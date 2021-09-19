@@ -14,7 +14,7 @@ initGame :: IO Game
 initGame = do
         let xm = width `div` 2
         let ym = height `div` 2
-        let player = Object { _position = V2 xm ym
+        let player = Entity { _position = V2 xm ym
                             , _char = '@'
                             , _color = white
                             }
@@ -31,23 +31,23 @@ width = 80
 type Coord = V2 Int
 
 data Game = Game
-          { _player :: Object
+          { _player :: Entity
           } deriving (Show)
 
-data Object = Object
+data Entity = Entity
             { _position :: Coord
             , _char     :: Char
             , _color    :: Color
             } deriving (Show)
 
 makeLenses ''Game
-makeLenses ''Object
+makeLenses ''Entity
 
 move :: Direction -> Game -> Game
 move d g = flip execState g . runMaybeT $ do
     MaybeT . fmap Just $ player .= nextPlayer d g
 
-nextPlayer :: Direction -> Game -> Object
+nextPlayer :: Direction -> Game -> Entity
 nextPlayer d g@Game { _player = p }
     = p & position .~ nextPosition d g
 
