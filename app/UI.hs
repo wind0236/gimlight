@@ -5,9 +5,9 @@ module UI(main) where
 import           Brick                      (App (..), AttrMap, AttrName,
                                              BrickEvent (AppEvent, VtyEvent),
                                              EventM, Next, Widget, attrMap,
-                                             continue, customMain, hBox, halt,
-                                             neverShowCursor, on, str, vBox,
-                                             withBorderStyle)
+                                             continue, customMain, fg, hBox,
+                                             halt, neverShowCursor, on, str,
+                                             vBox, withAttr, withBorderStyle)
 import           Brick.BChan                (newBChan, writeBChan)
 import qualified Brick.Widgets.Border       as B
 import qualified Brick.Widgets.Border.Style as BS
@@ -15,7 +15,7 @@ import qualified Brick.Widgets.Center       as C
 import           Control.Concurrent         (forkIO, threadDelay)
 import           Control.Lens               ((&), (^.))
 import           Control.Monad              (forever, void)
-import           Game                       (Direction (..), Game, char,
+import           Game                       (Direction (..), Game, attr, char,
                                              entities, height, initGame, move,
                                              player, position, width)
 import qualified Graphics.Vty               as V
@@ -66,17 +66,20 @@ drawGame g = withBorderStyle BS.unicodeBold
     $ vBox rows
     where
         rows = [hBox $ cellsInRow r | r <- [height - 1, height - 2 .. 0]]
-        cellsInRow y = [putCoord (V2 x y)  | x <- [0 .. width - 1]]
+        cellsInRow y = [cellAt (V2 x y)  | x <- [0 .. width - 1]]
         entityOnCellAt c = [e | e <- entities g, e ^. position == c]
-        putCoord = str . cellAt
-        cellAt c = let entityAt = entityOnCellAt c in case entityAt of
-                       entity:_ -> entity ^. char
-                       []       -> " "
+        cellAt c = let entityAt = entityOnCellAt c
+                       in case entityAt
+                       of
+                        entity:_ -> withAttr (entity ^. attr) $ str $ entity ^. char
+                        []       -> withAttr emptyAttr $ str " "
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
-    [(playerAttr, V.blue `on` V.black)]
+    [(playerAttr, V.brightWhite `on` V.black),
+     (npcAttr, V.yellow `on` V.black)]
 
-playerAttr, emptyAttr :: AttrName
+playerAttr, npcAttr, emptyAttr :: AttrName
 playerAttr = "playerAttr"
+npcAttr = "npcAttr"
 emptyAttr = "emptyAttr"

@@ -1,13 +1,15 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Game where
 
+import           Brick                          (AttrName)
 import           Control.Lens                   (makeLenses, (%~), (&), (.=),
                                                  (.~))
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
 import           Control.Monad.Trans.State.Lazy (execState, modify)
-import           Graphics.Vty.Attributes.Color  (Color, white)
+import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 
 initGame :: IO Game
@@ -16,11 +18,11 @@ initGame = do
         let ym = height `div` 2
         let player = Entity { _position = V2 xm ym
                             , _char = "@"
-                            , _color = white
+                            , _attr = "playerAttr"
                             }
         let npc = Entity { _position = V2 (xm - 5) ym
                          , _char = "@"
-                         , _color = white
+                         , _attr = "npcAttr"
                          }
         let g = Game { _player = player
                      , _npc = npc
@@ -42,7 +44,7 @@ data Game = Game
 data Entity = Entity
             { _position :: Coord
             , _char     :: [Char]
-            , _color    :: Color
+            , _attr     :: AttrName
             } deriving (Show)
 
 makeLenses ''Game
