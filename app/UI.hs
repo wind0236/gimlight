@@ -15,9 +15,9 @@ import qualified Brick.Widgets.Center       as C
 import           Control.Concurrent         (forkIO, threadDelay)
 import           Control.Lens               ((&), (^.))
 import           Control.Monad              (forever, void)
-import           Game                       (Direction (..), Game, height,
-                                             initGame, move, player, position,
-                                             width)
+import           Game                       (Direction (..), Game, char,
+                                             entities, height, initGame, move,
+                                             player, position, width)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..))
 
@@ -65,12 +65,13 @@ drawGame g = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Game")
     $ vBox rows
     where
-        rows = [hBox $ cellsInRow r | r <- [height - 1, height -2 .. 0]]
-        cellsInRow y = [putCoord (V2 x y)  | x <- [ 0 .. width - 1]]
+        rows = [hBox $ cellsInRow r | r <- [height - 1, height - 2 .. 0]]
+        cellsInRow y = [putCoord (V2 x y)  | x <- [0 .. width - 1]]
+        entityOnCellAt c = [e | e <- entities g, e ^. position == c]
         putCoord = str . cellAt
-        cellAt c = if g ^. (player . position) == c
-                    then "@"
-                    else " "
+        cellAt c = let entityAt = entityOnCellAt c in case entityAt of
+                       entity:_ -> entity ^. char
+                       []       -> " "
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
