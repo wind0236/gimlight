@@ -13,10 +13,11 @@ import qualified Brick.Widgets.Border       as B
 import qualified Brick.Widgets.Border.Style as BS
 import qualified Brick.Widgets.Center       as C
 import           Control.Concurrent         (forkIO, threadDelay)
-import           Control.Lens               ((^.))
+import           Control.Lens               ((&), (^.))
 import           Control.Monad              (forever, void)
 import           Game                       (Direction (..), Game, height,
-                                             initGame, move, player, width)
+                                             initGame, move, player, position,
+                                             width)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..))
 
@@ -67,7 +68,7 @@ drawGame g = withBorderStyle BS.unicodeBold
         rows = [hBox $ cellsInRow r | r <- [height - 1, height -2 .. 0]]
         cellsInRow y = [putCoord (V2 x y)  | x <- [ 0 .. width - 1]]
         putCoord = str . cellAt
-        cellAt c = if g ^. player == c
+        cellAt c = if g ^. (player . position) == c
                     then "@"
                     else " "
 
