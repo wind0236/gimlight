@@ -9,6 +9,7 @@ import           System.Random (Random (randomR), RandomGen, StdGen, getStdGen,
                                 mkStdGen)
 
 type GameMap = Array (Int, Int) Tile
+type BoolMap = Array (Int, Int) Bool
 
 data RecutangularRoom = RecutangularRoom
                       { x1 :: Int
@@ -98,20 +99,27 @@ allWallTiles :: GameMap
 allWallTiles = array ((0, 0), (width - 1, height - 1))
     [((x, y), wallTile) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
 
+emptyBoolMap :: BoolMap
+emptyBoolMap = array ((0, 0), (width - 1, height - 1))
+    [((x, y), False) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
+
 wallTile :: Tile
 wallTile = Tile { _walkable = False
             , _transparent = False
             , _darkAttr = "darkWallAttr"
+            , _lightAttr = "lightWallAttr"
             }
 
 floorTile :: Tile
 floorTile = Tile { _walkable = True
              , _transparent = True
              , _darkAttr = "darkFloorAttr"
+             , _lightAttr = "lightFloorAttr"
              }
 
 data Tile = Tile
           { _walkable    :: Bool
           , _transparent :: Bool
           , _darkAttr    :: AttrName
+          , _lightAttr   :: AttrName
           } deriving (Show)

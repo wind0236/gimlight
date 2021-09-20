@@ -83,7 +83,9 @@ theMap = attrMap V.defAttr
     [ (playerAttr, fg V.brightWhite)
     , (npcAttr, fg V.yellow)
     , (darkFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 50 50 150)
+    , (lightFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 200 180 50)
     , (darkWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 0 0 100)
+    , (lightWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 130 110 50)
     ]
 
 playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr :: AttrName
@@ -91,4 +93,6 @@ playerAttr = "playerAttr"
 npcAttr = "npcAttr"
 emptyAttr = "emptyAttr"
 darkFloorAttr = "darkFloorAttr"
+lightFloorAttr = "lightFloorAttr"
 darkWallAttr = "darkWallAttr"
+lightWallAttr = "lightWallAttr"

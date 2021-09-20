@@ -11,8 +11,8 @@ import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
 import           Control.Monad.Trans.State.Lazy (execState, modify)
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, (!), (//))
-import           Dungeon                        (Tile, height, initDungeon,
-                                                 width)
+import           Dungeon                        (BoolMap, Tile, emptyBoolMap,
+                                                 height, initDungeon, width)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           System.Random.Stateful         (newStdGen)
@@ -21,9 +21,11 @@ type Coord = V2 Int
 type Map = Array (Int, Int) Tile
 
 data Game = Game
-          { _player  :: Entity
-          , _npc     :: Entity
-          , _gameMap :: Map
+          { _player   :: Entity
+          , _npc      :: Entity
+          , _gameMap  :: Map
+          , _visible  :: BoolMap
+          , _explored :: BoolMap
           } deriving (Show)
 
 data Entity = Entity
@@ -81,5 +83,7 @@ initGame = do
         let g = Game { _player = player
                      , _npc = npc
                      , _gameMap = dungeon
+                     , _visible = emptyBoolMap
+                     , _explored = emptyBoolMap
                      }
         return g
