@@ -6,11 +6,11 @@ module Game where
 
 import           Brick                          (AttrName)
 import           Control.Lens                   (makeLenses, (%~), (&), (.=),
-                                                 (.~))
+                                                 (.~), (^.))
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
 import           Control.Monad.Trans.State.Lazy (execState, modify)
 import           Data.Array                     (Array)
-import           Data.Array.Base                (array, (//))
+import           Data.Array.Base                (array, (!), (//))
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 
@@ -49,7 +49,14 @@ move d g = flip execState g . runMaybeT $ do
 
 nextPlayer :: Direction -> Game -> Entity
 nextPlayer d g@Game { _player = p }
-    = p & position .~ nextPosition d g
+    = let next = nextPosition d g
+            in if movable next g
+                   then p & position .~ next
+                   else p
+
+movable :: Coord -> Game -> Bool
+movable c Game { _gameMap = m }
+    = (m ! (c ^. _x, c ^. _y)) ^. walkable
 
 nextPosition :: Direction -> Game -> Coord
 nextPosition d Game { _player = p }
