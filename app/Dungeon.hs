@@ -22,7 +22,7 @@ height = 45
 width = 80
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
-generateDungeon = generateDungeonAccum [] emptyTiles (V2 0 0)
+generateDungeon = generateDungeonAccum [] allWallTiles (V2 0 0)
 
 generateDungeonAccum :: [RecutangularRoom] -> GameMap -> V2 Int -> StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
 generateDungeonAccum _ d pos g 0 _ _ _ = (d, pos, g)
@@ -94,8 +94,8 @@ tunnelBetween start end d = createRoom path1 $ createRoom path2 d
           path2 = roomFromTwoPositionInclusive corner end
           corner = V2 (start ^. _x) (end ^. _y)
 
-emptyTiles :: GameMap
-emptyTiles = array ((0, 0), (width - 1, height - 1))
+allWallTiles :: GameMap
+allWallTiles = array ((0, 0), (width - 1, height - 1))
     [((x, y), wallTile) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
 
 wallTile :: Tile
