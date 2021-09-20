@@ -16,10 +16,11 @@ import           Control.Concurrent         (forkIO, threadDelay)
 import           Control.Lens               ((&), (^.))
 import           Control.Monad              (forever, void)
 import           Data.Array.Base            ((!))
+import           Dungeon                    (height, width)
 import           Game                       (Direction (..), Game, char,
                                              entities, entityAttr, gameMap,
-                                             height, initGame, move, player,
-                                             position, tileAttr, width)
+                                             initGame, move, player, position,
+                                             tileAttr)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 
