@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Dungeon where
 
-import           Brick        (AttrName)
-import           Control.Lens ((^.))
-import           Data.Array   (Array, array, (//))
-import           Linear.V2    (V2 (..), _x, _y)
+import           Brick         (AttrName)
+import           Control.Lens  ((^.))
+import           Data.Array    (Array, array, (//))
+import           Linear.V2     (V2 (..), _x, _y)
+import           System.Random (Random (randomR), RandomGen, StdGen, getStdGen,
+                                mkStdGen)
 
 type Dungeon = Array (Int, Int) Tile
 
@@ -19,6 +21,25 @@ height, width :: Int
 height = 45
 width = 80
 
+generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (Dungeon, V2 Int, StdGen)
+generateDungeon = generateDungeonAccum [] emptyTiles (V2 0 0)
+
+generateDungeonAccum :: [RecutangularRoom] -> Dungeon -> V2 Int -> StdGen -> Int -> Int -> Int -> V2 Int -> (Dungeon, V2 Int, StdGen)
+generateDungeonAccum _ d pos g 0 _ _ _ = (d, pos, g)
+generateDungeonAccum acc dungeon playerPos g maxRoms roomMinSize roomMaxSize mapSize
+    = generateDungeonAccum newAcc newDungeon newPlayerPos g'''' (maxRoms - 1) roomMinSize roomMaxSize mapSize
+    where (roomWidth, g') = randomR (roomMinSize, roomMaxSize) g
+          (roomHeight, g'') = randomR (roomMinSize, roomMaxSize) g'
+          (x, g''') = randomR (0, width - roomWidth - 1) g''
+          (y, g'''') = randomR (0, height - roomHeight - 1) g'''
+          room = roomFromWidthHeight (V2 x y) (V2 roomWidth roomHeight)
+          usable = not $ any (roomOverlaps room) acc
+          (newAcc, newDungeon, newPlayerPos) = if usable
+                                                   then if null acc
+                                                            then (room:acc, createRoom room dungeon, center room)
+                                                            else (room:acc, tunnelBetween (center room) (center $ head acc) $ createRoom room dungeon, center room)
+                                                   else (acc, dungeon, playerPos)
+
 center :: RecutangularRoom -> V2 Int
 center RecutangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 }
     = V2 xm ym
@@ -29,10 +50,16 @@ createRoom :: RecutangularRoom -> Dungeon -> Dungeon
 createRoom RecutangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 } r
     = r // [((x, y), floorTile) | x <- [x1 .. x2 - 1], y <- [y1 .. y2 - 1]]
 
-initDungeon :: Dungeon
-initDungeon = tunnelBetween (center room1) (center room2) $ createRoom room1 $ createRoom room2 emptyTiles
-    where room1 = roomFromWidthHeight (V2 20 15) (V2 10 15)
-          room2 = roomFromWidthHeight (V2 35 15) (V2 10 15)
+roomOverlaps :: RecutangularRoom -> RecutangularRoom -> Bool
+roomOverlaps RecutangularRoom { x1 = aX1, x2 = aX2, y1 = aY1, y2 = aY2 }
+             RecutangularRoom { x1 = bX1, x2 = bX2, y1 = bY1, y2 = bY2 }
+                = (aX1 <= bX2) && (aX2 >= bX1) && (aY1 <= bY2) && (aY2 >= bY1)
+
+initDungeon :: (Dungeon, V2 Int)
+initDungeon =
+        let gen = mkStdGen 334
+            (dungeon, pos, _) = generateDungeon gen 30 6 10 (V2 width height)
+        in (dungeon, pos)
 
 roomFromWidthHeight :: V2 Int -> V2 Int -> RecutangularRoom
 roomFromWidthHeight tl wh = RecutangularRoom { x1 = topLeftX
@@ -46,16 +73,21 @@ roomFromWidthHeight tl wh = RecutangularRoom { x1 = topLeftX
                                                    roomHeight = wh ^. _y
 
 roomFromTwoPositionInclusive :: V2 Int -> V2 Int -> RecutangularRoom
-roomFromTwoPositionInclusive topLeft bottomRight =
+roomFromTwoPositionInclusive pos1 pos2 =
         RecutangularRoom { x1 = topLeftX
                          , x2 = bottomRightX + 1
                          , y1 = topLeftY
                          , y2 = bottomRightY + 1
                          }
-                         where topLeftX = topLeft ^. _x
-                               topLeftY = topLeft ^. _y
-                               bottomRightX = bottomRight ^. _x
-                               bottomRightY = bottomRight ^. _y
+                         where pos1X = pos1 ^. _x
+                               pos1Y = pos1 ^. _y
+                               pos2X = pos2 ^. _x
+                               pos2Y = pos2 ^. _y
+                               topLeftX = min pos1X pos2X
+                               topLeftY = min pos1Y pos2Y
+                               bottomRightX = max pos1X pos2X
+                               bottomRightY = max pos1Y pos2Y
+
 
 tunnelBetween :: V2 Int -> V2 Int -> Dungeon -> Dungeon
 tunnelBetween start end d = createRoom path1 $ createRoom path2 d

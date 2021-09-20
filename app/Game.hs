@@ -67,7 +67,8 @@ initGame :: IO Game
 initGame = do
         let xm = width `div` 2
         let ym = height `div` 2
-        let player = Entity { _position = V2 xm ym
+        let (dungeon, playerPos) = initDungeon
+        let player = Entity { _position = playerPos
                             , _char = "@"
                             , _entityAttr = "playerAttr"
                             }
@@ -77,6 +78,6 @@ initGame = do
                          }
         let g = Game { _player = player
                      , _npc = npc
-                     , _gameMap = initDungeon
+                     , _gameMap = dungeon
                      }
         return g
