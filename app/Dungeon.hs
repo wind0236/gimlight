@@ -30,13 +30,11 @@ createRoom RecutangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 } r
     = r // [((x, y), floorTile) | x <- [x1 .. x2 - 1], y <- [y1 .. y2 - 1]]
 
 initDungeon :: Dungeon
-initDungeon = createRoom room1 $ createRoom room2 emptyTiles
+initDungeon = tunnelBetween (center room1) (center room2) $ createRoom room1 $ createRoom room2 emptyTiles
     where room1 = roomFromWidthHeight (V2 20 15) (V2 10 15)
           room2 = roomFromWidthHeight (V2 35 15) (V2 10 15)
 
-type TopLeft = V2 Int
-type WidthHeight = V2 Int
-roomFromWidthHeight :: TopLeft -> WidthHeight -> RecutangularRoom
+roomFromWidthHeight :: V2 Int -> V2 Int -> RecutangularRoom
 roomFromWidthHeight tl wh = RecutangularRoom { x1 = topLeftX
                                              , x2 = topLeftX + roomWidth
                                              , y1 = topLeftY
@@ -46,6 +44,24 @@ roomFromWidthHeight tl wh = RecutangularRoom { x1 = topLeftX
                                                    topLeftY = tl ^. _y
                                                    roomWidth = wh ^. _x
                                                    roomHeight = wh ^. _y
+
+roomFromTwoPositionInclusive :: V2 Int -> V2 Int -> RecutangularRoom
+roomFromTwoPositionInclusive topLeft bottomRight =
+        RecutangularRoom { x1 = topLeftX
+                         , x2 = bottomRightX + 1
+                         , y1 = topLeftY
+                         , y2 = bottomRightY + 1
+                         }
+                         where topLeftX = topLeft ^. _x
+                               topLeftY = topLeft ^. _y
+                               bottomRightX = bottomRight ^. _x
+                               bottomRightY = bottomRight ^. _y
+
+tunnelBetween :: V2 Int -> V2 Int -> Dungeon -> Dungeon
+tunnelBetween start end d = createRoom path1 $ createRoom path2 d
+    where path1 = roomFromTwoPositionInclusive start corner
+          path2 = roomFromTwoPositionInclusive corner end
+          corner = V2 (start ^. _x) (end ^. _y)
 
 emptyTiles :: Dungeon
 emptyTiles = array ((0, 0), (width - 1, height - 1))
