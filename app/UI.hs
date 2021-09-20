@@ -18,9 +18,9 @@ import           Control.Monad              (forever, void)
 import           Data.Array.Base            ((!))
 import           Dungeon                    (height, width)
 import           Game                       (Direction (..), Game, char,
-                                             entities, entityAttr, gameMap,
-                                             initGame, move, player, position,
-                                             tileAttr)
+                                             darkAttr, entities, entityAttr,
+                                             gameMap, initGame, move, player,
+                                             position)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 
@@ -76,19 +76,19 @@ drawGame g = withBorderStyle BS.unicodeBold
                        in case entityAt
                        of
                         entity:_ -> withAttr (entity ^. entityAttr) $ str $ entity ^. char
-                        []       -> withAttr (tileOnCellAt c ^. tileAttr) $ str " "
+                        []       -> withAttr (tileOnCellAt c ^. darkAttr) $ str " "
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
     [ (playerAttr, fg V.brightWhite)
     , (npcAttr, fg V.yellow)
-    , (floorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 50 50 150)
-    , (wallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 0 0 100)
+    , (darkFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 50 50 150)
+    , (darkWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 0 0 100)
     ]
 
-playerAttr, npcAttr, emptyAttr, floorAttr, wallAttr :: AttrName
+playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr :: AttrName
 playerAttr = "playerAttr"
 npcAttr = "npcAttr"
 emptyAttr = "emptyAttr"
-floorAttr = "floorAttr"
-wallAttr = "wallAttr"
+darkFloorAttr = "darkFloorAttr"
+darkWallAttr = "darkWallAttr"

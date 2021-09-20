@@ -101,17 +101,17 @@ allWallTiles = array ((0, 0), (width - 1, height - 1))
 wallTile :: Tile
 wallTile = Tile { _walkable = False
             , _transparent = False
-            , _tileAttr = "wallAttr"
+            , _darkAttr = "darkWallAttr"
             }
 
 floorTile :: Tile
 floorTile = Tile { _walkable = True
              , _transparent = True
-             , _tileAttr = "floorAttr"
+             , _darkAttr = "darkFloorAttr"
              }
 
 data Tile = Tile
           { _walkable    :: Bool
           , _transparent :: Bool
-          , _tileAttr    :: AttrName
+          , _darkAttr    :: AttrName
           } deriving (Show)
