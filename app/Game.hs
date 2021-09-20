@@ -15,6 +15,7 @@ import           Dungeon                        (Tile, height, initDungeon,
                                                  width)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
+import           System.Random.Stateful         (newStdGen)
 
 type Coord = V2 Int
 type Map = Array (Int, Int) Tile
@@ -65,9 +66,10 @@ data Direction = North | South | East | West deriving (Eq, Show)
 
 initGame :: IO Game
 initGame = do
+        gen <- newStdGen
         let xm = width `div` 2
         let ym = height `div` 2
-        let (dungeon, playerPos) = initDungeon
+        let (dungeon, playerPos) = initDungeon gen
         let player = Entity { _position = playerPos
                             , _char = "@"
                             , _entityAttr = "playerAttr"

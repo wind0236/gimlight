@@ -55,10 +55,9 @@ roomOverlaps RecutangularRoom { x1 = aX1, x2 = aX2, y1 = aY1, y2 = aY2 }
              RecutangularRoom { x1 = bX1, x2 = bX2, y1 = bY1, y2 = bY2 }
                 = (aX1 <= bX2) && (aX2 >= bX1) && (aY1 <= bY2) && (aY2 >= bY1)
 
-initDungeon :: (Dungeon, V2 Int)
-initDungeon =
-        let gen = mkStdGen 334
-            (dungeon, pos, _) = generateDungeon gen 30 6 10 (V2 width height)
+initDungeon :: StdGen -> (Dungeon, V2 Int)
+initDungeon gen =
+        let (dungeon, pos, _) = generateDungeon gen 30 6 10 (V2 width height)
         in (dungeon, pos)
 
 roomFromWidthHeight :: V2 Int -> V2 Int -> RecutangularRoom
