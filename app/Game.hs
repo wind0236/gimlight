@@ -50,10 +50,13 @@ updateExplored g = g & explored .~ newExplored
 updateFov :: Game -> Game
 updateFov g = g & visible .~ calculateFov g
 
+fovRadius :: Int
+fovRadius = 8
+
 calculateFov :: Game -> BoolMap
 calculateFov Game { _gameMap = m, _player = p } =
         foldl (flip (calculateLos m pos0)) emptyBoolMap
-              [V2 (x0 + x) (y0 + y) | x <- [(-5) .. 5], y <- [(-5) .. 5]]
+              [V2 (x0 + x) (y0 + y) | x <- [(-fovRadius) .. fovRadius], y <- [(-fovRadius) .. fovRadius]]
         where pos0 = p ^. position
               x0 = pos0 ^. _x
               y0 = pos0 ^. _y
