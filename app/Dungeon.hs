@@ -88,7 +88,6 @@ roomFromTwoPositionInclusive pos1 pos2 =
                                bottomRightX = max pos1X pos2X
                                bottomRightY = max pos1Y pos2Y
 
-
 tunnelBetween :: V2 Int -> V2 Int -> GameMap -> GameMap
 tunnelBetween start end d = createRoom path1 $ createRoom path2 d
     where path1 = roomFromTwoPositionInclusive start corner
