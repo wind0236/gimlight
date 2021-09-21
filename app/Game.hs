@@ -63,6 +63,7 @@ calculateLos m (V2 x0 y0) (V2 x1 y1) = calculateLosAccum (V2 x0 y0) m (V2 x0 y0)
 
 calculateLosAccum :: V2 Int -> Map -> V2 Int -> V2 Int -> BoolMap -> BoolMap
 calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
+        | x1 < 0 || y1 < 0 || x1 >= width || y1 >= height = fov
         | V2 xnext ynext == V2 x1 y1 = fov // [((x1, y1), True)]
         | not $ map ! (xnext, ynext) ^. transparent = fov
         | fromIntegral(abs(dy * (xnext - x0 + sx) - dx * (ynext - y0))) / dist < 0.5 =
