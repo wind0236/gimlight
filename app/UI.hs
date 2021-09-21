@@ -83,8 +83,8 @@ drawGame g = withBorderStyle BS.unicodeBold
         cellAt c = let entityAt = entityOnCellAt c
                        in case entityAt
                        of
-                        entity:_ -> withAttr (entity ^. entityAttr) $ str $ entity ^. char
-                        []       -> withAttr (attrAt c) $ str " "
+                        entity:_ | visibleAt c -> withAttr (entity ^. entityAttr) $ str $ entity ^. char
+                        _        -> withAttr (attrAt c) $ str " "
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
