@@ -6,7 +6,7 @@ import           Control.Lens    ((^.))
 import           Coord           (Coord)
 import           Data.Array      (Array, array, (//))
 import           Dungeon.BoolMap (BoolMap)
-import           Dungeon.GameMap (GameMap)
+import           Dungeon.GameMap (GameMap, allWallTiles)
 import           Dungeon.Room    (Room (..), center,
                                   roomFromTwoPositionInclusive,
                                   roomFromWidthHeight, roomOverlaps)
@@ -49,7 +49,3 @@ tunnelBetween start end d = createRoom path1 $ createRoom path2 d
     where path1 = roomFromTwoPositionInclusive start corner
           path2 = roomFromTwoPositionInclusive corner end
           corner = V2 (start ^. _x) (end ^. _y)
-
-allWallTiles :: GameMap
-allWallTiles = array ((0, 0), (width - 1, height - 1))
-    [((x, y), wallTile) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
