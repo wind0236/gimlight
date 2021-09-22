@@ -27,7 +27,8 @@ executable roguelike
 
     other-modules:    UI,
                       Game,
-                      Dungeon
+                      Dungeon,
+                      Coord
 
     -- Modules included in this executable, other than Main.
     -- other-modules:

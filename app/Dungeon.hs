@@ -3,6 +3,7 @@ module Dungeon where
 
 import           Brick         (AttrName)
 import           Control.Lens  ((^.))
+import           Coord         (Coord)
 import           Data.Array    (Array, array, (//))
 import           Linear.V2     (V2 (..), _x, _y)
 import           System.Random (Random (randomR), RandomGen, StdGen, getStdGen,
@@ -25,7 +26,7 @@ width = 80
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
 generateDungeon = generateDungeonAccum [] allWallTiles (V2 0 0)
 
-generateDungeonAccum :: [RecutangularRoom] -> GameMap -> V2 Int -> StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
+generateDungeonAccum :: [RecutangularRoom] -> GameMap -> Coord -> StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
 generateDungeonAccum _ d pos g 0 _ _ _ = (d, pos, g)
 generateDungeonAccum acc dungeon playerPos g maxRoms roomMinSize roomMaxSize mapSize
     = generateDungeonAccum newAcc newDungeon newPlayerPos g'''' (maxRoms - 1) roomMinSize roomMaxSize mapSize
@@ -41,7 +42,7 @@ generateDungeonAccum acc dungeon playerPos g maxRoms roomMinSize roomMaxSize map
                                                             else (room:acc, tunnelBetween (center room) (center $ head acc) $ createRoom room dungeon, center room)
                                                    else (acc, dungeon, playerPos)
 
-center :: RecutangularRoom -> V2 Int
+center :: RecutangularRoom -> Coord
 center RecutangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 }
     = V2 xm ym
     where xm = (x1 + x2) `div` 2
@@ -56,10 +57,10 @@ roomOverlaps RecutangularRoom { x1 = aX1, x2 = aX2, y1 = aY1, y2 = aY2 }
              RecutangularRoom { x1 = bX1, x2 = bX2, y1 = bY1, y2 = bY2 }
                 = (aX1 <= bX2) && (aX2 >= bX1) && (aY1 <= bY2) && (aY2 >= bY1)
 
-initDungeon :: StdGen -> (GameMap, V2 Int)
+initDungeon :: StdGen -> (GameMap, Coord)
 initDungeon gen =
-        let (dungeon, pos, _) = generateDungeon gen 30 6 10 (V2 width height)
-        in (dungeon, pos)
+        let (dungeon, playerPos, _) = generateDungeon gen 30 6 10 (V2 width height)
+        in (dungeon, playerPos)
 
 roomFromWidthHeight :: V2 Int -> V2 Int -> RecutangularRoom
 roomFromWidthHeight tl wh = RecutangularRoom { x1 = topLeftX
@@ -72,7 +73,7 @@ roomFromWidthHeight tl wh = RecutangularRoom { x1 = topLeftX
                                                    roomWidth = wh ^. _x
                                                    roomHeight = wh ^. _y
 
-roomFromTwoPositionInclusive :: V2 Int -> V2 Int -> RecutangularRoom
+roomFromTwoPositionInclusive :: Coord -> Coord -> RecutangularRoom
 roomFromTwoPositionInclusive pos1 pos2 =
         RecutangularRoom { x1 = topLeftX
                          , x2 = bottomRightX + 1
@@ -88,7 +89,7 @@ roomFromTwoPositionInclusive pos1 pos2 =
                                bottomRightX = max pos1X pos2X
                                bottomRightY = max pos1Y pos2Y
 
-tunnelBetween :: V2 Int -> V2 Int -> GameMap -> GameMap
+tunnelBetween :: Coord -> Coord -> GameMap -> GameMap
 tunnelBetween start end d = createRoom path1 $ createRoom path2 d
     where path1 = roomFromTwoPositionInclusive start corner
           path2 = roomFromTwoPositionInclusive corner end

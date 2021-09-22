@@ -9,6 +9,7 @@ import           Control.Lens                   (makeLenses, (%~), (&), (.=),
                                                  (.~), (^.))
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
 import           Control.Monad.Trans.State.Lazy (execState, modify)
+import           Coord                          (Coord)
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
@@ -18,7 +19,6 @@ import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           System.Random.Stateful         (newStdGen)
 
-type Coord = V2 Int
 type Map = Array (Int, Int) Tile
 
 data Game = Game
@@ -61,10 +61,10 @@ calculateFov Game { _gameMap = m, _player = p } =
               x0 = pos0 ^. _x
               y0 = pos0 ^. _y
 
-calculateLos :: Map -> V2 Int -> V2 Int -> BoolMap -> BoolMap
+calculateLos :: Map -> Coord -> Coord -> BoolMap -> BoolMap
 calculateLos m (V2 x0 y0) (V2 x1 y1) = calculateLosAccum (V2 x0 y0) m (V2 x0 y0) (V2 x1 y1)
 
-calculateLosAccum :: V2 Int -> Map -> V2 Int -> V2 Int -> BoolMap -> BoolMap
+calculateLosAccum :: Coord -> Map -> Coord -> Coord -> BoolMap -> BoolMap
 calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
         | x1 < 0 || y1 < 0 || x1 >= width || y1 >= height = fov
         | V2 xnext ynext == V2 x1 y1 = fov // [((x1, y1), True)]
