@@ -25,6 +25,10 @@ import           Game                       (Direction (..), Game, char,
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 
+data Tick = Tick
+
+type Name = ()
+
 main :: IO ()
 main = do
         chan <- newBChan 10
@@ -35,8 +39,6 @@ main = do
         let builder = V.mkVty V.defaultConfig
         initialVty <- builder
         void $ customMain initialVty builder (Just chan) app g
-
-data Tick = Tick
 
 app :: App Game Tick Name
 app = App { appDraw = drawUI
@@ -58,8 +60,6 @@ handleEvent g (VtyEvent (V.EvKey (V.KChar 'j') [])) = continue $ updateMap $ mov
 handleEvent g (VtyEvent (V.EvKey (V.KChar 'l') [])) = continue $ updateMap $ move East g
 handleEvent g (VtyEvent (V.EvKey (V.KChar 'h') [])) = continue $ updateMap $ move West g
 handleEvent g _                                     = continue g
-
-type Name = ()
 
 drawUI :: Game -> [Widget Name]
 drawUI g = [ C.center $ drawGame g ]
