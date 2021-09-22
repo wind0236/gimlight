@@ -16,8 +16,9 @@ import           Data.Array.Base                (array, bounds, elems, (!),
 import           Direction                      (Direction (East, North, South, West))
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
 import           Dungeon.GameMap                (GameMap)
-import           Dungeon.Generate               (initDungeon)
-import           Dungeon.Size                   (height, width)
+import           Dungeon.Generate               (generateDungeon)
+import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
+                                                 roomMinSize, width)
 import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
                                                  transparent, walkable)
 import           Entity                         (Entity (..), playerEntity,
@@ -105,7 +106,7 @@ entities Game { _player = player } = [player]
 initGame :: IO Game
 initGame = do
         gen <- newStdGen
-        let (dungeon, playerPos) = initDungeon gen
+        let (dungeon, playerPos, _) = generateDungeon gen maxRooms roomMinSize roomMaxSize (V2 width height)
         let player = playerEntity playerPos
         let g = Game { _player = player
                      , _gameMap = dungeon

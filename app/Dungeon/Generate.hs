@@ -1,6 +1,5 @@
 module Dungeon.Generate
     ( generateDungeon
-    , initDungeon
     ) where
 
 import           Brick           (AttrName)
@@ -40,11 +39,6 @@ generateDungeonAccum acc dungeon playerPos g maxRoms roomMinSize roomMaxSize map
 createRoom :: Room -> GameMap -> GameMap
 createRoom Room{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 } r
     = r // [((x, y), floorTile) | x <- [x1 .. x2 - 1], y <- [y1 .. y2 - 1]]
-
-initDungeon :: StdGen -> (GameMap, Coord)
-initDungeon gen =
-        let (dungeon, playerPos, _) = generateDungeon gen 30 6 10 (V2 width height)
-        in (dungeon, playerPos)
 
 tunnelBetween :: Coord -> Coord -> GameMap -> GameMap
 tunnelBetween start end d = createRoom path1 $ createRoom path2 d
