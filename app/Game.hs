@@ -14,8 +14,9 @@ import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
 import           Direction                      (Direction (East, North, South, West))
-import           Dungeon                        (BoolMap, Tile, emptyBoolMap,
-                                                 height, initDungeon, width)
+import           Dungeon                        (BoolMap, emptyBoolMap, height,
+                                                 initDungeon, width)
+import           Dungeon.Tile                   (Tile)
 import           Entity                         (Entity (..), position)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)

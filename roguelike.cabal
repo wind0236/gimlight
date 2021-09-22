@@ -28,6 +28,7 @@ executable roguelike
     other-modules:    UI,
                       Game,
                       Dungeon,
+                      Dungeon.Tile,
                       Coord,
                       Entity,
                       Direction

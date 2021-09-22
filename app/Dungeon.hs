@@ -5,6 +5,7 @@ import           Brick         (AttrName)
 import           Control.Lens  ((^.))
 import           Coord         (Coord)
 import           Data.Array    (Array, array, (//))
+import           Dungeon.Tile  (Tile (..), floorTile, wallTile)
 import           Linear.V2     (V2 (..), _x, _y)
 import           System.Random (Random (randomR), RandomGen, StdGen, getStdGen,
                                 mkStdGen)
@@ -15,13 +16,6 @@ data RecutangularRoom = RecutangularRoom
                       , x2 :: Int
                       , y2 :: Int
                       }
-
-data Tile = Tile
-          { _walkable    :: Bool
-          , _transparent :: Bool
-          , _darkAttr    :: AttrName
-          , _lightAttr   :: AttrName
-          } deriving (Show)
 
 type GameMap = Array (Int, Int) Tile
 type BoolMap = Array (Int, Int) Bool
@@ -109,17 +103,3 @@ allWallTiles = array ((0, 0), (width - 1, height - 1))
 emptyBoolMap :: BoolMap
 emptyBoolMap = array ((0, 0), (width - 1, height - 1))
     [((x, y), False) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
-
-wallTile :: Tile
-wallTile = Tile { _walkable = False
-            , _transparent = False
-            , _darkAttr = "darkWallAttr"
-            , _lightAttr = "lightWallAttr"
-            }
-
-floorTile :: Tile
-floorTile = Tile { _walkable = True
-             , _transparent = True
-             , _darkAttr = "darkFloorAttr"
-             , _lightAttr = "lightFloorAttr"
-             }
