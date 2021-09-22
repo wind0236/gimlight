@@ -7,6 +7,8 @@ module Entity
     , char
     , entityAttr
     , playerEntity
+    , orcEntity
+    , trollEntity
     ) where
 
 import           Brick.AttrMap   (AttrName)

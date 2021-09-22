@@ -1,4 +1,6 @@
-module Coord(Coord) where
+module Coord
+    ( Coord(..)
+    ) where
 
 import           Linear.V2 (V2)
 

@@ -17,7 +17,7 @@ import           Control.Lens                   (makeLenses, (%~), (&), (.=),
                                                  (.~), (^.))
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
 import           Control.Monad.Trans.State.Lazy (execState, modify)
-import           Coord                          (Coord)
+import           Coord                          (Coord (..))
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
@@ -25,21 +25,25 @@ import           Direction                      (Direction (East, North, South, 
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
 import           Dungeon.GameMap                (GameMap)
 import           Dungeon.Generate               (generateDungeon)
+import           Dungeon.Room                   (Room (..), x1, x2, y1, y2)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
 import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
                                                  transparent, walkable)
-import           Entity                         (Entity (..), playerEntity,
-                                                 position)
+import           Entity                         (Entity (..), orcEntity,
+                                                 playerEntity, position,
+                                                 trollEntity)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
-import           System.Random.Stateful         (newStdGen)
+import           System.Random.Stateful         (StdGen, newStdGen, random,
+                                                 randomR)
 
 data Dungeon = Dungeon
           { _player   :: Entity
           , _gameMap  :: GameMap
           , _visible  :: BoolMap
           , _explored :: BoolMap
+          , _enemies  :: [Entity]
           } deriving (Show)
 makeLenses ''Dungeon
 
@@ -109,16 +113,17 @@ nextPosition d Dungeon { _player = p }
 nextPosition _ _ = error "unreachable"
 
 entities :: Dungeon -> [Entity]
-entities Dungeon { _player = player } = [player]
+entities Dungeon { _player = player, _enemies = enemies } = player:enemies
 
 initDungeon :: IO Dungeon
 initDungeon = do
         gen <- newStdGen
-        let (dungeon, playerPos, _) = generateDungeon gen maxRooms roomMinSize roomMaxSize (V2 width height)
+        let (dungeon, enemies, playerPos, _) = generateDungeon gen maxRooms roomMinSize roomMaxSize (V2 width height)
         let player = playerEntity playerPos
         let g = Dungeon { _player = player
                      , _gameMap = dungeon
                      , _visible = emptyBoolMap
                      , _explored = emptyBoolMap
+                     , _enemies = enemies
                      }
         return $ updateMap g
