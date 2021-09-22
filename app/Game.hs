@@ -19,8 +19,6 @@ import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           System.Random.Stateful         (newStdGen)
 
-type Map = Array (Int, Int) Tile
-
 data Game = Game
           { _player   :: Entity
           , _npc      :: Entity
@@ -34,6 +32,10 @@ data Entity = Entity
             , _char       :: String
             , _entityAttr :: AttrName
             } deriving (Show)
+
+data Direction = North | South | East | West deriving (Eq, Show)
+
+type Map = Array (Int, Int) Tile
 
 makeLenses ''Game
 makeLenses ''Entity
@@ -106,8 +108,6 @@ nextPosition _ _ = error "unreachable"
 
 entities :: Game -> [Entity]
 entities Game { _player = player, _npc = npc } = [player, npc]
-
-data Direction = North | South | East | West deriving (Eq, Show)
 
 initGame :: IO Game
 initGame = do
