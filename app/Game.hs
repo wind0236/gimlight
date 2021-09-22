@@ -13,6 +13,7 @@ import           Coord                          (Coord)
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
+import           Direction                      (Direction (East, North, South, West))
 import           Dungeon                        (BoolMap, Tile, emptyBoolMap,
                                                  height, initDungeon, width)
 import           Entity                         (Entity (..))
@@ -27,8 +28,6 @@ data Game = Game
           , _visible  :: BoolMap
           , _explored :: BoolMap
           } deriving (Show)
-
-data Direction = North | South | East | West deriving (Eq, Show)
 
 type Map = Array (Int, Int) Tile
 

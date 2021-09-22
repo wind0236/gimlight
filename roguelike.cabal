@@ -29,7 +29,8 @@ executable roguelike
                       Game,
                       Dungeon,
                       Coord,
-                      Entity
+                      Entity,
+                      Direction
 
     -- Modules included in this executable, other than Main.
     -- other-modules:
