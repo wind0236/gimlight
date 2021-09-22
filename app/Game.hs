@@ -16,6 +16,7 @@ import           Data.Array.Base                (array, bounds, elems, (!),
 import           Direction                      (Direction (East, North, South, West))
 import           Dungeon                        (initDungeon)
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
+import           Dungeon.GameMap                (GameMap)
 import           Dungeon.Size                   (height, width)
 import           Dungeon.Tile                   (Tile)
 import           Entity                         (Entity (..), position)
@@ -26,12 +27,10 @@ import           System.Random.Stateful         (newStdGen)
 data Game = Game
           { _player   :: Entity
           , _npc      :: Entity
-          , _gameMap  :: Map
+          , _gameMap  :: GameMap
           , _visible  :: BoolMap
           , _explored :: BoolMap
           } deriving (Show)
-
-type Map = Array (Int, Int) Tile
 
 makeLenses ''Game
 makeLenses ''Tile
@@ -58,10 +57,10 @@ calculateFov Game { _gameMap = m, _player = p } =
               x0 = pos0 ^. _x
               y0 = pos0 ^. _y
 
-calculateLos :: Map -> Coord -> Coord -> BoolMap -> BoolMap
+calculateLos :: GameMap -> Coord -> Coord -> BoolMap -> BoolMap
 calculateLos m (V2 x0 y0) (V2 x1 y1) = calculateLosAccum (V2 x0 y0) m (V2 x0 y0) (V2 x1 y1)
 
-calculateLosAccum :: Coord -> Map -> Coord -> Coord -> BoolMap -> BoolMap
+calculateLosAccum :: Coord -> GameMap -> Coord -> Coord -> BoolMap -> BoolMap
 calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
         | x1 < 0 || y1 < 0 || x1 >= width || y1 >= height = fov
         | V2 xnext ynext == V2 x1 y1 = fov // [((x1, y1), True)]
