@@ -15,6 +15,7 @@ import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
 import           Dungeon                        (BoolMap, Tile, emptyBoolMap,
                                                  height, initDungeon, width)
+import           Entity                         (Entity (..))
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           System.Random.Stateful         (newStdGen)
@@ -26,12 +27,6 @@ data Game = Game
           , _visible  :: BoolMap
           , _explored :: BoolMap
           } deriving (Show)
-
-data Entity = Entity
-            { _position   :: Coord
-            , _char       :: String
-            , _entityAttr :: AttrName
-            } deriving (Show)
 
 data Direction = North | South | East | West deriving (Eq, Show)
 
