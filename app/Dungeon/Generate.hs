@@ -22,8 +22,8 @@ generateDungeon = generateDungeonAccum [] allWallTiles (V2 0 0)
 
 generateDungeonAccum :: [Room] -> GameMap -> Coord -> StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
 generateDungeonAccum _ d pos g 0 _ _ _ = (d, pos, g)
-generateDungeonAccum acc dungeon playerPos g maxRoms roomMinSize roomMaxSize mapSize
-    = generateDungeonAccum newAcc newDungeon newPlayerPos g'''' (maxRoms - 1) roomMinSize roomMaxSize mapSize
+generateDungeonAccum acc dungeon playerPos g maxRooms roomMinSize roomMaxSize mapSize
+    = generateDungeonAccum newAcc newDungeon newPlayerPos g'''' (maxRooms - 1) roomMinSize roomMaxSize mapSize
     where (roomWidth, g') = randomR (roomMinSize, roomMaxSize) g
           (roomHeight, g'') = randomR (roomMinSize, roomMaxSize) g'
           (x, g''') = randomR (0, width - roomWidth - 1) g''
