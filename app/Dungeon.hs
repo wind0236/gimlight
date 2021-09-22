@@ -1,14 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Dungeon where
 
-import           Brick         (AttrName)
-import           Control.Lens  ((^.))
-import           Coord         (Coord)
-import           Data.Array    (Array, array, (//))
-import           Dungeon.Tile  (Tile (..), floorTile, wallTile)
-import           Linear.V2     (V2 (..), _x, _y)
-import           System.Random (Random (randomR), RandomGen, StdGen, getStdGen,
-                                mkStdGen)
+import           Brick           (AttrName)
+import           Control.Lens    ((^.))
+import           Coord           (Coord)
+import           Data.Array      (Array, array, (//))
+import           Dungeon.GameMap (GameMap)
+import           Dungeon.Tile    (Tile (..), floorTile, wallTile)
+import           Linear.V2       (V2 (..), _x, _y)
+import           System.Random   (Random (randomR), RandomGen, StdGen,
+                                  getStdGen, mkStdGen)
 
 data RecutangularRoom = RecutangularRoom
                       { x1 :: Int
@@ -17,7 +18,6 @@ data RecutangularRoom = RecutangularRoom
                       , y2 :: Int
                       }
 
-type GameMap = Array (Int, Int) Tile
 type BoolMap = Array (Int, Int) Bool
 
 height, width :: Int
