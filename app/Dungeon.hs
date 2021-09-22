@@ -64,7 +64,3 @@ tunnelBetween start end d = createRoom path1 $ createRoom path2 d
 allWallTiles :: GameMap
 allWallTiles = array ((0, 0), (width - 1, height - 1))
     [((x, y), wallTile) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
-
-emptyBoolMap :: BoolMap
-emptyBoolMap = array ((0, 0), (width - 1, height - 1))
-    [((x, y), False) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
