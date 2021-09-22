@@ -10,14 +10,11 @@ import           Dungeon.GameMap         (GameMap)
 import           Dungeon.RectangularRoom (RectangularRoom (..),
                                           roomFromTwoPositionInclusive,
                                           roomFromWidthHeight)
+import           Dungeon.Size            (height, width)
 import           Dungeon.Tile            (Tile (..), floorTile, wallTile)
 import           Linear.V2               (V2 (..), _x, _y)
 import           System.Random           (Random (randomR), RandomGen, StdGen,
                                           getStdGen, mkStdGen)
-
-height, width :: Int
-height = 45
-width = 80
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
 generateDungeon = generateDungeonAccum [] allWallTiles (V2 0 0)

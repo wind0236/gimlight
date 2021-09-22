@@ -17,7 +17,7 @@ import           Control.Lens               ((&), (^.))
 import           Control.Monad              (forever, void)
 import           Data.Array.Base            ((!))
 import           Direction                  (Direction (East, North, South, West))
-import           Dungeon                    (height, width)
+import           Dungeon.Size               (height, width)
 import           Entity                     (char, entityAttr, position)
 import           Game                       (Game, darkAttr, entities, explored,
                                              gameMap, initGame, lightAttr, move,
