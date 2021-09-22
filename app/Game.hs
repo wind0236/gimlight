@@ -18,7 +18,8 @@ import           Dungeon                        (initDungeon)
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
 import           Dungeon.GameMap                (GameMap)
 import           Dungeon.Size                   (height, width)
-import           Dungeon.Tile                   (Tile)
+import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
+                                                 transparent, walkable)
 import           Entity                         (Entity (..), playerEntity,
                                                  position)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)

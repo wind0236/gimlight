@@ -5,6 +5,10 @@ module Dungeon.Tile
     ( Tile(..)
     , floorTile
     , wallTile
+    , walkable
+    , transparent
+    , darkAttr
+    , lightAttr
     ) where
 
 import           Brick.AttrMap   (AttrName)
