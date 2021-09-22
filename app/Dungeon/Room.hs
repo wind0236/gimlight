@@ -30,14 +30,14 @@ roomOverlaps Room { x1 = aX1, x2 = aX2, y1 = aY1, y2 = aY2 }
 
 roomFromWidthHeight :: Coord -> V2 Int -> Room
 roomFromWidthHeight tl wh = Room { x1 = topLeftX
-                                             , x2 = topLeftX + roomWidth
-                                             , y1 = topLeftY
-                                             , y2 = topLeftY + roomHeight
-                                             }
-                                             where topLeftX = tl ^. _x
-                                                   topLeftY = tl ^. _y
-                                                   roomWidth = wh ^. _x
-                                                   roomHeight = wh ^. _y
+                                 , x2 = topLeftX + roomWidth
+                                 , y1 = topLeftY
+                                 , y2 = topLeftY + roomHeight
+                                 }
+                                 where topLeftX = tl ^. _x
+                                       topLeftY = tl ^. _y
+                                       roomWidth = wh ^. _x
+                                       roomHeight = wh ^. _y
 
 roomFromTwoPositionInclusive :: Coord -> Coord -> Room
 roomFromTwoPositionInclusive pos1 pos2 =
