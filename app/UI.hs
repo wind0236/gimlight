@@ -91,10 +91,9 @@ drawGame g = withBorderStyle BS.unicodeBold
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
-    [ (playerAttr, fg V.brightWhite)
-    , (npcAttr, fg V.yellow)
-    , (orcAttr, fg $ V.rgbColor 63 127 63)
-    , (trollAttr, fg $ V.rgbColor 0 127 0)
+    [ (playerAttr, V.black `on` V.rgbColor 200 180 50)
+    , (orcAttr, V.rgbColor 63 127 63 `on` V.rgbColor 200 180 50)
+    , (trollAttr, V.rgbColor 0 127 0 `on` V.rgbColor 200 180 50)
     , (darkFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 50 50 150)
     , (lightFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 200 180 50)
     , (darkWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 0 0 100)
