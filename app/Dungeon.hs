@@ -1,25 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Dungeon where
 
-import           Brick                   (AttrName)
-import           Control.Lens            ((^.))
-import           Coord                   (Coord)
-import           Data.Array              (Array, array, (//))
-import           Dungeon.BoolMap         (BoolMap)
-import           Dungeon.GameMap         (GameMap)
-import           Dungeon.RectangularRoom (RectangularRoom (..), center,
-                                          roomFromTwoPositionInclusive,
-                                          roomFromWidthHeight, roomOverlaps)
-import           Dungeon.Size            (height, width)
-import           Dungeon.Tile            (Tile (..), floorTile, wallTile)
-import           Linear.V2               (V2 (..), _x, _y)
-import           System.Random           (Random (randomR), RandomGen, StdGen,
-                                          getStdGen, mkStdGen)
+import           Brick           (AttrName)
+import           Control.Lens    ((^.))
+import           Coord           (Coord)
+import           Data.Array      (Array, array, (//))
+import           Dungeon.BoolMap (BoolMap)
+import           Dungeon.GameMap (GameMap)
+import           Dungeon.Room    (Room (..), center,
+                                  roomFromTwoPositionInclusive,
+                                  roomFromWidthHeight, roomOverlaps)
+import           Dungeon.Size    (height, width)
+import           Dungeon.Tile    (Tile (..), floorTile, wallTile)
+import           Linear.V2       (V2 (..), _x, _y)
+import           System.Random   (Random (randomR), RandomGen, StdGen,
+                                  getStdGen, mkStdGen)
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
 generateDungeon = generateDungeonAccum [] allWallTiles (V2 0 0)
 
-generateDungeonAccum :: [RectangularRoom] -> GameMap -> Coord -> StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
+generateDungeonAccum :: [Room] -> GameMap -> Coord -> StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, V2 Int, StdGen)
 generateDungeonAccum _ d pos g 0 _ _ _ = (d, pos, g)
 generateDungeonAccum acc dungeon playerPos g maxRoms roomMinSize roomMaxSize mapSize
     = generateDungeonAccum newAcc newDungeon newPlayerPos g'''' (maxRoms - 1) roomMinSize roomMaxSize mapSize
@@ -35,8 +35,8 @@ generateDungeonAccum acc dungeon playerPos g maxRoms roomMinSize roomMaxSize map
                                                             else (room:acc, tunnelBetween (center room) (center $ head acc) $ createRoom room dungeon, center room)
                                                    else (acc, dungeon, playerPos)
 
-createRoom :: RectangularRoom -> GameMap -> GameMap
-createRoom RectangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 } r
+createRoom :: Room -> GameMap -> GameMap
+createRoom Room{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 } r
     = r // [((x, y), floorTile) | x <- [x1 .. x2 - 1], y <- [y1 .. y2 - 1]]
 
 initDungeon :: StdGen -> (GameMap, Coord)
