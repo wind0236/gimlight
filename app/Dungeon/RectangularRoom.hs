@@ -1,12 +1,13 @@
 module Dungeon.RectangularRoom
     ( RectangularRoom (..)
+    , center
     , roomFromWidthHeight
     , roomFromTwoPositionInclusive
     ) where
 
 import           Control.Lens.Getter ((^.))
 import           Coord               (Coord)
-import           Linear.V2           (V2, _x, _y)
+import           Linear.V2           (V2 (..), _x, _y)
 
 data RectangularRoom = RectangularRoom
                       { x1 :: Int
@@ -14,6 +15,12 @@ data RectangularRoom = RectangularRoom
                       , x2 :: Int
                       , y2 :: Int
                       }
+
+center :: RectangularRoom -> Coord
+center RectangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 }
+    = V2 xm ym
+    where xm = (x1 + x2) `div` 2
+          ym = (y1 + y2) `div` 2
 
 roomFromWidthHeight :: Coord -> V2 Int -> RectangularRoom
 roomFromWidthHeight tl wh = RectangularRoom { x1 = topLeftX

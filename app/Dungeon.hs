@@ -7,7 +7,7 @@ import           Coord                   (Coord)
 import           Data.Array              (Array, array, (//))
 import           Dungeon.BoolMap         (BoolMap)
 import           Dungeon.GameMap         (GameMap)
-import           Dungeon.RectangularRoom (RectangularRoom (..),
+import           Dungeon.RectangularRoom (RectangularRoom (..), center,
                                           roomFromTwoPositionInclusive,
                                           roomFromWidthHeight)
 import           Dungeon.Size            (height, width)
@@ -34,12 +34,6 @@ generateDungeonAccum acc dungeon playerPos g maxRoms roomMinSize roomMaxSize map
                                                             then (room:acc, createRoom room dungeon, center room)
                                                             else (room:acc, tunnelBetween (center room) (center $ head acc) $ createRoom room dungeon, center room)
                                                    else (acc, dungeon, playerPos)
-
-center :: RectangularRoom -> Coord
-center RectangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 }
-    = V2 xm ym
-    where xm = (x1 + x2) `div` 2
-          ym = (y1 + y2) `div` 2
 
 createRoom :: RectangularRoom -> GameMap -> GameMap
 createRoom RectangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 } r
