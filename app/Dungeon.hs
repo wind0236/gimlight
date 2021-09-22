@@ -21,6 +21,8 @@ import           Coord                          (Coord (..))
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
+import           Data.Foldable                  (find)
+import           Data.Maybe                     (isNothing)
 import           Direction                      (Direction (East, North, South, West))
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
 import           Dungeon.GameMap                (GameMap)
@@ -101,8 +103,8 @@ nextPlayer d g@Dungeon { _player = p }
                    else p
 
 movable :: Coord -> Dungeon -> Bool
-movable c Dungeon { _gameMap = m }
-    = m ! (c ^. _x, c ^. _y) ^. walkable
+movable c d@Dungeon { _gameMap = m }
+    = (m ! (c ^. _x, c ^. _y) ^. walkable) && isNothing (getBlockingEntityAtLocation c d)
 
 nextPosition :: Direction -> Dungeon -> Coord
 nextPosition d Dungeon { _player = p }
@@ -111,6 +113,10 @@ nextPosition d Dungeon { _player = p }
     | d == East  = p & _position & _x %~ (\x -> min (x + 1) (width - 1))
     | d == West  = p & _position & _x %~ (\x -> max (x - 1) 0)
 nextPosition _ _ = error "unreachable"
+
+getBlockingEntityAtLocation :: Coord -> Dungeon -> Maybe Entity
+getBlockingEntityAtLocation c d =
+        find (\x -> (x ^. position) == c) (d ^. enemies)
 
 entities :: Dungeon -> [Entity]
 entities Dungeon { _player = player, _enemies = enemies } = player:enemies
