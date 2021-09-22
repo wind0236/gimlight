@@ -58,8 +58,8 @@ placeEnemiesAccum :: [Entity] -> StdGen -> Room -> Int -> ([Entity], StdGen)
 placeEnemiesAccum e g _ 0 = (e, g)
 placeEnemiesAccum e g r@Room { x1 = x1, x2 = x2, y1 = y1, y2 = y2 } n =
         placeEnemiesAccum newEnemies g''' r (n - 1)
-        where (x, g') = randomR (x1, x2) g
-              (y, g'') = randomR (y1, y2) g'
+        where (x, g') = randomR (x1, x2 - 1) g
+              (y, g'') = randomR (y1, y2 - 1) g'
               (enemy, g''') = newMonster g'' (V2 x y)
               newEnemies = if V2 x y `notElem` map (^. position) e
                             then enemy:e
