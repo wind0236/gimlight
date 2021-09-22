@@ -32,7 +32,6 @@ data Game = Game
           , _visible  :: BoolMap
           , _explored :: BoolMap
           } deriving (Show)
-
 makeLenses ''Game
 
 updateMap :: Game -> Game
@@ -106,8 +105,6 @@ entities Game { _player = player } = [player]
 initGame :: IO Game
 initGame = do
         gen <- newStdGen
-        let xm = width `div` 2
-        let ym = height `div` 2
         let (dungeon, playerPos) = initDungeon gen
         let player = playerEntity playerPos
         let g = Game { _player = player
