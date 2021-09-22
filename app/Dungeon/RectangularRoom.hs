@@ -3,6 +3,7 @@ module Dungeon.RectangularRoom
     , center
     , roomFromWidthHeight
     , roomFromTwoPositionInclusive
+    , roomOverlaps
     ) where
 
 import           Control.Lens.Getter ((^.))
@@ -21,6 +22,11 @@ center RectangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 }
     = V2 xm ym
     where xm = (x1 + x2) `div` 2
           ym = (y1 + y2) `div` 2
+
+roomOverlaps :: RectangularRoom -> RectangularRoom -> Bool
+roomOverlaps RectangularRoom { x1 = aX1, x2 = aX2, y1 = aY1, y2 = aY2 }
+             RectangularRoom { x1 = bX1, x2 = bX2, y1 = bY1, y2 = bY2 }
+                = (aX1 <= bX2) && (aX2 >= bX1) && (aY1 <= bY2) && (aY2 >= bY1)
 
 roomFromWidthHeight :: Coord -> V2 Int -> RectangularRoom
 roomFromWidthHeight tl wh = RectangularRoom { x1 = topLeftX

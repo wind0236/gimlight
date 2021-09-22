@@ -9,7 +9,7 @@ import           Dungeon.BoolMap         (BoolMap)
 import           Dungeon.GameMap         (GameMap)
 import           Dungeon.RectangularRoom (RectangularRoom (..), center,
                                           roomFromTwoPositionInclusive,
-                                          roomFromWidthHeight)
+                                          roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Size            (height, width)
 import           Dungeon.Tile            (Tile (..), floorTile, wallTile)
 import           Linear.V2               (V2 (..), _x, _y)
@@ -38,11 +38,6 @@ generateDungeonAccum acc dungeon playerPos g maxRoms roomMinSize roomMaxSize map
 createRoom :: RectangularRoom -> GameMap -> GameMap
 createRoom RectangularRoom{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 } r
     = r // [((x, y), floorTile) | x <- [x1 .. x2 - 1], y <- [y1 .. y2 - 1]]
-
-roomOverlaps :: RectangularRoom -> RectangularRoom -> Bool
-roomOverlaps RectangularRoom { x1 = aX1, x2 = aX2, y1 = aY1, y2 = aY2 }
-             RectangularRoom { x1 = bX1, x2 = bX2, y1 = bY1, y2 = bY2 }
-                = (aX1 <= bX2) && (aX2 >= bX1) && (aY1 <= bY2) && (aY2 >= bY1)
 
 initDungeon :: StdGen -> (GameMap, Coord)
 initDungeon gen =
