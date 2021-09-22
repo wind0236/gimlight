@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Dungeon.Tile
     ( Tile(..)
@@ -6,7 +7,8 @@ module Dungeon.Tile
     , wallTile
     ) where
 
-import           Brick.AttrMap (AttrName)
+import           Brick.AttrMap   (AttrName)
+import           Control.Lens.TH (makeLenses)
 
 data Tile = Tile
           { _walkable    :: Bool
@@ -14,6 +16,7 @@ data Tile = Tile
           , _darkAttr    :: AttrName
           , _lightAttr   :: AttrName
           } deriving (Show)
+makeLenses ''Tile
 
 wallTile :: Tile
 wallTile = Tile { _walkable = False

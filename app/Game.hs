@@ -33,7 +33,6 @@ data Game = Game
           } deriving (Show)
 
 makeLenses ''Game
-makeLenses ''Tile
 
 updateMap :: Game -> Game
 updateMap = updateExplored . updateFov
