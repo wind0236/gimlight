@@ -30,6 +30,7 @@ executable roguelike
                       Dungeon,
                       Dungeon.Tile,
                       Dungeon.GameMap,
+                      Dungeon.RectangularRoom,
                       Coord,
                       Entity,
                       Direction
