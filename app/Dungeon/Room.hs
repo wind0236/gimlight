@@ -42,15 +42,15 @@ roomFromWidthHeight tl wh = Room { x1 = topLeftX
 roomFromTwoPositionInclusive :: Coord -> Coord -> Room
 roomFromTwoPositionInclusive pos1 pos2 =
         Room { x1 = topLeftX
-                         , x2 = bottomRightX + 1
-                         , y1 = topLeftY
-                         , y2 = bottomRightY + 1
-                         }
-                         where pos1X = pos1 ^. _x
-                               pos1Y = pos1 ^. _y
-                               pos2X = pos2 ^. _x
-                               pos2Y = pos2 ^. _y
-                               topLeftX = min pos1X pos2X
-                               topLeftY = min pos1Y pos2Y
-                               bottomRightX = max pos1X pos2X
-                               bottomRightY = max pos1Y pos2Y
+             , x2 = bottomRightX + 1
+             , y1 = topLeftY
+             , y2 = bottomRightY + 1
+             }
+             where pos1X = pos1 ^. _x
+                   pos1Y = pos1 ^. _y
+                   pos2X = pos2 ^. _x
+                   pos2Y = pos2 ^. _y
+                   topLeftX = min pos1X pos2X
+                   topLeftY = min pos1Y pos2Y
+                   bottomRightX = max pos1X pos2X
+                   bottomRightY = max pos1Y pos2Y
