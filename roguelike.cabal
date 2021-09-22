@@ -33,6 +33,7 @@ executable roguelike
                       Dungeon.Room,
                       Dungeon.BoolMap,
                       Dungeon.Size,
+                      Dungeon.Generate,
                       Coord,
                       Entity,
                       Direction

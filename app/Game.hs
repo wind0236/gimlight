@@ -14,9 +14,9 @@ import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
 import           Direction                      (Direction (East, North, South, West))
-import           Dungeon                        (initDungeon)
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
 import           Dungeon.GameMap                (GameMap)
+import           Dungeon.Generate               (initDungeon)
 import           Dungeon.Size                   (height, width)
 import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
                                                  transparent, walkable)
