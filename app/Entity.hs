@@ -11,5 +11,4 @@ data Entity = Entity
             , _char       :: String
             , _entityAttr :: AttrName
             } deriving (Show)
-
 makeLenses ''Entity
