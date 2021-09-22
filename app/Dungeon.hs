@@ -5,6 +5,7 @@ import           Brick                   (AttrName)
 import           Control.Lens            ((^.))
 import           Coord                   (Coord)
 import           Data.Array              (Array, array, (//))
+import           Dungeon.BoolMap         (BoolMap)
 import           Dungeon.GameMap         (GameMap)
 import           Dungeon.RectangularRoom (RectangularRoom (..),
                                           roomFromTwoPositionInclusive,
@@ -13,8 +14,6 @@ import           Dungeon.Tile            (Tile (..), floorTile, wallTile)
 import           Linear.V2               (V2 (..), _x, _y)
 import           System.Random           (Random (randomR), RandomGen, StdGen,
                                           getStdGen, mkStdGen)
-
-type BoolMap = Array (Int, Int) Bool
 
 height, width :: Int
 height = 45
