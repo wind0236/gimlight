@@ -18,10 +18,10 @@ import           Control.Monad              (forever, void)
 import           Data.Array.Base            ((!))
 import           Direction                  (Direction (East, North, South, West))
 import           Dungeon                    (height, width)
-import           Game                       (Game, char, darkAttr, entities,
-                                             entityAttr, explored, gameMap,
-                                             initGame, lightAttr, move, player,
-                                             position, updateMap, visible)
+import           Entity                     (char, entityAttr, position)
+import           Game                       (Game, darkAttr, entities, explored,
+                                             gameMap, initGame, lightAttr, move,
+                                             player, updateMap, visible)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 

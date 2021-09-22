@@ -16,7 +16,7 @@ import           Data.Array.Base                (array, bounds, elems, (!),
 import           Direction                      (Direction (East, North, South, West))
 import           Dungeon                        (BoolMap, Tile, emptyBoolMap,
                                                  height, initDungeon, width)
-import           Entity                         (Entity (..))
+import           Entity                         (Entity (..), position)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           System.Random.Stateful         (newStdGen)
@@ -32,7 +32,6 @@ data Game = Game
 type Map = Array (Int, Int) Tile
 
 makeLenses ''Game
-makeLenses ''Entity
 makeLenses ''Tile
 
 updateMap :: Game -> Game
