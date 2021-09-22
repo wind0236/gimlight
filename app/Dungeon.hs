@@ -9,15 +9,22 @@ import           Linear.V2     (V2 (..), _x, _y)
 import           System.Random (Random (randomR), RandomGen, StdGen, getStdGen,
                                 mkStdGen)
 
-type GameMap = Array (Int, Int) Tile
-type BoolMap = Array (Int, Int) Bool
-
 data RecutangularRoom = RecutangularRoom
                       { x1 :: Int
                       , y1 :: Int
                       , x2 :: Int
                       , y2 :: Int
                       }
+
+data Tile = Tile
+          { _walkable    :: Bool
+          , _transparent :: Bool
+          , _darkAttr    :: AttrName
+          , _lightAttr   :: AttrName
+          } deriving (Show)
+
+type GameMap = Array (Int, Int) Tile
+type BoolMap = Array (Int, Int) Bool
 
 height, width :: Int
 height = 45
@@ -116,10 +123,3 @@ floorTile = Tile { _walkable = True
              , _darkAttr = "darkFloorAttr"
              , _lightAttr = "lightFloorAttr"
              }
-
-data Tile = Tile
-          { _walkable    :: Bool
-          , _transparent :: Bool
-          , _darkAttr    :: AttrName
-          , _lightAttr   :: AttrName
-          } deriving (Show)
