@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections     #-}
 
-module Message
+module Log
     ( MessageLog
     , emptyLog
     , Message

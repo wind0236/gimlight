@@ -27,8 +27,8 @@ import           Entity                         (Entity (..), playerEntity,
                                                  position)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
-import           Message                        (MessageLog, addMessage)
-import qualified Message                        as M
+import           Log                            (MessageLog, addMessage)
+import qualified Log                            as L
 import           System.Random.Stateful         (newStdGen)
 
 data Game = Game
@@ -50,5 +50,5 @@ initGame :: IO Game
 initGame = do
         dungeon <- initDungeon
         return $ Game { _dungeon = dungeon
-                      , _messageLog = foldr (addMessage . M.infoMessage) M.emptyLog ["Welcome to a roguelike game!"]
+                      , _messageLog = foldr (addMessage . L.infoMessage) L.emptyLog ["Welcome to a roguelike game!"]
                       }

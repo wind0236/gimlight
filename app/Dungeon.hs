@@ -38,7 +38,7 @@ import           Entity                         (Entity (..), name, orcEntity,
                                                  trollEntity)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
-import           Message                        (Message, attackMessage)
+import           Log                            (Message, attackMessage)
 import           System.Random.Stateful         (StdGen, newStdGen, random,
                                                  randomR)
 

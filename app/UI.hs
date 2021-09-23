@@ -28,7 +28,7 @@ import           Game                       (Game, bumpAction, dungeon,
                                              initGame, messageLog, updateMap)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
-import qualified Message                    as M
+import qualified Log                        as L
 
 data Tick = Tick
 
@@ -97,7 +97,7 @@ drawMessageLog g = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Log")
     $ vBox rows
     where
-        rows = [m | m <- reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take M.height $ concatMap (reverse . M.messageToAttrNameAndStringList) (g ^. messageLog)]
+        rows = [m | m <- reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take L.height $ concatMap (reverse . L.messageToAttrNameAndStringList) (g ^. messageLog)]
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
