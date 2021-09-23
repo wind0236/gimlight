@@ -63,7 +63,7 @@ meleeAction direction dungeon =
         where playerPos = dungeon ^. (player . position)
               dest = playerPos + directionToOffset direction
               entity = find (\x -> x ^. position == dest) (dungeon ^. enemies)
-              entityName = fmap (^. name) entity
+              entityName = fmap (\x -> "Hello, " ++ x ^. name) entity
 
 updateMap :: Dungeon -> Dungeon
 updateMap = updateExplored . updateFov

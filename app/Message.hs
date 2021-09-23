@@ -33,7 +33,7 @@ width = 80
 height = 5
 
 emptyLog :: MessageLog
-emptyLog = replicate height emptyMessage
+emptyLog = take height $ replicate height emptyMessage
 
 emptyMessage :: Message
 emptyMessage = Message { text = replicate width ' ', attr = "emptyAttr" }

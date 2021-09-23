@@ -97,7 +97,7 @@ drawMessageLog g = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Log")
     $ vBox rows
     where
-        rows = [m | m <- reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take 5 $ concatMap (reverse . M.messageToAttrNameAndStringList) (g ^. messageLog)]
+        rows = [m | m <- reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take M.height $ concatMap (reverse . M.messageToAttrNameAndStringList) (g ^. messageLog)]
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr

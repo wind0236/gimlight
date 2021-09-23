@@ -50,5 +50,5 @@ initGame :: IO Game
 initGame = do
         dungeon <- initDungeon
         return $ Game { _dungeon = dungeon
-                      , _messageLog = foldr (addMessage . M.infoMessage) M.emptyLog ["hello, world", "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong line", "third"]
+                      , _messageLog = foldr (addMessage . M.infoMessage) M.emptyLog ["Welcome to a roguelike game!"]
                       }
