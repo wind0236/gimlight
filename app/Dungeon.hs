@@ -5,7 +5,7 @@ module Dungeon
     ( initDungeon
     , Dungeon
     , updateMap
-    , movePlayer
+    , bumpAction
     , entities
     , visible
     , explored
@@ -22,8 +22,9 @@ import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
 import           Data.Foldable                  (find)
-import           Data.Maybe                     (isNothing)
-import           Direction                      (Direction (East, North, South, West))
+import           Data.Maybe                     (isJust, isNothing)
+import           Direction                      (Direction (East, North, South, West),
+                                                 directionToOffset)
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
 import           Dungeon.GameMap                (GameMap)
 import           Dungeon.Generate               (generateDungeon)
@@ -48,6 +49,15 @@ data Dungeon = Dungeon
           , _enemies  :: [Entity]
           } deriving (Show)
 makeLenses ''Dungeon
+
+bumpAction :: Direction -> Dungeon -> Dungeon
+bumpAction direction dungeon
+    | isJust $ getBlockingEntityAtLocation dest dungeon = error "yahoo"
+    | otherwise = movePlayer direction dungeon
+    where dest = dungeon ^. (player . position) + directionToOffset direction
+
+meleeAction :: Direction -> Dungeon -> Dungeon
+meleeAction = undefined
 
 updateMap :: Dungeon -> Dungeon
 updateMap = updateExplored . updateFov

@@ -37,8 +37,8 @@ makeLenses ''Game
 updateMap :: Game -> Game
 updateMap g = g & dungeon %~ D.updateMap
 
-movePlayer :: Direction -> Game -> Game
-movePlayer d g = g & dungeon %~ D.movePlayer d
+bumpAction :: Direction -> Game -> Game
+bumpAction d g = g & dungeon %~ D.bumpAction d
 
 initGame :: IO Game
 initGame = do
