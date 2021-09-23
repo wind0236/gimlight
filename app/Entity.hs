@@ -5,6 +5,7 @@ module Entity
     ( Entity(..)
     , position
     , char
+    , name
     , entityAttr
     , playerEntity
     , orcEntity

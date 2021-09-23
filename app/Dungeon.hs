@@ -33,11 +33,12 @@ import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
 import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
                                                  transparent, walkable)
-import           Entity                         (Entity (..), orcEntity,
+import           Entity                         (Entity (..), name, orcEntity,
                                                  playerEntity, position,
                                                  trollEntity)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
+import           Message                        (Message, attackMessage)
 import           System.Random.Stateful         (StdGen, newStdGen, random,
                                                  randomR)
 
@@ -50,14 +51,19 @@ data Dungeon = Dungeon
           } deriving (Show)
 makeLenses ''Dungeon
 
-bumpAction :: Direction -> Dungeon -> Dungeon
+bumpAction :: Direction -> Dungeon -> (Dungeon, Maybe Message)
 bumpAction direction dungeon
-    | isJust $ getBlockingEntityAtLocation dest dungeon = error "yahoo"
-    | otherwise = movePlayer direction dungeon
+    | isJust $ getBlockingEntityAtLocation dest dungeon = (dungeon, meleeAction direction dungeon)
+    | otherwise = (movePlayer direction dungeon, Nothing)
     where dest = dungeon ^. (player . position) + directionToOffset direction
 
-meleeAction :: Direction -> Dungeon -> Dungeon
-meleeAction = undefined
+meleeAction :: Direction -> Dungeon -> Maybe Message
+meleeAction direction dungeon =
+        fmap attackMessage entityName
+        where playerPos = dungeon ^. (player . position)
+              dest = playerPos + directionToOffset direction
+              entity = find (\x -> x ^. position == dest) (dungeon ^. enemies)
+              entityName = fmap (^. name) entity
 
 updateMap :: Dungeon -> Dungeon
 updateMap = updateExplored . updateFov

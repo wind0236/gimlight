@@ -36,7 +36,8 @@ executable roguelike
                       Dungeon.Generate,
                       Coord,
                       Entity,
-                      Direction
+                      Direction,
+                      Message
 
     -- Modules included in this executable, other than Main.
     -- other-modules:
@@ -53,6 +54,7 @@ executable roguelike
         lens,
         random,
         transformers,
+        split,
         vty,
     hs-source-dirs:   app
     default-language: Haskell2010

@@ -4,10 +4,12 @@ module UI(main) where
 
 import           Brick                      (App (..), AttrMap, AttrName,
                                              BrickEvent (AppEvent, VtyEvent),
-                                             EventM, Next, Widget, attrMap,
-                                             continue, customMain, fg, hBox,
-                                             halt, neverShowCursor, on, str,
-                                             vBox, withAttr, withBorderStyle)
+                                             EventM, Next, Padding (Pad),
+                                             Widget, attrMap, continue,
+                                             customMain, fg, hBox, hLimit, halt,
+                                             neverShowCursor, on, padAll,
+                                             padTop, str, vBox, vLimit,
+                                             withAttr, withBorderStyle, (<=>))
 import           Brick.BChan                (newBChan, writeBChan)
 import qualified Brick.Widgets.Border       as B
 import qualified Brick.Widgets.Border.Style as BS
@@ -23,9 +25,10 @@ import           Dungeon.Size               (height, width)
 import           Dungeon.Tile               (darkAttr, lightAttr)
 import           Entity                     (char, entityAttr, position)
 import           Game                       (Game, bumpAction, dungeon,
-                                             initGame, updateMap)
+                                             initGame, messageLog, updateMap)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
+import qualified Message                    as M
 
 data Tick = Tick
 
@@ -64,7 +67,7 @@ handleEvent g (VtyEvent (V.EvKey (V.KChar 'h') [])) = continue $ updateMap $ bum
 handleEvent g _                                     = continue g
 
 drawUI :: Game -> [Widget Name]
-drawUI g = [ C.center $ drawGame g ]
+drawUI g = [ C.center $ padTop (Pad 2) (drawGame g) <=> drawMessageLog g ]
 
 drawGame :: Game -> Widget Name
 drawGame g = withBorderStyle BS.unicodeBold
@@ -89,6 +92,13 @@ drawGame g = withBorderStyle BS.unicodeBold
                         entity:_ | visibleAt c -> withAttr (entity ^. entityAttr) $ str $ entity ^. char
                         _        -> withAttr (attrAt c) $ str " "
 
+drawMessageLog :: Game -> Widget Name
+drawMessageLog g = withBorderStyle BS.unicodeBold
+    $ B.borderWithLabel (str "Log")
+    $ vBox rows
+    where
+        rows = [m | m <- reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take 5 $ concatMap (reverse . M.messageToAttrNameAndStringList) (g ^. messageLog)]
+
 theMap :: AttrMap
 theMap = attrMap V.defAttr
     [ (playerAttr, V.black `on` V.rgbColor 200 180 50)
@@ -98,9 +108,11 @@ theMap = attrMap V.defAttr
     , (lightFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 200 180 50)
     , (darkWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 0 0 100)
     , (lightWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 130 110 50)
+    , (attackMessageAttr, fg V.red)
+    , (infoMessageAttr, fg V.blue)
     ]
 
-playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr, orcAttr, trollAttr :: AttrName
+playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr, orcAttr, trollAttr, infoMessageAttr :: AttrName
 playerAttr = "playerAttr"
 npcAttr = "npcAttr"
 emptyAttr = "emptyAttr"
@@ -110,3 +122,5 @@ darkWallAttr = "darkWallAttr"
 lightWallAttr = "lightWallAttr"
 orcAttr = "orcAttr"
 trollAttr = "trollAttr"
+attackMessageAttr = "attackMessageAttr"
+infoMessageAttr = "infoMessageAttr"

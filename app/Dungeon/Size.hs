@@ -7,7 +7,7 @@ module Dungeon.Size
     ) where
 
 height, width, maxRooms, roomMinSize, roomMaxSize :: Int
-height = 45
+height = 20
 width = 80
 maxRooms = 30
 roomMinSize = 6

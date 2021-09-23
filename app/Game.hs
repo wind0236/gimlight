@@ -27,10 +27,13 @@ import           Entity                         (Entity (..), playerEntity,
                                                  position)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
+import           Message                        (MessageLog, addMessage)
+import qualified Message                        as M
 import           System.Random.Stateful         (newStdGen)
 
-newtype Game = Game
-          { _dungeon :: Dungeon
+data Game = Game
+          { _dungeon    :: Dungeon
+          , _messageLog :: MessageLog
           } deriving (Show)
 makeLenses ''Game
 
@@ -38,9 +41,14 @@ updateMap :: Game -> Game
 updateMap g = g & dungeon %~ D.updateMap
 
 bumpAction :: Direction -> Game -> Game
-bumpAction d g = g & dungeon %~ D.bumpAction d
+bumpAction d g@Game{ _messageLog = log } = Game{ _dungeon = newDungeon, _messageLog = addMaybeMessage message }
+    where (newDungeon, message) = D.bumpAction d (g ^. dungeon)
+          addMaybeMessage (Just m) = addMessage m log
+          addMaybeMessage Nothing  = log
 
 initGame :: IO Game
 initGame = do
         dungeon <- initDungeon
-        return $ Game { _dungeon = dungeon }
+        return $ Game { _dungeon = dungeon
+                      , _messageLog = foldr (addMessage . M.infoMessage) M.emptyLog ["hello, world", "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong line", "third"]
+                      }
