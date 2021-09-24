@@ -45,7 +45,8 @@ completeThisTurn g = g { _dungeon = d', _messageLog = newLog }
 
 playerBumpAction :: Direction -> Game -> Game
 playerBumpAction d g@Game{ _messageLog = log } = Game{ _dungeon = newDungeon, _messageLog = addMaybeMessage message }
-    where (newDungeon, message) = D.bumpAction (directionToOffset d) (g ^. dungeon)
+    where (e, dungeon') = D.popPlayer $ g ^. dungeon
+          (newDungeon, message) = D.bumpAction e (directionToOffset d) dungeon'
           addMaybeMessage (Just m) = addMessage m log
           addMaybeMessage Nothing  = log
 

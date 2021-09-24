@@ -10,6 +10,7 @@ module Entity
     , player
     , orc
     , troll
+    , isPlayer
     ) where
 
 import           Brick.AttrMap   (AttrName)
@@ -44,3 +45,6 @@ troll c = Entity { _position = c
                  , _entityAttr = "trollAttr"
                  , _name = "Troll"
                  }
+
+isPlayer :: Entity -> Bool
+isPlayer Entity { _name = name } = name == "Player"

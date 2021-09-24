@@ -79,7 +79,7 @@ drawGame g = withBorderStyle BS.unicodeBold
         rows = [hBox $ cellsInRow r | r <- [height - 1, height - 2 .. 0]]
         cellsInRow y = [cellAt (V2 x y)  | x <- [0 .. width - 1]]
         coordAsTuple c = (c ^. _x, c ^. _y)
-        entityOnCellAt c = [e | e <- entities d, e ^. position == c]
+        entityOnCellAt c = [e | e <- d ^. entities, e ^. position == c]
         visibleAt c = (d ^. visible) ! coordAsTuple c
         exploredAt c = (d ^. explored) ! coordAsTuple c
         tileOnCellAt c = (d ^. tileMap) ! coordAsTuple c

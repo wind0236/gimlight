@@ -10,6 +10,7 @@ module Dungeon
     , visible
     , explored
     , tileMap
+    , popPlayer
     ) where
 
 import           Brick                          (AttrName)
@@ -22,6 +23,7 @@ import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
 import           Data.Foldable                  (find)
+import           Data.List                      (findIndex)
 import           Data.Maybe                     (isJust, isNothing)
 import           Direction                      (Direction (East, North, South, West),
                                                  directionToOffset)
@@ -43,26 +45,25 @@ import           System.Random.Stateful         (StdGen, newStdGen, random,
                                                  randomR)
 
 data Dungeon = Dungeon
-          { _player   :: Entity
-          , _tileMap  :: TileMap
+          { _tileMap  :: TileMap
           , _visible  :: BoolMap
           , _explored :: BoolMap
-          , _enemies  :: [Entity]
+          , _entities :: [Entity]
           } deriving (Show)
 makeLenses ''Dungeon
 
-bumpAction :: V2 Int -> Dungeon -> (Dungeon, Maybe Message)
-bumpAction offset dungeon
-    | isJust $ getBlockingEntityAtLocation dest dungeon = (dungeon, meleeAction offset dungeon)
-    | otherwise = (movePlayer offset dungeon, Nothing)
-    where dest = dungeon ^. (player . position) + offset
+bumpAction :: Entity -> V2 Int -> Dungeon -> (Dungeon, Maybe Message)
+bumpAction src offset dungeon
+    | isJust $ getBlockingEntityAtLocation dest dungeon =  meleeAction src offset dungeon
+    | otherwise = (moveAction src offset dungeon, Nothing)
+    where dest = src ^. position + offset
 
-meleeAction :: V2 Int -> Dungeon -> Maybe Message
-meleeAction offset dungeon =
-        fmap attackMessage entityName
-        where playerPos = dungeon ^. (player . position)
-              dest = playerPos + offset
-              entity = find (\x -> x ^. position == dest) (dungeon ^. enemies)
+meleeAction :: Entity -> V2 Int -> Dungeon -> (Dungeon, Maybe Message)
+meleeAction src offset dungeon =
+        (pushEntity dungeon src, fmap attackMessage entityName)
+        where pos = src ^. position
+              dest = pos + offset
+              entity = find (\x -> x ^. position == dest) (dungeon ^. entities)
               entityName = fmap (\x -> "Hello, " ++ x ^. name) entity
 
 completeThisTurn :: Dungeon -> ([Message], Dungeon)
@@ -70,7 +71,7 @@ completeThisTurn d = let (ms, d') = handleEnemyTurns d
                      in (ms, updateMap d')
 
 handleEnemyTurns :: Dungeon -> ([Message], Dungeon)
-handleEnemyTurns d@Dungeon { _enemies = enemies } = (map (\x -> attackMessage $ (x ^. name) ++ "'s turn." ) enemies, d)
+handleEnemyTurns d@Dungeon { _entities = entities } = (map (\x -> attackMessage $ (x ^. name) ++ "'s turn." ) entities, d)
 
 updateMap :: Dungeon -> Dungeon
 updateMap = updateExplored . updateFov
@@ -86,10 +87,10 @@ fovRadius :: Int
 fovRadius = 8
 
 calculateFov :: Dungeon -> BoolMap
-calculateFov Dungeon { _tileMap = m, _player = p } =
+calculateFov d@Dungeon { _tileMap = m } =
         foldl (flip (calculateLos m pos0)) emptyBoolMap
               [V2 (x0 + x) (y0 + y) | x <- [(-fovRadius) .. fovRadius], y <- [(-fovRadius) .. fovRadius]]
-        where pos0 = p ^. position
+        where pos0 = getPlayerEntity d ^. position
               x0 = pos0 ^. _x
               y0 = pos0 ^. _y
 
@@ -113,40 +114,57 @@ calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
                   sy = if y0 < y1 then 1 else -1
                   dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
 
-movePlayer :: V2 Int -> Dungeon -> Dungeon
-movePlayer offset d = d & player .~ nextPlayer offset d
+moveAction :: Entity -> V2 Int -> Dungeon -> Dungeon
+moveAction src offset d = pushEntity d $ updatePosition src offset d
 
-nextPlayer :: V2 Int -> Dungeon -> Entity
-nextPlayer offset g@Dungeon { _player = p }
-    = let next = nextPosition offset g
-            in if movable next g
-                   then p & position .~ next
-                   else p
+updatePosition :: Entity -> V2 Int -> Dungeon -> Entity
+updatePosition src offset g
+    = let next = nextPosition src offset
+      in if movable next g
+            then src & position .~ next
+            else src
 
 movable :: Coord -> Dungeon -> Bool
 movable c d@Dungeon { _tileMap = m }
     = (m ! (c ^. _x, c ^. _y) ^. walkable) && isNothing (getBlockingEntityAtLocation c d)
 
-nextPosition :: V2 Int -> Dungeon -> Coord
-nextPosition offset Dungeon { _player = p } =
-    max (V2 0 0) $ min (V2 (width - 1) $ height - 1) $ (p ^. position) + offset
+nextPosition :: Entity -> V2 Int -> Coord
+nextPosition src offset =
+    max (V2 0 0) $ min (V2 (width - 1) $ height - 1) $ (src ^. position) + offset
+
+getPlayerEntity :: Dungeon -> Entity
+getPlayerEntity Dungeon { _entities = entities } = case find E.isPlayer entities of
+                                                      Just p -> p
+                                                      Nothing -> error "No player entity."
+
+pushEntity :: Dungeon -> Entity -> Dungeon
+pushEntity d@Dungeon{ _entities = entities } e = d { _entities = e:entities }
+
+popPlayer :: Dungeon -> (Entity, Dungeon)
+popPlayer d@Dungeon{ _entities = entities } = (player, d{ _entities = newEntities})
+    where player = case find E.isPlayer entities of
+                       Just p  -> p
+                       Nothing -> error "No player entity."
+          playerIndex = case findIndex E.isPlayer entities of
+                            Just index -> index
+                            Nothing    -> error "No player entity."
+          newEntities = take playerIndex entities ++ drop (playerIndex + 1) entities
 
 getBlockingEntityAtLocation :: Coord -> Dungeon -> Maybe Entity
 getBlockingEntityAtLocation c d =
-        find (\x -> (x ^. position) == c) (d ^. enemies)
+        find (\x -> (x ^. position) == c) (enemies d)
 
-entities :: Dungeon -> [Entity]
-entities Dungeon { _player = player, _enemies = enemies } = player:enemies
+enemies :: Dungeon -> [Entity]
+enemies Dungeon { _entities = entities } = filter (not . E.isPlayer) entities
 
 initDungeon :: IO Dungeon
 initDungeon = do
         gen <- newStdGen
         let (dungeon, enemies, playerPos, _) = generateDungeon gen maxRooms roomMinSize roomMaxSize (V2 width height)
         let player = E.player playerPos
-        let g = Dungeon { _player = player
-                     , _tileMap = dungeon
-                     , _visible = emptyBoolMap
-                     , _explored = emptyBoolMap
-                     , _enemies = enemies
-                     }
+        let g = Dungeon { _tileMap = dungeon
+                        , _visible = emptyBoolMap
+                        , _explored = emptyBoolMap
+                        , _entities = player:enemies
+                        }
         return $ updateMap g
