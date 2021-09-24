@@ -9,7 +9,7 @@ module Dungeon
     , entities
     , visible
     , explored
-    , gameMap
+    , tileMap
     ) where
 
 import           Brick                          (AttrName)
@@ -44,7 +44,7 @@ import           System.Random.Stateful         (StdGen, newStdGen, random,
 
 data Dungeon = Dungeon
           { _player   :: Entity
-          , _gameMap  :: TileMap
+          , _tileMap  :: TileMap
           , _visible  :: BoolMap
           , _explored :: BoolMap
           , _enemies  :: [Entity]
@@ -79,7 +79,7 @@ fovRadius :: Int
 fovRadius = 8
 
 calculateFov :: Dungeon -> BoolMap
-calculateFov Dungeon { _gameMap = m, _player = p } =
+calculateFov Dungeon { _tileMap = m, _player = p } =
         foldl (flip (calculateLos m pos0)) emptyBoolMap
               [V2 (x0 + x) (y0 + y) | x <- [(-fovRadius) .. fovRadius], y <- [(-fovRadius) .. fovRadius]]
         where pos0 = p ^. position
@@ -117,7 +117,7 @@ nextPlayer offset g@Dungeon { _player = p }
                    else p
 
 movable :: Coord -> Dungeon -> Bool
-movable c d@Dungeon { _gameMap = m }
+movable c d@Dungeon { _tileMap = m }
     = (m ! (c ^. _x, c ^. _y) ^. walkable) && isNothing (getBlockingEntityAtLocation c d)
 
 nextPosition :: V2 Int -> Dungeon -> Coord
@@ -137,7 +137,7 @@ initDungeon = do
         let (dungeon, enemies, playerPos, _) = generateDungeon gen maxRooms roomMinSize roomMaxSize (V2 width height)
         let player = E.player playerPos
         let g = Dungeon { _player = player
-                     , _gameMap = dungeon
+                     , _tileMap = dungeon
                      , _visible = emptyBoolMap
                      , _explored = emptyBoolMap
                      , _enemies = enemies

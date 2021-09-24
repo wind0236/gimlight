@@ -19,7 +19,7 @@ import           Control.Lens               ((&), (^.))
 import           Control.Monad              (forever, void)
 import           Data.Array.Base            ((!))
 import           Direction                  (Direction (East, North, South, West))
-import           Dungeon                    (entities, explored, gameMap,
+import           Dungeon                    (entities, explored, tileMap,
                                              visible)
 import           Dungeon.Map.Tile           (darkAttr, lightAttr)
 import           Dungeon.Size               (height, width)
@@ -82,7 +82,7 @@ drawGame g = withBorderStyle BS.unicodeBold
         entityOnCellAt c = [e | e <- entities d, e ^. position == c]
         visibleAt c = (d ^. visible) ! coordAsTuple c
         exploredAt c = (d ^. explored) ! coordAsTuple c
-        tileOnCellAt c = (d ^. gameMap) ! coordAsTuple c
+        tileOnCellAt c = (d ^. tileMap) ! coordAsTuple c
         attrAt c
           | visibleAt c = tileOnCellAt c ^. lightAttr
           | exploredAt c = tileOnCellAt c ^. darkAttr
