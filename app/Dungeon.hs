@@ -4,7 +4,7 @@
 module Dungeon
     ( initDungeon
     , Dungeon
-    , updateMap
+    , completeThisTurn
     , bumpAction
     , entities
     , visible
@@ -64,6 +64,13 @@ meleeAction offset dungeon =
               dest = playerPos + offset
               entity = find (\x -> x ^. position == dest) (dungeon ^. enemies)
               entityName = fmap (\x -> "Hello, " ++ x ^. name) entity
+
+completeThisTurn :: Dungeon -> ([Message], Dungeon)
+completeThisTurn d = let (ms, d') = handleEnemyTurns d
+                     in (ms, updateMap d')
+
+handleEnemyTurns :: Dungeon -> ([Message], Dungeon)
+handleEnemyTurns d@Dungeon { _enemies = enemies } = (map (\x -> attackMessage $ (x ^. name) ++ "'s turn." ) enemies, d)
 
 updateMap :: Dungeon -> Dungeon
 updateMap = updateExplored . updateFov

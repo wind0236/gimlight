@@ -38,8 +38,10 @@ data Game = Game
           } deriving (Show)
 makeLenses ''Game
 
-updateMap :: Game -> Game
-updateMap g = g & dungeon %~ D.updateMap
+completeThisTurn :: Game -> Game
+completeThisTurn g = g { _dungeon = d', _messageLog = newLog }
+    where (ms, d') = D.completeThisTurn $ g ^. dungeon
+          newLog = foldl  (flip addMessage) (g ^. messageLog) ms
 
 playerBumpAction :: Direction -> Game -> Game
 playerBumpAction d g@Game{ _messageLog = log } = Game{ _dungeon = newDungeon, _messageLog = addMaybeMessage message }
