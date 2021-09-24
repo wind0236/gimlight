@@ -52,15 +52,15 @@ data Dungeon = Dungeon
           } deriving (Show)
 makeLenses ''Dungeon
 
-bumpAction :: Entity -> V2 Int -> Dungeon -> (Dungeon, Maybe Message)
+bumpAction :: Entity -> V2 Int -> Dungeon -> (Maybe Message, Dungeon)
 bumpAction src offset dungeon
     | isJust $ getBlockingEntityAtLocation dest dungeon =  meleeAction src offset dungeon
-    | otherwise = (moveAction src offset dungeon, Nothing)
+    | otherwise = (Nothing, moveAction src offset dungeon)
     where dest = src ^. position + offset
 
-meleeAction :: Entity -> V2 Int -> Dungeon -> (Dungeon, Maybe Message)
+meleeAction :: Entity -> V2 Int -> Dungeon -> (Maybe Message, Dungeon)
 meleeAction src offset dungeon =
-        (pushEntity dungeon src, fmap attackMessage entityName)
+        (fmap attackMessage entityName, pushEntity dungeon src)
         where pos = src ^. position
               dest = pos + offset
               entity = find (\x -> x ^. position == dest) (dungeon ^. entities)
