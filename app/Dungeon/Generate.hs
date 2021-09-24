@@ -2,22 +2,22 @@ module Dungeon.Generate
     ( generateDungeon
     ) where
 
-import           Brick           (AttrName)
-import           Control.Lens    ((^.))
-import           Coord           (Coord)
-import           Data.Array      (Array, array, (//))
-import           Dungeon.BoolMap (BoolMap)
-import           Dungeon.Room    (Room (..), center,
-                                  roomFromTwoPositionInclusive,
-                                  roomFromWidthHeight, roomOverlaps)
-import           Dungeon.Size    (height, width)
-import           Dungeon.Tile    (Tile (..), floorTile, wallTile)
-import           Dungeon.TileMap (TileMap, allWallTiles)
-import           Entity          (Entity, position)
-import qualified Entity          as E
-import           Linear.V2       (V2 (..), _x, _y)
-import           System.Random   (Random (randomR), RandomGen, StdGen,
-                                  getStdGen, mkStdGen, random)
+import           Brick            (AttrName)
+import           Control.Lens     ((^.))
+import           Coord            (Coord)
+import           Data.Array       (Array, array, (//))
+import           Dungeon.Map.Bool (BoolMap)
+import           Dungeon.Map.Tile (TileMap, allWallTiles)
+import           Dungeon.Room     (Room (..), center,
+                                   roomFromTwoPositionInclusive,
+                                   roomFromWidthHeight, roomOverlaps)
+import           Dungeon.Size     (height, width)
+import           Dungeon.Tile     (Tile (..), floorTile, wallTile)
+import           Entity           (Entity, position)
+import qualified Entity           as E
+import           Linear.V2        (V2 (..), _x, _y)
+import           System.Random    (Random (randomR), RandomGen, StdGen,
+                                   getStdGen, mkStdGen, random)
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Entity], V2 Int, StdGen)
 generateDungeon = generateDungeonAccum [] [] allWallTiles (V2 0 0)

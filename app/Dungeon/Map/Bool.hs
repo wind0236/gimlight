@@ -1,4 +1,4 @@
-module Dungeon.BoolMap
+module Dungeon.Map.Bool
     ( BoolMap
     , emptyBoolMap
     ) where

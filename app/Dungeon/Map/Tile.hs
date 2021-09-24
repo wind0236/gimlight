@@ -1,4 +1,4 @@
-module Dungeon.TileMap
+module Dungeon.Map.Tile
     ( TileMap
     , allWallTiles
     ) where
