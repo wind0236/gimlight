@@ -107,8 +107,7 @@ calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
                   dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
 
 movePlayer :: V2 Int -> Dungeon -> Dungeon
-movePlayer offset g = flip execState g . runMaybeT $
-    MaybeT . fmap Just $ player .= nextPlayer offset g
+movePlayer offset d = d & player .~ nextPlayer offset d
 
 nextPlayer :: V2 Int -> Dungeon -> Entity
 nextPlayer offset g@Dungeon { _player = p }
