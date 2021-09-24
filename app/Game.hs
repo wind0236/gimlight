@@ -41,8 +41,8 @@ makeLenses ''Game
 updateMap :: Game -> Game
 updateMap g = g & dungeon %~ D.updateMap
 
-bumpAction :: Direction -> Game -> Game
-bumpAction d g@Game{ _messageLog = log } = Game{ _dungeon = newDungeon, _messageLog = addMaybeMessage message }
+playerBumpAction :: Direction -> Game -> Game
+playerBumpAction d g@Game{ _messageLog = log } = Game{ _dungeon = newDungeon, _messageLog = addMaybeMessage message }
     where (newDungeon, message) = D.bumpAction (directionToOffset d) (g ^. dungeon)
           addMaybeMessage (Just m) = addMessage m log
           addMaybeMessage Nothing  = log

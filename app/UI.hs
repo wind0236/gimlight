@@ -24,8 +24,9 @@ import           Dungeon                    (entities, explored, gameMap,
 import           Dungeon.Size               (height, width)
 import           Dungeon.Tile               (darkAttr, lightAttr)
 import           Entity                     (char, entityAttr, position)
-import           Game                       (Game, bumpAction, dungeon,
-                                             initGame, messageLog, updateMap)
+import           Game                       (Game, dungeon, initGame,
+                                             messageLog, playerBumpAction,
+                                             updateMap)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 import qualified Log                        as L
@@ -56,14 +57,14 @@ app = App { appDraw = drawUI
 handleEvent :: Game -> BrickEvent Name Tick -> EventM Name (Next Game)
 handleEvent g (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt g
 handleEvent g (VtyEvent (V.EvKey V.KEsc []))        = halt g
-handleEvent g (VtyEvent (V.EvKey V.KUp []))         = continue $ updateMap $ bumpAction North g
-handleEvent g (VtyEvent (V.EvKey V.KDown []))       = continue $ updateMap $ bumpAction South g
-handleEvent g (VtyEvent (V.EvKey V.KRight []))      = continue $ updateMap $ bumpAction East g
-handleEvent g (VtyEvent (V.EvKey V.KLeft []))       = continue $ updateMap $ bumpAction West g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'k') [])) = continue $ updateMap $ bumpAction North g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'j') [])) = continue $ updateMap $ bumpAction South g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'l') [])) = continue $ updateMap $ bumpAction East g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'h') [])) = continue $ updateMap $ bumpAction West g
+handleEvent g (VtyEvent (V.EvKey V.KUp []))         = continue $ updateMap $ playerBumpAction North g
+handleEvent g (VtyEvent (V.EvKey V.KDown []))       = continue $ updateMap $ playerBumpAction South g
+handleEvent g (VtyEvent (V.EvKey V.KRight []))      = continue $ updateMap $ playerBumpAction East g
+handleEvent g (VtyEvent (V.EvKey V.KLeft []))       = continue $ updateMap $ playerBumpAction West g
+handleEvent g (VtyEvent (V.EvKey (V.KChar 'k') [])) = continue $ updateMap $ playerBumpAction North g
+handleEvent g (VtyEvent (V.EvKey (V.KChar 'j') [])) = continue $ updateMap $ playerBumpAction South g
+handleEvent g (VtyEvent (V.EvKey (V.KChar 'l') [])) = continue $ updateMap $ playerBumpAction East g
+handleEvent g (VtyEvent (V.EvKey (V.KChar 'h') [])) = continue $ updateMap $ playerBumpAction West g
 handleEvent g _                                     = continue g
 
 drawUI :: Game -> [Widget Name]
