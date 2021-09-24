@@ -19,11 +19,11 @@ import           Dungeon                        (Dungeon, initDungeon)
 import qualified Dungeon                        as D
 import           Dungeon.Generate               (generateDungeon)
 import           Dungeon.Map.Bool               (BoolMap, emptyBoolMap)
-import           Dungeon.Map.Tile               (TileMap)
+import           Dungeon.Map.Tile               (Tile, TileMap, darkAttr,
+                                                 lightAttr, transparent,
+                                                 walkable)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
-import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
-                                                 transparent, walkable)
 import           Entity                         (Entity (..), position)
 import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)

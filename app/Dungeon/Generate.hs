@@ -7,12 +7,12 @@ import           Control.Lens     ((^.))
 import           Coord            (Coord)
 import           Data.Array       (Array, array, (//))
 import           Dungeon.Map.Bool (BoolMap)
-import           Dungeon.Map.Tile (TileMap, allWallTiles)
+import           Dungeon.Map.Tile (Tile (..), TileMap, allWallTiles, floorTile,
+                                   wallTile)
 import           Dungeon.Room     (Room (..), center,
                                    roomFromTwoPositionInclusive,
                                    roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Size     (height, width)
-import           Dungeon.Tile     (Tile (..), floorTile, wallTile)
 import           Entity           (Entity, position)
 import qualified Entity           as E
 import           Linear.V2        (V2 (..), _x, _y)

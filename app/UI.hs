@@ -21,8 +21,8 @@ import           Data.Array.Base            ((!))
 import           Direction                  (Direction (East, North, South, West))
 import           Dungeon                    (entities, explored, gameMap,
                                              visible)
+import           Dungeon.Map.Tile           (darkAttr, lightAttr)
 import           Dungeon.Size               (height, width)
-import           Dungeon.Tile               (darkAttr, lightAttr)
 import           Entity                     (char, entityAttr, position)
 import           Game                       (Game, dungeon, initGame,
                                              messageLog, playerBumpAction,

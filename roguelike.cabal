@@ -28,7 +28,6 @@ executable roguelike
     other-modules:    UI,
                       Game,
                       Dungeon,
-                      Dungeon.Tile,
                       Dungeon.Map,
                       Dungeon.Map.Tile,
                       Dungeon.Map.Bool,
