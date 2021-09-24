@@ -26,6 +26,7 @@ import           Data.Maybe                     (isJust, isNothing)
 import           Direction                      (Direction (East, North, South, West),
                                                  directionToOffset)
 import           Dungeon.Generate               (generateDungeon)
+import qualified Dungeon.Map                    as M
 import           Dungeon.Map.Bool               (BoolMap, emptyBoolMap)
 import           Dungeon.Map.Tile               (Tile, TileMap, darkAttr,
                                                  lightAttr, transparent,
@@ -69,8 +70,7 @@ updateMap = updateExplored . updateFov
 
 updateExplored :: Dungeon -> Dungeon
 updateExplored g = g & explored .~ newExplored
-    where newExplored = array ((0, 0), (width - 1, height - 1))
-                            [((x, y), (g ^. visible) ! (x, y) || (g ^. explored) ! (x, y)) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
+    where newExplored = M.generate (\(x, y) -> (g ^. visible) ! (x, y) || (g ^. explored) ! (x, y))
 
 updateFov :: Dungeon -> Dungeon
 updateFov g = g & visible .~ calculateFov g
