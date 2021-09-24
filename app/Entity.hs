@@ -7,9 +7,9 @@ module Entity
     , char
     , name
     , entityAttr
-    , playerEntity
-    , orcEntity
-    , trollEntity
+    , player
+    , orc
+    , troll
     ) where
 
 import           Brick.AttrMap   (AttrName)
@@ -24,23 +24,23 @@ data Entity = Entity
             } deriving (Show)
 makeLenses ''Entity
 
-playerEntity :: Coord -> Entity
-playerEntity c = Entity { _position = c
-                        , _char = "@"
-                        , _entityAttr = "playerAttr"
-                        , _name = "Player"
-                        }
+player :: Coord -> Entity
+player c = Entity { _position = c
+                  , _char = "@"
+                  , _entityAttr = "playerAttr"
+                  , _name = "Player"
+                  }
 
-orcEntity :: Coord -> Entity
-orcEntity c = Entity { _position = c
-                     , _char = "o"
-                     , _entityAttr = "orcAttr"
-                     , _name = "Orc"
-                     }
+orc :: Coord -> Entity
+orc c = Entity { _position = c
+               , _char = "o"
+               , _entityAttr = "orcAttr"
+               , _name = "Orc"
+               }
 
-trollEntity :: Coord -> Entity
-trollEntity c = Entity { _position = c
-                       , _char = "T"
-                       , _entityAttr = "trollAttr"
-                       , _name = "Troll"
-                       }
+troll :: Coord -> Entity
+troll c = Entity { _position = c
+                 , _char = "T"
+                 , _entityAttr = "trollAttr"
+                 , _name = "Troll"
+                 }

@@ -33,9 +33,8 @@ import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
 import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
                                                  transparent, walkable)
-import           Entity                         (Entity (..), name, orcEntity,
-                                                 playerEntity, position,
-                                                 trollEntity)
+import           Entity                         (Entity (..), name, position)
+import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           Log                            (Message, attackMessage)
@@ -137,7 +136,7 @@ initDungeon :: IO Dungeon
 initDungeon = do
         gen <- newStdGen
         let (dungeon, enemies, playerPos, _) = generateDungeon gen maxRooms roomMinSize roomMaxSize (V2 width height)
-        let player = playerEntity playerPos
+        let player = E.player playerPos
         let g = Dungeon { _player = player
                      , _gameMap = dungeon
                      , _visible = emptyBoolMap

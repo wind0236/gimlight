@@ -24,8 +24,8 @@ import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
 import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
                                                  transparent, walkable)
-import           Entity                         (Entity (..), playerEntity,
-                                                 position)
+import           Entity                         (Entity (..), position)
+import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           Log                            (MessageLog, addMessage)

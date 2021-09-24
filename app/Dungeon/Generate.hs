@@ -13,7 +13,8 @@ import           Dungeon.Room    (Room (..), center,
                                   roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Size    (height, width)
 import           Dungeon.Tile    (Tile (..), floorTile, wallTile)
-import           Entity          (Entity, orcEntity, position, trollEntity)
+import           Entity          (Entity, position)
+import qualified Entity          as E
 import           Linear.V2       (V2 (..), _x, _y)
 import           System.Random   (Random (randomR), RandomGen, StdGen,
                                   getStdGen, mkStdGen, random)
@@ -69,5 +70,5 @@ newMonster :: StdGen -> Coord -> (Entity, StdGen)
 newMonster g c =
         let (r, g') = random g :: (Float, StdGen)
         in if r < 0.8
-            then (orcEntity c, g')
-            else (trollEntity c, g')
+            then (E.orc c, g')
+            else (E.troll c, g')
