@@ -13,7 +13,8 @@ import           Coord                          (Coord)
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
-import           Direction                      (Direction (East, North, South, West))
+import           Direction                      (Direction (East, North, South, West),
+                                                 directionToOffset)
 import           Dungeon                        (Dungeon, initDungeon)
 import qualified Dungeon                        as D
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
@@ -42,7 +43,7 @@ updateMap g = g & dungeon %~ D.updateMap
 
 bumpAction :: Direction -> Game -> Game
 bumpAction d g@Game{ _messageLog = log } = Game{ _dungeon = newDungeon, _messageLog = addMaybeMessage message }
-    where (newDungeon, message) = D.bumpAction d (g ^. dungeon)
+    where (newDungeon, message) = D.bumpAction (directionToOffset d) (g ^. dungeon)
           addMaybeMessage (Just m) = addMessage m log
           addMaybeMessage Nothing  = log
 

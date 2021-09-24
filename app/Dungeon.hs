@@ -51,17 +51,17 @@ data Dungeon = Dungeon
           } deriving (Show)
 makeLenses ''Dungeon
 
-bumpAction :: Direction -> Dungeon -> (Dungeon, Maybe Message)
-bumpAction direction dungeon
-    | isJust $ getBlockingEntityAtLocation dest dungeon = (dungeon, meleeAction direction dungeon)
-    | otherwise = (movePlayer direction dungeon, Nothing)
-    where dest = dungeon ^. (player . position) + directionToOffset direction
+bumpAction :: V2 Int -> Dungeon -> (Dungeon, Maybe Message)
+bumpAction offset dungeon
+    | isJust $ getBlockingEntityAtLocation dest dungeon = (dungeon, meleeAction offset dungeon)
+    | otherwise = (movePlayer offset dungeon, Nothing)
+    where dest = dungeon ^. (player . position) + offset
 
-meleeAction :: Direction -> Dungeon -> Maybe Message
-meleeAction direction dungeon =
+meleeAction :: V2 Int -> Dungeon -> Maybe Message
+meleeAction offset dungeon =
         fmap attackMessage entityName
         where playerPos = dungeon ^. (player . position)
-              dest = playerPos + directionToOffset direction
+              dest = playerPos + offset
               entity = find (\x -> x ^. position == dest) (dungeon ^. enemies)
               entityName = fmap (\x -> "Hello, " ++ x ^. name) entity
 
@@ -107,13 +107,13 @@ calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
                   sy = if y0 < y1 then 1 else -1
                   dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
 
-movePlayer :: Direction -> Dungeon -> Dungeon
-movePlayer d g = flip execState g . runMaybeT $
-    MaybeT . fmap Just $ player .= nextPlayer d g
+movePlayer :: V2 Int -> Dungeon -> Dungeon
+movePlayer offset g = flip execState g . runMaybeT $
+    MaybeT . fmap Just $ player .= nextPlayer offset g
 
-nextPlayer :: Direction -> Dungeon -> Entity
-nextPlayer d g@Dungeon { _player = p }
-    = let next = nextPosition d g
+nextPlayer :: V2 Int -> Dungeon -> Entity
+nextPlayer offset g@Dungeon { _player = p }
+    = let next = nextPosition offset g
             in if movable next g
                    then p & position .~ next
                    else p
@@ -122,13 +122,9 @@ movable :: Coord -> Dungeon -> Bool
 movable c d@Dungeon { _gameMap = m }
     = (m ! (c ^. _x, c ^. _y) ^. walkable) && isNothing (getBlockingEntityAtLocation c d)
 
-nextPosition :: Direction -> Dungeon -> Coord
-nextPosition d Dungeon { _player = p }
-    | d == North = p & _position & _y %~ (\y -> min (y + 1) (height - 1))
-    | d == South = p & _position & _y %~ (\y -> max (y - 1) 0)
-    | d == East  = p & _position & _x %~ (\x -> min (x + 1) (width - 1))
-    | d == West  = p & _position & _x %~ (\x -> max (x - 1) 0)
-nextPosition _ _ = error "unreachable"
+nextPosition :: V2 Int -> Dungeon -> Coord
+nextPosition offset Dungeon { _player = p } =
+    max (V2 0 0) $ min (V2 (width - 1) $ height - 1) $ (p ^. position) + offset
 
 getBlockingEntityAtLocation :: Coord -> Dungeon -> Maybe Entity
 getBlockingEntityAtLocation c d =
