@@ -26,13 +26,13 @@ import           Data.Maybe                     (isJust, isNothing)
 import           Direction                      (Direction (East, North, South, West),
                                                  directionToOffset)
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
-import           Dungeon.GameMap                (GameMap)
 import           Dungeon.Generate               (generateDungeon)
 import           Dungeon.Room                   (Room (..), x1, x2, y1, y2)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
 import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
                                                  transparent, walkable)
+import           Dungeon.TileMap                (TileMap)
 import           Entity                         (Entity (..), name, position)
 import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
@@ -43,7 +43,7 @@ import           System.Random.Stateful         (StdGen, newStdGen, random,
 
 data Dungeon = Dungeon
           { _player   :: Entity
-          , _gameMap  :: GameMap
+          , _gameMap  :: TileMap
           , _visible  :: BoolMap
           , _explored :: BoolMap
           , _enemies  :: [Entity]
@@ -86,10 +86,10 @@ calculateFov Dungeon { _gameMap = m, _player = p } =
               x0 = pos0 ^. _x
               y0 = pos0 ^. _y
 
-calculateLos :: GameMap -> Coord -> Coord -> BoolMap -> BoolMap
+calculateLos :: TileMap -> Coord -> Coord -> BoolMap -> BoolMap
 calculateLos m (V2 x0 y0) (V2 x1 y1) = calculateLosAccum (V2 x0 y0) m (V2 x0 y0) (V2 x1 y1)
 
-calculateLosAccum :: Coord -> GameMap -> Coord -> Coord -> BoolMap -> BoolMap
+calculateLosAccum :: Coord -> TileMap -> Coord -> Coord -> BoolMap -> BoolMap
 calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
         | x1 < 0 || y1 < 0 || x1 >= width || y1 >= height = fov
         | V2 xnext ynext == V2 x1 y1 = fov // [((x1, y1), True)]

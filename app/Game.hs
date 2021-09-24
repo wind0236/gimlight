@@ -18,12 +18,12 @@ import           Direction                      (Direction (East, North, South, 
 import           Dungeon                        (Dungeon, initDungeon)
 import qualified Dungeon                        as D
 import           Dungeon.BoolMap                (BoolMap, emptyBoolMap)
-import           Dungeon.GameMap                (GameMap)
 import           Dungeon.Generate               (generateDungeon)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
 import           Dungeon.Tile                   (Tile, darkAttr, lightAttr,
                                                  transparent, walkable)
+import           Dungeon.TileMap                (TileMap)
 import           Entity                         (Entity (..), position)
 import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)

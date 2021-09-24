@@ -7,22 +7,22 @@ import           Control.Lens    ((^.))
 import           Coord           (Coord)
 import           Data.Array      (Array, array, (//))
 import           Dungeon.BoolMap (BoolMap)
-import           Dungeon.GameMap (GameMap, allWallTiles)
 import           Dungeon.Room    (Room (..), center,
                                   roomFromTwoPositionInclusive,
                                   roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Size    (height, width)
 import           Dungeon.Tile    (Tile (..), floorTile, wallTile)
+import           Dungeon.TileMap (TileMap, allWallTiles)
 import           Entity          (Entity, position)
 import qualified Entity          as E
 import           Linear.V2       (V2 (..), _x, _y)
 import           System.Random   (Random (randomR), RandomGen, StdGen,
                                   getStdGen, mkStdGen, random)
 
-generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, [Entity], V2 Int, StdGen)
+generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Entity], V2 Int, StdGen)
 generateDungeon = generateDungeonAccum [] [] allWallTiles (V2 0 0)
 
-generateDungeonAccum :: [Entity] -> [Room] -> GameMap -> Coord -> StdGen -> Int -> Int -> Int -> V2 Int -> (GameMap, [Entity], V2 Int, StdGen)
+generateDungeonAccum :: [Entity] -> [Room] -> TileMap -> Coord -> StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Entity], V2 Int, StdGen)
 generateDungeonAccum enemiesAcc _ d pos g 0 _ _ _ = (d, enemiesAcc, pos, g)
 generateDungeonAccum enemiesAcc acc dungeon playerPos g maxRooms roomMinSize roomMaxSize mapSize
     = generateDungeonAccum newEnemiesAcc newAcc newDungeon newPlayerPos g''''' (maxRooms - 1) roomMinSize roomMaxSize mapSize
@@ -39,11 +39,11 @@ generateDungeonAccum enemiesAcc acc dungeon playerPos g maxRooms roomMinSize roo
                                                             else (enemies ++ enemiesAcc, room:acc, tunnelBetween (center room) (center $ head acc) $ createRoom room dungeon, center room)
                                                    else (enemiesAcc, acc, dungeon, playerPos)
 
-createRoom :: Room -> GameMap -> GameMap
+createRoom :: Room -> TileMap -> TileMap
 createRoom Room{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 } r
     = r // [((x, y), floorTile) | x <- [x1 .. x2 - 1], y <- [y1 .. y2 - 1]]
 
-tunnelBetween :: Coord -> Coord -> GameMap -> GameMap
+tunnelBetween :: Coord -> Coord -> TileMap -> TileMap
 tunnelBetween start end d = createRoom path1 $ createRoom path2 d
     where path1 = roomFromTwoPositionInclusive start corner
           path2 = roomFromTwoPositionInclusive corner end
