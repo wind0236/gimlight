@@ -29,7 +29,8 @@ import           Entity                         (Entity (..), position)
 import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
-import           Log                            (MessageLog, addMessage)
+import           Log                            (MessageLog, addMaybeMessage,
+                                                 addMessage)
 import qualified Log                            as L
 import           System.Random.Stateful         (newStdGen)
 
@@ -45,11 +46,9 @@ completeThisTurn g = g { _dungeon = d', _messageLog = newLog }
           newLog = foldl  (flip addMessage) (g ^. messageLog) ms
 
 playerBumpAction :: Direction -> Game -> Game
-playerBumpAction d g@Game{ _messageLog = log } = Game{ _dungeon = newDungeon, _messageLog = addMaybeMessage message }
+playerBumpAction d g@Game{ _messageLog = log } = Game{ _dungeon = newDungeon, _messageLog = addMaybeMessage message log }
     where (e, dungeon') = runState D.popPlayer $ g ^. dungeon
           (message, newDungeon) = D.bumpAction e (directionToOffset d) dungeon'
-          addMaybeMessage (Just m) = addMessage m log
-          addMaybeMessage Nothing  = log
 
 initGame :: IO Game
 initGame = do

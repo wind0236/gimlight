@@ -8,6 +8,7 @@ module Log
     , attackMessage
     , infoMessage
     , addMessage
+    , addMaybeMessage
     , messageToStringList
     , messageToAttrNameAndStringList
     , height
@@ -40,6 +41,10 @@ emptyMessage = Message { text = replicate width ' ', attr = "emptyAttr" }
 
 addMessage :: Message -> MessageLog -> MessageLog
 addMessage m l = m:l
+
+addMaybeMessage :: Maybe Message -> MessageLog -> MessageLog
+addMaybeMessage (Just m) log = addMessage m log
+addMaybeMessage Nothing log  = log
 
 infoMessage :: String -> Message
 infoMessage text = Message { text = text
