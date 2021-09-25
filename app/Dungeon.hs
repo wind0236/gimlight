@@ -147,12 +147,10 @@ pushEntity d@Dungeon{ _entities = entities } e = d { _entities = e:entities }
 
 popPlayer :: State Dungeon Entity
 popPlayer = state $ \d@Dungeon{ _entities = entities } ->
-                let player = case find E.isPlayer entities of
-                                Just p  -> p
-                                Nothing -> error "No player entity."
-                    playerIndex = case findIndex E.isPlayer entities of
+                let playerIndex = case findIndex E.isPlayer entities of
                                     Just index -> index
                                     Nothing    -> error "No player entity."
+                    player = entities !! playerIndex
                     newEntities = take playerIndex entities ++ drop (playerIndex + 1) entities
                 in (player, d{ _entities = newEntities })
 
