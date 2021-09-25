@@ -145,15 +145,16 @@ getPlayerEntity Dungeon { _entities = entities } = case find E.isPlayer entities
 pushEntity :: Dungeon -> Entity -> Dungeon
 pushEntity d@Dungeon{ _entities = entities } e = d { _entities = e:entities }
 
-popPlayer :: Dungeon -> (Entity, Dungeon)
-popPlayer d@Dungeon{ _entities = entities } = (player, d{ _entities = newEntities})
-    where player = case find E.isPlayer entities of
-                       Just p  -> p
-                       Nothing -> error "No player entity."
-          playerIndex = case findIndex E.isPlayer entities of
-                            Just index -> index
-                            Nothing    -> error "No player entity."
-          newEntities = take playerIndex entities ++ drop (playerIndex + 1) entities
+popPlayer :: State Dungeon Entity
+popPlayer = state $ \d@Dungeon{ _entities = entities } ->
+                let player = case find E.isPlayer entities of
+                                Just p  -> p
+                                Nothing -> error "No player entity."
+                    playerIndex = case findIndex E.isPlayer entities of
+                                    Just index -> index
+                                    Nothing    -> error "No player entity."
+                    newEntities = take playerIndex entities ++ drop (playerIndex + 1) entities
+                in (player, d{ _entities = newEntities })
 
 getBlockingEntityAtLocation :: Coord -> Dungeon -> Maybe Entity
 getBlockingEntityAtLocation c d =
