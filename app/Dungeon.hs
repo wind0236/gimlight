@@ -55,11 +55,12 @@ data Dungeon = Dungeon
           } deriving (Show)
 makeLenses ''Dungeon
 
-bumpAction :: Entity -> V2 Int -> Dungeon -> (Maybe Message, Dungeon)
-bumpAction src offset dungeon
-    | isJust $ getBlockingEntityAtLocation dest dungeon =  runState (meleeAction src offset) dungeon
-    | otherwise = (Nothing, moveAction src offset dungeon)
-    where dest = src ^. position + offset
+bumpAction :: Entity -> V2 Int -> State Dungeon (Maybe Message)
+bumpAction src offset = state $ \d ->
+    if isJust $ getBlockingEntityAtLocation (src ^. position + offset) d
+        then runState (meleeAction src offset) d
+        else
+            (Nothing, execState (moveAction src offset) d)
 
 meleeAction :: Entity -> V2 Int -> State Dungeon (Maybe Message)
 meleeAction src offset = do
@@ -125,8 +126,8 @@ calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
                   sy = if y0 < y1 then 1 else -1
                   dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
 
-moveAction :: Entity -> V2 Int -> Dungeon -> Dungeon
-moveAction src offset d = execState (pushEntity $ updatePosition src offset d) d
+moveAction :: Entity -> V2 Int -> State Dungeon ()
+moveAction src offset = state $ \d -> ((), execState (pushEntity $ updatePosition src offset d) d)
 
 updatePosition :: Entity -> V2 Int -> Dungeon -> Entity
 updatePosition src offset g
