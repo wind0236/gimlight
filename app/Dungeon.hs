@@ -133,7 +133,6 @@ popActorIf f = state $ \d@Dungeon{ _entities = entities } ->
                   in (Just entity, d{ _entities = newEntities})
         Nothing -> (Nothing, d)
 
-
 walkableFloor :: Dungeon -> BoolMap
 walkableFloor d = M.generate (\c -> ((d ^. tileMap) ! c) ^. walkable)
 
