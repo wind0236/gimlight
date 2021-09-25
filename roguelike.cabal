@@ -34,6 +34,7 @@ executable roguelike
                       Dungeon.Room,
                       Dungeon.Size,
                       Dungeon.Generate,
+                      Dungeon.PathFinder,
                       Coord,
                       Entity,
                       Direction,

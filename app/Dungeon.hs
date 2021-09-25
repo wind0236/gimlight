@@ -12,6 +12,7 @@ module Dungeon
     , popPlayer
     , enemies
     , pushEntity
+    , walkableFloor
     ) where
 
 import           Brick                          (AttrName)
@@ -124,6 +125,9 @@ popPlayer = state $ \d@Dungeon{ _entities = entities } ->
                     player = entities !! playerIndex
                     newEntities = take playerIndex entities ++ drop (playerIndex + 1) entities
                 in (player, d{ _entities = newEntities })
+
+walkableFloor :: Dungeon -> BoolMap
+walkableFloor d = M.generate (\c -> ((d ^. tileMap) ! c) ^. walkable)
 
 enemies :: Dungeon -> [Entity]
 enemies Dungeon { _entities = entities } = filter (not . E.isPlayer) entities
