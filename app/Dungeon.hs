@@ -66,6 +66,16 @@ completeThisTurn = do
 handleEnemyTurns :: State Dungeon [Message]
 handleEnemyTurns = state $ \d@Dungeon{ _entities = entities } -> (map (\x -> attackMessage $ (x ^. name) ++ "'s turn.") entities, d)
 
+handleEnemyTurn :: Coord -> MaybeT (State Dungeon) (Maybe Message)
+handleEnemyTurn c = do
+        entity <- (MaybeT . popActorAt) c
+
+        let message = attackMessage $ (entity ^. name) ++ "'s turn."
+
+        MaybeT . fmap Just $ do
+            pushEntity entity
+            return $ Just message
+
 updateMap :: State Dungeon ()
 updateMap = do
                updateExplored
