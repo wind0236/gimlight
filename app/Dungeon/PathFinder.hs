@@ -15,7 +15,7 @@ getPathTo d src = getPathToAcc emptyBoolMap [src] (walkableFloor d) src
 
 getPathToAcc :: BoolMap -> [Coord] -> BoolMap -> Coord -> Coord -> [Coord]
 getPathToAcc visited path walkable src dst
-    | src == dst = path
+    | src == dst = drop 1 $ reverse path    -- exclude the start point
     | otherwise =  nextStep $ candidate visited walkable src
     where nextStep xs = msum $ map (\c@(V2 x y) -> getPathToAcc (visited // [((x, y), True)]) (src:xs) walkable (V2 x y) dst) $ candidate visited walkable src
 
