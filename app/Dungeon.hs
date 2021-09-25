@@ -118,17 +118,16 @@ pushEntity :: Entity -> State Dungeon ()
 pushEntity e = state $ \d@Dungeon{ _entities = entities } -> ((), d { _entities = e:entities })
 
 popPlayer :: State Dungeon Entity
-popPlayer = state $ \d@Dungeon{ _entities = entities } ->
-                let playerIndex = case findIndex E.isPlayer entities of
-                                    Just index -> index
-                                    Nothing    -> error "No player entity."
-                    player = entities !! playerIndex
-                    newEntities = take playerIndex entities ++ drop (playerIndex + 1) entities
-                in (player, d{ _entities = newEntities })
+popPlayer = state $ \d -> case runState (popActorIf E.isPlayer) d of
+                  (Just x, d') -> (x, d')
+                  (Nothing, _) -> error "No player entity."
 
 popActorAt :: Coord -> State Dungeon (Maybe Entity)
-popActorAt c = state $ \d@Dungeon{ _entities = entities } ->
-    case findIndex (\x -> x ^. position == c) entities of
+popActorAt c = popActorIf (\x -> x ^. position == c)
+
+popActorIf :: (Entity -> Bool) -> State Dungeon (Maybe Entity)
+popActorIf f = state $ \d@Dungeon{ _entities = entities } ->
+    case findIndex f entities of
         Just x -> let entity = entities !! x
                       newEntities = take x entities ++ drop (x + 1) entities
                   in (Just entity, d{ _entities = newEntities})
