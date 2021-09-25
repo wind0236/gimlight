@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Entity
-    ( Entity(..)
+    ( Entity
     , position
     , char
     , name
