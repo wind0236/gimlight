@@ -16,8 +16,10 @@ module Dungeon
 import           Brick                          (AttrName)
 import           Control.Lens                   (makeLenses, (%~), (&), (.=),
                                                  (.~), (^.))
+import           Control.Lens.Getter            (use)
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
-import           Control.Monad.Trans.State      (State, evalState, state)
+import           Control.Monad.Trans.State      (State, evalState, runState,
+                                                 state)
 import           Control.Monad.Trans.State.Lazy (execState, modify)
 import           Coord                          (Coord (..))
 import           Data.Array                     (Array)
@@ -55,17 +57,21 @@ makeLenses ''Dungeon
 
 bumpAction :: Entity -> V2 Int -> Dungeon -> (Maybe Message, Dungeon)
 bumpAction src offset dungeon
-    | isJust $ getBlockingEntityAtLocation dest dungeon =  meleeAction src offset dungeon
+    | isJust $ getBlockingEntityAtLocation dest dungeon =  runState (meleeAction src offset) dungeon
     | otherwise = (Nothing, moveAction src offset dungeon)
     where dest = src ^. position + offset
 
-meleeAction :: Entity -> V2 Int -> Dungeon -> (Maybe Message, Dungeon)
-meleeAction src offset dungeon =
-        (fmap attackMessage entityName, execState (pushEntity src) dungeon)
-        where pos = src ^. position
-              dest = pos + offset
-              entity = find (\x -> x ^. position == dest) (dungeon ^. entities)
-              entityName = fmap (\x -> "Hello, " ++ x ^. name) entity
+meleeAction :: Entity -> V2 Int -> State Dungeon (Maybe Message)
+meleeAction src offset = do
+        es <- use entities
+
+        let pos = src ^. position
+            dest = pos + offset
+            entity = find (\x -> x ^. position == dest) es
+            entityName = fmap (\x -> "Hello, " ++ x ^. name) entity
+
+        pushEntity src
+        return $ fmap attackMessage entityName
 
 completeThisTurn :: State Dungeon [Message]
 completeThisTurn = do
