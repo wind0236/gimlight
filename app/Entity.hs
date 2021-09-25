@@ -17,7 +17,7 @@ import           Brick.AttrMap   (AttrName)
 import           Control.Lens.TH (makeLenses)
 import           Coord           (Coord)
 
-data Entity = Entity
+data Entity = Actor
             { _position   :: Coord
             , _char       :: String
             , _entityAttr :: AttrName
@@ -26,25 +26,25 @@ data Entity = Entity
 makeLenses ''Entity
 
 player :: Coord -> Entity
-player c = Entity { _position = c
+player c = Actor { _position = c
                   , _char = "@"
                   , _entityAttr = "playerAttr"
                   , _name = "Player"
                   }
 
 orc :: Coord -> Entity
-orc c = Entity { _position = c
+orc c = Actor { _position = c
                , _char = "o"
                , _entityAttr = "orcAttr"
                , _name = "Orc"
                }
 
 troll :: Coord -> Entity
-troll c = Entity { _position = c
+troll c = Actor { _position = c
                  , _char = "T"
                  , _entityAttr = "trollAttr"
                  , _name = "Troll"
                  }
 
 isPlayer :: Entity -> Bool
-isPlayer Entity { _name = name } = name == "Player"
+isPlayer Actor { _name = name } = name == "Player"
