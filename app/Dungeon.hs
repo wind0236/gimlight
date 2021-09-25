@@ -17,7 +17,7 @@ import           Brick                          (AttrName)
 import           Control.Lens                   (makeLenses, (%~), (&), (.=),
                                                  (.~), (^.))
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
-import           Control.Monad.Trans.State      (State, state)
+import           Control.Monad.Trans.State      (State, evalState, state)
 import           Control.Monad.Trans.State.Lazy (execState, modify)
 import           Coord                          (Coord (..))
 import           Data.Array                     (Array)
@@ -61,7 +61,7 @@ bumpAction src offset dungeon
 
 meleeAction :: Entity -> V2 Int -> Dungeon -> (Maybe Message, Dungeon)
 meleeAction src offset dungeon =
-        (fmap attackMessage entityName, pushEntity dungeon src)
+        (fmap attackMessage entityName, execState (pushEntity src) dungeon)
         where pos = src ^. position
               dest = pos + offset
               entity = find (\x -> x ^. position == dest) (dungeon ^. entities)
@@ -120,7 +120,7 @@ calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
                   dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
 
 moveAction :: Entity -> V2 Int -> Dungeon -> Dungeon
-moveAction src offset d = pushEntity d $ updatePosition src offset d
+moveAction src offset d = execState (pushEntity $ updatePosition src offset d) d
 
 updatePosition :: Entity -> V2 Int -> Dungeon -> Entity
 updatePosition src offset g
@@ -142,8 +142,8 @@ getPlayerEntity Dungeon { _entities = entities } = case find E.isPlayer entities
                                                       Just p -> p
                                                       Nothing -> error "No player entity."
 
-pushEntity :: Dungeon -> Entity -> Dungeon
-pushEntity d@Dungeon{ _entities = entities } e = d { _entities = e:entities }
+pushEntity :: Entity -> State Dungeon ()
+pushEntity e = state $ \d@Dungeon{ _entities = entities } -> ((), d { _entities = e:entities })
 
 popPlayer :: State Dungeon Entity
 popPlayer = state $ \d@Dungeon{ _entities = entities } ->
