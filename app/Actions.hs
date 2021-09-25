@@ -1,6 +1,7 @@
 module Actions
     ( bumpAction
     , meleeAction
+    , waitAction
     ) where
 
 import           Control.Lens              (use, (&), (.~), (^.))
@@ -42,6 +43,9 @@ meleeAction src offset = do
 
 moveAction :: Entity -> V2 Int -> State Dungeon ()
 moveAction src offset = state $ \d -> ((), execState (pushEntity $ updatePosition src offset d) d)
+
+waitAction :: Entity -> State Dungeon ()
+waitAction = pushEntity
 
 updatePosition :: Entity -> V2 Int -> Dungeon -> Entity
 updatePosition src offset g
