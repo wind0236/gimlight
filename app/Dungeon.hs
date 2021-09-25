@@ -17,6 +17,7 @@ import           Brick                          (AttrName)
 import           Control.Lens                   (makeLenses, (%~), (&), (.=),
                                                  (.~), (^.))
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
+import           Control.Monad.Trans.State      (State, state)
 import           Control.Monad.Trans.State.Lazy (execState, modify)
 import           Coord                          (Coord (..))
 import           Data.Array                     (Array)
@@ -66,22 +67,26 @@ meleeAction src offset dungeon =
               entity = find (\x -> x ^. position == dest) (dungeon ^. entities)
               entityName = fmap (\x -> "Hello, " ++ x ^. name) entity
 
-completeThisTurn :: Dungeon -> ([Message], Dungeon)
-completeThisTurn d = let (ms, d') = handleEnemyTurns d
-                     in (ms, updateMap d')
+completeThisTurn :: State Dungeon [Message]
+completeThisTurn = do
+        ms <- handleEnemyTurns
+        updateMap
+        return ms
 
-handleEnemyTurns :: Dungeon -> ([Message], Dungeon)
-handleEnemyTurns d@Dungeon { _entities = entities } = (map (\x -> attackMessage $ (x ^. name) ++ "'s turn." ) entities, d)
+handleEnemyTurns :: State Dungeon [Message]
+handleEnemyTurns = state $ \d@Dungeon{ _entities = entities } -> (map (\x -> attackMessage $ (x ^. name) ++ "'s turn.") entities, d)
 
-updateMap :: Dungeon -> Dungeon
-updateMap = updateExplored . updateFov
+updateMap :: State Dungeon ()
+updateMap = do
+               updateExplored
+               updateFov
 
-updateExplored :: Dungeon -> Dungeon
-updateExplored g = g & explored .~ newExplored
-    where newExplored = M.generate (\(x, y) -> (g ^. visible) ! (x, y) || (g ^. explored) ! (x, y))
+updateExplored :: State Dungeon ()
+updateExplored = state $ \g -> let newExplored = M.generate (\(x, y) -> (g ^. visible) ! (x, y) || (g ^. explored) ! (x, y))
+                               in ((), g & explored .~ newExplored)
 
-updateFov :: Dungeon -> Dungeon
-updateFov g = g & visible .~ calculateFov g
+updateFov :: State Dungeon ()
+updateFov = state $ \g -> ((), g & visible .~ calculateFov g)
 
 fovRadius :: Int
 fovRadius = 8
@@ -167,4 +172,4 @@ initDungeon = do
                         , _explored = emptyBoolMap
                         , _entities = player:enemies
                         }
-        return $ updateMap g
+        return $ execState updateMap g

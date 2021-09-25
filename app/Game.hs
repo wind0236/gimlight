@@ -8,7 +8,8 @@ import           Brick                          (AttrName)
 import           Control.Lens                   (makeLenses, (%~), (&), (.=),
                                                  (.~), (^.))
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
-import           Control.Monad.Trans.State.Lazy (execState, modify)
+import           Control.Monad.Trans.State      (State, state)
+import           Control.Monad.Trans.State.Lazy (execState, modify, runState)
 import           Coord                          (Coord)
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
@@ -40,7 +41,7 @@ makeLenses ''Game
 
 completeThisTurn :: Game -> Game
 completeThisTurn g = g { _dungeon = d', _messageLog = newLog }
-    where (ms, d') = D.completeThisTurn $ g ^. dungeon
+    where (ms, d') = runState D.completeThisTurn $ g ^. dungeon
           newLog = foldl  (flip addMessage) (g ^. messageLog) ms
 
 playerBumpAction :: Direction -> Game -> Game
