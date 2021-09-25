@@ -5,12 +5,13 @@ module Dungeon
     ( initDungeon
     , Dungeon
     , completeThisTurn
-    , bumpAction
     , entities
     , visible
     , explored
     , tileMap
     , popPlayer
+    , enemies
+    , pushEntity
     ) where
 
 import           Brick                          (AttrName)
@@ -54,25 +55,6 @@ data Dungeon = Dungeon
           , _entities :: [Entity]
           } deriving (Show)
 makeLenses ''Dungeon
-
-bumpAction :: Entity -> V2 Int -> State Dungeon (Maybe Message)
-bumpAction src offset = state $ \d ->
-    if isJust $ getBlockingEntityAtLocation (src ^. position + offset) d
-        then runState (meleeAction src offset) d
-        else
-            (Nothing, execState (moveAction src offset) d)
-
-meleeAction :: Entity -> V2 Int -> State Dungeon (Maybe Message)
-meleeAction src offset = do
-        es <- use entities
-
-        let pos = src ^. position
-            dest = pos + offset
-            entity = find (\x -> x ^. position == dest) es
-            entityName = fmap (\x -> "Hello, " ++ x ^. name) entity
-
-        pushEntity src
-        return $ fmap attackMessage entityName
 
 completeThisTurn :: State Dungeon [Message]
 completeThisTurn = do
@@ -126,24 +108,6 @@ calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
                   sy = if y0 < y1 then 1 else -1
                   dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
 
-moveAction :: Entity -> V2 Int -> State Dungeon ()
-moveAction src offset = state $ \d -> ((), execState (pushEntity $ updatePosition src offset d) d)
-
-updatePosition :: Entity -> V2 Int -> Dungeon -> Entity
-updatePosition src offset g
-    = let next = nextPosition src offset
-      in if movable next g
-            then src & position .~ next
-            else src
-
-movable :: Coord -> Dungeon -> Bool
-movable c d@Dungeon { _tileMap = m }
-    = (m ! (c ^. _x, c ^. _y) ^. walkable) && isNothing (getBlockingEntityAtLocation c d)
-
-nextPosition :: Entity -> V2 Int -> Coord
-nextPosition src offset =
-    max (V2 0 0) $ min (V2 (width - 1) $ height - 1) $ (src ^. position) + offset
-
 getPlayerEntity :: Dungeon -> Entity
 getPlayerEntity Dungeon { _entities = entities } = case find E.isPlayer entities of
                                                       Just p -> p
@@ -160,10 +124,6 @@ popPlayer = state $ \d@Dungeon{ _entities = entities } ->
                     player = entities !! playerIndex
                     newEntities = take playerIndex entities ++ drop (playerIndex + 1) entities
                 in (player, d{ _entities = newEntities })
-
-getBlockingEntityAtLocation :: Coord -> Dungeon -> Maybe Entity
-getBlockingEntityAtLocation c d =
-        find (\x -> (x ^. position) == c) (enemies d)
 
 enemies :: Dungeon -> [Entity]
 enemies Dungeon { _entities = entities } = filter (not . E.isPlayer) entities
