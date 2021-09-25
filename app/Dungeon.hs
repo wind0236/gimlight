@@ -126,6 +126,15 @@ popPlayer = state $ \d@Dungeon{ _entities = entities } ->
                     newEntities = take playerIndex entities ++ drop (playerIndex + 1) entities
                 in (player, d{ _entities = newEntities })
 
+popActorAt :: Coord -> State Dungeon (Maybe Entity)
+popActorAt c = state $ \d@Dungeon{ _entities = entities } ->
+    case findIndex (\x -> x ^. position == c) entities of
+        Just x -> let entity = entities !! x
+                      newEntities = take x entities ++ drop (x + 1) entities
+                  in (Just entity, d{ _entities = newEntities})
+        Nothing -> (Nothing, d)
+
+
 walkableFloor :: Dungeon -> BoolMap
 walkableFloor d = M.generate (\c -> ((d ^. tileMap) ! c) ^. walkable)
 
