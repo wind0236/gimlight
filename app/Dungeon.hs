@@ -67,7 +67,7 @@ completeThisTurn = do
 handleEnemyTurns :: State Dungeon [Message]
 handleEnemyTurns = state $ \d -> foldl (\(ms, d') x -> (\(ms', d'') -> (case join ms' of
                                        Just x  -> x:ms
-                                       Nothing -> ms, d'')) (runState (runMaybeT (handleEnemyTurn (x ^. position))) d')) ([], d) $ enemies d
+                                       Nothing -> ms, d'')) (runState (runMaybeT (handleEnemyTurn (x ^. position))) d')) ([], d) $ evalState enemies d
 
 handleEnemyTurn :: Coord -> MaybeT (State Dungeon) (Maybe Message)
 handleEnemyTurn c = do
@@ -149,8 +149,10 @@ popActorIf f = state $ \d@Dungeon{ _entities = entities } ->
 walkableFloor :: Dungeon -> BoolMap
 walkableFloor d = M.generate (\c -> ((d ^. tileMap) ! c) ^. walkable)
 
-enemies :: Dungeon -> [Entity]
-enemies Dungeon { _entities = entities } = filter (not . E.isPlayer) entities
+enemies :: State Dungeon [Entity]
+enemies = do
+        xs <- use entities
+        return $ filter (not . E.isPlayer) xs
 
 initDungeon :: IO Dungeon
 initDungeon = do
