@@ -67,3 +67,6 @@ isPlayer Actor { _name = name } = name == "Player"
 
 getHp :: Entity -> Int
 getHp e = e ^. hp
+
+updateHp :: Entity -> Int -> Entity
+updateHp e@Actor{ _hp = hp, _maxHp = maxHp } newHp = e { _hp = min 0 $ max maxHp newHp }
