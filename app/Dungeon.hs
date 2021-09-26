@@ -81,8 +81,8 @@ handleEnemyTurn c = do
 
 updateMap :: State Dungeon ()
 updateMap = do
-               updateExplored
-               updateFov
+        updateExplored
+        updateFov
 
 updateExplored :: State Dungeon ()
 updateExplored = do
