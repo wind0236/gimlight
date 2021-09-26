@@ -85,8 +85,11 @@ updateMap = do
                updateFov
 
 updateExplored :: State Dungeon ()
-updateExplored = state $ \g -> let newExplored = M.generate (\(x, y) -> (g ^. visible) ! (x, y) || (g ^. explored) ! (x, y))
-                               in ((), g & explored .~ newExplored)
+updateExplored = do
+        v <- use visible
+        e <- use explored
+
+        explored .= M.generate (\(x, y) -> v ! (x, y) || e ! (x, y))
 
 updateFov :: State Dungeon ()
 updateFov = state $ \g -> ((), g & visible .~ calculateFov g)
