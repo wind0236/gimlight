@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Game where
+module Engine where
 
 import           Actions                        (bumpAction)
 import           Brick                          (AttrName)

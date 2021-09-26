@@ -23,10 +23,10 @@ import           Dungeon                    (entities, explored, tileMap,
                                              visible)
 import           Dungeon.Map.Tile           (darkAttr, lightAttr)
 import           Dungeon.Size               (height, width)
-import           Entity                     (char, entityAttr, position)
-import           Game                       (Game, completeThisTurn, dungeon,
+import           Engine                     (Game, completeThisTurn, dungeon,
                                              initGame, messageLog,
                                              playerBumpAction)
+import           Entity                     (char, entityAttr, position)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 import qualified Log                        as L
