@@ -13,6 +13,7 @@ module Dungeon
     , enemies
     , pushEntity
     , walkableFloor
+    , getPlayerEntity
     ) where
 
 import           Brick                          (AttrName)

@@ -11,6 +11,9 @@ module Entity
     , orc
     , troll
     , isPlayer
+    , Ai(..)
+    , ai
+    , path
     ) where
 
 import           Brick.AttrMap (AttrName)
