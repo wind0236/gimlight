@@ -13,9 +13,9 @@ module Entity
     , isPlayer
     ) where
 
-import           Brick.AttrMap   (AttrName)
-import           Control.Lens.TH (makeLenses)
-import           Coord           (Coord)
+import           Brick.AttrMap (AttrName)
+import           Control.Lens  (makeLenses, (^.))
+import           Coord         (Coord)
 
 data Entity = Actor
             { _position   :: Coord
@@ -64,3 +64,6 @@ troll c = Actor { _position = c
 
 isPlayer :: Entity -> Bool
 isPlayer Actor { _name = name } = name == "Player"
+
+getHp :: Entity -> Int
+getHp e = e ^. hp
