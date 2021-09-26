@@ -35,25 +35,25 @@ import           Log                            (MessageLog, addMaybeMessage,
 import qualified Log                            as L
 import           System.Random.Stateful         (newStdGen)
 
-data Game = Game
+data Engine = Engine
           { _dungeon    :: Dungeon
           , _messageLog :: MessageLog
           } deriving (Show)
-makeLenses ''Game
+makeLenses ''Engine
 
-completeThisTurn :: Game -> Game
+completeThisTurn :: Engine -> Engine
 completeThisTurn g = g { _dungeon = d', _messageLog = newLog }
     where (ms, d') = runState D.completeThisTurn $ g ^. dungeon
           newLog = foldl  (flip addMessage) (g ^. messageLog) ms
 
-playerBumpAction :: Direction -> Game -> Game
-playerBumpAction d g@Game{ _messageLog = log } = Game{ _dungeon = newDungeon, _messageLog = addMaybeMessage message log }
+playerBumpAction :: Direction -> Engine -> Engine
+playerBumpAction d g@Engine{ _messageLog = log } = Engine{ _dungeon = newDungeon, _messageLog = addMaybeMessage message log }
     where (e, dungeon') = runState D.popPlayer $ g ^. dungeon
           (message, newDungeon) = runState (bumpAction e (directionToOffset d)) dungeon'
 
-initGame :: IO Game
-initGame = do
+initEngine :: IO Engine
+initEngine = do
         dungeon <- initDungeon
-        return $ Game { _dungeon = dungeon
+        return $ Engine { _dungeon = dungeon
                       , _messageLog = foldr (addMessage . L.infoMessage) L.emptyLog ["Welcome to a roguelike game!"]
                       }

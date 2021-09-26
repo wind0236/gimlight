@@ -23,8 +23,8 @@ import           Dungeon                    (entities, explored, tileMap,
                                              visible)
 import           Dungeon.Map.Tile           (darkAttr, lightAttr)
 import           Dungeon.Size               (height, width)
-import           Engine                     (Game, completeThisTurn, dungeon,
-                                             initGame, messageLog,
+import           Engine                     (Engine, completeThisTurn, dungeon,
+                                             initEngine, messageLog,
                                              playerBumpAction)
 import           Entity                     (char, entityAttr, position)
 import qualified Graphics.Vty               as V
@@ -41,12 +41,12 @@ main = do
         forkIO $ forever $ do
             writeBChan chan Tick
             threadDelay 100000
-        g <- initGame
+        g <- initEngine
         let builder = V.mkVty V.defaultConfig
         initialVty <- builder
         void $ customMain initialVty builder (Just chan) app g
 
-app :: App Game Tick Name
+app :: App Engine Tick Name
 app = App { appDraw = drawUI
           , appChooseCursor = neverShowCursor
           , appHandleEvent = handleEvent
@@ -54,7 +54,7 @@ app = App { appDraw = drawUI
           , appAttrMap = const theMap
           }
 
-handleEvent :: Game -> BrickEvent Name Tick -> EventM Name (Next Game)
+handleEvent :: Engine -> BrickEvent Name Tick -> EventM Name (Next Engine)
 handleEvent g (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt g
 handleEvent g (VtyEvent (V.EvKey V.KEsc []))        = halt g
 handleEvent g (VtyEvent (V.EvKey V.KUp []))         = continue $ completeThisTurn $ playerBumpAction North g
@@ -67,10 +67,10 @@ handleEvent g (VtyEvent (V.EvKey (V.KChar 'l') [])) = continue $ completeThisTur
 handleEvent g (VtyEvent (V.EvKey (V.KChar 'h') [])) = continue $ completeThisTurn $ playerBumpAction West g
 handleEvent g _                                     = continue g
 
-drawUI :: Game -> [Widget Name]
+drawUI :: Engine -> [Widget Name]
 drawUI g = [ C.center $ padTop (Pad 2) (drawGame g) <=> drawMessageLog g ]
 
-drawGame :: Game -> Widget Name
+drawGame :: Engine -> Widget Name
 drawGame g = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Game")
     $ vBox rows
@@ -93,7 +93,7 @@ drawGame g = withBorderStyle BS.unicodeBold
                         entity:_ | visibleAt c -> withAttr (entity ^. entityAttr) $ str $ entity ^. char
                         _        -> withAttr (attrAt c) $ str " "
 
-drawMessageLog :: Game -> Widget Name
+drawMessageLog :: Engine -> Widget Name
 drawMessageLog g = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Log")
     $ vBox rows
