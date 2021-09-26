@@ -92,18 +92,25 @@ updateExplored = do
         explored .= M.generate (\(x, y) -> v ! (x, y) || e ! (x, y))
 
 updateFov :: State Dungeon ()
-updateFov = state $ \g -> ((), g & visible .~ calculateFov g)
+updateFov = do
+        fov <- calculateFov
+        visible .= fov
 
 fovRadius :: Int
 fovRadius = 8
 
-calculateFov :: Dungeon -> BoolMap
-calculateFov d@Dungeon { _tileMap = m } =
-        foldl (flip (calculateLos m pos0)) emptyBoolMap
+calculateFov :: State Dungeon BoolMap
+calculateFov = do
+        p <- getPlayerEntity
+
+        let pos0 = p ^. position
+            x0 = pos0 ^. _x
+            y0 = pos0 ^. _y
+
+        m <- use tileMap
+
+        return $ foldl (flip (calculateLos m pos0)) emptyBoolMap
               [V2 (x0 + x) (y0 + y) | x <- [(-fovRadius) .. fovRadius], y <- [(-fovRadius) .. fovRadius]]
-        where pos0 = getPlayerEntity d ^. position
-              x0 = pos0 ^. _x
-              y0 = pos0 ^. _y
 
 calculateLos :: TileMap -> Coord -> Coord -> BoolMap -> BoolMap
 calculateLos m (V2 x0 y0) (V2 x1 y1) = calculateLosAccum (V2 x0 y0) m (V2 x0 y0) (V2 x1 y1)
@@ -125,10 +132,14 @@ calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
                   sy = if y0 < y1 then 1 else -1
                   dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
 
-getPlayerEntity :: Dungeon -> Entity
-getPlayerEntity Dungeon { _entities = entities } = case find E.isPlayer entities of
-                                                      Just p -> p
-                                                      Nothing -> error "No player entity."
+getPlayerEntity :: State Dungeon Entity
+getPlayerEntity = do
+        xs <- use entities
+        let x = find E.isPlayer xs
+
+        case x of
+            Just p  -> return p
+            Nothing -> error "No player entity."
 
 pushEntity :: Entity -> State Dungeon ()
 pushEntity e = state $ \d@Dungeon{ _entities = entities } -> ((), d { _entities = e:entities })
