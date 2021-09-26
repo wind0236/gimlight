@@ -35,14 +35,14 @@ allWallTiles = M.generate $ const wallTile
 
 wallTile :: Tile
 wallTile = Tile { _walkable = False
-            , _transparent = False
-            , _darkAttr = "darkWallAttr"
-            , _lightAttr = "lightWallAttr"
-            }
+                , _transparent = False
+                , _darkAttr = "darkWallAttr"
+                , _lightAttr = "lightWallAttr"
+                }
 
 floorTile :: Tile
 floorTile = Tile { _walkable = True
-             , _transparent = True
-             , _darkAttr = "darkFloorAttr"
-             , _lightAttr = "lightFloorAttr"
-             }
+                 , _transparent = True
+                 , _darkAttr = "darkFloorAttr"
+                 , _lightAttr = "lightFloorAttr"
+                 }
