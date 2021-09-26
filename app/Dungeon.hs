@@ -19,6 +19,7 @@ import           Brick                          (AttrName)
 import           Control.Lens                   (makeLenses, (%~), (&), (.=),
                                                  (.~), (^.))
 import           Control.Lens.Getter            (use)
+import           Control.Monad                  (join)
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
 import           Control.Monad.Trans.State      (State, evalState, runState,
                                                  state)
@@ -64,7 +65,9 @@ completeThisTurn = do
         return ms
 
 handleEnemyTurns :: State Dungeon [Message]
-handleEnemyTurns = state $ \d@Dungeon{ _entities = entities } -> (map (\x -> attackMessage $ (x ^. name) ++ "'s turn.") entities, d)
+handleEnemyTurns = state $ \d -> foldl (\(ms, d') x -> (\(ms', d'') -> (case join ms' of
+                                       Just x  -> x:ms
+                                       Nothing -> ms, d'')) (runState (runMaybeT (handleEnemyTurn (x ^. position))) d')) ([], d) $ enemies d
 
 handleEnemyTurn :: Coord -> MaybeT (State Dungeon) (Maybe Message)
 handleEnemyTurn c = do
