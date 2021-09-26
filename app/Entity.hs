@@ -69,4 +69,4 @@ getHp :: Entity -> Int
 getHp e = e ^. hp
 
 updateHp :: Entity -> Int -> Entity
-updateHp e@Actor{ _hp = hp, _maxHp = maxHp } newHp = e { _hp = max 0 $ min maxHp newHp }
+updateHp e@Actor{ _hp = hp, _maxHp = maxHp } newHp = e{ _hp = max 0 $ min maxHp newHp }
