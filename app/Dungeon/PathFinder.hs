@@ -2,16 +2,17 @@ module Dungeon.PathFinder
     ( getPathTo
     ) where
 
-import           Control.Monad    (msum)
-import           Coord            (Coord (..))
-import           Data.Array       ((!), (//))
-import           Dungeon          (Dungeon, walkableFloor)
-import           Dungeon.Map.Bool (BoolMap, emptyBoolMap)
-import qualified Dungeon.Size     as DS
-import           Linear.V2        (V2 (..))
+import           Control.Monad             (msum)
+import           Control.Monad.Trans.State (State, state)
+import           Coord                     (Coord (..))
+import           Data.Array                ((!), (//))
+import           Dungeon                   (Dungeon, walkableFloor)
+import           Dungeon.Map.Bool          (BoolMap, emptyBoolMap)
+import qualified Dungeon.Size              as DS
+import           Linear.V2                 (V2 (..))
 
-getPathTo :: Dungeon -> Coord -> Coord -> [Coord]
-getPathTo d src = getPathToAcc emptyBoolMap [src] (walkableFloor d) src
+getPathTo :: Coord -> Coord -> State Dungeon [Coord]
+getPathTo src dst = state $ \d -> (getPathToAcc emptyBoolMap [src] (walkableFloor d) src dst, d)
 
 getPathToAcc :: BoolMap -> [Coord] -> BoolMap -> Coord -> Coord -> [Coord]
 getPathToAcc visited path walkable src dst
