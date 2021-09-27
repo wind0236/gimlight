@@ -55,17 +55,17 @@ app = App { appDraw = drawUI
           }
 
 handleEvent :: Engine -> BrickEvent Name Tick -> EventM Name (Next Engine)
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt g
-handleEvent g (VtyEvent (V.EvKey V.KEsc []))        = halt g
-handleEvent g (VtyEvent (V.EvKey V.KUp []))         = continue $ completeThisTurn $ playerBumpAction North g
-handleEvent g (VtyEvent (V.EvKey V.KDown []))       = continue $ completeThisTurn $ playerBumpAction South g
-handleEvent g (VtyEvent (V.EvKey V.KRight []))      = continue $ completeThisTurn $ playerBumpAction East g
-handleEvent g (VtyEvent (V.EvKey V.KLeft []))       = continue $ completeThisTurn $ playerBumpAction West g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'k') [])) = continue $ completeThisTurn $ playerBumpAction North g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'j') [])) = continue $ completeThisTurn $ playerBumpAction South g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'l') [])) = continue $ completeThisTurn $ playerBumpAction East g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'h') [])) = continue $ completeThisTurn $ playerBumpAction West g
-handleEvent g _                                     = continue g
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt e
+handleEvent e (VtyEvent (V.EvKey V.KEsc []))        = halt e
+handleEvent e (VtyEvent (V.EvKey V.KUp []))         = continue $ completeThisTurn $ playerBumpAction North e
+handleEvent e (VtyEvent (V.EvKey V.KDown []))       = continue $ completeThisTurn $ playerBumpAction South e
+handleEvent e (VtyEvent (V.EvKey V.KRight []))      = continue $ completeThisTurn $ playerBumpAction East e
+handleEvent e (VtyEvent (V.EvKey V.KLeft []))       = continue $ completeThisTurn $ playerBumpAction West e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'k') [])) = continue $ completeThisTurn $ playerBumpAction North e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'j') [])) = continue $ completeThisTurn $ playerBumpAction South e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'l') [])) = continue $ completeThisTurn $ playerBumpAction East e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'h') [])) = continue $ completeThisTurn $ playerBumpAction West e
+handleEvent e _                                     = continue e
 
 drawUI :: Engine -> [Widget Name]
 drawUI g = [ C.center $ padTop (Pad 2) (drawGame g) <=> drawMessageLog g ]
