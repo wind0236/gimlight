@@ -57,15 +57,18 @@ app = App { appDraw = drawUI
 handleEvent :: Engine -> BrickEvent Name Tick -> EventM Name (Next Engine)
 handleEvent e (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt e
 handleEvent e (VtyEvent (V.EvKey V.KEsc []))        = halt e
-handleEvent e (VtyEvent (V.EvKey V.KUp []))         = continue $ completeThisTurn $ playerBumpAction North e
-handleEvent e (VtyEvent (V.EvKey V.KDown []))       = continue $ completeThisTurn $ playerBumpAction South e
-handleEvent e (VtyEvent (V.EvKey V.KRight []))      = continue $ completeThisTurn $ playerBumpAction East e
-handleEvent e (VtyEvent (V.EvKey V.KLeft []))       = continue $ completeThisTurn $ playerBumpAction West e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'k') [])) = continue $ completeThisTurn $ playerBumpAction North e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'j') [])) = continue $ completeThisTurn $ playerBumpAction South e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'l') [])) = continue $ completeThisTurn $ playerBumpAction East e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'h') [])) = continue $ completeThisTurn $ playerBumpAction West e
+handleEvent e (VtyEvent (V.EvKey V.KUp []))         = handlePlayerMove North e
+handleEvent e (VtyEvent (V.EvKey V.KDown []))       = handlePlayerMove South e
+handleEvent e (VtyEvent (V.EvKey V.KRight []))      = handlePlayerMove East e
+handleEvent e (VtyEvent (V.EvKey V.KLeft []))       = handlePlayerMove West e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'k') [])) = handlePlayerMove North e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'j') [])) = handlePlayerMove South e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'l') [])) = handlePlayerMove East e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'h') [])) = handlePlayerMove West e
 handleEvent e _                                     = continue e
+
+handlePlayerMove :: Direction -> Engine -> EventM Name (Next Engine)
+handlePlayerMove d e = continue $ completeThisTurn $ playerBumpAction d e
 
 drawUI :: Engine -> [Widget Name]
 drawUI g = [ C.center $ padTop (Pad 2) (drawGame g) <=> drawMessageLog g ]
