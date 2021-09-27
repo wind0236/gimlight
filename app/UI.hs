@@ -17,6 +17,7 @@ import qualified Brick.Widgets.Center       as C
 import           Control.Concurrent         (forkIO, threadDelay)
 import           Control.Lens               ((&), (^.))
 import           Control.Monad              (forever, void)
+import           Control.Monad.Trans.State  (execState)
 import           Data.Array.Base            ((!))
 import           Direction                  (Direction (East, North, South, West))
 import           Dungeon                    (entities, explored, tileMap,
@@ -68,7 +69,9 @@ handleEvent e (VtyEvent (V.EvKey (V.KChar 'h') [])) = handlePlayerMove West e
 handleEvent e _                                     = continue e
 
 handlePlayerMove :: Direction -> Engine -> EventM Name (Next Engine)
-handlePlayerMove d e = continue $ completeThisTurn $ playerBumpAction d e
+handlePlayerMove d e = continue $ flip execState e $ do
+                                     playerBumpAction d
+                                     completeThisTurn
 
 drawUI :: Engine -> [Widget Name]
 drawUI g = [ C.center $ padTop (Pad 2) (drawGame g) <=> drawMessageLog g ]

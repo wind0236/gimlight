@@ -6,8 +6,8 @@ module Engine where
 
 import           Actions                        (bumpAction)
 import           Brick                          (AttrName)
-import           Control.Lens                   (makeLenses, (%~), (&), (.=),
-                                                 (.~), (^.))
+import           Control.Lens                   (makeLenses, use, (%=), (%~),
+                                                 (&), (.=), (.~), (^.))
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
 import           Control.Monad.Trans.State      (State, state)
 import           Control.Monad.Trans.State.Lazy (execState, modify, runState)
@@ -41,16 +41,25 @@ data Engine = Engine
           } deriving (Show)
 makeLenses ''Engine
 
-completeThisTurn :: Engine -> Engine
-completeThisTurn g = g { _dungeon = d', _messageLog = newLog }
-    where (ms, d') = runState D.completeThisTurn $ g ^. dungeon
-          newLog = foldl  (flip addMessage) (g ^. messageLog) ms
+completeThisTurn :: State Engine ()
+completeThisTurn = do
+        dg <- use dungeon
 
-playerBumpAction :: Direction -> Engine -> Engine
-playerBumpAction d g@Engine{ _messageLog = log } = Engine{ _dungeon = newDungeon, _messageLog = addMaybeMessage message log }
-    where (message, newDungeon) = flip runState (g ^. dungeon) $ do
-            e <- D.popPlayer
-            bumpAction e (directionToOffset d)
+        let (ms, newD) = runState D.completeThisTurn dg
+
+        messageLog %= foldl (flip addMessage) ms
+        dungeon .= newD
+
+playerBumpAction :: Direction -> State Engine ()
+playerBumpAction d = do
+        dg <- use dungeon
+
+        let (message, newDungeon) = flip runState dg $ do
+                e <- D.popPlayer
+                bumpAction e (directionToOffset d)
+
+        messageLog %= addMaybeMessage message
+        dungeon .= newDungeon
 
 initEngine :: IO Engine
 initEngine = do
