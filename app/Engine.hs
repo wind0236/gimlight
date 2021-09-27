@@ -48,8 +48,9 @@ completeThisTurn g = g { _dungeon = d', _messageLog = newLog }
 
 playerBumpAction :: Direction -> Engine -> Engine
 playerBumpAction d g@Engine{ _messageLog = log } = Engine{ _dungeon = newDungeon, _messageLog = addMaybeMessage message log }
-    where (e, dungeon') = runState D.popPlayer $ g ^. dungeon
-          (message, newDungeon) = runState (bumpAction e (directionToOffset d)) dungeon'
+    where (message, newDungeon) = flip runState (g ^. dungeon) $ do
+            e <- D.popPlayer
+            bumpAction e (directionToOffset d)
 
 initEngine :: IO Engine
 initEngine = do
