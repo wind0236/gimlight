@@ -114,7 +114,7 @@ calculateFov = do
               [V2 (x0 + x) (y0 + y) | x <- [(-fovRadius) .. fovRadius], y <- [(-fovRadius) .. fovRadius]]
 
 calculateLos :: TileMap -> Coord -> Coord -> BoolMap -> BoolMap
-calculateLos m (V2 x0 y0) (V2 x1 y1) = calculateLosAccum (V2 x0 y0) m (V2 x0 y0) (V2 x1 y1)
+calculateLos m p0 = calculateLosAccum p0 m p0
 
 calculateLosAccum :: Coord -> TileMap -> Coord -> Coord -> BoolMap -> BoolMap
 calculateLosAccum (V2 xnext ynext) map (V2 x0 y0) (V2 x1 y1) fov
