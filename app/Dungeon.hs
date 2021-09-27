@@ -37,6 +37,7 @@ import           Direction                      (Direction (East, North, South, 
 import           Dungeon.Generate               (generateDungeon)
 import qualified Dungeon.Map                    as M
 import           Dungeon.Map.Bool               (BoolMap, emptyBoolMap)
+import           Dungeon.Map.Fov                (Fov)
 import           Dungeon.Map.Tile               (Tile, TileMap, darkAttr,
                                                  lightAttr, transparent,
                                                  walkable)
@@ -53,7 +54,7 @@ import           System.Random.Stateful         (StdGen, newStdGen, random,
 
 data Dungeon = Dungeon
           { _tileMap  :: TileMap
-          , _visible  :: BoolMap
+          , _visible  :: Fov
           , _explored :: BoolMap
           , _entities :: [Entity]
           } deriving (Show)
