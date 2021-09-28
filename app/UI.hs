@@ -19,7 +19,6 @@ import           Control.Lens               ((&), (^.))
 import           Control.Monad              (forever, void)
 import           Control.Monad.Trans.State  (execState)
 import           Data.Array.Base            ((!))
-import           Direction                  (Direction (East, North, South, West))
 import           Dungeon                    (entities, explored, tileMap,
                                              visible)
 import           Dungeon.Map.Tile           (darkAttr, lightAttr)
@@ -58,17 +57,17 @@ app = App { appDraw = drawUI
 handleEvent :: Engine -> BrickEvent Name Tick -> EventM Name (Next Engine)
 handleEvent e (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt e
 handleEvent e (VtyEvent (V.EvKey V.KEsc []))        = halt e
-handleEvent e (VtyEvent (V.EvKey V.KUp []))         = handlePlayerMove North e
-handleEvent e (VtyEvent (V.EvKey V.KDown []))       = handlePlayerMove South e
-handleEvent e (VtyEvent (V.EvKey V.KRight []))      = handlePlayerMove East e
-handleEvent e (VtyEvent (V.EvKey V.KLeft []))       = handlePlayerMove West e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'k') [])) = handlePlayerMove North e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'j') [])) = handlePlayerMove South e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'l') [])) = handlePlayerMove East e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'h') [])) = handlePlayerMove West e
+handleEvent e (VtyEvent (V.EvKey V.KUp []))         = handlePlayerMove (V2 0 1) e
+handleEvent e (VtyEvent (V.EvKey V.KDown []))       = handlePlayerMove (V2 0 (-1)) e
+handleEvent e (VtyEvent (V.EvKey V.KRight []))      = handlePlayerMove (V2 1 0) e
+handleEvent e (VtyEvent (V.EvKey V.KLeft []))       = handlePlayerMove (V2 (-1) 0) e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'k') [])) = handlePlayerMove (V2 0 1) e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'j') [])) = handlePlayerMove (V2 0 (-1)) e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'l') [])) = handlePlayerMove (V2 1 0) e
+handleEvent e (VtyEvent (V.EvKey (V.KChar 'h') [])) = handlePlayerMove (V2 (-1) 0) e
 handleEvent e _                                     = continue e
 
-handlePlayerMove :: Direction -> Engine -> EventM Name (Next Engine)
+handlePlayerMove :: V2 Int -> Engine -> EventM Name (Next Engine)
 handlePlayerMove d e = continue $ flip execState e $ do
                                      playerBumpAction d
                                      completeThisTurn

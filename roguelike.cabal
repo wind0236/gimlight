@@ -38,7 +38,6 @@ executable roguelike
                       Dungeon.PathFinder,
                       Coord,
                       Entity,
-                      Direction,
                       Log,
                       Actions
 

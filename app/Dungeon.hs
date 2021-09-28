@@ -34,8 +34,6 @@ import           Data.Array.Base                (array, bounds, elems, (!),
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
 import           Data.Maybe                     (isJust, isNothing)
-import           Direction                      (Direction (East, North, South, West),
-                                                 directionToOffset)
 import           Dungeon.Generate               (generateDungeon)
 import qualified Dungeon.Map                    as M
 import           Dungeon.Map.Bool               (BoolMap, emptyBoolMap)

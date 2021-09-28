@@ -18,8 +18,6 @@ import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
 import           Data.Maybe                     (catMaybes)
-import           Direction                      (Direction (East, North, South, West),
-                                                 directionToOffset)
 import           Dungeon                        (Dungeon, enemies, initDungeon)
 import qualified Dungeon                        as D
 import           Dungeon.Generate               (generateDungeon)
@@ -75,13 +73,13 @@ handleEnemyTurn c = do
         messageLog %= addMaybeMessage message
         dungeon .= dg'
 
-playerBumpAction :: Direction -> State Engine ()
-playerBumpAction d = do
+playerBumpAction :: V2 Int -> State Engine ()
+playerBumpAction offset = do
         dg <- use dungeon
 
         let (message, newDungeon) = flip runState dg $ do
                 e <- D.popPlayer
-                bumpAction e (directionToOffset d)
+                bumpAction e offset
 
         messageLog %= addMaybeMessage message
         dungeon .= newDungeon
