@@ -14,6 +14,7 @@ module Log
     , height
     , width
     , emptyMessage
+    , addMessages
     ) where
 
 import           Brick.AttrMap   (AttrName)
@@ -38,6 +39,9 @@ emptyLog = take height $ replicate height emptyMessage
 
 emptyMessage :: Message
 emptyMessage = Message { text = replicate width ' ', attr = "emptyAttr" }
+
+addMessages :: [Message] -> MessageLog -> MessageLog
+addMessages m l = m ++ l
 
 addMessage :: Message -> MessageLog -> MessageLog
 addMessage m l = m:l

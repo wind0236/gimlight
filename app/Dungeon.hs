@@ -10,10 +10,12 @@ module Dungeon
     , explored
     , tileMap
     , popPlayer
+    , popActorAt
     , enemies
     , pushEntity
     , walkableFloor
     , getPlayerEntity
+    , enemyCoords
     ) where
 
 import           Brick                          (AttrName)
@@ -62,24 +64,8 @@ makeLenses ''Dungeon
 
 completeThisTurn :: State Dungeon [Message]
 completeThisTurn = do
-        ms <- handleEnemyTurns
         updateMap
-        return ms
-
-handleEnemyTurns :: State Dungeon [Message]
-handleEnemyTurns = state $ \d -> foldl (\(ms, d') x -> (\(ms', d'') -> (case join ms' of
-                                       Just x  -> x:ms
-                                       Nothing -> ms, d'')) (runState (runMaybeT (handleEnemyTurn (x ^. position))) d')) ([], d) $ evalState enemies d
-
-handleEnemyTurn :: Coord -> MaybeT (State Dungeon) (Maybe Message)
-handleEnemyTurn c = do
-        entity <- (MaybeT . popActorAt) c
-
-        let message = attackMessage $ (entity ^. name) ++ "'s turn."
-
-        MaybeT . fmap Just $ do
-            pushEntity entity
-            return $ Just message
+        return []
 
 updateMap :: State Dungeon ()
 updateMap = do
@@ -136,6 +122,9 @@ transparentMap = do
         t <- use tileMap
 
         return $ fmap (^. transparent) t
+
+enemyCoords :: Dungeon -> [Coord]
+enemyCoords d = map (^. position) $ filter (not . E.isPlayer) $ d ^. entities
 
 enemies :: State Dungeon [Entity]
 enemies = do

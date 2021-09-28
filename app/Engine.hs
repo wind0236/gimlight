@@ -1,23 +1,26 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 
 module Engine where
 
-import           Actions                        (bumpAction)
+import           Actions                        (bumpAction, enemyAction)
 import           Brick                          (AttrName)
 import           Control.Lens                   (makeLenses, use, (%=), (%~),
                                                  (&), (.=), (.~), (^.))
+import           Control.Monad.Extra            (foldM)
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
-import           Control.Monad.Trans.State      (State, state)
+import           Control.Monad.Trans.State      (State, evalState, state)
 import           Control.Monad.Trans.State.Lazy (execState, modify, runState)
 import           Coord                          (Coord)
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
+import           Data.Maybe                     (catMaybes)
 import           Direction                      (Direction (East, North, South, West),
                                                  directionToOffset)
-import           Dungeon                        (Dungeon, initDungeon)
+import           Dungeon                        (Dungeon, enemies, initDungeon)
 import qualified Dungeon                        as D
 import           Dungeon.Generate               (generateDungeon)
 import           Dungeon.Map.Bool               (BoolMap, emptyBoolMap)
@@ -31,7 +34,7 @@ import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           Log                            (MessageLog, addMaybeMessage,
-                                                 addMessage)
+                                                 addMessage, addMessages)
 import qualified Log                            as L
 import           System.Random.Stateful         (newStdGen)
 
@@ -43,12 +46,34 @@ makeLenses ''Engine
 
 completeThisTurn :: State Engine ()
 completeThisTurn = do
+        handleEnemyTurns
+
         dg <- use dungeon
 
         let (ms, newD) = runState D.completeThisTurn dg
 
-        messageLog %= foldl (flip addMessage) ms
+        messageLog %= addMessages ms
+
         dungeon .= newD
+
+handleEnemyTurns :: State Engine ()
+handleEnemyTurns = do
+        dg <- use dungeon
+        let xs = evalState enemies dg
+        mapM_ (handleEnemyTurn . (^. position)) xs
+
+handleEnemyTurn :: Coord -> State Engine ()
+handleEnemyTurn c = do
+        dg <- use dungeon
+
+        let (message, dg') = flip runState dg $ do
+                e <- D.popActorAt c
+                case e of
+                    Just e  -> enemyAction e
+                    Nothing -> error "No such enemy."
+
+        messageLog %= addMaybeMessage message
+        dungeon .= dg'
 
 playerBumpAction :: Direction -> State Engine ()
 playerBumpAction d = do

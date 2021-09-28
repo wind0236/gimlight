@@ -50,7 +50,7 @@ tunnelBetween start end d = createRoom path1 $ createRoom path2 d
           corner = V2 (start ^. _x) (end ^. _y)
 
 maxMonstersPerRoom :: Int
-maxMonstersPerRoom = 8
+maxMonstersPerRoom = 1
 
 placeEnemies :: StdGen -> Room -> Int -> ([Entity], StdGen)
 placeEnemies = placeEnemiesAccum []

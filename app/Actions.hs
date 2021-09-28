@@ -11,7 +11,7 @@ import           Control.Monad.Trans.State (State, evalState, execState,
 import           Coord                     (Coord)
 import           Data.Array                ((!))
 import           Data.List                 (find)
-import           Data.Maybe                (isJust, isNothing)
+import           Data.Maybe                (fromMaybe, isJust, isNothing)
 import           Dungeon                   (Dungeon, enemies, entities,
                                             getPlayerEntity, pushEntity,
                                             tileMap, visible)
@@ -25,12 +25,6 @@ import           Log                       (Message, attackMessage)
 
 enemyAction :: Entity -> State Dungeon (Maybe Message)
 enemyAction e = do
-        p <- getPlayerEntity
-        v <- use visible
-
-        let posDiff = p ^. position - e ^. position
-            distance = max (abs posDiff ^. _x) (abs posDiff ^. _y)
-
         u <- updatePathOrMelee e
 
         case u of
@@ -40,31 +34,45 @@ enemyAction e = do
 updatePathOrMelee :: Entity -> State Dungeon (Either (Maybe Message) Entity)
 updatePathOrMelee e = do
         p <- getPlayerEntity
-        v <- use visible
 
         let pos = e ^. position
             posDiff = (p ^. position) - pos
             distance = max (abs posDiff ^. _x) (abs posDiff ^. _y)
+
+        v <- use visible
 
         if v ! (pos ^. _x, pos ^. _y)
             then if distance <= 1
                      then do
                          msg <- meleeAction e posDiff
                          return $ Left msg
+
                      else do
                          newPath <- getPathTo pos (p ^. position)
 
-                         let    newAi = HostileEnemy { _path = newPath }
-                                newEntity = e & ai .~ newAi
-                         undefined
-                         return $ Right newEntity
+                         let newAi = HostileEnemy { _path = fromMaybe [] newPath}
+                             newEntity = e & ai .~ newAi
 
-            else return $ Left Nothing
+                         return $ Right newEntity
+            else do
+                pushEntity e
+                return $ Left Nothing
 
 
 moveOrWait :: Entity -> State Dungeon (Maybe Message)
 moveOrWait e =
         let p = e ^. (ai . path)
+            -- d = length p
+
+        -- in do
+            -- waitAction e
+            -- return $ Just $ attackMessage $ "length: " ++ show p
+        -- in if d then do
+        --                 waitAction e
+        --                 return Nothing
+        --          else do
+        --                 waitAction e
+        --                 return Nothing
 
         in if null p
             then do
