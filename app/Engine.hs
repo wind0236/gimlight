@@ -18,7 +18,8 @@ import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
 import           Data.Maybe                     (catMaybes)
-import           Dungeon                        (Dungeon, enemies, initDungeon)
+import           Dungeon                        (Dungeon, aliveEnemies, enemies,
+                                                 initDungeon)
 import qualified Dungeon                        as D
 import           Dungeon.Generate               (generateDungeon)
 import           Dungeon.Map.Bool               (BoolMap, emptyBoolMap)
@@ -57,7 +58,7 @@ completeThisTurn = do
 handleEnemyTurns :: State Engine ()
 handleEnemyTurns = do
         dg <- use dungeon
-        let xs = evalState enemies dg
+        let xs = evalState aliveEnemies dg
         mapM_ (handleEnemyTurn . (^. position)) xs
 
 handleEnemyTurn :: Coord -> State Engine ()

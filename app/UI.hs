@@ -115,6 +115,7 @@ theMap = attrMap V.defAttr
     [ (playerAttr, V.black `on` V.rgbColor 200 180 50)
     , (orcAttr, V.rgbColor 63 127 63 `on` V.rgbColor 200 180 50)
     , (trollAttr, V.rgbColor 0 127 0 `on` V.rgbColor 200 180 50)
+    , (deadAttr, V.rgbColor 191 0 0 `on` V.rgbColor 200 180 50)
     , (darkFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 50 50 150)
     , (lightFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 200 180 50)
     , (darkWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 0 0 100)
@@ -123,7 +124,7 @@ theMap = attrMap V.defAttr
     , (infoMessageAttr, fg V.blue)
     ]
 
-playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr, orcAttr, trollAttr, infoMessageAttr :: AttrName
+playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr, orcAttr, trollAttr, infoMessageAttr, deadAttr :: AttrName
 playerAttr = "playerAttr"
 npcAttr = "npcAttr"
 emptyAttr = "emptyAttr"
@@ -135,3 +136,4 @@ orcAttr = "orcAttr"
 trollAttr = "trollAttr"
 attackMessageAttr = "attackMessageAttr"
 infoMessageAttr = "infoMessageAttr"
+deadAttr = "deadAttr"
