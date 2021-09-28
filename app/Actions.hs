@@ -62,18 +62,6 @@ updatePathOrMelee e = do
 moveOrWait :: Entity -> State Dungeon (Maybe Message)
 moveOrWait e =
         let p = e ^. (ai . path)
-            -- d = length p
-
-        -- in do
-            -- waitAction e
-            -- return $ Just $ attackMessage $ "length: " ++ show p
-        -- in if d then do
-        --                 waitAction e
-        --                 return Nothing
-        --          else do
-        --                 waitAction e
-        --                 return Nothing
-
         in if null p
             then do
                     waitAction e
