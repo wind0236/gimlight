@@ -5,11 +5,12 @@ module UI(main) where
 import           Brick                      (App (..), AttrMap, AttrName,
                                              BrickEvent (AppEvent, VtyEvent),
                                              EventM, Next, Padding (Pad),
-                                             Widget, attrMap, continue,
+                                             Widget, attrMap, bg, continue,
                                              customMain, fg, hBox, hLimit, halt,
                                              neverShowCursor, on, padAll,
                                              padTop, str, vBox, vLimit,
-                                             withAttr, withBorderStyle, (<=>))
+                                             withAttr, withBorderStyle, (<+>),
+                                             (<=>))
 import           Brick.BChan                (newBChan, writeBChan)
 import qualified Brick.Widgets.Border       as B
 import qualified Brick.Widgets.Border.Style as BS
@@ -26,7 +27,8 @@ import           Dungeon.Map.Tile           (darkAttr, lightAttr)
 import           Dungeon.Size               (height, width)
 import           Engine                     (Engine, completeThisTurn, dungeon,
                                              initEngine, isGameOver, messageLog,
-                                             playerBumpAction)
+                                             playerBumpAction, playerCurrentHp,
+                                             playerMaxHp)
 import           Entity                     (char, entityAttr, position,
                                              renderOrder)
 import qualified Graphics.Vty               as V
@@ -81,7 +83,7 @@ handlePlayerMove d e = continue $ flip execState e $ do
         completeThisTurn
 
 drawUI :: Engine -> [Widget Name]
-drawUI e = [ C.center $ padTop (Pad 2) (drawGame e) <=> drawMessageLog e ]
+drawUI e = [ C.center $ drawHpBar e <+> (padTop (Pad 2) (drawGame e) <=> drawMessageLog e )]
 
 drawGame :: Engine -> Widget Name
 drawGame engine = withBorderStyle BS.unicodeBold
@@ -112,6 +114,15 @@ drawMessageLog engine = withBorderStyle BS.unicodeBold
     where
         rows = [m | m <- reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take L.height $ concatMap (reverse . L.messageToAttrNameAndStringList) (engine ^. messageLog)]
 
+drawStatus :: Engine -> [Widget Name]
+drawStatus e = [ C.center $ padTop (Pad 2) (drawHpBar e)]
+
+drawHpBar :: Engine -> Widget Name
+drawHpBar e = let barWidth = 20
+                  filledWidth = playerCurrentHp e * barWidth `div` playerMaxHp e
+                  attrAt x = if x < filledWidth then hpBarFilled else hpBarEmpty
+              in hBox [ x | x <- map (\x -> withAttr (attrAt x) $ str "  ") [0 .. barWidth - 1]]
+
 theMap :: AttrMap
 theMap = attrMap V.defAttr
     [ (playerAttr, V.black `on` V.rgbColor 200 180 50)
@@ -122,11 +133,13 @@ theMap = attrMap V.defAttr
     , (lightFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 200 180 50)
     , (darkWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 0 0 100)
     , (lightWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 130 110 50)
+    , (hpBarFilled, bg $ V.rgbColor 0x0 0x60 0x0)
+    , (hpBarEmpty, bg $ V.rgbColor 0x40 0x10 0x10)
     , (attackMessageAttr, fg V.red)
     , (infoMessageAttr, fg V.blue)
     ]
 
-playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr, orcAttr, trollAttr, infoMessageAttr, deadAttr :: AttrName
+playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr, orcAttr, trollAttr, infoMessageAttr, hpBarFilled, hpBarEmpty, deadAttr :: AttrName
 playerAttr = "playerAttr"
 npcAttr = "npcAttr"
 emptyAttr = "emptyAttr"
@@ -138,4 +151,6 @@ orcAttr = "orcAttr"
 trollAttr = "trollAttr"
 attackMessageAttr = "attackMessageAttr"
 infoMessageAttr = "infoMessageAttr"
+hpBarFilled = "hpBarFilled"
+hpBarEmpty = "hpBarEmpty"
 deadAttr = "deadAttr"

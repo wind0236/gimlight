@@ -19,9 +19,9 @@ import           Dungeon.Map.Tile          (walkable)
 import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
 import           Entity                    (Ai (..), Entity, ai, blocksMovement,
-                                            defence, getHp, hp, isAlive,
-                                            isPlayer, name, path, position,
-                                            power, updateHp)
+                                            defence, getHp, isAlive, isPlayer,
+                                            name, path, position, power,
+                                            updateHp)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, attackMessage)
 

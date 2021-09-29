@@ -18,7 +18,7 @@ module Entity
     , power
     , defence
     , updateHp
-    , hp
+    , maxHp
     , isAlive
     , blocksMovement
     , renderOrder

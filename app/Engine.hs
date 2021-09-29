@@ -19,7 +19,7 @@ import           Data.Array.Base                (array, bounds, elems, (!),
                                                  (//))
 import           Data.Maybe                     (catMaybes)
 import           Dungeon                        (Dungeon, aliveEnemies, enemies,
-                                                 initDungeon)
+                                                 getPlayerEntity, initDungeon)
 import qualified Dungeon                        as D
 import           Dungeon.Generate               (generateDungeon)
 import           Dungeon.Map.Bool               (BoolMap, emptyBoolMap)
@@ -78,6 +78,7 @@ handleEnemyTurn c = do
         messageLog %= addMessages messages
         dungeon .= dg'
 
+
 playerBumpAction :: V2 Int -> State Engine ()
 playerBumpAction offset = do
         dg <- use dungeon
@@ -88,6 +89,12 @@ playerBumpAction offset = do
 
         messageLog %= addMessages messages
         dungeon .= newDungeon
+
+playerCurrentHp :: Engine -> Int
+playerCurrentHp e = E.getHp $ getPlayerEntity (e ^. dungeon)
+
+playerMaxHp :: Engine -> Int
+playerMaxHp e = getPlayerEntity (e ^. dungeon) ^. E.maxHp
 
 initEngine :: IO Engine
 initEngine = do
