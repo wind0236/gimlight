@@ -61,9 +61,7 @@ updatePathOrMelee e = do
                              newEntity = e & ai .~ newAi
 
                          return $ Right newEntity
-            else do
-                pushEntity e
-                return $ Left []
+            else return $ Right e
 
 
 moveOrWait :: Entity -> State Dungeon (Maybe Message)
