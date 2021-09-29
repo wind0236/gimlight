@@ -67,24 +67,24 @@ handleEnemyTurn :: Coord -> State Engine ()
 handleEnemyTurn c = do
         dg <- use dungeon
 
-        let (message, dg') = flip runState dg $ do
+        let (messages, dg') = flip runState dg $ do
                 e <- D.popActorAt c
                 case e of
                     Just e  -> enemyAction e
                     Nothing -> error "No such enemy."
 
-        messageLog %= addMaybeMessage message
+        messageLog %= addMessages messages
         dungeon .= dg'
 
 playerBumpAction :: V2 Int -> State Engine ()
 playerBumpAction offset = do
         dg <- use dungeon
 
-        let (message, newDungeon) = flip runState dg $ do
+        let (messages, newDungeon) = flip runState dg $ do
                 e <- D.popPlayer
                 bumpAction e offset
 
-        messageLog %= addMaybeMessage message
+        messageLog %= addMessages messages
         dungeon .= newDungeon
 
 initEngine :: IO Engine

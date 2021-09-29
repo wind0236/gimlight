@@ -24,15 +24,19 @@ import           Entity                    (Ai (..), Entity, ai, blocksMovement,
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, attackMessage)
 
-enemyAction :: Entity -> State Dungeon (Maybe Message)
+enemyAction :: Entity -> State Dungeon [Message]
 enemyAction e = do
         u <- updatePathOrMelee e
 
         case u of
-            Right e -> moveOrWait e
+            Right e -> do
+                            m <- moveOrWait e
+                            return $ case m of
+                                         Nothing -> []
+                                         Just x  -> [x]
             Left m  -> return m
 
-updatePathOrMelee :: Entity -> State Dungeon (Either (Maybe Message) Entity)
+updatePathOrMelee :: Entity -> State Dungeon (Either [Message] Entity)
 updatePathOrMelee e = do
         d <- get
 
@@ -58,7 +62,7 @@ updatePathOrMelee e = do
                          return $ Right newEntity
             else do
                 pushEntity e
-                return $ Left Nothing
+                return $ Left []
 
 
 moveOrWait :: Entity -> State Dungeon (Maybe Message)
@@ -76,7 +80,7 @@ moveOrWait e =
                      moveAction newEntity offset
                      return Nothing
 
-bumpAction :: Entity -> V2 Int -> State Dungeon (Maybe Message)
+bumpAction :: Entity -> V2 Int -> State Dungeon [Message]
 bumpAction src offset = do
         d <- get
 
@@ -86,7 +90,7 @@ bumpAction src offset = do
             Just _  -> meleeAction src offset
             Nothing -> do
                 moveAction src offset
-                return Nothing
+                return []
 
 getBlockingEntityAtLocation :: Dungeon -> Coord -> Maybe Entity
 getBlockingEntityAtLocation d c = find (\x -> x ^. position == c && x ^. blocksMovement) $ enemies d
@@ -94,7 +98,7 @@ getBlockingEntityAtLocation d c = find (\x -> x ^. position == c && x ^. blocksM
 getAliveActorAtLocation :: Dungeon -> Coord -> Maybe Entity
 getAliveActorAtLocation d c = find (\x -> x ^. position == c && x ^. isAlive) $ enemies d
 
-meleeAction :: Entity -> V2 Int -> State Dungeon (Maybe Message)
+meleeAction :: Entity -> V2 Int -> State Dungeon [Message]
 meleeAction src offset = do
         es <- use entities
 
@@ -106,7 +110,7 @@ meleeAction src offset = do
         case target of
             Nothing -> do
                 pushEntity src
-                return Nothing
+                return []
             Just x -> let damage = (src ^. power) - (x ^. defence)
                           msg = (src ^. name) ++ " attacks " ++ (x ^. name)
                         in if damage > 0
@@ -115,11 +119,11 @@ meleeAction src offset = do
                                     newEntity = updateHp x newHp
                                 pushEntity src
                                 pushEntity newEntity
-                                return $ Just $ attackMessage $ msg ++ " for " ++ show damage ++ " hit points."
+                                return [attackMessage $ msg ++ " for " ++ show damage ++ " hit points."]
                             else do
                                     pushEntity src
                                     pushEntity x
-                                    return $ Just $ attackMessage $ msg ++ " but does not damage."
+                                    return [attackMessage $ msg ++ " but does not damage."]
 
 moveAction :: Entity -> V2 Int -> State Dungeon ()
 moveAction src offset = state $ \d -> ((), execState (pushEntity $ updatePosition d src offset) d)
