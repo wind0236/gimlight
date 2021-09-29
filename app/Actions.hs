@@ -128,9 +128,9 @@ waitAction :: Entity -> State Dungeon ()
 waitAction = pushEntity
 
 updatePosition :: Dungeon -> Entity -> V2 Int -> Entity
-updatePosition g src offset
+updatePosition d src offset
     = let next = nextPosition src offset
-      in if movable g next
+      in if movable d next
             then src & position .~ next
             else src
 
