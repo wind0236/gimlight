@@ -81,14 +81,14 @@ handlePlayerMove d e = continue $ flip execState e $ do
         completeThisTurn
 
 drawUI :: Engine -> [Widget Name]
-drawUI g = [ C.center $ padTop (Pad 2) (drawGame g) <=> drawMessageLog g ]
+drawUI e = [ C.center $ padTop (Pad 2) (drawGame e) <=> drawMessageLog e ]
 
 drawGame :: Engine -> Widget Name
-drawGame g = withBorderStyle BS.unicodeBold
+drawGame engine = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Game")
     $ vBox rows
     where
-        d = g ^. dungeon
+        d = engine ^. dungeon
         rows = [hBox $ cellsInRow r | r <- [height - 1, height - 2 .. 0]]
         cellsInRow y = [cellAt (V2 x y)  | x <- [0 .. width - 1]]
         coordAsTuple c = (c ^. _x, c ^. _y)
@@ -106,12 +106,11 @@ drawGame g = withBorderStyle BS.unicodeBold
                         _        -> withAttr (attrAt c) $ str " "
 
 drawMessageLog :: Engine -> Widget Name
-drawMessageLog g = withBorderStyle BS.unicodeBold
+drawMessageLog engine = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Log")
     $ vBox rows
     where
-        -- rows = [m | m <- map (str . show) $ g ^. messageLog]
-        rows = [m | m <- reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take L.height $ concatMap (reverse . L.messageToAttrNameAndStringList) (g ^. messageLog)]
+        rows = [m | m <- reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take L.height $ concatMap (reverse . L.messageToAttrNameAndStringList) (engine ^. messageLog)]
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
