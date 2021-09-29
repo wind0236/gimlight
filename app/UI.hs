@@ -15,8 +15,8 @@ import qualified Brick.Widgets.Border       as B
 import qualified Brick.Widgets.Border.Style as BS
 import qualified Brick.Widgets.Center       as C
 import           Control.Concurrent         (forkIO, threadDelay)
-import           Control.Lens               ((&), (^.))
-import           Control.Monad              (forever, void)
+import           Control.Lens               (use, (&), (^.))
+import           Control.Monad              (forever, unless, void, when)
 import           Control.Monad.Trans.State  (execState)
 import           Data.Array.Base            ((!))
 import           Data.List                  (sortOn)
@@ -25,7 +25,7 @@ import           Dungeon                    (entities, explored, tileMap,
 import           Dungeon.Map.Tile           (darkAttr, lightAttr)
 import           Dungeon.Size               (height, width)
 import           Engine                     (Engine, completeThisTurn, dungeon,
-                                             initEngine, messageLog,
+                                             initEngine, isGameOver, messageLog,
                                              playerBumpAction)
 import           Entity                     (char, entityAttr, position,
                                              renderOrder)
@@ -75,8 +75,10 @@ handleEvent e _                                     = continue e
 
 handlePlayerMove :: V2 Int -> Engine -> EventM Name (Next Engine)
 handlePlayerMove d e = continue $ flip execState e $ do
-                                     playerBumpAction d
-                                     completeThisTurn
+    finished <- use isGameOver
+    unless finished $ do
+        playerBumpAction d
+        completeThisTurn
 
 drawUI :: Engine -> [Widget Name]
 drawUI g = [ C.center $ padTop (Pad 2) (drawGame g) <=> drawMessageLog g ]

@@ -45,6 +45,7 @@ import           Dungeon.Map.Tile               (Tile, TileMap, darkAttr,
 import           Dungeon.Room                   (Room (..), x1, x2, y1, y2)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
+import qualified Dungeon.Turn                   as DT
 import           Entity                         (Entity (..), isAlive, name,
                                                  position)
 import qualified Entity                         as E
@@ -62,10 +63,11 @@ data Dungeon = Dungeon
           } deriving (Show)
 makeLenses ''Dungeon
 
-completeThisTurn :: State Dungeon [Message]
+completeThisTurn :: State Dungeon DT.Status
 completeThisTurn = do
         updateMap
-        return []
+        d <- get
+        return $ if isPlayerAlive d then DT.Success else DT.PlayerKilled
 
 updateMap :: State Dungeon ()
 updateMap = do
@@ -121,6 +123,9 @@ transparentMap d = fmap (^. transparent) (d ^. tileMap)
 
 enemyCoords :: Dungeon -> [Coord]
 enemyCoords d = map (^. position) $ filter (not . (^. E.isPlayer)) $ d ^. entities
+
+isPlayerAlive :: Dungeon -> Bool
+isPlayerAlive d = getPlayerEntity d ^. isAlive
 
 aliveEnemies :: Dungeon -> [Entity]
 aliveEnemies d = filter (^. isAlive) $ enemies d

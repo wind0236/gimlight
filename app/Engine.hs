@@ -28,6 +28,7 @@ import           Dungeon.Map.Tile               (Tile, TileMap, darkAttr,
                                                  walkable)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
+import qualified Dungeon.Turn                   as DT
 import           Entity                         (Entity (..), position)
 import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
@@ -40,6 +41,7 @@ import           System.Random.Stateful         (newStdGen)
 data Engine = Engine
           { _dungeon    :: Dungeon
           , _messageLog :: MessageLog
+          , _isGameOver :: Bool
           } deriving (Show)
 makeLenses ''Engine
 
@@ -49,9 +51,9 @@ completeThisTurn = do
 
         dg <- use dungeon
 
-        let (ms, newD) = runState D.completeThisTurn dg
+        let (status, newD) = runState D.completeThisTurn dg
 
-        messageLog %= addMessages ms
+        isGameOver .= (status == DT.PlayerKilled)
 
         dungeon .= newD
 
@@ -92,4 +94,5 @@ initEngine = do
         dungeon <- initDungeon
         return $ Engine { _dungeon = dungeon
                       , _messageLog = foldr (addMessage . L.infoMessage) L.emptyLog ["Welcome to a roguelike game!"]
+                      , _isGameOver = False
                       }
