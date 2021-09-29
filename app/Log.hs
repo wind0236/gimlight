@@ -41,7 +41,7 @@ emptyMessage :: Message
 emptyMessage = Message { text = replicate width ' ', attr = "emptyAttr" }
 
 addMessages :: [Message] -> MessageLog -> MessageLog
-addMessages m l = m ++ l
+addMessages xs l = foldl (flip addMessage) l xs
 
 addMessage :: Message -> MessageLog -> MessageLog
 addMessage m l = m:l
