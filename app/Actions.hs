@@ -19,8 +19,9 @@ import           Dungeon.Map.Tile          (walkable)
 import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
 import           Entity                    (Ai (..), Entity, ai, blocksMovement,
-                                            defence, getHp, hp, isAlive, name,
-                                            path, position, power, updateHp)
+                                            defence, getHp, hp, isAlive,
+                                            isPlayer, name, path, position,
+                                            power, updateHp)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, attackMessage)
 
@@ -117,9 +118,12 @@ meleeAction src offset = do
                             then do
                                 let newHp = getHp x - damage
                                     newEntity = updateHp x newHp
+                                    damagedMessage = msg ++ " for " ++ show damage ++ " hit points."
+                                    deathMessage = if x ^. isPlayer then "You died!" else (x ^. name) ++ " is dead!"
+                                    messages = if newHp <= 0 then [damagedMessage, deathMessage] else [damagedMessage]
                                 pushEntity src
                                 pushEntity newEntity
-                                return [attackMessage $ msg ++ " for " ++ show damage ++ " hit points."]
+                                return $ fmap attackMessage messages
                             else do
                                     pushEntity src
                                     pushEntity x
