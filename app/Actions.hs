@@ -122,13 +122,13 @@ meleeAction src offset = do
                                     return $ Just $ attackMessage $ msg ++ " but does not damage."
 
 moveAction :: Entity -> V2 Int -> State Dungeon ()
-moveAction src offset = state $ \d -> ((), execState (pushEntity $ updatePosition src offset d) d)
+moveAction src offset = state $ \d -> ((), execState (pushEntity $ updatePosition d src offset) d)
 
 waitAction :: Entity -> State Dungeon ()
 waitAction = pushEntity
 
-updatePosition :: Entity -> V2 Int -> Dungeon -> Entity
-updatePosition src offset g
+updatePosition :: Dungeon -> Entity -> V2 Int -> Entity
+updatePosition g src offset
     = let next = nextPosition src offset
       in if movable g next
             then src & position .~ next
