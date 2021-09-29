@@ -58,7 +58,9 @@ completeThisTurn = do
 handleEnemyTurns :: State Engine ()
 handleEnemyTurns = do
         dg <- use dungeon
-        let xs = evalState aliveEnemies dg
+
+        let xs = aliveEnemies dg
+
         mapM_ (handleEnemyTurn . (^. position)) xs
 
 handleEnemyTurn :: Coord -> State Engine ()

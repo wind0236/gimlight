@@ -6,7 +6,7 @@ module Actions
     ) where
 
 import           Control.Lens              (use, (%~), (&), (.=), (.~), (^.))
-import           Control.Monad.Trans.State (State, evalState, execState,
+import           Control.Monad.Trans.State (State, evalState, execState, get,
                                             runState, state)
 import           Coord                     (Coord)
 import           Data.Array                ((!))
@@ -34,9 +34,10 @@ enemyAction e = do
 
 updatePathOrMelee :: Entity -> State Dungeon (Either (Maybe Message) Entity)
 updatePathOrMelee e = do
-        p <- getPlayerEntity
+        d <- get
 
-        let pos = e ^. position
+        let p = getPlayerEntity d
+            pos = e ^. position
             posDiff = p ^. position - pos
             distance = max (abs posDiff ^. _x) (abs posDiff ^. _y)
 
@@ -77,7 +78,9 @@ moveOrWait e =
 
 bumpAction :: Entity -> V2 Int -> State Dungeon (Maybe Message)
 bumpAction src offset = do
-        x <- getAliveActorAtLocation (src ^. position + offset)
+        d <- get
+
+        let x = getAliveActorAtLocation d (src ^. position + offset)
 
         case x of
             Just _  -> meleeAction src offset
@@ -85,11 +88,11 @@ bumpAction src offset = do
                 moveAction src offset
                 return Nothing
 
-getBlockingEntityAtLocation :: Coord -> State Dungeon (Maybe Entity)
-getBlockingEntityAtLocation c = find (\x -> x ^. position == c && x ^. blocksMovement) <$> enemies
+getBlockingEntityAtLocation :: Dungeon -> Coord -> Maybe Entity
+getBlockingEntityAtLocation d c = find (\x -> x ^. position == c && x ^. blocksMovement) $ enemies d
 
-getAliveActorAtLocation :: Coord -> State Dungeon (Maybe Entity)
-getAliveActorAtLocation c = find (\x -> x ^. position == c && x ^. isAlive) <$> enemies
+getAliveActorAtLocation :: Dungeon -> Coord -> Maybe Entity
+getAliveActorAtLocation d c = find (\x -> x ^. position == c && x ^. isAlive) $ enemies d
 
 meleeAction :: Entity -> V2 Int -> State Dungeon (Maybe Message)
 meleeAction src offset = do
@@ -137,8 +140,11 @@ nextPosition src offset =
 
 movable :: Coord -> State Dungeon Bool
 movable c = do
+        d <- get
         t <- use tileMap
-        e <- getBlockingEntityAtLocation c
+
+        let e = getBlockingEntityAtLocation d c
+
         return $ case e of
             Just _  -> False
             Nothing -> t ! (c ^. _x, c ^. _y) ^. walkable

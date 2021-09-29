@@ -27,7 +27,7 @@ import           Control.Monad                  (join)
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
 import           Control.Monad.Trans.State      (State, evalState, runState,
                                                  state)
-import           Control.Monad.Trans.State.Lazy (execState, modify)
+import           Control.Monad.Trans.State.Lazy (execState, get, modify)
 import           Coord                          (Coord (..))
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
@@ -81,18 +81,17 @@ updateExplored = do
 
 updateFov :: State Dungeon ()
 updateFov = do
-        t <- transparentMap
-        p <- getPlayerEntity
+        d <- get
+
+        let t = transparentMap d
+            p = getPlayerEntity d
 
         visible .= calculateFov (p ^. position) t
 
-getPlayerEntity :: State Dungeon Entity
-getPlayerEntity = do
-        xs <- use entities
-        let x = find (^. E.isPlayer) xs
-
-        case x of
-            Just p  -> return p
+getPlayerEntity :: Dungeon -> Entity
+getPlayerEntity d =
+        case find (^. E.isPlayer) $ d ^. entities of
+            Just p  -> p
             Nothing -> error "No player entity."
 
 pushEntity :: Entity -> State Dungeon ()
@@ -117,22 +116,17 @@ popActorIf f = state $ \d@Dungeon{ _entities = entities } ->
 walkableFloor :: Dungeon -> BoolMap
 walkableFloor d = M.generate (\c -> ((d ^. tileMap) ! c) ^. walkable)
 
-transparentMap :: State Dungeon BoolMap
-transparentMap = do
-        t <- use tileMap
-
-        return $ fmap (^. transparent) t
+transparentMap :: Dungeon -> BoolMap
+transparentMap d = fmap (^. transparent) (d ^. tileMap)
 
 enemyCoords :: Dungeon -> [Coord]
 enemyCoords d = map (^. position) $ filter (not . (^. E.isPlayer)) $ d ^. entities
 
-aliveEnemies :: State Dungeon [Entity]
-aliveEnemies = filter (^. isAlive) <$> enemies
+aliveEnemies :: Dungeon -> [Entity]
+aliveEnemies d = filter (^. isAlive) $ enemies d
 
-enemies :: State Dungeon [Entity]
-enemies = do
-        xs <- use entities
-        return $ filter (not . (^. E.isPlayer)) xs
+enemies :: Dungeon -> [Entity]
+enemies d = filter (not . (^. E.isPlayer)) $ d ^. entities
 
 initDungeon :: IO Dungeon
 initDungeon = do
