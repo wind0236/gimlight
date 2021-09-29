@@ -130,7 +130,7 @@ waitAction = pushEntity
 updatePosition :: Entity -> V2 Int -> Dungeon -> Entity
 updatePosition src offset g
     = let next = nextPosition src offset
-      in if evalState (movable next) g
+      in if movable g next
             then src & position .~ next
             else src
 
@@ -138,13 +138,7 @@ nextPosition :: Entity -> V2 Int -> Coord
 nextPosition src offset =
     max (V2 0 0) $ min (V2 (DS.width - 1) $ DS.height - 1) $ src ^. position + offset
 
-movable :: Coord -> State Dungeon Bool
-movable c = do
-        d <- get
-        t <- use tileMap
-
-        let e = getBlockingEntityAtLocation d c
-
-        return $ case e of
-            Just _  -> False
-            Nothing -> t ! (c ^. _x, c ^. _y) ^. walkable
+movable :: Dungeon -> Coord -> Bool
+movable d c = case getBlockingEntityAtLocation d c of
+                  Just _  -> False
+                  Nothing -> (d ^. tileMap) ! (c ^. _x, c ^. _y) ^. walkable
