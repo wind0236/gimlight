@@ -19,6 +19,7 @@ import           Control.Lens               ((&), (^.))
 import           Control.Monad              (forever, void)
 import           Control.Monad.Trans.State  (execState)
 import           Data.Array.Base            ((!))
+import           Data.List                  (sortOn)
 import           Dungeon                    (entities, explored, tileMap,
                                              visible)
 import           Dungeon.Map.Tile           (darkAttr, lightAttr)
@@ -26,7 +27,8 @@ import           Dungeon.Size               (height, width)
 import           Engine                     (Engine, completeThisTurn, dungeon,
                                              initEngine, messageLog,
                                              playerBumpAction)
-import           Entity                     (char, entityAttr, position)
+import           Entity                     (char, entityAttr, position,
+                                             renderOrder)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 import qualified Log                        as L
@@ -96,9 +98,8 @@ drawGame g = withBorderStyle BS.unicodeBold
           | visibleAt c = tileOnCellAt c ^. lightAttr
           | exploredAt c = tileOnCellAt c ^. darkAttr
           | otherwise = emptyAttr
-        cellAt c = let entityAt = entityOnCellAt c
-                       in case entityAt
-                       of
+        cellAt c = let entityAt = sortOn (^. renderOrder) $ entityOnCellAt c
+                       in case entityAt of
                         entity:_ | visibleAt c -> withAttr (entity ^. entityAttr) $ str $ entity ^. char
                         _        -> withAttr (attrAt c) $ str " "
 

@@ -21,6 +21,7 @@ module Entity
     , hp
     , isAlive
     , blocksMovement
+    , renderOrder
     ) where
 
 import           Brick.AttrMap (AttrName)
@@ -31,6 +32,8 @@ newtype Ai = HostileEnemy
              { _path :: [Coord]
              } deriving (Show)
 makeLenses ''Ai
+
+data RenderOrder =  ActorEntity| Iten | Corpse deriving (Show, Ord, Eq)
 
 data Entity = Actor
             { _position       :: Coord
@@ -45,6 +48,7 @@ data Entity = Actor
             , _isAlive        :: Bool
             , _blocksMovement :: Bool
             , _isPlayer       :: Bool
+            , _renderOrder    :: RenderOrder
             } deriving (Show)
 makeLenses ''Entity
 
@@ -61,6 +65,7 @@ player c = Actor { _position = c
                   , _isAlive = True
                   , _blocksMovement = True
                   , _isPlayer = True
+                  , _renderOrder = ActorEntity
                   }
 
 orc :: Coord -> Entity
@@ -76,6 +81,7 @@ orc c = Actor { _position = c
                , _isAlive = True
                , _blocksMovement = True
                , _isPlayer = False
+               , _renderOrder = ActorEntity
                }
 
 troll :: Coord -> Entity
@@ -91,6 +97,7 @@ troll c = Actor { _position = c
                  , _isAlive = True
                  , _blocksMovement = True
                  , _isPlayer = False
+                 , _renderOrder = ActorEntity
                  }
 
 hostileEnemy :: Ai
@@ -112,4 +119,5 @@ die e = e{ _hp = 0
          , _blocksMovement = False
          , _name = "remains of " ++ (e ^. name)
          , _isAlive = False
+         , _renderOrder = Corpse
          }
