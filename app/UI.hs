@@ -83,7 +83,7 @@ handlePlayerMove d e = continue $ flip execState e $ do
         completeThisTurn
 
 drawUI :: Engine -> [Widget Name]
-drawUI e = [ C.center $ drawHpBar e <+> (padTop (Pad 2) (drawGame e) <=> drawMessageLog e )]
+drawUI e = [ C.center $ drawHpBar e <+> (padTop (Pad 2) (drawGame e) <=> drawMessageLog e)]
 
 drawGame :: Engine -> Widget Name
 drawGame engine = withBorderStyle BS.unicodeBold
@@ -119,9 +119,11 @@ drawStatus e = [ C.center $ padTop (Pad 2) (drawHpBar e)]
 
 drawHpBar :: Engine -> Widget Name
 drawHpBar e = let barWidth = 20
-                  filledWidth = playerCurrentHp e * barWidth `div` playerMaxHp e
+                  currentHp = playerCurrentHp e
+                  maxHp = playerMaxHp e
+                  filledWidth = currentHp * barWidth `div` maxHp
                   attrAt x = if x < filledWidth then hpBarFilled else hpBarEmpty
-              in hBox [ x | x <- map (\x -> withAttr (attrAt x) $ str "  ") [0 .. barWidth - 1]]
+              in vBox [hBox [ x | x <- map (\x -> withAttr (attrAt x) $ str "  ") [0 .. barWidth - 1]], str $ "HP: " ++ show currentHp ++ " / " ++ show maxHp]
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
