@@ -6,11 +6,12 @@ module Engine where
 
 import           Actions                        (bumpAction, enemyAction)
 import           Brick                          (AttrName)
-import           Control.Lens                   (makeLenses, use, (%=), (%~),
-                                                 (&), (.=), (.~), (^.))
+import           Control.Lens                   (makeLenses, makeLensesFor, use,
+                                                 (%=), (%~), (&), (.=), (.~),
+                                                 (^.), (^?!))
 import           Control.Monad.Extra            (foldM)
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
-import           Control.Monad.Trans.State      (State, evalState, state)
+import           Control.Monad.Trans.State      (State, evalState, get, state)
 import           Control.Monad.Trans.State.Lazy (execState, modify, runState)
 import           Coord                          (Coord)
 import           Data.Array                     (Array)
@@ -30,6 +31,7 @@ import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
 import qualified Dungeon.Turn                   as DT
 import           Entity                         (Entity (..), position)
 import qualified Entity                         as E
+import           Event                          (Event, gameStartEvent)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           Log                            (MessageLog, addMaybeMessage,
@@ -41,6 +43,9 @@ data Engine = Engine
           { _dungeon    :: Dungeon
           , _messageLog :: MessageLog
           , _isGameOver :: Bool
+          } | HandlingEvent
+          { _event       :: Event
+          , _afterFinish :: Engine
           } deriving (Show)
 makeLenses ''Engine
 
@@ -48,7 +53,8 @@ completeThisTurn :: State Engine ()
 completeThisTurn = do
         handleEnemyTurns
 
-        dg <- use dungeon
+        e <- get
+        let dg = e ^?! dungeon
 
         let (status, newD) = runState D.completeThisTurn dg
 
@@ -58,7 +64,8 @@ completeThisTurn = do
 
 handleEnemyTurns :: State Engine ()
 handleEnemyTurns = do
-        dg <- use dungeon
+        e <- get
+        let dg = e ^?! dungeon
 
         let xs = aliveEnemies dg
 
@@ -66,7 +73,8 @@ handleEnemyTurns = do
 
 handleEnemyTurn :: Coord -> State Engine ()
 handleEnemyTurn c = do
-        dg <- use dungeon
+        e <- get
+        let dg = e ^?! dungeon
 
         let (messages, dg') = flip runState dg $ do
                 e <- D.popActorAt c
@@ -79,7 +87,8 @@ handleEnemyTurn c = do
 
 playerBumpAction :: V2 Int -> State Engine ()
 playerBumpAction offset = do
-        dg <- use dungeon
+        e <- get
+        let dg = e ^?! dungeon
 
         let (messages, newDungeon) = flip runState dg $ do
                 e <- D.popPlayer
@@ -89,15 +98,18 @@ playerBumpAction offset = do
         dungeon .= newDungeon
 
 playerCurrentHp :: Engine -> Int
-playerCurrentHp e = E.getHp $ getPlayerEntity (e ^. dungeon)
+playerCurrentHp e = E.getHp $ getPlayerEntity (e ^?! dungeon)
 
 playerMaxHp :: Engine -> Int
-playerMaxHp e = getPlayerEntity (e ^. dungeon) ^. E.maxHp
+playerMaxHp e = getPlayerEntity (e ^?! dungeon) ^. E.maxHp
 
 initEngine :: IO Engine
 initEngine = do
         dungeon <- initDungeon
-        return $ Engine { _dungeon = dungeon
+        return $ HandlingEvent {
+                               _event = gameStartEvent,
+                               _afterFinish = Engine { _dungeon = dungeon
                       , _messageLog = foldr (addMessage . L.infoMessage) L.emptyLog ["Welcome to a roguelike game!"]
                       , _isGameOver = False
+                      }
                       }

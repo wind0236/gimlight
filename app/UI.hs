@@ -8,29 +8,34 @@ import           Brick                      (App (..), AttrMap, AttrName,
                                              Widget, attrMap, bg, continue,
                                              customMain, fg, hBox, hLimit, halt,
                                              neverShowCursor, on, padAll,
-                                             padTop, str, vBox, vLimit,
+                                             padTop, str, strWrap, vBox, vLimit,
                                              withAttr, withBorderStyle, (<+>),
                                              (<=>))
 import           Brick.BChan                (newBChan, writeBChan)
 import qualified Brick.Widgets.Border       as B
 import qualified Brick.Widgets.Border.Style as BS
+import           Brick.Widgets.Center       (center)
 import qualified Brick.Widgets.Center       as C
 import           Control.Concurrent         (forkIO, threadDelay)
-import           Control.Lens               (use, (&), (^.))
+import           Control.Lens               (use, (&), (^.), (^?!))
 import           Control.Monad              (forever, unless, void, when)
-import           Control.Monad.Trans.State  (execState)
+import           Control.Monad.Trans.State  (execState, get)
 import           Data.Array.Base            ((!))
 import           Data.List                  (sortOn)
+import           Data.Maybe                 (fromMaybe)
 import           Dungeon                    (entities, explored, tileMap,
                                              visible)
 import           Dungeon.Map.Tile           (darkAttr, lightAttr)
 import           Dungeon.Size               (height, width)
-import           Engine                     (Engine, completeThisTurn, dungeon,
-                                             initEngine, isGameOver, messageLog,
+import           Engine                     (Engine (Engine, HandlingEvent, _event),
+                                             afterFinish, completeThisTurn,
+                                             dungeon, event, initEngine,
+                                             isGameOver, messageLog,
                                              playerBumpAction, playerCurrentHp,
                                              playerMaxHp)
 import           Entity                     (char, entityAttr, position,
                                              renderOrder)
+import           Event                      (numMessages, popMessage)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 import qualified Log                        as L
@@ -59,38 +64,47 @@ app = App { appDraw = drawUI
           }
 
 handleEvent :: Engine -> BrickEvent Name Tick -> EventM Name (Next Engine)
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt e
-handleEvent e (VtyEvent (V.EvKey V.KEsc []))        = halt e
-handleEvent e (VtyEvent (V.EvKey V.KUp []))         = handlePlayerMove (V2 0 1) e
-handleEvent e (VtyEvent (V.EvKey V.KDown []))       = handlePlayerMove (V2 0 (-1)) e
-handleEvent e (VtyEvent (V.EvKey V.KRight []))      = handlePlayerMove (V2 1 0) e
-handleEvent e (VtyEvent (V.EvKey V.KLeft []))       = handlePlayerMove (V2 (-1) 0) e
-handleEvent e (VtyEvent (V.EvKey V.KUpRight [])) = handlePlayerMove (V2 1 1) e
-handleEvent e (VtyEvent (V.EvKey V.KUpLeft [])) = handlePlayerMove (V2 1 (-1)) e
-handleEvent e (VtyEvent (V.EvKey V.KDownRight [])) = handlePlayerMove (V2 (-1) 1) e
-handleEvent e (VtyEvent (V.EvKey V.KDownLeft [])) = handlePlayerMove (V2 (-1) (-1)) e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'k') [])) = handlePlayerMove (V2 0 1) e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'j') [])) = handlePlayerMove (V2 0 (-1)) e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'l') [])) = handlePlayerMove (V2 1 0) e
-handleEvent e (VtyEvent (V.EvKey (V.KChar 'h') [])) = handlePlayerMove (V2 (-1) 0) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt e
+handleEvent e@Engine{} (VtyEvent (V.EvKey V.KEsc []))        = halt e
+handleEvent e@Engine{} (VtyEvent (V.EvKey V.KUp []))         = handlePlayerMove (V2 0 1) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey V.KDown []))       = handlePlayerMove (V2 0 (-1)) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey V.KRight []))      = handlePlayerMove (V2 1 0) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey V.KLeft []))       = handlePlayerMove (V2 (-1) 0) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey V.KUpRight [])) = handlePlayerMove (V2 1 1) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey V.KUpLeft [])) = handlePlayerMove (V2 1 (-1)) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey V.KDownRight [])) = handlePlayerMove (V2 (-1) 1) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey V.KDownLeft [])) = handlePlayerMove (V2 (-1) (-1)) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'k') [])) = handlePlayerMove (V2 0 1) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'j') [])) = handlePlayerMove (V2 0 (-1)) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'l') [])) = handlePlayerMove (V2 1 0) e
+handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'h') [])) = handlePlayerMove (V2 (-1) 0) e
+handleEvent e@HandlingEvent{} (VtyEvent (V.EvKey V.KEnter [])) = handleMessageEvent e
 handleEvent e _                                     = continue e
 
 handlePlayerMove :: V2 Int -> Engine -> EventM Name (Next Engine)
 handlePlayerMove d e = continue $ flip execState e $ do
-    finished <- use isGameOver
+    eng <- get
+    let finished = eng ^?! isGameOver
     unless finished $ do
         playerBumpAction d
         completeThisTurn
 
 drawUI :: Engine -> [Widget Name]
-drawUI e = [ C.center $ drawHpBar e <+> (padTop (Pad 2) (drawGame e) <=> drawMessageLog e)]
+drawUI e@Engine{} = [ C.center $ drawHpBar e <+> (padTop (Pad 2) (drawGame e) <=> drawMessageLog e)]
+drawUI engine@HandlingEvent{} = [withBorderStyle BS.unicodeBold
+    $ B.borderWithLabel (str "Roguelike game")
+    $ center
+    $ padAll 2
+    $ strWrap m]
+    where
+        m = fromMaybe "" (fst $ popMessage (engine ^?! event))
 
 drawGame :: Engine -> Widget Name
-drawGame engine = withBorderStyle BS.unicodeBold
+drawGame engine@Engine{} = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Game")
     $ vBox rows
     where
-        d = engine ^. dungeon
+        d = engine ^?! dungeon
         rows = [hBox $ cellsInRow r | r <- [height - 1, height - 2 .. 0]]
         cellsInRow y = [cellAt (V2 x y)  | x <- [0 .. width - 1]]
         coordAsTuple c = (c ^. _x, c ^. _y)
@@ -106,6 +120,7 @@ drawGame engine = withBorderStyle BS.unicodeBold
                        in case entityAt of
                         entity:_ | visibleAt c -> withAttr (entity ^. entityAttr) $ str $ entity ^. char
                         _        -> withAttr (attrAt c) $ str " "
+drawGame _ = error "unreachable."
 
 drawMessageLog :: Engine -> Widget Name
 drawMessageLog engine = withBorderStyle BS.unicodeBold
@@ -124,6 +139,13 @@ drawHpBar e = let barWidth = 20
                   filledWidth = currentHp * barWidth `div` maxHp
                   attrAt x = if x < filledWidth then hpBarFilled else hpBarEmpty
               in vBox [hBox [ x | x <- map (\x -> withAttr (attrAt x) $ str "  ") [0 .. barWidth - 1]], str $ "HP: " ++ show currentHp ++ " / " ++ show maxHp]
+
+handleMessageEvent :: Engine -> EventM Name (Next Engine)
+handleMessageEvent e@HandlingEvent{} =
+        continue $ if numMessages (e ^?! event) > 1
+                    then e { _event = snd $ popMessage (e ^?! event) }
+                    else e ^?! afterFinish
+handleMessageEvent _ = error "Unreachable."
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
