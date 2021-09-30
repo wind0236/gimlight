@@ -77,7 +77,6 @@ handleEnemyTurn c = do
         messageLog %= addMessages messages
         dungeon .= dg'
 
-
 playerBumpAction :: V2 Int -> State Engine ()
 playerBumpAction offset = do
         dg <- use dungeon
