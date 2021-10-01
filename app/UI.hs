@@ -40,6 +40,8 @@ import           Event                      (numMessages, popMessage)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 import qualified Log                        as L
+import           UI.Attrs                   (attrMapForThisGame, emptyAttr,
+                                             hpBarEmpty, hpBarFilled)
 
 data Tick = Tick
 
@@ -61,7 +63,7 @@ app = App { appDraw = drawUI
           , appChooseCursor = neverShowCursor
           , appHandleEvent = handleEvent
           , appStartEvent = return
-          , appAttrMap = const theMap
+          , appAttrMap = const attrMapForThisGame
           }
 
 handleEvent :: Engine -> BrickEvent Name Tick -> EventM Name (Next Engine)
@@ -147,36 +149,3 @@ handleMessageEvent e@HandlingEvent{} =
                     then e { _event = snd $ popMessage (e ^?! event) }
                     else e ^?! afterFinish
 handleMessageEvent _ = error "Unreachable."
-
-theMap :: AttrMap
-theMap = attrMap V.defAttr
-    [ (playerAttr           , V.rgbColor 255 255 255 `on` V.black)
-    , (orcAttr              , V.rgbColor  63 127  63 `on` V.black)
-    , (trollAttr            , V.rgbColor   0 127   0 `on` V.black)
-    , (deadAttr             , V.rgbColor 191   0   0 `on` V.black)
-    , (darkFloorAttr        , V.rgbColor 128 128 128 `on` V.black)
-    , (lightFloorAttr       , V.rgbColor 255 255 255 `on` V.black)
-    , (darkWallAttr         , V.rgbColor 128 128 128 `on` V.black)
-    , (lightWallAttr        , V.rgbColor 255 255 255 `on` V.black)
-    , (hpBarFilled          , V.rgbColor   0 255   0 `on` V.black)
-    , (hpBarEmpty           , V.rgbColor 255   0   0 `on` V.black)
-    , (attackMessageAttr    , V.rgbColor 255   0   0 `on` V.black)
-    , (infoMessageAttr      , V.rgbColor   0 255   0 `on` V.black)
-    , (emptyAttr            , V.black                `on` V.black)
-    ]
-
-playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr, orcAttr, trollAttr, infoMessageAttr, hpBarFilled, hpBarEmpty, deadAttr :: AttrName
-playerAttr = "playerAttr"
-npcAttr = "npcAttr"
-emptyAttr = "emptyAttr"
-darkFloorAttr = "darkFloorAttr"
-lightFloorAttr = "lightFloorAttr"
-darkWallAttr = "darkWallAttr"
-lightWallAttr = "lightWallAttr"
-orcAttr = "orcAttr"
-trollAttr = "trollAttr"
-attackMessageAttr = "attackMessageAttr"
-infoMessageAttr = "infoMessageAttr"
-hpBarFilled = "hpBarFilled"
-hpBarEmpty = "hpBarEmpty"
-deadAttr = "deadAttr"

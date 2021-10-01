@@ -26,6 +26,7 @@ executable roguelike
     ghc-options:      -threaded
 
     other-modules:    UI,
+                      UI.Attrs,
                       Engine,
                       Dungeon,
                       Dungeon.Map,
