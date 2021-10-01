@@ -3,6 +3,16 @@ module UI.Attrs
     , emptyAttr
     , hpBarFilled
     , hpBarEmpty
+    , darkWallAttr
+    , lightWallAttr
+    , darkFloorAttr
+    , lightFloorAttr
+    , infoMessageAttr
+    , attackMessageAttr
+    , playerAttr
+    , orcAttr
+    , trollAttr
+    , deadAttr
     ) where
 
 import           Brick.AttrMap                 (AttrMap, AttrName, attrMap,

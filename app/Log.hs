@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections     #-}
+{-# LANGUAGE TupleSections #-}
 
 module Log
     ( MessageLog
@@ -22,6 +21,7 @@ import           Data.List       (intercalate)
 import           Data.List.Split (splitOn)
 import           Graphics.Vty    (Color)
 import qualified Graphics.Vty    as V
+import           UI.Attrs        (attackMessageAttr, emptyAttr, infoMessageAttr)
 
 data Message = Message
              { text :: String
@@ -38,7 +38,7 @@ emptyLog :: MessageLog
 emptyLog = take height $ replicate height emptyMessage
 
 emptyMessage :: Message
-emptyMessage = Message { text = replicate width ' ', attr = "emptyAttr" }
+emptyMessage = Message { text = replicate width ' ', attr = emptyAttr }
 
 addMessages :: [Message] -> MessageLog -> MessageLog
 addMessages xs l = foldl (flip addMessage) l xs
@@ -52,12 +52,12 @@ addMaybeMessage Nothing log  = log
 
 infoMessage :: String -> Message
 infoMessage text = Message { text = text
-                           , attr = "infoMessageAttr"
+                           , attr = infoMessageAttr
                            }
 
 attackMessage :: String -> Message
 attackMessage text = Message { text = text
-                             , attr = "attackMessageAttr"
+                             , attr = attackMessageAttr
                              }
 
 messageToAttrNameAndStringList :: Message -> [(AttrName, String)]

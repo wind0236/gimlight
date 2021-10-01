@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module UI(main) where
 
 import           Brick                      (App (..), AttrMap, AttrName,
