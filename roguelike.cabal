@@ -25,24 +25,24 @@ executable roguelike
     main-is:          Main.hs
     ghc-options:      -threaded
 
-    other-modules:    UI,
-                      UI.Attrs,
-                      Engine,
-                      Dungeon,
-                      Dungeon.Map,
-                      Dungeon.Map.Tile,
-                      Dungeon.Map.Bool,
-                      Dungeon.Map.Fov,
-                      Dungeon.Room,
-                      Dungeon.Size,
-                      Dungeon.Generate,
-                      Dungeon.PathFinder,
-                      Dungeon.Turn,
-                      Coord,
-                      Entity,
-                      Log,
-                      Actions,
-                      Event
+    other-modules:      UI
+                      , UI.Attrs
+                      , Engine
+                      , Dungeon
+                      , Dungeon.Map
+                      , Dungeon.Map.Tile
+                      , Dungeon.Map.Bool
+                      , Dungeon.Map.Fov
+                      , Dungeon.Room
+                      , Dungeon.Size
+                      , Dungeon.Generate
+                      , Dungeon.PathFinder
+                      , Dungeon.Turn
+                      , Coord
+                      , Entity
+                      , Log
+                      , Actions
+                      , Event
 
     -- Modules included in this executable, other than Main.
     -- other-modules:
