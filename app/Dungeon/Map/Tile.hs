@@ -11,6 +11,7 @@ module Dungeon.Map.Tile
     , transparent
     , darkAttr
     , lightAttr
+    , char
     ) where
 
 import           Brick.AttrMap   (AttrName)
@@ -25,6 +26,7 @@ data Tile = Tile
           , _transparent :: Bool
           , _darkAttr    :: AttrName
           , _lightAttr   :: AttrName
+          , _char        :: Char
           } deriving (Show)
 makeLenses ''Tile
 
@@ -38,6 +40,7 @@ wallTile = Tile { _walkable = False
                 , _transparent = False
                 , _darkAttr = "darkWallAttr"
                 , _lightAttr = "lightWallAttr"
+                , _char = 'X'
                 }
 
 floorTile :: Tile
@@ -45,4 +48,5 @@ floorTile = Tile { _walkable = True
                  , _transparent = True
                  , _darkAttr = "darkFloorAttr"
                  , _lightAttr = "lightFloorAttr"
+                 , _char = '.'
                  }

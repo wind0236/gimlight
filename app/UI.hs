@@ -26,6 +26,7 @@ import           Data.Maybe                 (fromMaybe)
 import           Dungeon                    (entities, explored, tileMap,
                                              visible)
 import           Dungeon.Map.Tile           (darkAttr, lightAttr)
+import qualified Dungeon.Map.Tile           as T
 import           Dungeon.Size               (height, width)
 import           Engine                     (Engine (Engine, HandlingEvent, _event),
                                              afterFinish, completeThisTurn,
@@ -119,7 +120,7 @@ drawGame engine@Engine{} = withBorderStyle BS.unicodeBold
         cellAt c = let entityAt = sortOn (^. renderOrder) $ entityOnCellAt c
                        in case entityAt of
                         entity:_ | visibleAt c -> withAttr (entity ^. entityAttr) $ str $ entity ^. char
-                        _        -> withAttr (attrAt c) $ str " "
+                        _        -> withAttr (attrAt c) $ str [tileOnCellAt c ^. T.char]
 drawGame _ = error "unreachable."
 
 drawMessageLog :: Engine -> Widget Name
@@ -138,7 +139,7 @@ drawHpBar e = let barWidth = 20
                   maxHp = playerMaxHp e
                   filledWidth = currentHp * barWidth `div` maxHp
                   attrAt x = if x < filledWidth then hpBarFilled else hpBarEmpty
-              in vBox [hBox [ x | x <- map (\x -> withAttr (attrAt x) $ str "  ") [0 .. barWidth - 1]], str $ "HP: " ++ show currentHp ++ " / " ++ show maxHp]
+              in vBox [hBox [ x | x <- map (\x -> withAttr (attrAt x) $ str "XX") [0 .. barWidth - 1]], str $ "HP: " ++ show currentHp ++ " / " ++ show maxHp]
 
 handleMessageEvent :: Engine -> EventM Name (Next Engine)
 handleMessageEvent e@HandlingEvent{} =
@@ -149,18 +150,19 @@ handleMessageEvent _ = error "Unreachable."
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
-    [ (playerAttr, V.black `on` V.rgbColor 200 180 50)
-    , (orcAttr, V.rgbColor 63 127 63 `on` V.rgbColor 200 180 50)
-    , (trollAttr, V.rgbColor 0 127 0 `on` V.rgbColor 200 180 50)
-    , (deadAttr, V.rgbColor 191 0 0 `on` V.rgbColor 200 180 50)
-    , (darkFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 50 50 150)
-    , (lightFloorAttr, V.rgbColor 255 255 255 `on` V.rgbColor 200 180 50)
-    , (darkWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 0 0 100)
-    , (lightWallAttr, V.rgbColor 255 255 255 `on` V.rgbColor 130 110 50)
-    , (hpBarFilled, bg $ V.rgbColor 0x0 0x60 0x0)
-    , (hpBarEmpty, bg $ V.rgbColor 0x40 0x10 0x10)
-    , (attackMessageAttr, fg V.red)
-    , (infoMessageAttr, fg V.blue)
+    [ (playerAttr           , V.rgbColor 255 255 255 `on` V.black)
+    , (orcAttr              , V.rgbColor  63 127  63 `on` V.black)
+    , (trollAttr            , V.rgbColor   0 127   0 `on` V.black)
+    , (deadAttr             , V.rgbColor 191   0   0 `on` V.black)
+    , (darkFloorAttr        , V.rgbColor 128 128 128 `on` V.black)
+    , (lightFloorAttr       , V.rgbColor 255 255 255 `on` V.black)
+    , (darkWallAttr         , V.rgbColor 128 128 128 `on` V.black)
+    , (lightWallAttr        , V.rgbColor 255 255 255 `on` V.black)
+    , (hpBarFilled          , V.rgbColor   0 255   0 `on` V.black)
+    , (hpBarEmpty           , V.rgbColor 255   0   0 `on` V.black)
+    , (attackMessageAttr    , V.rgbColor 255   0   0 `on` V.black)
+    , (infoMessageAttr      , V.rgbColor   0 255   0 `on` V.black)
+    , (emptyAttr            , V.black                `on` V.black)
     ]
 
 playerAttr, npcAttr, emptyAttr, darkFloorAttr, darkWallAttr, orcAttr, trollAttr, infoMessageAttr, hpBarFilled, hpBarEmpty, deadAttr :: AttrName
