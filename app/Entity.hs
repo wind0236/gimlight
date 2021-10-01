@@ -26,7 +26,7 @@ module Entity
 import           Brick.AttrMap (AttrName)
 import           Control.Lens  (makeLenses, (^.))
 import           Coord         (Coord)
-import           UI.Attrs      (deadAttr, orcAttr, playerAttr, trollAttr)
+import           UI.Attrs      (greenAttr, redAttr, whiteAttr)
 
 newtype Ai = HostileEnemy
              { _path :: [Coord]
@@ -55,7 +55,7 @@ makeLenses ''Entity
 player :: Coord -> Entity
 player c = Actor { _position = c
                   , _char = "@"
-                  , _entityAttr = playerAttr
+                  , _entityAttr = whiteAttr
                   , _name = "Player"
                   , _hp = 30
                   , _maxHp = 30
@@ -71,7 +71,7 @@ player c = Actor { _position = c
 orc :: Coord -> Entity
 orc c = Actor { _position = c
                , _char = "o"
-               , _entityAttr = orcAttr
+               , _entityAttr = greenAttr
                , _name = "Orc"
                , _hp = 10
                , _maxHp = 10
@@ -87,7 +87,7 @@ orc c = Actor { _position = c
 troll :: Coord -> Entity
 troll c = Actor { _position = c
                  , _char = "T"
-                 , _entityAttr = trollAttr
+                 , _entityAttr = greenAttr
                  , _name = "Troll"
                  , _hp = 16
                  , _maxHp = 16
@@ -115,7 +115,7 @@ updateHp e@Actor{ _hp = hp, _maxHp = maxHp } newHp =
 die :: Entity -> Entity
 die e = e{ _hp = 0
          , _char = "%"
-         , _entityAttr = deadAttr
+         , _entityAttr = redAttr
          , _blocksMovement = False
          , _name = "remains of " ++ (e ^. name)
          , _isAlive = False

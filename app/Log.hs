@@ -21,7 +21,7 @@ import           Data.List       (intercalate)
 import           Data.List.Split (splitOn)
 import           Graphics.Vty    (Color)
 import qualified Graphics.Vty    as V
-import           UI.Attrs        (attackMessageAttr, emptyAttr, infoMessageAttr)
+import           UI.Attrs        (emptyAttr, greenAttr, redAttr)
 
 data Message = Message
              { text :: String
@@ -52,12 +52,12 @@ addMaybeMessage Nothing log  = log
 
 infoMessage :: String -> Message
 infoMessage text = Message { text = text
-                           , attr = infoMessageAttr
+                           , attr = greenAttr
                            }
 
 attackMessage :: String -> Message
 attackMessage text = Message { text = text
-                             , attr = attackMessageAttr
+                             , attr = redAttr
                              }
 
 messageToAttrNameAndStringList :: Message -> [(AttrName, String)]

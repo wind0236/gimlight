@@ -39,7 +39,7 @@ import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 import qualified Log                        as L
 import           UI.Attrs                   (attrMapForThisGame, emptyAttr,
-                                             hpBarEmpty, hpBarFilled)
+                                             greenAttr, redAttr)
 
 data Tick = Tick
 
@@ -138,7 +138,7 @@ drawHpBar e = let barWidth = 20
                   currentHp = playerCurrentHp e
                   maxHp = playerMaxHp e
                   filledWidth = currentHp * barWidth `div` maxHp
-                  attrAt x = if x < filledWidth then hpBarFilled else hpBarEmpty
+                  attrAt x = if x < filledWidth then greenAttr else redAttr
               in vBox [hBox [ x | x <- map (\x -> withAttr (attrAt x) $ str "XX") [0 .. barWidth - 1]], str $ "HP: " ++ show currentHp ++ " / " ++ show maxHp]
 
 handleMessageEvent :: Engine -> EventM Name (Next Engine)

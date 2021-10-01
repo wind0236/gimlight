@@ -19,8 +19,7 @@ import           Data.Array      (Array)
 import           Data.Array.Base (array)
 import qualified Dungeon.Map     as M
 import           Dungeon.Size    (height, width)
-import           UI.Attrs        (darkFloorAttr, darkWallAttr, lightFloorAttr,
-                                  lightWallAttr)
+import           UI.Attrs        (grayAttr, whiteAttr)
 
 data Tile = Tile
           { _walkable    :: Bool
@@ -39,15 +38,15 @@ allWallTiles = M.generate $ const wallTile
 wallTile :: Tile
 wallTile = Tile { _walkable = False
                 , _transparent = False
-                , _darkAttr = darkWallAttr
-                , _lightAttr = lightWallAttr
+                , _darkAttr = grayAttr
+                , _lightAttr = whiteAttr
                 , _char = 'X'
                 }
 
 floorTile :: Tile
 floorTile = Tile { _walkable = True
                  , _transparent = True
-                 , _darkAttr = darkFloorAttr
-                 , _lightAttr = lightFloorAttr
+                 , _darkAttr = grayAttr
+                 , _lightAttr = whiteAttr
                  , _char = '.'
                  }
