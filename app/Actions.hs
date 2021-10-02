@@ -22,7 +22,7 @@ import           Entity                    (Ai (..), Entity, ai, blocksMovement,
                                             name, path, position, power,
                                             updateHp)
 import           Linear.V2                 (V2 (..), _x, _y)
-import           Log                       (Message, attackMessage)
+import           Log                       (Message, message)
 import           Map.Tile                  (walkable)
 
 enemyAction :: Entity -> State Dungeon [Message]
@@ -125,11 +125,11 @@ meleeAction src offset = do
                                     messages = if newHp <= 0 then [damagedMessage, deathMessage] else [damagedMessage]
                                 pushEntity src
                                 pushEntity newEntity
-                                return $ fmap attackMessage messages
+                                return $ fmap message messages
                             else do
                                     pushEntity src
                                     pushEntity x
-                                    return [attackMessage $ msg ++ " but does not damage."]
+                                    return [message $ msg ++ " but does not damage."]
 
 moveAction :: Entity -> V2 Int -> State Dungeon ()
 moveAction src offset = state $ \d -> ((), execState (pushEntity $ updatePosition d src offset) d)

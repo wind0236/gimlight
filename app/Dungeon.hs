@@ -44,7 +44,7 @@ import           Entity                         (Entity (..), isAlive, name,
 import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
-import           Log                            (Message, attackMessage)
+import           Log                            (Message, message)
 import qualified Map                            as M
 import           Map.Bool                       (BoolMap, emptyBoolMap)
 import           Map.Explored                   (ExploredMap, updateExploredMap)

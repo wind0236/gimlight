@@ -4,8 +4,7 @@ module Log
     ( MessageLog
     , emptyLog
     , Message
-    , attackMessage
-    , infoMessage
+    , message
     , addMessage
     , addMaybeMessage
     , messageToStringList
@@ -21,7 +20,7 @@ import           Data.List       (intercalate)
 import           Data.List.Split (splitOn)
 import           Graphics.Vty    (Color)
 import qualified Graphics.Vty    as V
-import           UI.Attrs        (emptyAttr, greenAttr, redAttr)
+import           UI.Attrs        (emptyAttr, greenAttr, redAttr, whiteAttr)
 
 data Message = Message
              { text :: String
@@ -50,15 +49,10 @@ addMaybeMessage :: Maybe Message -> MessageLog -> MessageLog
 addMaybeMessage (Just m) log = addMessage m log
 addMaybeMessage Nothing log  = log
 
-infoMessage :: String -> Message
-infoMessage text = Message { text = text
-                           , attr = greenAttr
-                           }
-
-attackMessage :: String -> Message
-attackMessage text = Message { text = text
-                             , attr = redAttr
-                             }
+message :: String -> Message
+message text = Message { text = text
+                       , attr = whiteAttr
+                       }
 
 messageToAttrNameAndStringList :: Message -> [(AttrName, String)]
 messageToAttrNameAndStringList m@Message{ attr = attr } =  take height $ map (attr,) $ messageToStringList m

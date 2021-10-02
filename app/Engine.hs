@@ -108,7 +108,7 @@ initEngine = do
         return $ HandlingEvent {
                                _event = gameStartEvent,
                                _afterFinish = Engine { _dungeon = dungeon
-                      , _messageLog = foldr (addMessage . L.infoMessage) L.emptyLog ["Welcome to a roguelike game!"]
+                      , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
                       , _isGameOver = False
                       }
                       }
