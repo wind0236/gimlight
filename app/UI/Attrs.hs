@@ -22,10 +22,9 @@ attrMapForThisGame = attrMap defAttr
     , (emptyAttr            , black                `on` black)
     ]
 
-whiteAttr, grayAttr, redAttr, greenAttr, npcAttr, emptyAttr :: AttrName
+whiteAttr, grayAttr, redAttr, greenAttr, emptyAttr :: AttrName
 whiteAttr         = attrName "whiteAttr"
 grayAttr          = attrName "grayAttr"
 redAttr           = attrName "redAttr"
 greenAttr         = attrName "greenAttr"
-npcAttr           = attrName "npcAttr"
 emptyAttr         = attrName "emptyAttr"
