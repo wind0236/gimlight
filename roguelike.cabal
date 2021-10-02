@@ -41,8 +41,8 @@ executable roguelike
                       , Dungeon.Turn
                       , Coord
                       , Entity
+                      , Entity.Behavior
                       , Log
-                      , Actions
                       , Event
 
     -- Modules included in this executable, other than Main.

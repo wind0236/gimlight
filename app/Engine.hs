@@ -3,7 +3,6 @@
 
 module Engine where
 
-import           Actions                        (bumpAction, enemyAction)
 import           Brick                          (AttrName)
 import           Control.Lens                   (makeLenses, makeLensesFor, use,
                                                  (%=), (%~), (&), (.=), (.~),
@@ -26,6 +25,7 @@ import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
 import qualified Dungeon.Turn                   as DT
 import           Entity                         (Entity (..), position)
 import qualified Entity                         as E
+import           Entity.Behavior                (bumpAction, enemyAction)
 import           Event                          (Event, gameStartEvent)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)

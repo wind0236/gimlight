@@ -1,4 +1,4 @@
-module Actions
+module Entity.Behavior
     ( bumpAction
     , meleeAction
     , waitAction
