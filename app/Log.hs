@@ -22,9 +22,8 @@ import           Graphics.Vty    (Color)
 import qualified Graphics.Vty    as V
 import           UI.Attrs        (emptyAttr, greenAttr, redAttr, whiteAttr)
 
-data Message = Message
+newtype Message = Message
              { text :: String
-             , attr :: AttrName
              } deriving (Show)
 
 type MessageLog = [Message]
@@ -37,7 +36,7 @@ emptyLog :: MessageLog
 emptyLog = take height $ replicate height emptyMessage
 
 emptyMessage :: Message
-emptyMessage = Message { text = replicate width ' ', attr = emptyAttr }
+emptyMessage = Message { text = replicate width ' ' }
 
 addMessages :: [Message] -> MessageLog -> MessageLog
 addMessages xs l = foldl (flip addMessage) l xs
@@ -51,11 +50,10 @@ addMaybeMessage Nothing log  = log
 
 message :: String -> Message
 message text = Message { text = text
-                       , attr = whiteAttr
                        }
 
 messageToAttrNameAndStringList :: Message -> [(AttrName, String)]
-messageToAttrNameAndStringList m@Message{ attr = attr } =  take height $ map (attr,) $ messageToStringList m
+messageToAttrNameAndStringList m =  take height $ map (whiteAttr,) $ messageToStringList m
 
 messageToStringList :: Message -> [String]
 messageToStringList Message{ text = text } = map (\x -> x ++ replicate (width - length x) ' ') $ concatMap wrapString $ splitStringOnNewLine text
