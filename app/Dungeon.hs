@@ -47,6 +47,7 @@ import           Linear.V2                      (V2 (..), _x, _y)
 import           Log                            (Message, attackMessage)
 import qualified Map                            as M
 import           Map.Bool                       (BoolMap, emptyBoolMap)
+import           Map.Explored                   (ExploredMap, updateExploredMap)
 import           Map.Fov                        (Fov, calculateFov)
 import           Map.Tile                       (Tile, TileMap, darkAttr,
                                                  lightAttr, transparent,
@@ -57,7 +58,7 @@ import           System.Random.Stateful         (StdGen, newStdGen, random,
 data Dungeon = Dungeon
           { _tileMap  :: TileMap
           , _visible  :: Fov
-          , _explored :: BoolMap
+          , _explored :: ExploredMap
           , _entities :: [Entity]
           } deriving (Show)
 makeLenses ''Dungeon
@@ -78,7 +79,7 @@ updateExplored = do
         v <- use visible
         e <- use explored
 
-        explored .= M.generate (\(x, y) -> v ! (x, y) || e ! (x, y))
+        explored .= updateExploredMap e v
 
 updateFov :: State Dungeon ()
 updateFov = do
