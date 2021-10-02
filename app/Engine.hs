@@ -21,10 +21,6 @@ import           Dungeon                        (Dungeon, aliveEnemies, enemies,
                                                  getPlayerEntity, initDungeon)
 import qualified Dungeon                        as D
 import           Dungeon.Generate               (generateDungeon)
-import           Dungeon.Map.Bool               (BoolMap, emptyBoolMap)
-import           Dungeon.Map.Tile               (Tile, TileMap, darkAttr,
-                                                 lightAttr, transparent,
-                                                 walkable)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
 import qualified Dungeon.Turn                   as DT
@@ -36,6 +32,10 @@ import           Linear.V2                      (V2 (..), _x, _y)
 import           Log                            (MessageLog, addMaybeMessage,
                                                  addMessage, addMessages)
 import qualified Log                            as L
+import           Map.Bool                       (BoolMap, emptyBoolMap)
+import           Map.Tile                       (Tile, TileMap, darkAttr,
+                                                 lightAttr, transparent,
+                                                 walkable)
 import           System.Random.Stateful         (newStdGen)
 
 data Engine = Engine

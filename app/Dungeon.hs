@@ -35,12 +35,6 @@ import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
 import           Data.Maybe                     (isJust, isNothing)
 import           Dungeon.Generate               (generateDungeon)
-import qualified Dungeon.Map                    as M
-import           Dungeon.Map.Bool               (BoolMap, emptyBoolMap)
-import           Dungeon.Map.Fov                (Fov, calculateFov)
-import           Dungeon.Map.Tile               (Tile, TileMap, darkAttr,
-                                                 lightAttr, transparent,
-                                                 walkable)
 import           Dungeon.Room                   (Room (..), x1, x2, y1, y2)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
@@ -51,6 +45,12 @@ import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           Log                            (Message, attackMessage)
+import qualified Map                            as M
+import           Map.Bool                       (BoolMap, emptyBoolMap)
+import           Map.Fov                        (Fov, calculateFov)
+import           Map.Tile                       (Tile, TileMap, darkAttr,
+                                                 lightAttr, transparent,
+                                                 walkable)
 import           System.Random.Stateful         (StdGen, newStdGen, random,
                                                  randomR)
 

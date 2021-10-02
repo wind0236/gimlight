@@ -28,11 +28,11 @@ executable roguelike
     other-modules:      UI
                       , UI.Attrs
                       , Engine
+                      , Map
+                      , Map.Tile
+                      , Map.Bool
+                      , Map.Fov
                       , Dungeon
-                      , Dungeon.Map
-                      , Dungeon.Map.Tile
-                      , Dungeon.Map.Bool
-                      , Dungeon.Map.Fov
                       , Dungeon.Room
                       , Dungeon.Size
                       , Dungeon.Generate

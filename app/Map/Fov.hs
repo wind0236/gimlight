@@ -1,13 +1,13 @@
-module Dungeon.Map.Fov
+module Map.Fov
     ( Fov
     , calculateFov
     ) where
 
-import           Coord            (Coord)
-import           Data.Array       ((!), (//))
-import           Dungeon.Map.Bool (BoolMap, emptyBoolMap)
-import           Dungeon.Size     (height, width)
-import           Linear.V2        (V2 (..))
+import           Coord        (Coord)
+import           Data.Array   ((!), (//))
+import           Dungeon.Size (height, width)
+import           Linear.V2    (V2 (..))
+import           Map.Bool     (BoolMap, emptyBoolMap)
 
 type Fov = BoolMap
 

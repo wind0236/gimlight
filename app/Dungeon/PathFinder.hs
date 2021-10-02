@@ -13,9 +13,9 @@ import           Data.Graph.AStar          (aStar)
 import           Data.HashSet              (HashSet, fromList)
 import           Data.Maybe                (catMaybes, mapMaybe)
 import           Dungeon                   (Dungeon, walkableFloor)
-import           Dungeon.Map.Bool          (BoolMap, emptyBoolMap)
 import qualified Dungeon.Size              as DS
 import           Linear.V2                 (V2 (..))
+import           Map.Bool                  (BoolMap, emptyBoolMap)
 
 getPathTo :: Coord -> Coord -> State Dungeon (Maybe [Coord])
 getPathTo src dst = state $ \d -> (getPathToNoState d src dst, d)

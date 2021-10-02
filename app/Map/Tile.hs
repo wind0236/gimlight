@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Dungeon.Map.Tile
+module Map.Tile
     ( TileMap
     , allWallTiles
     , Tile
@@ -17,8 +17,8 @@ import           Brick.AttrMap   (AttrName)
 import           Control.Lens.TH (makeLenses)
 import           Data.Array      (Array)
 import           Data.Array.Base (array)
-import qualified Dungeon.Map     as M
 import           Dungeon.Size    (height, width)
+import qualified Map             as M
 import           UI.Attrs        (grayAttr, whiteAttr)
 
 data Tile = Tile

@@ -23,8 +23,6 @@ import           Data.List                  (sortOn)
 import           Data.Maybe                 (fromMaybe)
 import           Dungeon                    (entities, explored, tileMap,
                                              visible)
-import           Dungeon.Map.Tile           (darkAttr, lightAttr)
-import qualified Dungeon.Map.Tile           as T
 import           Dungeon.Size               (height, width)
 import           Engine                     (Engine (Engine, HandlingEvent, _event),
                                              afterFinish, completeThisTurn,
@@ -38,6 +36,8 @@ import           Event                      (numMessages, popMessage)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)
 import qualified Log                        as L
+import           Map.Tile                   (darkAttr, lightAttr)
+import qualified Map.Tile                   as T
 import           UI.Attrs                   (attrMapForThisGame, emptyAttr,
                                              greenAttr, redAttr)
 

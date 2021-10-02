@@ -15,7 +15,6 @@ import           Data.Maybe                (fromMaybe, isJust, isNothing)
 import           Dungeon                   (Dungeon, enemies, entities,
                                             getPlayerEntity, popActorAt,
                                             pushEntity, tileMap, visible)
-import           Dungeon.Map.Tile          (walkable)
 import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
 import           Entity                    (Ai (..), Entity, ai, blocksMovement,
@@ -24,6 +23,7 @@ import           Entity                    (Ai (..), Entity, ai, blocksMovement,
                                             updateHp)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, attackMessage)
+import           Map.Tile                  (walkable)
 
 enemyAction :: Entity -> State Dungeon [Message]
 enemyAction e = do
