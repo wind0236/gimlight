@@ -7,8 +7,6 @@ module Entity
     , name
     , entityAttr
     , player
-    , orc
-    , troll
     , isPlayer
     , Ai(..)
     , ai
@@ -21,6 +19,7 @@ module Entity
     , isAlive
     , blocksMovement
     , renderOrder
+    , monster
     ) where
 
 import           Brick.AttrMap (AttrName)
@@ -52,6 +51,23 @@ data Entity = Actor
             } deriving (Show)
 makeLenses ''Entity
 
+monster :: Coord -> String -> AttrName -> String -> Int -> Int -> Int -> Entity
+monster position char entityAttr name maxHp defence power =
+        Actor { _position = position
+              , _char = char
+              , _entityAttr = entityAttr
+              , _name = name
+              , _hp = maxHp
+              , _maxHp = maxHp
+              , _defence = defence
+              , _power = power
+              , _ai = hostileEnemy
+              , _isAlive = True
+              , _blocksMovement = True
+              , _isPlayer = False
+              , _renderOrder = ActorEntity
+              }
+
 player :: Coord -> Entity
 player c = Actor { _position = c
                   , _char = "@"
@@ -67,38 +83,6 @@ player c = Actor { _position = c
                   , _isPlayer = True
                   , _renderOrder = ActorEntity
                   }
-
-orc :: Coord -> Entity
-orc c = Actor { _position = c
-               , _char = "o"
-               , _entityAttr = greenAttr
-               , _name = "Orc"
-               , _hp = 10
-               , _maxHp = 10
-               , _defence = 0
-               , _power = 3
-               , _ai = hostileEnemy
-               , _isAlive = True
-               , _blocksMovement = True
-               , _isPlayer = False
-               , _renderOrder = ActorEntity
-               }
-
-troll :: Coord -> Entity
-troll c = Actor { _position = c
-                 , _char = "T"
-                 , _entityAttr = greenAttr
-                 , _name = "Troll"
-                 , _hp = 16
-                 , _maxHp = 16
-                 , _defence = 1
-                 , _power = 4
-                 , _ai = hostileEnemy
-                 , _isAlive = True
-                 , _blocksMovement = True
-                 , _isPlayer = False
-                 , _renderOrder = ActorEntity
-                 }
 
 hostileEnemy :: Ai
 hostileEnemy = HostileEnemy { _path = [] }

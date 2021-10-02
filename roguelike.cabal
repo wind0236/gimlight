@@ -42,6 +42,7 @@ executable roguelike
                       , Coord
                       , Entity
                       , Entity.Behavior
+                      , Entity.Monsters
                       , Log
                       , Event
 

@@ -2,21 +2,23 @@ module Dungeon.Generate
     ( generateDungeon
     ) where
 
-import           Brick         (AttrName)
-import           Control.Lens  ((^.))
-import           Coord         (Coord)
-import           Data.Array    (Array, array, (//))
-import           Dungeon.Room  (Room (..), center, roomFromTwoPositionInclusive,
-                                roomFromWidthHeight, roomOverlaps)
-import           Dungeon.Size  (height, width)
-import           Entity        (Entity, position)
-import qualified Entity        as E
-import           Linear.V2     (V2 (..), _x, _y)
-import           Map.Bool      (BoolMap)
-import           Map.Tile      (Tile (..), TileMap, allWallTiles, floorTile,
-                                wallTile)
-import           System.Random (Random (randomR), RandomGen, StdGen, getStdGen,
-                                mkStdGen, random)
+import           Brick           (AttrName)
+import           Control.Lens    ((^.))
+import           Coord           (Coord)
+import           Data.Array      (Array, array, (//))
+import           Dungeon.Room    (Room (..), center,
+                                  roomFromTwoPositionInclusive,
+                                  roomFromWidthHeight, roomOverlaps)
+import           Dungeon.Size    (height, width)
+import           Entity          (Entity, position)
+import qualified Entity          as E
+import           Entity.Monsters (orc, troll)
+import           Linear.V2       (V2 (..), _x, _y)
+import           Map.Bool        (BoolMap)
+import           Map.Tile        (Tile (..), TileMap, allWallTiles, floorTile,
+                                  wallTile)
+import           System.Random   (Random (randomR), RandomGen, StdGen,
+                                  getStdGen, mkStdGen, random)
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Entity], V2 Int, StdGen)
 generateDungeon = generateDungeonAccum [] [] allWallTiles (V2 0 0)
@@ -69,5 +71,5 @@ newMonster :: StdGen -> Coord -> (Entity, StdGen)
 newMonster g c =
         let (r, g') = random g :: (Float, StdGen)
         in if r < 0.8
-            then (E.orc c, g')
-            else (E.troll c, g')
+            then (orc c, g')
+            else (troll c, g')
