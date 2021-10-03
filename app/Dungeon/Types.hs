@@ -66,6 +66,7 @@ data Entity = Actor
             , _renderOrder    :: RenderOrder
             } deriving (Show)
 makeLenses ''Entity
+
 data Dungeon = Dungeon
           { _tileMap  :: TileMap
           , _visible  :: Fov
