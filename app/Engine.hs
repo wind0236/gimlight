@@ -4,13 +4,14 @@
 module Engine where
 
 import           Brick                          (AttrName)
-import           Control.Lens                   (makeLenses, makeLensesFor, use,
-                                                 (%=), (%~), (&), (.=), (.~),
-                                                 (^.), (^?!))
+import           Control.Lens                   (makeLenses, makeLensesFor, set,
+                                                 use, (%=), (%~), (&), (.=),
+                                                 (.~), (^.), (^?!))
 import           Control.Monad.Extra            (foldM)
 import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
 import           Control.Monad.Trans.State      (State, evalState, get, state)
-import           Control.Monad.Trans.State.Lazy (execState, modify, runState)
+import           Control.Monad.Trans.State.Lazy (execState, modify, put,
+                                                 runState)
 import           Coord                          (Coord)
 import           Data.Array                     (Array)
 import           Data.Array.Base                (array, bounds, elems, (!),
@@ -26,7 +27,8 @@ import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (maxHp, position)
 import           Entity                         (Entity (..))
 import qualified Entity                         as E
-import           Entity.Behavior                (bumpAction, enemyAction)
+import           Entity.Behavior                (BumpResult (..), bumpAction,
+                                                 enemyAction)
 import           Event                          (Event, gameStartEvent)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
@@ -90,12 +92,17 @@ playerBumpAction offset = do
         e <- get
         let dg = e ^?! dungeon
 
-        let (messages, newDungeon) = flip runState dg $ do
+        let (result, newDungeon) = flip runState dg $ do
                 e <- D.popPlayer
                 bumpAction e offset
 
-        messageLog %= addMessages messages
-        dungeon .= newDungeon
+        case result of
+            LogReturned x -> do
+                messageLog %= addMessages x
+                dungeon .= newDungeon
+            EventStarted ev -> put $ HandlingEvent { _event = ev
+                                                   , _afterFinish = e
+                                                   }
 
 playerCurrentHp :: Engine -> Int
 playerCurrentHp e = E.getHp $ getPlayerEntity (e ^?! dungeon)

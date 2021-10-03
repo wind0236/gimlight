@@ -87,7 +87,11 @@ handlePlayerMove d e = continue $ flip execState e $ do
     let finished = eng ^?! isGameOver
     unless finished $ do
         playerBumpAction d
-        completeThisTurn
+
+        eng <- get
+        case eng of
+            Engine {} -> completeThisTurn
+            _         -> return ()
 
 drawUI :: Engine -> [Widget Name]
 drawUI e@Engine{} = [ C.center $ drawHpBar e <+> (padTop (Pad 2) (drawGame e) <=> drawMessageLog e)]

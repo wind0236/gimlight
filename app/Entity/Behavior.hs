@@ -3,6 +3,7 @@ module Entity.Behavior
     , meleeAction
     , waitAction
     , enemyAction
+    , BumpResult(..)
     ) where
 
 import           Control.Lens              (use, (%~), (&), (.=), (.~), (^.))
@@ -18,13 +19,16 @@ import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
 import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
                                             ai, blocksMovement, defence,
-                                            entities, isAlive, isEnemy,
+                                            entities, event, isAlive, isEnemy,
                                             isPlayer, name, path, position,
                                             power, tileMap, visible)
 import           Entity                    (getHp, updateHp)
+import           Event                     (Event)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, message)
 import           Map.Tile                  (walkable)
+
+data BumpResult = LogReturned [Message] | EventStarted Event
 
 enemyAction :: Entity -> State Dungeon [Message]
 enemyAction e = do
@@ -79,26 +83,29 @@ moveOrWait e =
                      moveAction newEntity offset
                      return Nothing
 
-bumpAction :: Entity -> V2 Int -> State Dungeon [Message]
+bumpAction :: Entity -> V2 Int -> State Dungeon BumpResult
 bumpAction src offset = do
         d <- get
 
         let x = getAliveActorAtLocation d (src ^. position + offset)
 
         case x of
-            Just e | e ^. isEnemy  -> meleeAction src offset
-            Just _ -> do
-                waitAction src
-                return []
+            Just e
+                | e ^. isEnemy -> do
+                    logs <- meleeAction src offset
+                    return $ LogReturned logs
+                | otherwise -> do
+                    pushEntity src
+                    return $ EventStarted $ e ^. event
             Nothing -> do
                 moveAction src offset
-                return []
+                return $ LogReturned []
 
 getBlockingEntityAtLocation :: Dungeon -> Coord -> Maybe Entity
 getBlockingEntityAtLocation d c = find (\x -> x ^. position == c && x ^. blocksMovement) (d ^. entities)
 
 getAliveActorAtLocation :: Dungeon -> Coord -> Maybe Entity
-getAliveActorAtLocation d c = find (\x -> x ^. position == c && x ^. isAlive) $ enemies d
+getAliveActorAtLocation d c = find (\x -> x ^. position == c && x ^. isAlive) $ d ^. entities
 
 meleeAction :: Entity -> V2 Int -> State Dungeon [Message]
 meleeAction src offset = do
