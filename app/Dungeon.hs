@@ -1,8 +1,15 @@
+-- I refer to "Dungeon" in this source code as the mixed things of map and
+-- entities because I could not come up with a much more proper word.  So,
+-- in this code, "Dungeon" means not only dungeon but also towns, etc.
+--
+-- TODO: Change the word to more precise one.
+
 {-# LANGUAGE TemplateHaskell #-}
 
 module Dungeon
     ( initDungeon
     , Dungeon
+    , dungeon
     , completeThisTurn
     , popPlayer
     , popActorAt
@@ -31,6 +38,7 @@ import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
 import           Data.Maybe                     (isJust, isNothing)
 import           Dungeon.Generate               (generateDungeon)
+import           Dungeon.Predefined             (firstEventMap)
 import           Dungeon.Room                   (Room (..), x1, x2, y1, y2)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
@@ -45,13 +53,15 @@ import           Linear.V2                      (V2 (..), _x, _y)
 import           Log                            (Message, message)
 import qualified Map                            as M
 import           Map.Bool                       (BoolMap, emptyBoolMap)
-import           Map.Explored                   (ExploredMap, updateExploredMap)
-import           Map.Fov                        (Fov, calculateFov)
+import           Map.Explored                   (ExploredMap, initExploredMap,
+                                                 updateExploredMap)
+import           Map.Fov                        (Fov, calculateFov, initFov)
 import           Map.Tile                       (Tile, TileMap, darkAttr,
                                                  lightAttr, transparent,
                                                  walkable)
 import           System.Random.Stateful         (StdGen, newStdGen, random,
                                                  randomR)
+
 completeThisTurn :: State Dungeon DT.Status
 completeThisTurn = do
         updateMap
@@ -126,8 +136,7 @@ enemies d = filter (not . (^. isPlayer)) $ d ^. entities
 initDungeon :: IO Dungeon
 initDungeon = do
         gen <- newStdGen
-        let (tileMap, enemies, playerPos, _) = generateDungeon gen maxRooms roomMinSize roomMaxSize (V2 width height)
-        let player = E.player playerPos
-        let d = dungeon tileMap $ player:enemies
+        let player = E.player $ V2 5 5
+        let d = firstEventMap player
 
         return $ execState updateMap d

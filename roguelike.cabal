@@ -34,6 +34,7 @@ executable roguelike
                       , Map.Explored
                       , Map.Fov
                       , Dungeon
+                      , Dungeon.Predefined
                       , Dungeon.Types
                       , Dungeon.Room
                       , Dungeon.Size
