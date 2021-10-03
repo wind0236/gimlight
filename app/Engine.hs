@@ -23,7 +23,8 @@ import           Dungeon.Generate               (generateDungeon)
 import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
 import qualified Dungeon.Turn                   as DT
-import           Entity                         (Entity (..), position)
+import           Dungeon.Types                  (maxHp, position)
+import           Entity                         (Entity (..))
 import qualified Entity                         as E
 import           Entity.Behavior                (bumpAction, enemyAction)
 import           Event                          (Event, gameStartEvent)
@@ -100,7 +101,7 @@ playerCurrentHp :: Engine -> Int
 playerCurrentHp e = E.getHp $ getPlayerEntity (e ^?! dungeon)
 
 playerMaxHp :: Engine -> Int
-playerMaxHp e = getPlayerEntity (e ^?! dungeon) ^. E.maxHp
+playerMaxHp e = getPlayerEntity (e ^?! dungeon) ^. maxHp
 
 initEngine :: IO Engine
 initEngine = do

@@ -10,7 +10,8 @@ import           Dungeon.Room    (Room (..), center,
                                   roomFromTwoPositionInclusive,
                                   roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Size    (height, width)
-import           Entity          (Entity, position)
+import           Dungeon.Types   (position)
+import           Entity          (Entity)
 import qualified Entity          as E
 import           Entity.Monsters (orc, troll)
 import           Linear.V2       (V2 (..), _x, _y)

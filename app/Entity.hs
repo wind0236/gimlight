@@ -2,107 +2,42 @@
 
 module Entity
     ( Entity
-    , position
-    , char
-    , name
-    , entityAttr
     , player
-    , isPlayer
-    , Ai(..)
-    , ai
-    , path
     , getHp
-    , power
-    , defence
     , updateHp
-    , maxHp
-    , isAlive
-    , blocksMovement
-    , renderOrder
     , monster
     ) where
 
 import           Brick.AttrMap (AttrName)
-import           Control.Lens  (makeLenses, (^.))
+import           Control.Lens  (makeLenses, (&), (&~), (.=), (.~), (^.))
 import           Coord         (Coord)
+import           Dungeon.Types (Entity, RenderOrder (ActorEntity, Corpse),
+                                actor, blocksMovement, char, entityAttr, hp,
+                                isAlive, maxHp, name, renderOrder)
 import           UI.Attrs      (greenAttr, redAttr, whiteAttr)
-
-newtype Ai = HostileEnemy
-             { _path :: [Coord]
-             } deriving (Show)
-makeLenses ''Ai
-
-data RenderOrder =  ActorEntity| Iten | Corpse deriving (Show, Ord, Eq)
-
-data Entity = Actor
-            { _position       :: Coord
-            , _char           :: String
-            , _entityAttr     :: AttrName
-            , _name           :: [Char]
-            , _hp             :: Int
-            , _maxHp          :: Int
-            , _defence        :: Int
-            , _power          :: Int
-            , _ai             :: Ai
-            , _isAlive        :: Bool
-            , _blocksMovement :: Bool
-            , _isPlayer       :: Bool
-            , _renderOrder    :: RenderOrder
-            } deriving (Show)
-makeLenses ''Entity
 
 monster :: Coord -> String -> AttrName -> String -> Int -> Int -> Int -> Entity
 monster position char entityAttr name maxHp defence power =
-        Actor { _position = position
-              , _char = char
-              , _entityAttr = entityAttr
-              , _name = name
-              , _hp = maxHp
-              , _maxHp = maxHp
-              , _defence = defence
-              , _power = power
-              , _ai = hostileEnemy
-              , _isAlive = True
-              , _blocksMovement = True
-              , _isPlayer = False
-              , _renderOrder = ActorEntity
-              }
+        actor position char entityAttr name maxHp defence power True True False ActorEntity
 
 player :: Coord -> Entity
-player c = Actor { _position = c
-                  , _char = "@"
-                  , _entityAttr = whiteAttr
-                  , _name = "Player"
-                  , _hp = 30
-                  , _maxHp = 30
-                  , _defence = 2
-                  , _power = 5
-                  , _ai = hostileEnemy
-                  , _isAlive = True
-                  , _blocksMovement = True
-                  , _isPlayer = True
-                  , _renderOrder = ActorEntity
-                  }
-
-hostileEnemy :: Ai
-hostileEnemy = HostileEnemy { _path = [] }
+player c = actor c "@" whiteAttr "Player" 30 2 5 True True True ActorEntity
 
 getHp :: Entity -> Int
 getHp e = e ^. hp
 
 updateHp :: Entity -> Int -> Entity
-updateHp e@Actor{ _hp = hp, _maxHp = maxHp } newHp =
-        let hpInRange = max 0 $ min maxHp newHp
-        in if hpInRange == 0 && e ^. isAlive
-               then  die e
-               else e{ _hp = max 0 $ min maxHp newHp }
+updateHp e newHp =
+        let newHpInRange = max 0 $ min (e ^. maxHp) newHp
+        in if newHpInRange == 0 && e ^. isAlive
+               then die e
+               else e & hp .~ newHpInRange
 
 die :: Entity -> Entity
-die e = e{ _hp = 0
-         , _char = "%"
-         , _entityAttr = redAttr
-         , _blocksMovement = False
-         , _name = "remains of " ++ (e ^. name)
-         , _isAlive = False
-         , _renderOrder = Corpse
-         }
+die e = e &~ do
+    char .= "%"
+    entityAttr .= redAttr
+    blocksMovement .= False
+    name .= "remains of " ++ (e ^. name)
+    isAlive .= False
+    renderOrder .= Corpse

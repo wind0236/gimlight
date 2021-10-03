@@ -21,17 +21,16 @@ import           Control.Monad.Trans.State  (execState, get)
 import           Data.Array.Base            ((!))
 import           Data.List                  (sortOn)
 import           Data.Maybe                 (fromMaybe)
-import           Dungeon                    (entities, explored, tileMap,
-                                             visible)
 import           Dungeon.Size               (height, width)
+import           Dungeon.Types              (char, entities, entityAttr,
+                                             explored, position, renderOrder,
+                                             tileMap, visible)
 import           Engine                     (Engine (Engine, HandlingEvent, _event),
                                              afterFinish, completeThisTurn,
                                              dungeon, event, initEngine,
                                              isGameOver, messageLog,
                                              playerBumpAction, playerCurrentHp,
                                              playerMaxHp)
-import           Entity                     (char, entityAttr, position,
-                                             renderOrder)
 import           Event                      (numMessages, popMessage)
 import qualified Graphics.Vty               as V
 import           Linear.V2                  (V2 (..), _x, _y)

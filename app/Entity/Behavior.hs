@@ -12,15 +12,16 @@ import           Coord                     (Coord)
 import           Data.Array                ((!))
 import           Data.List                 (find)
 import           Data.Maybe                (fromMaybe, isJust, isNothing)
-import           Dungeon                   (Dungeon, enemies, entities,
-                                            getPlayerEntity, popActorAt,
-                                            pushEntity, tileMap, visible)
+import           Dungeon                   (Dungeon, enemies, getPlayerEntity,
+                                            popActorAt, pushEntity)
 import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
-import           Entity                    (Ai (..), Entity, ai, blocksMovement,
-                                            defence, getHp, isAlive, isPlayer,
-                                            name, path, position, power,
-                                            updateHp)
+import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
+                                            ai, blocksMovement, defence,
+                                            entities, isAlive, isPlayer, name,
+                                            path, position, power, tileMap,
+                                            visible)
+import           Entity                    (getHp, updateHp)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, message)
 import           Map.Tile                  (walkable)
