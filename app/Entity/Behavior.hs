@@ -18,9 +18,9 @@ import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
 import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
                                             ai, blocksMovement, defence,
-                                            entities, isAlive, isPlayer, name,
-                                            path, position, power, tileMap,
-                                            visible)
+                                            entities, isAlive, isEnemy,
+                                            isPlayer, name, path, position,
+                                            power, tileMap, visible)
 import           Entity                    (getHp, updateHp)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, message)
@@ -86,13 +86,16 @@ bumpAction src offset = do
         let x = getAliveActorAtLocation d (src ^. position + offset)
 
         case x of
-            Just _  -> meleeAction src offset
+            Just e | e ^. isEnemy  -> meleeAction src offset
+            Just _ -> do
+                waitAction src
+                return []
             Nothing -> do
                 moveAction src offset
                 return []
 
 getBlockingEntityAtLocation :: Dungeon -> Coord -> Maybe Entity
-getBlockingEntityAtLocation d c = find (\x -> x ^. position == c && x ^. blocksMovement) $ enemies d
+getBlockingEntityAtLocation d c = find (\x -> x ^. position == c && x ^. blocksMovement) (d ^. entities)
 
 getAliveActorAtLocation :: Dungeon -> Coord -> Maybe Entity
 getAliveActorAtLocation d c = find (\x -> x ^. position == c && x ^. isAlive) $ enemies d

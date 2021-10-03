@@ -44,8 +44,9 @@ import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
                                                  roomMinSize, width)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (Dungeon, dungeon, entities,
-                                                 explored, isAlive, isPlayer,
-                                                 position, tileMap, visible)
+                                                 explored, isAlive, isEnemy,
+                                                 isPlayer, position, tileMap,
+                                                 visible)
 import           Entity                         (Entity (..))
 import qualified Entity                         as E
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
@@ -116,7 +117,7 @@ popActorIf f = state $ \d ->
         Nothing -> (Nothing, d)
 
 walkableFloor :: Dungeon -> BoolMap
-walkableFloor d = M.generate (\c -> ((d ^. tileMap) ! c) ^. walkable)
+walkableFloor d = M.generate (\c -> (d ^. tileMap) ! c ^. walkable)
 
 transparentMap :: Dungeon -> BoolMap
 transparentMap d = fmap (^. transparent) (d ^. tileMap)
@@ -131,7 +132,7 @@ aliveEnemies :: Dungeon -> [Entity]
 aliveEnemies d = filter (^. isAlive) $ enemies d
 
 enemies :: Dungeon -> [Entity]
-enemies d = filter (not . (^. isPlayer)) $ d ^. entities
+enemies d = filter (^. isEnemy) $ d ^. entities
 
 initDungeon :: IO Dungeon
 initDungeon = do
