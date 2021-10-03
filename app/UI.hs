@@ -25,7 +25,7 @@ import           Dungeon.Size               (height, width)
 import           Dungeon.Types              (char, entities, entityAttr,
                                              explored, position, renderOrder,
                                              tileMap, visible)
-import           Engine                     (Engine (Engine, HandlingEvent, _event),
+import           Engine                     (Engine (HandlingEvent, PlayerIsExploring, _event),
                                              afterFinish, completeThisTurn,
                                              dungeon, event, initEngine,
                                              isGameOver, messageLog,
@@ -64,20 +64,20 @@ app = App { appDraw = drawUI
           }
 
 handleEvent :: Engine -> BrickEvent Name Tick -> EventM Name (Next Engine)
-handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt e
-handleEvent e@Engine{} (VtyEvent (V.EvKey V.KEsc []))        = halt e
-handleEvent e@Engine{} (VtyEvent (V.EvKey V.KUp []))         = handlePlayerMove (V2 0 1) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey V.KDown []))       = handlePlayerMove (V2 0 (-1)) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey V.KRight []))      = handlePlayerMove (V2 1 0) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey V.KLeft []))       = handlePlayerMove (V2 (-1) 0) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey V.KUpRight [])) = handlePlayerMove (V2 1 1) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey V.KUpLeft [])) = handlePlayerMove (V2 1 (-1)) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey V.KDownRight [])) = handlePlayerMove (V2 (-1) 1) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey V.KDownLeft [])) = handlePlayerMove (V2 (-1) (-1)) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'k') [])) = handlePlayerMove (V2 0 1) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'j') [])) = handlePlayerMove (V2 0 (-1)) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'l') [])) = handlePlayerMove (V2 1 0) e
-handleEvent e@Engine{} (VtyEvent (V.EvKey (V.KChar 'h') [])) = handlePlayerMove (V2 (-1) 0) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey V.KEsc []))        = halt e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey V.KUp []))         = handlePlayerMove (V2 0 1) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey V.KDown []))       = handlePlayerMove (V2 0 (-1)) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey V.KRight []))      = handlePlayerMove (V2 1 0) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey V.KLeft []))       = handlePlayerMove (V2 (-1) 0) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey V.KUpRight [])) = handlePlayerMove (V2 1 1) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey V.KUpLeft [])) = handlePlayerMove (V2 1 (-1)) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey V.KDownRight [])) = handlePlayerMove (V2 (-1) 1) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey V.KDownLeft [])) = handlePlayerMove (V2 (-1) (-1)) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey (V.KChar 'k') [])) = handlePlayerMove (V2 0 1) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey (V.KChar 'j') [])) = handlePlayerMove (V2 0 (-1)) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey (V.KChar 'l') [])) = handlePlayerMove (V2 1 0) e
+handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey (V.KChar 'h') [])) = handlePlayerMove (V2 (-1) 0) e
 handleEvent e@HandlingEvent{} (VtyEvent (V.EvKey V.KEnter [])) = handleMessageEvent e
 handleEvent e _                                     = continue e
 
@@ -90,11 +90,11 @@ handlePlayerMove d e = continue $ flip execState e $ do
 
         eng <- get
         case eng of
-            Engine {} -> completeThisTurn
-            _         -> return ()
+            PlayerIsExploring {} -> completeThisTurn
+            _                    -> return ()
 
 drawUI :: Engine -> [Widget Name]
-drawUI e@Engine{} = [ C.center $ drawHpBar e <+> (padTop (Pad 2) (drawGame e) <=> drawMessageLog e)]
+drawUI e@PlayerIsExploring{} = [ C.center $ drawHpBar e <+> (padTop (Pad 2) (drawGame e) <=> drawMessageLog e)]
 drawUI engine@HandlingEvent{} = [withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Roguelike game")
     $ center
@@ -104,7 +104,7 @@ drawUI engine@HandlingEvent{} = [withBorderStyle BS.unicodeBold
         m = fromMaybe "" (fst $ popMessage (engine ^?! event))
 
 drawGame :: Engine -> Widget Name
-drawGame engine@Engine{} = withBorderStyle BS.unicodeBold
+drawGame engine@PlayerIsExploring{} = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Game")
     $ vBox rows
     where

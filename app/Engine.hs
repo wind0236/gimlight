@@ -41,7 +41,7 @@ import           Map.Tile                       (Tile, TileMap, darkAttr,
                                                  walkable)
 import           System.Random.Stateful         (newStdGen)
 
-data Engine = Engine
+data Engine = PlayerIsExploring
           { _dungeon    :: Dungeon
           , _messageLog :: MessageLog
           , _isGameOver :: Bool
@@ -115,7 +115,7 @@ initEngine = do
         dungeon <- initDungeon
         return $ HandlingEvent {
                                _event = gameStartEvent,
-                               _afterFinish = Engine { _dungeon = dungeon
+                               _afterFinish = PlayerIsExploring { _dungeon = dungeon
                       , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
                       , _isGameOver = False
                       }
