@@ -113,10 +113,10 @@ playerMaxHp e = getPlayerEntity (e ^?! dungeon) ^. maxHp
 initEngine :: IO Engine
 initEngine = do
         dungeon <- initDungeon
-        return $ HandlingEvent {
-                               _event = gameStartEvent,
-                               _afterFinish = PlayerIsExploring { _dungeon = dungeon
-                      , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
-                      , _isGameOver = False
-                      }
-                      }
+        return $ HandlingEvent { _event = gameStartEvent
+                               , _afterFinish =
+                                    PlayerIsExploring { _dungeon = dungeon
+                                                      , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
+                                                      , _isGameOver = False
+                                                      }
+                               }
