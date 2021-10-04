@@ -45,7 +45,7 @@ data Engine = PlayerIsExploring
           { _dungeon    :: Dungeon
           , _messageLog :: MessageLog
           , _isGameOver :: Bool
-          } | HandlingEvent
+          } | Talking
           { _event       :: Event
           , _afterFinish :: Engine
           } deriving (Show)
@@ -100,9 +100,9 @@ playerBumpAction offset = do
             LogReturned x -> do
                 messageLog %= addMessages x
                 dungeon .= newDungeon
-            EventStarted ev -> put $ HandlingEvent { _event = ev
-                                                   , _afterFinish = e
-                                                   }
+            EventStarted ev -> put $ Talking { _event = ev
+                                             , _afterFinish = e
+                                             }
 
 playerCurrentHp :: Engine -> Int
 playerCurrentHp e = E.getHp $ getPlayerEntity (e ^?! dungeon)
@@ -113,10 +113,10 @@ playerMaxHp e = getPlayerEntity (e ^?! dungeon) ^. maxHp
 initEngine :: IO Engine
 initEngine = do
         dungeon <- initDungeon
-        return $ HandlingEvent { _event = gameStartEvent
-                               , _afterFinish =
-                                    PlayerIsExploring { _dungeon = dungeon
-                                                      , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
-                                                      , _isGameOver = False
-                                                      }
-                               }
+        return $ Talking { _event = gameStartEvent
+                         , _afterFinish =
+                             PlayerIsExploring { _dungeon = dungeon
+                                                 , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
+                                                 , _isGameOver = False
+                                                 }
+                         }

@@ -25,7 +25,7 @@ import           Dungeon.Size               (height, width)
 import           Dungeon.Types              (char, entities, entityAttr,
                                              explored, position, renderOrder,
                                              tileMap, visible)
-import           Engine                     (Engine (HandlingEvent, PlayerIsExploring, _event),
+import           Engine                     (Engine (PlayerIsExploring, Talking, _event),
                                              afterFinish, completeThisTurn,
                                              dungeon, event, initEngine,
                                              isGameOver, messageLog,
@@ -78,7 +78,7 @@ handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey (V.KChar 'k') [])) = handle
 handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey (V.KChar 'j') [])) = handlePlayerMove (V2 0 (-1)) e
 handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey (V.KChar 'l') [])) = handlePlayerMove (V2 1 0) e
 handleEvent e@PlayerIsExploring{} (VtyEvent (V.EvKey (V.KChar 'h') [])) = handlePlayerMove (V2 (-1) 0) e
-handleEvent e@HandlingEvent{} (VtyEvent (V.EvKey V.KEnter [])) = handleMessageEvent e
+handleEvent e@Talking{} (VtyEvent (V.EvKey V.KEnter [])) = handleMessageEvent e
 handleEvent e _                                     = continue e
 
 handlePlayerMove :: V2 Int -> Engine -> EventM Name (Next Engine)
@@ -95,7 +95,7 @@ handlePlayerMove d e = continue $ flip execState e $ do
 
 drawUI :: Engine -> [Widget Name]
 drawUI e@PlayerIsExploring{} = [ C.center $ drawHpBar e <+> (padTop (Pad 2) (drawGame e) <=> drawMessageLog e)]
-drawUI engine@HandlingEvent{} = [withBorderStyle BS.unicodeBold
+drawUI engine@Talking{} = [withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Roguelike game")
     $ center
     $ padAll 2
@@ -145,7 +145,7 @@ drawHpBar e = let barWidth = 20
               in vBox [hBox [ x | x <- map (\x -> withAttr (attrAt x) $ str "XX") [0 .. barWidth - 1]], str $ "HP: " ++ show currentHp ++ " / " ++ show maxHp]
 
 handleMessageEvent :: Engine -> EventM Name (Next Engine)
-handleMessageEvent e@HandlingEvent{} =
+handleMessageEvent e@Talking{} =
         continue $ if numMessages (e ^?! event) > 1
                     then e { _event = snd $ popMessage (e ^?! event) }
                     else e ^?! afterFinish
