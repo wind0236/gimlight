@@ -36,7 +36,7 @@ import           Linear.V2                  (V2 (..), _x, _y)
 import qualified Log                        as L
 import           Map.Tile                   (darkAttr, lightAttr)
 import qualified Map.Tile                   as T
-import           Scene                      (numMessages, popMessage)
+import           Scene                      (SceneElement (WithSpeaker, WithoutSpeaker))
 import           Talking                    (destruct, talkWith)
 import           UI.Attrs                   (attrMapForThisGame, emptyAttr,
                                              greenAttr, redAttr)
@@ -111,7 +111,9 @@ drawUI engine@HandlingScene{} = [withBorderStyle BS.unicodeBold
     $ padAll 2
     $ strWrap m]
     where
-        m = fromMaybe "" (fst $ popMessage (engine ^?! scene))
+        m = case head $ engine ^?! scene of
+                WithSpeaker name msg -> name ++ ": " ++ msg
+                WithoutSpeaker msg   -> msg
 
 drawGame :: Engine -> Widget Name
 drawGame engine@PlayerIsExploring{} = withBorderStyle BS.unicodeBold
@@ -156,8 +158,8 @@ drawHpBar e = let barWidth = 20
 
 handleMessageEvent :: Engine -> EventM Name (Next Engine)
 handleMessageEvent e@HandlingScene{} =
-        continue $ if numMessages (e ^?! scene) > 1
-                    then e { _scene = snd $ popMessage (e ^?! scene) }
+        continue $ if length (e ^?! scene) > 1
+                    then e { _scene = tail (e ^?! scene) }
                     else e ^?! afterFinish
 handleMessageEvent _ = error "unreachable"
 
