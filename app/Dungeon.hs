@@ -4,8 +4,6 @@
 --
 -- TODO: Change the word to more precise one.
 
-{-# LANGUAGE TemplateHaskell #-}
-
 module Dungeon
     ( initDungeon
     , Dungeon

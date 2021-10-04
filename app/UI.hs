@@ -143,7 +143,7 @@ drawMessageLog engine = withBorderStyle BS.unicodeBold
     $ B.borderWithLabel (str "Log")
     $ vBox rows
     where
-        rows = [m | m <- reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take L.height $ concatMap (reverse . L.messageToAttrNameAndStringList) (engine ^. messageLog)]
+        rows = reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take L.height $ concatMap (reverse . L.messageToAttrNameAndStringList) (engine ^. messageLog)
 
 drawStatus :: Engine -> [Widget Name]
 drawStatus e = [ C.center $ padTop (Pad 2) (drawHpBar e)]
@@ -154,7 +154,7 @@ drawHpBar e = let barWidth = 20
                   maxHp = playerMaxHp e
                   filledWidth = currentHp * barWidth `div` maxHp
                   attrAt x = if x < filledWidth then greenAttr else redAttr
-              in vBox [hBox [ x | x <- map (\x -> withAttr (attrAt x) $ str "XX") [0 .. barWidth - 1]], str $ "HP: " ++ show currentHp ++ " / " ++ show maxHp]
+              in vBox [hBox $ map (\x -> withAttr (attrAt x) $ str "XX") [0 .. barWidth - 1], str $ "HP: " ++ show currentHp ++ " / " ++ show maxHp]
 
 handleMessageEvent :: Engine -> EventM Name (Next Engine)
 handleMessageEvent e@HandlingScene{} =
