@@ -7,14 +7,13 @@ module Entity.Behavior
     , BumpResult(..)
     ) where
 
-import           Control.Lens              (use, (%~), (&), (.=), (.~), (^.))
-import           Control.Monad.Trans.State (State, evalState, execState, get,
-                                            runState, state)
+import           Control.Lens              (use, (&), (.~), (^.))
+import           Control.Monad.Trans.State (State, execState, get, state)
 import           Coord                     (Coord)
 import           Data.Array                ((!))
 import           Data.List                 (find)
-import           Data.Maybe                (fromMaybe, isJust, isNothing)
-import           Dungeon                   (Dungeon, enemies, getPlayerEntity,
+import           Data.Maybe                (fromMaybe)
+import           Dungeon                   (Dungeon, getPlayerEntity,
                                             popActorAt, pushEntity)
 import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
@@ -37,8 +36,8 @@ enemyAction e = do
         u <- updatePathOrMelee e
 
         case u of
-            Right e -> do
-                            m <- moveOrWait e
+            Right e' -> do
+                            m <- moveOrWait e'
                             return $ case m of
                                          Nothing -> []
                                          Just x  -> [x]
@@ -111,8 +110,6 @@ getAliveActorAtLocation d c = find (\x -> x ^. position == c && x ^. isAlive) $ 
 
 meleeAction :: Entity -> V2 Int -> State Dungeon [Message]
 meleeAction src offset = do
-        es <- use entities
-
         let pos = src ^. position
             dest = pos + offset
 

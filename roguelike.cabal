@@ -23,7 +23,7 @@ extra-source-files: CHANGELOG.md
 
 executable roguelike
     main-is:          Main.hs
-    ghc-options:      -threaded
+    ghc-options:      -threaded -Wall -Werror
 
     other-modules:      UI
                       , UI.Attrs

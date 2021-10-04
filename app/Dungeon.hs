@@ -19,47 +19,28 @@ module Dungeon
     , aliveEnemies
     ) where
 
-import           Brick                          (AttrName)
-import           Control.Lens                   (makeLenses, (%~), (&), (.=),
-                                                 (.~), (^.))
+import           Control.Lens                   ((%~), (&), (.=), (.~), (^.))
 import           Control.Lens.Getter            (use)
-import           Control.Monad                  (join)
-import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
-import           Control.Monad.Trans.State      (State, evalState, runState,
-                                                 state)
-import           Control.Monad.Trans.State.Lazy (execState, get, modify)
-import           Coord                          (Coord (..))
-import           Data.Array                     (Array)
-import           Data.Array.Base                (array, bounds, elems, (!),
-                                                 (//))
+import           Control.Monad.Trans.State      (State, runState, state)
+import           Control.Monad.Trans.State.Lazy (execState, get)
+import           Coord                          (Coord)
+import           Data.Array.Base                ((!))
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
-import           Data.Maybe                     (isJust, isNothing)
-import           Dungeon.Generate               (generateDungeon)
 import           Dungeon.Predefined             (firstEventMap)
-import           Dungeon.Room                   (Room (..), x1, x2, y1, y2)
-import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
-                                                 roomMinSize, width)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (Dungeon, dungeon, entities,
                                                  explored, isAlive, isEnemy,
                                                  isPlayer, position, tileMap,
                                                  visible)
-import           Entity                         (Entity (..))
+import           Entity                         (Entity)
 import qualified Entity                         as E
-import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
-import           Linear.V2                      (V2 (..), _x, _y)
-import           Log                            (Message, message)
+import           Linear.V2                      (V2 (..))
 import qualified Map                            as M
-import           Map.Bool                       (BoolMap, emptyBoolMap)
-import           Map.Explored                   (ExploredMap, initExploredMap,
-                                                 updateExploredMap)
-import           Map.Fov                        (Fov, calculateFov, initFov)
-import           Map.Tile                       (Tile, TileMap, darkAttr,
-                                                 lightAttr, transparent,
-                                                 walkable)
-import           System.Random.Stateful         (StdGen, newStdGen, random,
-                                                 randomR)
+import           Map.Bool                       (BoolMap)
+import           Map.Explored                   (updateExploredMap)
+import           Map.Fov                        (calculateFov)
+import           Map.Tile                       (transparent, walkable)
 
 completeThisTurn :: State Dungeon DT.Status
 completeThisTurn = do
@@ -134,7 +115,6 @@ enemies d = filter (^. isEnemy) $ d ^. entities
 
 initDungeon :: IO Dungeon
 initDungeon = do
-        gen <- newStdGen
         let player = E.player $ V2 5 5
         let d = firstEventMap player
 

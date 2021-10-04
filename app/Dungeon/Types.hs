@@ -43,7 +43,6 @@ import           Coord         (Coord)
 import           Map.Explored  (ExploredMap, initExploredMap)
 import           Map.Fov       (Fov, initFov)
 import           Map.Tile      (TileMap)
-import           Scene         (Scene)
 
 
 newtype Ai = HostileEnemy
@@ -88,22 +87,22 @@ dungeon t e = Dungeon { _tileMap = t
                       }
 
 actor :: Coord -> String -> AttrName -> String -> Int -> Int -> Int -> Bool -> Bool -> Bool -> RenderOrder -> Bool -> String -> Entity
-actor position char entityAttr name hp defence power isAlive blocksMovement isPlayer renderOrder isEnemy talkMessage =
-        Actor { _position = position
-              , _char = char
-              , _entityAttr = entityAttr
-              , _name = name
-              , _hp = hp
-              , _maxHp = hp
-              , _defence = defence
-              , _power = power
+actor position' char' entityAttr' name' hp' defence' power' isAlive' blocksMovement' isPlayer' renderOrder' isEnemy' talkMessage' =
+        Actor { _position = position'
+              , _char = char'
+              , _entityAttr = entityAttr'
+              , _name = name'
+              , _hp = hp'
+              , _maxHp = hp'
+              , _defence = defence'
+              , _power = power'
               , _ai = hostileEnemy
-              , _isAlive = isAlive
-              , _blocksMovement = blocksMovement
-              , _isPlayer = isPlayer
-              , _renderOrder = renderOrder
-              , _isEnemy = isEnemy
-              , _talkMessage = talkMessage
+              , _isAlive = isAlive'
+              , _blocksMovement = blocksMovement'
+              , _isPlayer = isPlayer'
+              , _renderOrder = renderOrder'
+              , _isEnemy = isEnemy'
+              , _talkMessage = talkMessage'
               }
 
 hostileEnemy :: Ai

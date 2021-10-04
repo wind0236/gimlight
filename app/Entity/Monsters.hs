@@ -3,7 +3,7 @@ module Entity.Monsters
     , troll
     ) where
 import           Coord    (Coord)
-import           Entity   (Entity (..), monster)
+import           Entity   (Entity, monster)
 import           UI.Attrs (greenAttr)
 
 orc :: Coord -> Entity

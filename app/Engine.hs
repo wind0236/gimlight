@@ -3,43 +3,24 @@
 
 module Engine where
 
-import           Brick                          (AttrName)
-import           Control.Lens                   (makeLenses, makeLensesFor, set,
-                                                 use, (%=), (%~), (&), (.=),
-                                                 (.~), (^.), (^?!))
-import           Control.Monad.Extra            (foldM)
-import           Control.Monad.Trans.Maybe      (MaybeT (MaybeT), runMaybeT)
-import           Control.Monad.Trans.State      (State, evalState, get, state)
-import           Control.Monad.Trans.State.Lazy (execState, modify, put,
-                                                 runState)
+import           Control.Lens                   (makeLenses, (%=), (.=), (^.),
+                                                 (^?!))
+import           Control.Monad.Trans.State      (State, get)
+import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
-import           Data.Array                     (Array)
-import           Data.Array.Base                (array, bounds, elems, (!),
-                                                 (//))
-import           Data.Maybe                     (catMaybes)
-import           Dungeon                        (Dungeon, aliveEnemies, enemies,
+import           Dungeon                        (Dungeon, aliveEnemies,
                                                  getPlayerEntity, initDungeon)
 import qualified Dungeon                        as D
-import           Dungeon.Generate               (generateDungeon)
-import           Dungeon.Size                   (height, maxRooms, roomMaxSize,
-                                                 roomMinSize, width)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (maxHp, position)
-import           Entity                         (Entity (..))
 import qualified Entity                         as E
 import           Entity.Behavior                (BumpResult (..), bumpAction,
                                                  enemyAction)
-import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
-import           Linear.V2                      (V2 (..), _x, _y)
-import           Log                            (MessageLog, addMaybeMessage,
-                                                 addMessage, addMessages)
+import           Linear.V2                      (V2)
+import           Log                            (MessageLog, addMessage,
+                                                 addMessages)
 import qualified Log                            as L
-import           Map.Bool                       (BoolMap, emptyBoolMap)
-import           Map.Tile                       (Tile, TileMap, darkAttr,
-                                                 lightAttr, transparent,
-                                                 walkable)
 import           Scene                          (Scene, gameStartScene)
-import           System.Random.Stateful         (newStdGen)
 import           Talking                        (TalkWith)
 
 data Engine = PlayerIsExploring
@@ -83,10 +64,10 @@ handleEnemyTurn c = do
         let dg = e ^?! dungeon
 
         let (messages, dg') = flip runState dg $ do
-                e <- D.popActorAt c
-                case e of
-                    Just e  -> enemyAction e
-                    Nothing -> error "No such enemy."
+                e' <- D.popActorAt c
+                case e' of
+                    Just e'' -> enemyAction e''
+                    Nothing  -> error "No such enemy."
 
         messageLog %= addMessages messages
         dungeon .= dg'
@@ -97,8 +78,8 @@ playerBumpAction offset = do
         let dg = e ^?! dungeon
 
         let (result, newDungeon) = flip runState dg $ do
-                e <- D.popPlayer
-                bumpAction e offset
+                e' <- D.popPlayer
+                bumpAction e' offset
 
         case result of
             LogReturned x -> do
@@ -116,11 +97,11 @@ playerMaxHp e = getPlayerEntity (e ^?! dungeon) ^. maxHp
 
 initEngine :: IO Engine
 initEngine = do
-        dungeon <- initDungeon
+        d <- initDungeon
         return $ HandlingScene
                 { _scene = gameStartScene
                 , _afterFinish =
-                    PlayerIsExploring { _dungeon = dungeon
+                    PlayerIsExploring { _dungeon = d
                                     , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
                                     , _isGameOver = False
                                     }

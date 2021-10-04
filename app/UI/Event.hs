@@ -41,8 +41,8 @@ handlePlayerMove d e = continue $ flip execState e $ do
     unless finished $ do
         playerBumpAction d
 
-        eng <- get
-        case eng of
+        eng' <- get
+        case eng' of
             PlayerIsExploring {} -> completeThisTurn
             _                    -> return ()
 

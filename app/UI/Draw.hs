@@ -47,8 +47,8 @@ drawUI engine@HandlingScene{} = [withBorderStyle BS.unicodeBold
     $ strWrap m]
     where
         m = case head $ engine ^?! scene of
-                WithSpeaker name msg -> name ++ ": " ++ msg
-                WithoutSpeaker msg   -> msg
+                WithSpeaker speaker msg -> speaker ++ ": " ++ msg
+                WithoutSpeaker msg      -> msg
 
 drawGame :: Engine -> Widget Name
 drawGame engine@PlayerIsExploring{} = withBorderStyle BS.unicodeBold
@@ -79,9 +79,6 @@ drawMessageLog engine = withBorderStyle BS.unicodeBold
     $ vBox rows
     where
         rows = reverse $ fmap (\(attr, s) -> withAttr attr $ str s) $ take L.height $ concatMap (reverse . L.messageToAttrNameAndStringList) (engine ^. messageLog)
-
-drawStatus :: Engine -> [Widget Name]
-drawStatus e = [ C.center $ padTop (Pad 2) (drawHpBar e)]
 
 drawHpBar :: Engine -> Widget Name
 drawHpBar e = let barWidth = 20

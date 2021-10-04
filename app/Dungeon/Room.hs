@@ -18,10 +18,10 @@ data Room = Room
             }
 
 center :: Room -> Coord
-center Room{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 }
+center r
     = V2 xm ym
-    where xm = (x1 + x2) `div` 2
-          ym = (y1 + y2) `div` 2
+    where xm = (x1 r + x2 r) `div` 2
+          ym = (y1 r + y2 r) `div` 2
 
 roomOverlaps :: Room -> Room -> Bool
 roomOverlaps Room { x1 = aX1, x2 = aX2, y1 = aY1, y2 = aY2 }

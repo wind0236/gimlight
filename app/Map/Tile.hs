@@ -16,8 +16,6 @@ module Map.Tile
 import           Brick.AttrMap   (AttrName)
 import           Control.Lens.TH (makeLenses)
 import           Data.Array      (Array)
-import           Data.Array.Base (array)
-import           Dungeon.Size    (height, width)
 import qualified Map             as M
 import           UI.Attrs        (grayAttr, whiteAttr)
 

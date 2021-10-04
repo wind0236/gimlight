@@ -16,11 +16,8 @@ module Log
     ) where
 
 import           Brick.AttrMap   (AttrName)
-import           Data.List       (intercalate)
 import           Data.List.Split (splitOn)
-import           Graphics.Vty    (Color)
-import qualified Graphics.Vty    as V
-import           UI.Attrs        (emptyAttr, greenAttr, redAttr, whiteAttr)
+import           UI.Attrs        (whiteAttr)
 
 type Message = String
 
@@ -43,8 +40,8 @@ addMessage :: Message -> MessageLog -> MessageLog
 addMessage m l = m:l
 
 addMaybeMessage :: Maybe Message -> MessageLog -> MessageLog
-addMaybeMessage (Just m) log = addMessage m log
-addMaybeMessage Nothing log  = log
+addMaybeMessage (Just m) l = addMessage m l
+addMaybeMessage Nothing l  = l
 
 message :: String -> Message
 message text = text

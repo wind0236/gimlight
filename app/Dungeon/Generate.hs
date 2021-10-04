@@ -2,24 +2,19 @@ module Dungeon.Generate
     ( generateDungeon
     ) where
 
-import           Brick           (AttrName)
 import           Control.Lens    ((^.))
 import           Coord           (Coord)
-import           Data.Array      (Array, array, (//))
+import           Data.Array      ((//))
 import           Dungeon.Room    (Room (..), center,
                                   roomFromTwoPositionInclusive,
                                   roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Size    (height, width)
 import           Dungeon.Types   (position)
 import           Entity          (Entity)
-import qualified Entity          as E
 import           Entity.Monsters (orc, troll)
 import           Linear.V2       (V2 (..), _x, _y)
-import           Map.Bool        (BoolMap)
-import           Map.Tile        (Tile (..), TileMap, allWallTiles, floorTile,
-                                  wallTile)
-import           System.Random   (Random (randomR), RandomGen, StdGen,
-                                  getStdGen, mkStdGen, random)
+import           Map.Tile        (TileMap, allWallTiles, floorTile)
+import           System.Random   (Random (randomR), StdGen, random)
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Entity], V2 Int, StdGen)
 generateDungeon = generateDungeonAccum [] [] allWallTiles (V2 0 0)
@@ -42,8 +37,8 @@ generateDungeonAccum enemiesAcc acc dungeon playerPos g maxRooms roomMinSize roo
                                                    else (enemiesAcc, acc, dungeon, playerPos)
 
 createRoom :: Room -> TileMap -> TileMap
-createRoom Room{ x1 = x1, y1 = y1, x2 = x2, y2 = y2 } r
-    = r // [((x, y), floorTile) | x <- [x1 .. x2 - 1], y <- [y1 .. y2 - 1]]
+createRoom room r
+    = r // [((x, y), floorTile) | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 
 tunnelBetween :: Coord -> Coord -> TileMap -> TileMap
 tunnelBetween start end d = createRoom path1 $ createRoom path2 d
@@ -59,10 +54,10 @@ placeEnemies = placeEnemiesAccum []
 
 placeEnemiesAccum :: [Entity] -> StdGen -> Room -> Int -> ([Entity], StdGen)
 placeEnemiesAccum e g _ 0 = (e, g)
-placeEnemiesAccum e g r@Room { x1 = x1, x2 = x2, y1 = y1, y2 = y2 } n =
+placeEnemiesAccum e g r n =
         placeEnemiesAccum newEnemies g''' r (n - 1)
-        where (x, g') = randomR (x1, x2 - 1) g
-              (y, g'') = randomR (y1, y2 - 1) g'
+        where (x, g') = randomR (x1 r, x2 r - 1) g
+              (y, g'') = randomR (y1 r, y2 r - 1) g'
               (enemy, g''') = newMonster g'' (V2 x y)
               newEnemies = if V2 x y `notElem` map (^. position) e
                             then enemy:e

@@ -1,5 +1,5 @@
 module Coord
-    ( Coord(..)
+    ( Coord
     ) where
 
 import           Linear.V2 (V2)
