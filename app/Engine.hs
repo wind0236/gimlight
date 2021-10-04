@@ -29,7 +29,6 @@ import           Entity                         (Entity (..))
 import qualified Entity                         as E
 import           Entity.Behavior                (BumpResult (..), bumpAction,
                                                  enemyAction)
-import           Event                          (Event, gameStartEvent)
 import           Graphics.Vty.Attributes.Color  (Color, white, yellow)
 import           Linear.V2                      (V2 (..), _x, _y)
 import           Log                            (MessageLog, addMaybeMessage,
@@ -39,14 +38,19 @@ import           Map.Bool                       (BoolMap, emptyBoolMap)
 import           Map.Tile                       (Tile, TileMap, darkAttr,
                                                  lightAttr, transparent,
                                                  walkable)
+import           Scene                          (Scene, gameStartScene)
 import           System.Random.Stateful         (newStdGen)
+import           Talking                        (TalkWith)
 
 data Engine = PlayerIsExploring
           { _dungeon    :: Dungeon
           , _messageLog :: MessageLog
           , _isGameOver :: Bool
           } | Talking
-          { _event       :: Event
+          { _talk         :: TalkWith
+          , _afterTalking :: Engine
+          } | HandlingScene
+          { _scene       :: Scene
           , _afterFinish :: Engine
           } deriving (Show)
 makeLenses ''Engine
@@ -100,9 +104,9 @@ playerBumpAction offset = do
             LogReturned x -> do
                 messageLog %= addMessages x
                 dungeon .= newDungeon
-            EventStarted ev -> put $ Talking { _event = ev
-                                             , _afterFinish = e
-                                             }
+            TalkStarted tw -> put $ Talking { _talk = tw
+                                            , _afterTalking = e
+                                            }
 
 playerCurrentHp :: Engine -> Int
 playerCurrentHp e = E.getHp $ getPlayerEntity (e ^?! dungeon)
@@ -113,10 +117,11 @@ playerMaxHp e = getPlayerEntity (e ^?! dungeon) ^. maxHp
 initEngine :: IO Engine
 initEngine = do
         dungeon <- initDungeon
-        return $ Talking { _event = gameStartEvent
-                         , _afterFinish =
-                             PlayerIsExploring { _dungeon = dungeon
-                                                 , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
-                                                 , _isGameOver = False
-                                                 }
-                         }
+        return $ HandlingScene
+                { _scene = gameStartScene
+                , _afterFinish =
+                    PlayerIsExploring { _dungeon = dungeon
+                                    , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
+                                    , _isGameOver = False
+                                    }
+                }

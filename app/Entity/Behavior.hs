@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 module Entity.Behavior
     ( bumpAction
     , meleeAction
@@ -19,16 +20,17 @@ import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
 import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
                                             ai, blocksMovement, defence,
-                                            entities, event, isAlive, isEnemy,
+                                            entities, isAlive, isEnemy,
                                             isPlayer, name, path, position,
-                                            power, tileMap, visible)
+                                            power, talkMessage, tileMap,
+                                            visible)
 import           Entity                    (getHp, updateHp)
-import           Event                     (Event)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, message)
 import           Map.Tile                  (walkable)
+import           Talking                   (TalkWith, talkWith)
 
-data BumpResult = LogReturned [Message] | EventStarted Event
+data BumpResult = LogReturned [Message] | TalkStarted TalkWith
 
 enemyAction :: Entity -> State Dungeon [Message]
 enemyAction e = do
@@ -96,7 +98,7 @@ bumpAction src offset = do
                     return $ LogReturned logs
                 | otherwise -> do
                     pushEntity src
-                    return $ EventStarted $ e ^. event
+                    return $ TalkStarted $ talkWith e (e ^. talkMessage)
             Nothing -> do
                 moveAction src offset
                 return $ LogReturned []

@@ -34,16 +34,16 @@ module Dungeon.Types
     , isPlayer
     , renderOrder
     , isEnemy
-    , event
+    , talkMessage
     ) where
 
 import           Brick.AttrMap (AttrName)
 import           Control.Lens  (makeLenses)
 import           Coord         (Coord)
-import           Event         (Event)
 import           Map.Explored  (ExploredMap, initExploredMap)
 import           Map.Fov       (Fov, initFov)
 import           Map.Tile      (TileMap)
+import           Scene         (Scene)
 
 
 newtype Ai = HostileEnemy
@@ -68,7 +68,7 @@ data Entity = Actor
             , _isPlayer       :: Bool
             , _renderOrder    :: RenderOrder
             , _isEnemy        :: Bool
-            , _event          :: Event
+            , _talkMessage    :: String
             } deriving (Show)
 makeLenses ''Entity
 
@@ -87,8 +87,8 @@ dungeon t e = Dungeon { _tileMap = t
                       , _entities = e
                       }
 
-actor :: Coord -> String -> AttrName -> String -> Int -> Int -> Int -> Bool -> Bool -> Bool -> RenderOrder -> Bool -> Event -> Entity
-actor position char entityAttr name hp defence power isAlive blocksMovement isPlayer renderOrder isEnemy event =
+actor :: Coord -> String -> AttrName -> String -> Int -> Int -> Int -> Bool -> Bool -> Bool -> RenderOrder -> Bool -> String -> Entity
+actor position char entityAttr name hp defence power isAlive blocksMovement isPlayer renderOrder isEnemy talkMessage =
         Actor { _position = position
               , _char = char
               , _entityAttr = entityAttr
@@ -103,7 +103,7 @@ actor position char entityAttr name hp defence power isAlive blocksMovement isPl
               , _isPlayer = isPlayer
               , _renderOrder = renderOrder
               , _isEnemy = isEnemy
-              , _event = event
+              , _talkMessage = talkMessage
               }
 
 hostileEnemy :: Ai
