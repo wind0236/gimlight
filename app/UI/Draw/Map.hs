@@ -17,26 +17,26 @@ import           Monomer          (CmbAlignLeft (alignLeft), CmbHeight (height),
                                    hgrid, image, vgrid, zstack)
 
 mapGrid :: (WidgetModel s, WidgetEvent e) => Engine -> WidgetNode s e
-mapGrid engine = zstack (mapTiles engine:mapEntities engine) `styleBasic` [ width $ fromIntegral mapWidth
-                                                                   , height $ fromIntegral mapHeight
-                                                                   ]
+mapGrid engine = zstack (mapTiles engine:mapEntities engine) `styleBasic` [ width $ fromIntegral mapDrawingWidth
+                                                                          , height $ fromIntegral mapDrawingHeight
+                                                                          ]
 
 mapTiles :: (WidgetModel s, WidgetEvent e) => Engine ->  WidgetNode s e
 mapTiles (PlayerIsExploring d _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` styles
     where rows = [hgrid $ row y | y <- [tileRows - 1, tileRows - 2 .. 0]]
           row y = [cell (x, y) | x <- [0 .. tileColumns - 1]]
           cell c = image $ pack $ ((d ^. tileMap) ! c) ^. MT.imagePath
-          styles = [ width $ fromIntegral mapWidth
-                   , height $ fromIntegral mapHeight]
+          styles = [ width $ fromIntegral mapDrawingWidth
+                   , height $ fromIntegral mapDrawingHeight]
 mapTiles _ = undefined
 
 mapEntities :: (WidgetModel s, WidgetEvent e) => Engine -> [WidgetNode s e]
-mapEntities (PlayerIsExploring d _ _) = map (\e -> image (pack $ e ^. DT.imagePath) `styleBasic` [paddingL $ fromIntegral $ e ^. (position . _x) * tileWidth, paddingT $ fromIntegral $ mapHeight - ((e ^. (position . _y) + 1) * tileHeight)]) $ d ^. entities
+mapEntities (PlayerIsExploring d _ _) = map (\e -> image (pack $ e ^. DT.imagePath) `styleBasic` [paddingL $ fromIntegral $ e ^. (position . _x) * tileWidth, paddingT $ fromIntegral $ mapDrawingHeight - ((e ^. (position . _y) + 1) * tileHeight)]) $ d ^. entities
 mapEntities _                         = undefined
 
-mapWidth, mapHeight :: Int
-mapWidth = tileWidth * tileColumns
-mapHeight = tileHeight * tileRows
+mapDrawingWidth, mapDrawingHeight :: Int
+mapDrawingWidth = tileWidth * tileColumns
+mapDrawingHeight = tileHeight * tileRows
 
 tileWidth, tileHeight :: Int
 tileWidth = 48
