@@ -36,6 +36,10 @@ executable roguelike
                       , Map.Explored
                       , Map.Fov
                       , Dungeon
+                      , Dungeon.Entity
+                      , Dungeon.Entity.Behavior
+                      , Dungeon.Entity.Friendly
+                      , Dungeon.Entity.Monsters
                       , Dungeon.Predefined
                       , Dungeon.Types
                       , Dungeon.Room
@@ -44,10 +48,6 @@ executable roguelike
                       , Dungeon.PathFinder
                       , Dungeon.Turn
                       , Coord
-                      , Entity
-                      , Entity.Behavior
-                      , Entity.Friendly
-                      , Entity.Monsters
                       , Log
                       , Scene
                       , Talking

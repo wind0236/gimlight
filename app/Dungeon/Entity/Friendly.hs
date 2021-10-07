@@ -1,10 +1,10 @@
-module Entity.Friendly
+module Dungeon.Entity.Friendly
     ( electria
     ) where
 
-import           Coord         (Coord)
-import           Dungeon.Types (actor)
-import           Entity        (Entity)
+import           Coord          (Coord)
+import           Dungeon.Entity (Entity)
+import           Dungeon.Types  (actor)
 
 electria :: Coord -> Entity
 electria position = friendly position "Electria" 50 50 50 "How's it going, Ruskell?" "images/electria.png"

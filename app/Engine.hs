@@ -11,11 +11,11 @@ import           Coord                          (Coord)
 import           Dungeon                        (Dungeon, aliveEnemies,
                                                  getPlayerEntity, initDungeon)
 import qualified Dungeon                        as D
+import qualified Dungeon.Entity                 as E
+import           Dungeon.Entity.Behavior        (BumpResult (..), bumpAction,
+                                                 enemyAction)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (maxHp, position)
-import qualified Entity                         as E
-import           Entity.Behavior                (BumpResult (..), bumpAction,
-                                                 enemyAction)
 import           Linear.V2                      (V2)
 import           Log                            (MessageLog, addMessage,
                                                  addMessages)

@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
-module Entity.Behavior
+module Dungeon.Entity.Behavior
     ( bumpAction
     , meleeAction
     , waitAction
@@ -15,6 +14,7 @@ import           Data.List                 (find)
 import           Data.Maybe                (fromMaybe)
 import           Dungeon                   (Dungeon, getPlayerEntity,
                                             popActorAt, pushEntity)
+import           Dungeon.Entity            (getHp, updateHp)
 import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
 import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
@@ -23,7 +23,6 @@ import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
                                             isPlayer, name, path, position,
                                             power, talkMessage, tileMap,
                                             visible)
-import           Entity                    (getHp, updateHp)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, message)
 import           Map.Tile                  (walkable)

@@ -1,4 +1,4 @@
-module Entity
+module Dungeon.Entity
     ( Entity
     , player
     , getHp

@@ -27,14 +27,14 @@ import           Coord                          (Coord)
 import           Data.Array.Base                ((!))
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
+import           Dungeon.Entity                 (Entity)
+import qualified Dungeon.Entity                 as E
 import           Dungeon.Predefined             (firstEventMap)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (Dungeon, dungeon, entities,
                                                  explored, isAlive, isEnemy,
                                                  isPlayer, position, tileMap,
                                                  visible)
-import           Entity                         (Entity)
-import qualified Entity                         as E
 import           Linear.V2                      (V2 (..))
 import qualified Map                            as M
 import           Map.Bool                       (BoolMap)

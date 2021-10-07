@@ -1,9 +1,9 @@
-module Entity.Monsters
+module Dungeon.Entity.Monsters
     ( orc
     , troll
     ) where
-import           Coord  (Coord)
-import           Entity (Entity, monster)
+import           Coord          (Coord)
+import           Dungeon.Entity (Entity, monster)
 
 orc :: Coord -> Entity
 orc c = monster c "Orc" 10 0 3 "images/orc.png"

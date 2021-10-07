@@ -2,12 +2,13 @@ module Dungeon.Predefined
     ( firstEventMap
     ) where
 
-import           Data.Array      ((//))
-import           Dungeon.Types   (Dungeon, dungeon)
-import           Entity          (Entity)
-import           Entity.Friendly (electria)
-import           Linear.V2       (V2 (V2))
-import           Map.Tile        (TileMap, allWallTiles, floorTile, wallTile)
+import           Data.Array              ((//))
+import           Dungeon.Entity          (Entity)
+import           Dungeon.Entity.Friendly (electria)
+import           Dungeon.Types           (Dungeon, dungeon)
+import           Linear.V2               (V2 (V2))
+import           Map.Tile                (TileMap, allWallTiles, floorTile,
+                                          wallTile)
 
 firstEventMap :: Entity -> Dungeon
 firstEventMap player = dungeon (stringArrayToMap
