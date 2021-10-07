@@ -34,7 +34,13 @@ mapTiles (PlayerIsExploring d _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` 
 mapTiles _ = undefined
 
 mapEntities :: (WidgetModel s, WidgetEvent e) => Engine -> [WidgetNode s e]
-mapEntities (PlayerIsExploring d _ _) = map (\e -> image (pack $ e ^. DT.imagePath) `styleBasic` [paddingL $ fromIntegral $ e ^. position . _x * tileWidth, paddingT $ fromIntegral $ mapDrawingHeight - (e ^. (position . _y) + 1) * tileHeight]) $ d ^. entities
+mapEntities (PlayerIsExploring d _ _) = map entityToImage $ d ^. entities
+    where leftPadding e = fromIntegral $ e ^. position . _x * tileWidth
+          topPadding e = fromIntegral $ mapDrawingHeight - (e ^. (position . _y) + 1) * tileHeight
+
+          style e = [paddingL $ leftPadding e, paddingT $ topPadding e]
+
+          entityToImage e = image (pack $ e ^. DT.imagePath) `styleBasic` style e
 mapEntities _                         = undefined
 
 bottomLeftCoord :: Dungeon -> Coord
