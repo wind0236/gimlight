@@ -8,24 +8,18 @@ module Map.Tile
     , floorTile
     , walkable
     , transparent
-    , darkAttr
-    , lightAttr
-    , char
+    , imagePath
     ) where
 
-import           Brick.AttrMap   (AttrName)
 import           Control.Lens.TH (makeLenses)
 import           Data.Array      (Array)
 import qualified Map             as M
-import           UI.Attrs        (grayAttr, whiteAttr)
 
 data Tile = Tile
           { _walkable    :: Bool
           , _transparent :: Bool
-          , _darkAttr    :: AttrName
-          , _lightAttr   :: AttrName
-          , _char        :: Char
-          } deriving (Show)
+          , _imagePath   :: String
+          } deriving (Show, Ord, Eq)
 makeLenses ''Tile
 
 type TileMap = Array (Int, Int) Tile
@@ -36,15 +30,11 @@ allWallTiles = M.generate $ const wallTile
 wallTile :: Tile
 wallTile = Tile { _walkable = False
                 , _transparent = False
-                , _darkAttr = grayAttr
-                , _lightAttr = whiteAttr
-                , _char = 'X'
+                , _imagePath = "images/wall.png"
                 }
 
 floorTile :: Tile
 floorTile = Tile { _walkable = True
                  , _transparent = True
-                 , _darkAttr = grayAttr
-                 , _lightAttr = whiteAttr
-                 , _char = '.'
+                 , _imagePath = "images/grass.png"
                  }

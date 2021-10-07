@@ -25,9 +25,8 @@ executable roguelike
     main-is:          Main.hs
     ghc-options:      -threaded -Wall -Werror
 
-    other-modules:      UI
-                      , UI.Attrs
-                      , UI.Draw
+    other-modules:      UI.Draw
+                      , UI.Draw.Map
                       , UI.Event
                       , UI.Types
                       , Engine
@@ -61,8 +60,8 @@ executable roguelike
     build-depends:
         array,
         base,
-        brick,
         containers,
+        data-default,
         extra,
         linear,
         lens,
@@ -72,5 +71,7 @@ executable roguelike
         vty,
         astar,
         unordered-containers,
+        monomer,
+        text,
     hs-source-dirs:   app
     default-language: Haskell2010

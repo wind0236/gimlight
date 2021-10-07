@@ -6,20 +6,16 @@ module Entity
     , monster
     ) where
 
-import           Brick.AttrMap (AttrName)
 import           Control.Lens  ((&), (&~), (.=), (.~), (^.))
 import           Coord         (Coord)
-import           Dungeon.Types (Entity, RenderOrder (ActorEntity, Corpse),
-                                actor, blocksMovement, char, entityAttr, hp,
-                                isAlive, maxHp, name, renderOrder)
-import           UI.Attrs      (redAttr, whiteAttr)
+import           Dungeon.Types (Entity, actor, blocksMovement, hp, isAlive,
+                                maxHp, name)
 
-monster :: Coord -> String -> AttrName -> String -> Int -> Int -> Int -> Entity
-monster position char' entityAttr' name' maxHp' defence power =
-        actor position char' entityAttr' name' maxHp' defence power True True False ActorEntity True ""
+monster :: Coord -> String -> Int -> Int -> Int -> String -> Entity
+monster position name' maxHp' defence power = actor position name' maxHp' defence power True True False True ""
 
 player :: Coord -> Entity
-player c = actor c "@" whiteAttr "Player" 30 2 5 True True True ActorEntity False ""
+player c = actor c "Player" 30 2 5 True True True False "" "images/player.png"
 
 getHp :: Entity -> Int
 getHp e = e ^. hp
@@ -33,9 +29,6 @@ updateHp e newHp =
 
 die :: Entity -> Entity
 die e = e &~ do
-    char .= "%"
-    entityAttr .= redAttr
     blocksMovement .= False
     name .= "remains of " ++ (e ^. name)
     isAlive .= False
-    renderOrder .= Corpse

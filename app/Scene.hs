@@ -7,9 +7,10 @@ module Scene
 
 type Scene = [SceneElement]
 
-data SceneElement = WithoutSpeaker String | WithSpeaker { name    :: String
-                                                        , message :: String
-                                                        } deriving (Show)
+data SceneElement = WithoutSpeaker String
+                  | WithSpeaker { name    :: String
+                                , message :: String
+                                } deriving (Show, Ord, Eq)
 withSpeaker :: String -> String -> SceneElement
 withSpeaker = WithSpeaker
 

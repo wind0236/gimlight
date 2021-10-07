@@ -11,7 +11,7 @@ import           Dungeon.Types (Entity)
 data TalkWith = TalkWith
               { _person  :: Entity
               , _message :: String
-              } deriving (Show)
+              } deriving (Show, Ord, Eq)
 makeLenses ''TalkWith
 
 talkWith :: Entity -> String -> TalkWith

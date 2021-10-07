@@ -113,9 +113,8 @@ aliveEnemies d = filter (^. isAlive) $ enemies d
 enemies :: Dungeon -> [Entity]
 enemies d = filter (^. isEnemy) $ d ^. entities
 
-initDungeon :: IO Dungeon
-initDungeon = do
+initDungeon :: Dungeon
+initDungeon =
         let player = E.player $ V2 5 5
-        let d = firstEventMap player
-
-        return $ execState updateMap d
+            d = firstEventMap player
+        in execState updateMap d

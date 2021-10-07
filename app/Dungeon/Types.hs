@@ -11,7 +11,6 @@
 module Dungeon.Types
     ( Dungeon
     , Entity
-    , RenderOrder(..)
     , Ai(..)
     , path
     , dungeon
@@ -21,8 +20,6 @@ module Dungeon.Types
     , explored
     , entities
     , position
-    , char
-    , entityAttr
     , name
     , hp
     , maxHp
@@ -32,30 +29,25 @@ module Dungeon.Types
     , isAlive
     , blocksMovement
     , isPlayer
-    , renderOrder
     , isEnemy
     , talkMessage
+    , imagePath
     ) where
 
-import           Brick.AttrMap (AttrName)
-import           Control.Lens  (makeLenses)
-import           Coord         (Coord)
-import           Map.Explored  (ExploredMap, initExploredMap)
-import           Map.Fov       (Fov, initFov)
-import           Map.Tile      (TileMap)
+import           Control.Lens (makeLenses)
+import           Coord        (Coord)
+import           Map.Explored (ExploredMap, initExploredMap)
+import           Map.Fov      (Fov, initFov)
+import           Map.Tile     (TileMap)
 
 
 newtype Ai = HostileEnemy
              { _path :: [Coord]
-             } deriving (Show)
+             } deriving (Show, Ord, Eq)
 makeLenses ''Ai
-
-data RenderOrder =  ActorEntity| Iten | Corpse deriving (Show, Ord, Eq)
 
 data Entity = Actor
             { _position       :: Coord
-            , _char           :: String
-            , _entityAttr     :: AttrName
             , _name           :: String
             , _hp             :: Int
             , _maxHp          :: Int
@@ -65,10 +57,10 @@ data Entity = Actor
             , _isAlive        :: Bool
             , _blocksMovement :: Bool
             , _isPlayer       :: Bool
-            , _renderOrder    :: RenderOrder
             , _isEnemy        :: Bool
             , _talkMessage    :: String
-            } deriving (Show)
+            , _imagePath      :: String
+            } deriving (Show, Ord, Eq)
 makeLenses ''Entity
 
 data Dungeon = Dungeon
@@ -76,7 +68,7 @@ data Dungeon = Dungeon
           , _visible  :: Fov
           , _explored :: ExploredMap
           , _entities :: [Entity]
-          } deriving (Show)
+          } deriving (Show, Ord, Eq)
 makeLenses ''Dungeon
 
 dungeon :: TileMap -> [Entity] -> Dungeon
@@ -86,11 +78,9 @@ dungeon t e = Dungeon { _tileMap = t
                       , _entities = e
                       }
 
-actor :: Coord -> String -> AttrName -> String -> Int -> Int -> Int -> Bool -> Bool -> Bool -> RenderOrder -> Bool -> String -> Entity
-actor position' char' entityAttr' name' hp' defence' power' isAlive' blocksMovement' isPlayer' renderOrder' isEnemy' talkMessage' =
+actor :: Coord -> String -> Int -> Int -> Int -> Bool -> Bool -> Bool -> Bool -> String -> String -> Entity
+actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isEnemy' talkMessage' imagePath' =
         Actor { _position = position'
-              , _char = char'
-              , _entityAttr = entityAttr'
               , _name = name'
               , _hp = hp'
               , _maxHp = hp'
@@ -100,9 +90,9 @@ actor position' char' entityAttr' name' hp' defence' power' isAlive' blocksMovem
               , _isAlive = isAlive'
               , _blocksMovement = blocksMovement'
               , _isPlayer = isPlayer'
-              , _renderOrder = renderOrder'
               , _isEnemy = isEnemy'
               , _talkMessage = talkMessage'
+              , _imagePath = imagePath'
               }
 
 hostileEnemy :: Ai
