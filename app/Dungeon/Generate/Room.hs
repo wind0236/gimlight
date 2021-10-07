@@ -1,4 +1,4 @@
-module Dungeon.Room
+module Dungeon.Generate.Room
     ( Room (..)
     , center
     , roomFromWidthHeight

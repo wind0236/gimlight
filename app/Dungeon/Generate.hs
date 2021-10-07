@@ -7,10 +7,10 @@ import           Coord                   (Coord)
 import           Data.Array              ((//))
 import           Dungeon.Entity          (Entity)
 import           Dungeon.Entity.Monsters (orc, troll)
-import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile)
-import           Dungeon.Room            (Room (..), center,
+import           Dungeon.Generate.Room   (Room (..), center,
                                           roomFromTwoPositionInclusive,
                                           roomFromWidthHeight, roomOverlaps)
+import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile)
 import           Dungeon.Size            (height, width)
 import           Dungeon.Types           (position)
 import           Linear.V2               (V2 (..), _x, _y)

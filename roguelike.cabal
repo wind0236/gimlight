@@ -42,9 +42,9 @@ executable roguelike
                       , Dungeon.Map.Fov
                       , Dungeon.Predefined
                       , Dungeon.Types
-                      , Dungeon.Room
                       , Dungeon.Size
                       , Dungeon.Generate
+                      , Dungeon.Generate.Room
                       , Dungeon.PathFinder
                       , Dungeon.Turn
                       , Coord
