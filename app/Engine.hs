@@ -9,7 +9,8 @@ import           Control.Monad.Trans.State      (State, get)
 import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Dungeon                        (Dungeon, aliveEnemies,
-                                                 getPlayerEntity, initDungeon)
+                                                 getPlayerEntity, initDungeon,
+                                                 mapWidthAndHeight)
 import qualified Dungeon                        as D
 import qualified Dungeon.Entity                 as E
 import           Dungeon.Entity.Behavior        (BumpResult (..), bumpAction,
@@ -94,6 +95,16 @@ playerCurrentHp e = E.getHp $ getPlayerEntity (e ^?! dungeon)
 
 playerMaxHp :: Engine -> Int
 playerMaxHp e = getPlayerEntity (e ^?! dungeon) ^. maxHp
+
+playerPosition :: Engine -> Coord
+playerPosition (PlayerIsExploring d _ _) = D.playerPosition d
+playerPosition (Talking _ e)             = playerPosition e
+playerPosition (HandlingScene _ e)       = playerPosition e
+
+currentMapWidthAndHeight :: Engine -> V2 Int
+currentMapWidthAndHeight (PlayerIsExploring d _ _) = mapWidthAndHeight d
+currentMapWidthAndHeight (Talking _ e)             = currentMapWidthAndHeight e
+currentMapWidthAndHeight (HandlingScene _ e)       = currentMapWidthAndHeight e
 
 initEngine :: Engine
 initEngine = do

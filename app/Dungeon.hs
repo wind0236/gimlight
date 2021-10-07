@@ -17,6 +17,8 @@ module Dungeon
     , getPlayerEntity
     , enemyCoords
     , aliveEnemies
+    , mapWidthAndHeight
+    , playerPosition
     ) where
 
 import           Control.Lens                   ((%~), (&), (.=), (.~), (^.))
@@ -24,7 +26,7 @@ import           Control.Lens.Getter            (use)
 import           Control.Monad.Trans.State      (State, runState, state)
 import           Control.Monad.Trans.State.Lazy (execState, get)
 import           Coord                          (Coord)
-import           Data.Array.Base                ((!))
+import           Data.Array.Base                (IArray (bounds), (!))
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
 import           Dungeon.Entity                 (Entity)
@@ -69,6 +71,9 @@ updateFov = do
 
         visible .= calculateFov (p ^. position) t
 
+playerPosition :: Dungeon -> Coord
+playerPosition d = getPlayerEntity d ^. position
+
 getPlayerEntity :: Dungeon -> Entity
 getPlayerEntity d =
         case find (^. isPlayer) $ d ^. entities of
@@ -112,6 +117,10 @@ aliveEnemies d = filter (^. isAlive) $ enemies d
 
 enemies :: Dungeon -> [Entity]
 enemies d = filter (^. isEnemy) $ d ^. entities
+
+mapWidthAndHeight :: Dungeon -> V2 Int
+mapWidthAndHeight d = V2 (maxX + 1) (maxY + 1)
+    where (maxX, maxY) = snd $ bounds $ d ^. tileMap
 
 initDungeon :: Dungeon
 initDungeon =
