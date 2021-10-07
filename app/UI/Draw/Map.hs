@@ -4,6 +4,7 @@ module UI.Draw.Map
 import           Control.Lens     ((^.))
 import           Coord            (Coord)
 import           Data.Array       ((!))
+import           Data.Maybe       (mapMaybe)
 import           Data.Text        (pack)
 import           Dungeon          (mapWidthAndHeight, playerPosition)
 import qualified Dungeon.Map.Tile as MT
@@ -34,14 +35,21 @@ mapTiles (PlayerIsExploring d _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` 
 mapTiles _ = undefined
 
 mapEntities :: (WidgetModel s, WidgetEvent e) => Engine -> [WidgetNode s e]
-mapEntities (PlayerIsExploring d _ _) = map entityToImage $ d ^. entities
-    where leftPadding e = fromIntegral $ e ^. position . _x * tileWidth
-          topPadding e = fromIntegral $ mapDrawingHeight - (e ^. (position . _y) + 1) * tileHeight
+mapEntities (PlayerIsExploring d _ _) = mapMaybe entityToImage $ d ^. entities
+    where leftPadding e = fromIntegral $ entityPositionOnDisplay e ^. _x * tileWidth
+          topPadding e = fromIntegral $ mapDrawingHeight - (entityPositionOnDisplay e ^. _y + 1) * tileHeight
 
           style e = [paddingL $ leftPadding e, paddingT $ topPadding e]
 
-          entityToImage e = image (pack $ e ^. DT.imagePath) `styleBasic` style e
+          entityPositionOnDisplay e = e ^. position - bottomLeftCoord d
+          entityToImage e = let pos = entityPositionOnDisplay e
+                            in if V2 0 0 <= pos && pos <= topRightCoord d
+                                   then Just $ image (pack $ e ^. DT.imagePath) `styleBasic` style e
+                                   else Nothing
 mapEntities _                         = undefined
+
+topRightCoord :: Dungeon -> Coord
+topRightCoord d = bottomLeftCoord d + mapWidthAndHeight d - V2 1 1
 
 bottomLeftCoord :: Dungeon -> Coord
 bottomLeftCoord d = V2 x y
