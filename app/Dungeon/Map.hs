@@ -1,4 +1,4 @@
-module Map
+module Dungeon.Map
     ( generate
     ) where
 

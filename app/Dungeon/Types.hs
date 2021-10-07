@@ -34,11 +34,11 @@ module Dungeon.Types
     , imagePath
     ) where
 
-import           Control.Lens (makeLenses)
-import           Coord        (Coord)
-import           Map.Explored (ExploredMap, initExploredMap)
-import           Map.Fov      (Fov, initFov)
-import           Map.Tile     (TileMap)
+import           Control.Lens         (makeLenses)
+import           Coord                (Coord)
+import           Dungeon.Map.Explored (ExploredMap, initExploredMap)
+import           Dungeon.Map.Fov      (Fov, initFov)
+import           Dungeon.Map.Tile     (TileMap)
 
 
 newtype Ai = HostileEnemy

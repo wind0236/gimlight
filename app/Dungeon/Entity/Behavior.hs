@@ -15,6 +15,7 @@ import           Data.Maybe                (fromMaybe)
 import           Dungeon                   (Dungeon, getPlayerEntity,
                                             popActorAt, pushEntity)
 import           Dungeon.Entity            (getHp, updateHp)
+import           Dungeon.Map.Tile          (walkable)
 import           Dungeon.PathFinder        (getPathTo)
 import qualified Dungeon.Size              as DS
 import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
@@ -25,7 +26,6 @@ import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
                                             visible)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, message)
-import           Map.Tile                  (walkable)
 import           Talking                   (TalkWith, talkWith)
 
 data BumpResult = LogReturned [Message] | TalkStarted TalkWith

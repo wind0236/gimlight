@@ -7,13 +7,13 @@ import           Coord                   (Coord)
 import           Data.Array              ((//))
 import           Dungeon.Entity          (Entity)
 import           Dungeon.Entity.Monsters (orc, troll)
+import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile)
 import           Dungeon.Room            (Room (..), center,
                                           roomFromTwoPositionInclusive,
                                           roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Size            (height, width)
 import           Dungeon.Types           (position)
 import           Linear.V2               (V2 (..), _x, _y)
-import           Map.Tile                (TileMap, allWallTiles, floorTile)
 import           System.Random           (Random (randomR), StdGen, random)
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Entity], V2 Int, StdGen)

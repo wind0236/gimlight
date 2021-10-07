@@ -29,6 +29,11 @@ import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
 import           Dungeon.Entity                 (Entity)
 import qualified Dungeon.Entity                 as E
+import qualified Dungeon.Map                    as M
+import           Dungeon.Map.Bool               (BoolMap)
+import           Dungeon.Map.Explored           (updateExploredMap)
+import           Dungeon.Map.Fov                (calculateFov)
+import           Dungeon.Map.Tile               (transparent, walkable)
 import           Dungeon.Predefined             (firstEventMap)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (Dungeon, dungeon, entities,
@@ -36,11 +41,6 @@ import           Dungeon.Types                  (Dungeon, dungeon, entities,
                                                  isPlayer, position, tileMap,
                                                  visible)
 import           Linear.V2                      (V2 (..))
-import qualified Map                            as M
-import           Map.Bool                       (BoolMap)
-import           Map.Explored                   (updateExploredMap)
-import           Map.Fov                        (calculateFov)
-import           Map.Tile                       (transparent, walkable)
 
 completeThisTurn :: State Dungeon DT.Status
 completeThisTurn = do

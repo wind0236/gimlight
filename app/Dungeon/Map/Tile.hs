@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Map.Tile
+module Dungeon.Map.Tile
     ( TileMap
     , allWallTiles
     , Tile
@@ -13,7 +13,7 @@ module Map.Tile
 
 import           Control.Lens.TH (makeLenses)
 import           Data.Array      (Array)
-import qualified Map             as M
+import qualified Dungeon.Map     as M
 
 data Tile = Tile
           { _walkable    :: Bool

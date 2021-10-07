@@ -8,9 +8,9 @@ import           Data.Array                ((!))
 import           Data.Graph.AStar          (aStar)
 import           Data.HashSet              (HashSet, fromList)
 import           Dungeon                   (Dungeon, walkableFloor)
+import           Dungeon.Map.Bool          (BoolMap)
 import qualified Dungeon.Size              as DS
 import           Linear.V2                 (V2 (..))
-import           Map.Bool                  (BoolMap)
 
 getPathTo :: Coord -> Coord -> State Dungeon (Maybe [Coord])
 getPathTo src dst = state $ \d -> (getPathToNoState d src dst, d)

@@ -1,12 +1,12 @@
-module Map.Explored
+module Dungeon.Map.Explored
     ( ExploredMap
     , initExploredMap
     , updateExploredMap
     ) where
 
-import           Data.Array (assocs, (!), (//))
-import           Map.Bool   (BoolMap, emptyBoolMap)
-import           Map.Fov    (Fov)
+import           Data.Array       (assocs, (!), (//))
+import           Dungeon.Map.Bool (BoolMap, emptyBoolMap)
+import           Dungeon.Map.Fov  (Fov)
 
 type ExploredMap = BoolMap;
 

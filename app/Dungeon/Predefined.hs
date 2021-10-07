@@ -5,10 +5,10 @@ module Dungeon.Predefined
 import           Data.Array              ((//))
 import           Dungeon.Entity          (Entity)
 import           Dungeon.Entity.Friendly (electria)
+import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile,
+                                          wallTile)
 import           Dungeon.Types           (Dungeon, dungeon)
 import           Linear.V2               (V2 (V2))
-import           Map.Tile                (TileMap, allWallTiles, floorTile,
-                                          wallTile)
 
 firstEventMap :: Entity -> Dungeon
 firstEventMap player = dungeon (stringArrayToMap

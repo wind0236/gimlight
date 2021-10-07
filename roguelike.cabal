@@ -30,16 +30,16 @@ executable roguelike
                       , UI.Event
                       , UI.Types
                       , Engine
-                      , Map
-                      , Map.Tile
-                      , Map.Bool
-                      , Map.Explored
-                      , Map.Fov
                       , Dungeon
                       , Dungeon.Entity
                       , Dungeon.Entity.Behavior
                       , Dungeon.Entity.Friendly
                       , Dungeon.Entity.Monsters
+                      , Dungeon.Map
+                      , Dungeon.Map.Tile
+                      , Dungeon.Map.Bool
+                      , Dungeon.Map.Explored
+                      , Dungeon.Map.Fov
                       , Dungeon.Predefined
                       , Dungeon.Types
                       , Dungeon.Room
