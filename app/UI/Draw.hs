@@ -23,19 +23,22 @@ import           Monomer               (CmbAlignLeft (alignLeft),
                                         CmbPaddingL (paddingL),
                                         CmbPaddingT (paddingT),
                                         CmbStyleBasic (styleBasic),
+                                        CmbTextColor (textColor),
+                                        CmbTextSize (textSize),
                                         CmbWidth (width), WidgetEnv,
                                         WidgetEvent, WidgetModel, WidgetNode,
-                                        black, box_, filler, gray, hgrid, image,
-                                        keyDown, keyLeft, keyRight, keyUp,
-                                        keystroke, label, vgrid, vstack, zstack)
+                                        black, box_, filler, gray, hgrid,
+                                        hstack, image, keyDown, keyLeft,
+                                        keyRight, keyUp, keystroke, label, red,
+                                        vgrid, vstack, zstack)
 import qualified Monomer.Graphics.Lens as L
-import           Talking               (TalkWith, person)
+import           Talking               (TalkWith, message, person)
 import           UI.Types              (AppEvent (AppKeyboardInput))
 
 drawUI :: WidgetEnv Engine AppEvent -> Engine -> WidgetNode Engine AppEvent
 drawUI wenv (Talking with afterEngine) = withKeyEvents $ zstack [ drawUI wenv afterEngine `styleBasic` [bgColor $ gray & L.a .~ 0.5]
                                                                 , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
-                                                                , partner with
+                                                                , talkingWindow with
                                                                 ]
 drawUI _ engine = withKeyEvents $ vstack [ mapGrid engine
                                          , label $ pack "多分ここにログが表示される．"
@@ -80,9 +83,13 @@ mapEntities (PlayerIsExploring d _ _) = mapMaybe entityToImage $ d ^. entities
           entityToImage e = guard (isEntityDrawed e) >> return (image (pack $ e ^. DT.walkingImagePath) `styleBasic` style e)
 mapEntities _                         = undefined
 
-partner :: TalkWith -> WidgetNode Engine AppEvent
-partner tw = zstack [ image (pack $ tw ^. (person . standingImagePath)) `styleBasic` style]
-    where style = []
+talkingWindow :: TalkWith -> WidgetNode Engine AppEvent
+talkingWindow tw = hstack [ image (pack $ tw ^. (person . standingImagePath))
+                          , window
+                          ]
+    where window = zstack [ image (pack "images/talking_window.png")
+                          , label (pack $ tw ^. message) `styleBasic` [textColor red, textSize 16, paddingL 50]
+                          ]
 
 topRightCoord :: Dungeon -> Coord
 topRightCoord d = bottomLeftCoord d + mapWidthAndHeight d - V2 1 1
@@ -110,6 +117,5 @@ windowWidth, windowHeight :: Int
 windowWidth = 1280
 windowHeight = 720
 
--- standingImageWidth, standingImageHeight :: Int
+-- standingImageWidth :: Int
 -- standingImageWidth = 300
--- standingImageHeight = 600
