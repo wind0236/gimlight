@@ -29,11 +29,11 @@ handleKeyInput e k
     | otherwise = e
 
 handlePlayerMove :: V2 Int -> Engine -> Engine
-handlePlayerMove d e = flip execState e $ do
+handlePlayerMove offset e = flip execState e $ do
     eng <- get
     let finished = eng ^?! isGameOver
     unless finished $ do
-        playerBumpAction d
+        playerBumpAction offset
 
         eng' <- get
         case eng' of
