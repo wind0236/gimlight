@@ -116,6 +116,3 @@ tileRows = 11
 windowWidth, windowHeight :: Int
 windowWidth = 1280
 windowHeight = 720
-
--- standingImageWidth :: Int
--- standingImageWidth = 300
