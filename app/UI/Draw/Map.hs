@@ -2,6 +2,7 @@ module UI.Draw.Map
     ( mapGrid
     ) where
 import           Control.Lens     ((^.))
+import           Control.Monad    (guard)
 import           Coord            (Coord)
 import           Data.Array       ((!))
 import           Data.Maybe       (mapMaybe)
@@ -42,10 +43,11 @@ mapEntities (PlayerIsExploring d _ _) = mapMaybe entityToImage $ d ^. entities
           style e = [paddingL $ leftPadding e, paddingT $ topPadding e]
 
           entityPositionOnDisplay e = e ^. position - bottomLeftCoord d
-          entityToImage e = let pos = entityPositionOnDisplay e
-                            in if V2 0 0 <= pos && pos <= topRightCoord d
-                                   then Just $ image (pack $ e ^. DT.imagePath) `styleBasic` style e
-                                   else Nothing
+
+          isEntityDrawed e = let pos = entityPositionOnDisplay e
+                             in V2 0 0 <= pos && pos <= topRightCoord d
+
+          entityToImage e = guard (isEntityDrawed e) >> return (image (pack $ e ^. DT.imagePath) `styleBasic` style e)
 mapEntities _                         = undefined
 
 topRightCoord :: Dungeon -> Coord
