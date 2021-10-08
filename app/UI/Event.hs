@@ -5,14 +5,14 @@ module UI.Event
 import           Control.Lens              ((^?!))
 import           Control.Monad             (unless)
 import           Control.Monad.Trans.State (execState, get)
-import           Engine                    (Engine (PlayerIsExploring),
+import           Engine                    (Engine (PlayerIsExploring, Talking),
                                             completeThisTurn, isGameOver,
                                             playerBumpAction)
 import           Linear.V2                 (V2 (V2))
 import           Monomer                   (AppEventResponse,
                                             EventResponse (Model), KeyCode,
                                             WidgetEnv, WidgetNode, keyDown,
-                                            keyLeft, keyRight, keyUp)
+                                            keyLeft, keyReturn, keyRight, keyUp)
 import           UI.Types                  (AppEvent (AppInit, AppKeyboardInput))
 
 handleEvent :: WidgetEnv Engine AppEvent -> WidgetNode Engine AppEvent -> Engine -> AppEvent -> [AppEventResponse Engine AppEvent]
@@ -26,6 +26,9 @@ handleKeyInput e@PlayerIsExploring{} k
     | k == keyLeft  = handlePlayerMove (V2 (-1) 0) e
     | k == keyUp    = handlePlayerMove (V2 0 1) e
     | k == keyDown  = handlePlayerMove (V2 0 (-1)) e
+    | otherwise = e
+handleKeyInput e@(Talking _ after) k
+    | k == keyReturn = after
     | otherwise = e
 handleKeyInput e _ = e
 

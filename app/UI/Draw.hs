@@ -29,8 +29,8 @@ import           Monomer               (CmbAlignLeft (alignLeft),
                                         WidgetEvent, WidgetModel, WidgetNode,
                                         black, box_, filler, gray, hgrid,
                                         hstack, image, keyDown, keyLeft,
-                                        keyRight, keyUp, keystroke, label, red,
-                                        vgrid, vstack, zstack)
+                                        keyReturn, keyRight, keyUp, keystroke,
+                                        label, red, vgrid, vstack, zstack)
 import qualified Monomer.Graphics.Lens as L
 import           Talking               (TalkWith, message, person)
 import           UI.Types              (AppEvent (AppKeyboardInput))
@@ -51,6 +51,7 @@ withKeyEvents =
     , (pack "Down", keyDown)
     , (pack "Right", keyRight)
     , (pack "Left", keyLeft)
+    , (pack "Enter", keyReturn)
     ]
 
 mapGrid :: (WidgetModel s, WidgetEvent e) => Engine -> WidgetNode s e
