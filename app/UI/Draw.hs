@@ -101,8 +101,8 @@ tileWidth = 48
 tileHeight = 48
 
 tileColumns, tileRows :: Int
-tileColumns = 25
-tileRows = 19
+tileColumns = 19
+tileRows = 11
 
 -- standingImageWidth, standingImageHeight :: Int
 -- standingImageWidth = 300
