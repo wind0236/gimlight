@@ -2,8 +2,9 @@ module Main (main) where
 
 import           Data.Text (pack)
 import           Engine    (initEngine)
-import           Monomer   (appFontDef, appInitEvent, appTheme, appWindowTitle,
-                            darkTheme, startApp)
+import           Monomer   (MainWindowState (MainWindowNormal), appFontDef,
+                            appInitEvent, appTheme, appWindowResizable,
+                            appWindowState, appWindowTitle, darkTheme, startApp)
 import           UI.Draw   (drawUI)
 import qualified UI.Event  as E
 import           UI.Types  (AppEvent (..))
@@ -18,4 +19,6 @@ main = startApp model handleEvent buildUI config
                  , appTheme darkTheme
                  , appFontDef (pack "Regular") (pack "third_party/noto-cjk/NotoSansCJK-VF.otf.ttc")
                  , appInitEvent AppInit
+                 , appWindowState $ MainWindowNormal (1280, 720)
+                 , appWindowResizable False
                  ]
