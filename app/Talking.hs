@@ -3,9 +3,11 @@
 module Talking
     ( TalkWith
     , talkWith
-    , destruct
+    , person
+    , message
     ) where
-import           Control.Lens  (makeLenses, (^.))
+
+import           Control.Lens  (makeLenses)
 import           Dungeon.Types (Entity)
 
 data TalkWith = TalkWith
@@ -16,6 +18,3 @@ makeLenses ''TalkWith
 
 talkWith :: Entity -> String -> TalkWith
 talkWith = TalkWith
-
-destruct :: TalkWith -> (Entity, String)
-destruct t = (t ^. person, t ^. message)

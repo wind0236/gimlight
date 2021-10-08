@@ -31,7 +31,8 @@ module Dungeon.Types
     , isPlayer
     , isEnemy
     , talkMessage
-    , imagePath
+    , walkingImagePath
+    , standingImagePath
     ) where
 
 import           Control.Lens         (makeLenses)
@@ -47,19 +48,20 @@ newtype Ai = HostileEnemy
 makeLenses ''Ai
 
 data Entity = Actor
-            { _position       :: Coord
-            , _name           :: String
-            , _hp             :: Int
-            , _maxHp          :: Int
-            , _defence        :: Int
-            , _power          :: Int
-            , _ai             :: Ai
-            , _isAlive        :: Bool
-            , _blocksMovement :: Bool
-            , _isPlayer       :: Bool
-            , _isEnemy        :: Bool
-            , _talkMessage    :: String
-            , _imagePath      :: String
+            { _position          :: Coord
+            , _name              :: String
+            , _hp                :: Int
+            , _maxHp             :: Int
+            , _defence           :: Int
+            , _power             :: Int
+            , _ai                :: Ai
+            , _isAlive           :: Bool
+            , _blocksMovement    :: Bool
+            , _isPlayer          :: Bool
+            , _isEnemy           :: Bool
+            , _talkMessage       :: String
+            , _walkingImagePath  :: String
+            , _standingImagePath :: String
             } deriving (Show, Ord, Eq)
 makeLenses ''Entity
 
@@ -78,8 +80,8 @@ dungeon t e = Dungeon { _tileMap = t
                       , _entities = e
                       }
 
-actor :: Coord -> String -> Int -> Int -> Int -> Bool -> Bool -> Bool -> Bool -> String -> String -> Entity
-actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isEnemy' talkMessage' imagePath' =
+actor :: Coord -> String -> Int -> Int -> Int -> Bool -> Bool -> Bool -> Bool -> String -> String -> String -> Entity
+actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isEnemy' talkMessage' walkingImagePath' standingImagePath'=
         Actor { _position = position'
               , _name = name'
               , _hp = hp'
@@ -92,7 +94,8 @@ actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isE
               , _isPlayer = isPlayer'
               , _isEnemy = isEnemy'
               , _talkMessage = talkMessage'
-              , _imagePath = imagePath'
+              , _walkingImagePath = walkingImagePath'
+              , _standingImagePath = standingImagePath'
               }
 
 hostileEnemy :: Ai
