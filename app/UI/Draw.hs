@@ -1,5 +1,7 @@
 module UI.Draw
     ( drawUI
+    , windowWidth
+    , windowHeight
     ) where
 import           Control.Lens          ((&), (.~), (^.))
 import           Control.Monad         (guard)
@@ -103,6 +105,10 @@ tileHeight = 48
 tileColumns, tileRows :: Int
 tileColumns = 19
 tileRows = 11
+
+windowWidth, windowHeight :: Int
+windowWidth = 1280
+windowHeight = 720
 
 -- standingImageWidth, standingImageHeight :: Int
 -- standingImageWidth = 300
