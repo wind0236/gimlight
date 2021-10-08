@@ -21,12 +21,13 @@ handleEvent _ _ engine evt = case evt of
                                 AppKeyboardInput k -> [Model $ handleKeyInput engine k]
 
 handleKeyInput :: Engine -> KeyCode -> Engine
-handleKeyInput e k
+handleKeyInput e@PlayerIsExploring{} k
     | k == keyRight = handlePlayerMove (V2 1 0) e
     | k == keyLeft  = handlePlayerMove (V2 (-1) 0) e
     | k == keyUp    = handlePlayerMove (V2 0 1) e
     | k == keyDown  = handlePlayerMove (V2 0 (-1)) e
     | otherwise = e
+handleKeyInput e _ = e
 
 handlePlayerMove :: V2 Int -> Engine -> Engine
 handlePlayerMove offset e = flip execState e $ do
