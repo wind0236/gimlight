@@ -69,5 +69,5 @@ tileWidth = 48
 tileHeight = 48
 
 tileColumns, tileRows :: Int
-tileColumns = 17
-tileRows = 9
+tileColumns = 25
+tileRows = 19
