@@ -6,12 +6,13 @@ import           Data.Text      (pack)
 import           Engine         (Engine)
 import           Monomer        (CmbStyleBasic (styleBasic), CmbWidth (width),
                                  WidgetEnv, WidgetNode, keyDown, keyLeft,
-                                 keyRight, keyUp, keystroke, vstack)
+                                 keyRight, keyUp, keystroke, label, vstack)
 import           UI.Draw.Map    (mapGrid)
 import           UI.Types       (AppEvent (AppKeyboardInput))
 
 drawUI :: WidgetEnv Engine AppEvent -> Engine -> WidgetNode Engine AppEvent
 drawUI _ engine = withKeyEvents $ vstack [ mapGrid engine
+                                         , label $ pack "多分ここにログが表示される．"
                                          ] `styleBasic` [width 0]
     where withKeyEvents =
             keystroke $ map (second AppKeyboardInput)

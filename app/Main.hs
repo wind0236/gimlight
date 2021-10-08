@@ -2,8 +2,8 @@ module Main (main) where
 
 import           Data.Text (pack)
 import           Engine    (initEngine)
-import           Monomer   (appInitEvent, appTheme, appWindowTitle, darkTheme,
-                            startApp)
+import           Monomer   (appFontDef, appInitEvent, appTheme, appWindowTitle,
+                            darkTheme, startApp)
 import           UI.Draw   (drawUI)
 import qualified UI.Event  as E
 import           UI.Types  (AppEvent (..))
@@ -16,5 +16,6 @@ main = startApp model handleEvent buildUI config
         buildUI = drawUI
         config = [ appWindowTitle (pack "Roguelike")
                  , appTheme darkTheme
+                 , appFontDef (pack "Regular") (pack "third_party/noto-cjk/NotoSansCJK-VF.otf.ttc")
                  , appInitEvent AppInit
                  ]
