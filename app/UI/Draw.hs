@@ -12,8 +12,8 @@ import           Data.Maybe            (mapMaybe)
 import           Data.Text             (pack)
 import           Dungeon               (mapWidthAndHeight, playerPosition)
 import qualified Dungeon.Map.Tile      as MT
-import           Dungeon.Types         (Dungeon, entities, position,
-                                        standingImagePath, tileMap)
+import           Dungeon.Types         (Dungeon, entities, explored, position,
+                                        standingImagePath, tileMap, visible)
 import qualified Dungeon.Types         as DT
 import           Engine                (Engine (PlayerIsExploring, Talking))
 import           Linear.V2             (V2 (V2), _x, _y)
@@ -64,7 +64,18 @@ mapTiles (PlayerIsExploring d _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` 
     where V2 bottomLeftX bottomLeftY = bottomLeftCoord d
           rows = [hgrid $ row y | y <- [bottomLeftY + tileRows - 1, bottomLeftY + tileRows - 2 .. bottomLeftY]]
           row y = [cell (x, y) | x <- [bottomLeftX .. bottomLeftX + tileColumns - 1]]
-          cell c = image $ pack $ (d ^. tileMap) ! c ^. MT.imagePath
+
+          isVisible c = (d ^. visible) ! c
+          isExplored c = (d ^. explored) ! c
+
+          cell c = zstack [ image $ pack $ (d ^. tileMap) ! c ^. MT.imagePath
+                          , filler `styleBasic` [bgColor $ black & L.a .~ cellOpacity c]
+                          ]
+          cellOpacity c = case (isVisible c, isExplored c) of
+                            (True, _) -> 0
+                            (_, True) -> 0.5
+                            _         -> 1
+
           styles = [ width $ fromIntegral mapDrawingWidth
                    , height $ fromIntegral mapDrawingHeight]
 mapTiles _ = undefined
@@ -79,13 +90,14 @@ mapEntities (PlayerIsExploring d _ _) = mapMaybe entityToImage $ d ^. entities
           entityPositionOnDisplay e = e ^. position - bottomLeftCoord d
 
           isEntityDrawed e = let pos = entityPositionOnDisplay e
-                             in V2 0 0 <= pos && pos <= topRightCoord d
+                                 isVisible = (d ^. visible) ! (e ^. (position . _x), e ^. (position . _y))
+                             in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
 
           entityToImage e = guard (isEntityDrawed e) >> return (image (pack $ e ^. DT.walkingImagePath) `styleBasic` style e)
 mapEntities _                         = undefined
 
 talkingWindow :: TalkWith -> WidgetNode Engine AppEvent
-talkingWindow tw = hstack [ image (pack $ tw ^. (person . standingImagePath))
+talkingWindow tw = hstack [ image (pack $ tw ^. person . standingImagePath)
                           , window
                           ]
     where window = zstack [ image (pack "images/talking_window.png")
