@@ -37,9 +37,11 @@ module Dungeon.Types
 
 import           Control.Lens         (makeLenses)
 import           Coord                (Coord)
+import           Data.Array           (bounds)
 import           Dungeon.Map.Explored (ExploredMap, initExploredMap)
 import           Dungeon.Map.Fov      (Fov, initFov)
 import           Dungeon.Map.Tile     (TileMap)
+import           Linear.V2            (V2 (V2))
 
 
 newtype Ai = HostileEnemy
@@ -75,10 +77,11 @@ makeLenses ''Dungeon
 
 dungeon :: TileMap -> [Entity] -> Dungeon
 dungeon t e = Dungeon { _tileMap = t
-                      , _visible = initFov
-                      , _explored = initExploredMap
+                      , _visible = initFov widthAndHeight
+                      , _explored = initExploredMap widthAndHeight
                       , _entities = e
                       }
+    where widthAndHeight = snd (bounds t) + V2 1 1
 
 actor :: Coord -> String -> Int -> Int -> Int -> Bool -> Bool -> Bool -> Bool -> String -> String -> String -> Entity
 actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isEnemy' talkMessage' walkingImagePath' standingImagePath'=

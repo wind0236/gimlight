@@ -9,5 +9,5 @@ import           Linear.V2   (V2)
 
 type BoolMap = Array (V2 Int) Bool
 
-emptyBoolMap :: BoolMap
-emptyBoolMap = M.generate $ const False
+emptyBoolMap :: V2 Int -> BoolMap
+emptyBoolMap size = M.generate size $ const False

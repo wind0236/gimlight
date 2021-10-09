@@ -26,12 +26,11 @@ import           Control.Lens.Getter            (use)
 import           Control.Monad.Trans.State      (State, runState, state)
 import           Control.Monad.Trans.State.Lazy (execState, get)
 import           Coord                          (Coord)
-import           Data.Array.Base                (IArray (bounds), (!))
+import           Data.Array.Base                (IArray (bounds))
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
 import           Dungeon.Entity                 (Entity)
 import qualified Dungeon.Entity                 as E
-import qualified Dungeon.Map                    as M
 import           Dungeon.Map.Bool               (BoolMap)
 import           Dungeon.Map.Explored           (updateExploredMap)
 import           Dungeon.Map.Fov                (calculateFov)
@@ -101,7 +100,7 @@ popActorIf f = state $ \d ->
         Nothing -> (Nothing, d)
 
 walkableFloor :: Dungeon -> BoolMap
-walkableFloor d = M.generate (\c -> (d ^. tileMap) ! c ^. walkable)
+walkableFloor d = fmap (^. walkable) (d ^. tileMap)
 
 transparentMap :: Dungeon -> BoolMap
 transparentMap d = fmap (^. transparent) (d ^. tileMap)

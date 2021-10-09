@@ -2,6 +2,8 @@ module UI.Draw
     ( drawUI
     , windowWidth
     , windowHeight
+    , tileColumns
+    , tileRows
     ) where
 import           Control.Lens          ((&), (.~), (^.))
 import           Control.Monad         (guard)

@@ -4,24 +4,26 @@ module Dungeon.Generate
 
 import           Control.Lens            ((^.))
 import           Coord                   (Coord)
-import           Data.Array              ((//))
+import           Data.Array              (bounds, (//))
 import           Dungeon.Entity          (Entity)
 import           Dungeon.Entity.Monsters (orc, troll)
 import           Dungeon.Generate.Room   (Room (..), center,
                                           roomFromTwoPositionInclusive,
                                           roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile)
-import           Dungeon.Size            (height, width)
+import           Dungeon.Size            (maxSize, minSize)
 import           Dungeon.Types           (position)
 import           Linear.V2               (V2 (..), _x, _y)
 import           System.Random           (Random (randomR), StdGen, random)
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Entity], V2 Int, StdGen)
-generateDungeon = generateDungeonAccum [] [] allWallTiles (V2 0 0)
+generateDungeon g = generateDungeonAccum [] [] (allWallTiles (V2 width height)) (V2 0 0) g''
+    where (width, g') = randomR (minSize, maxSize) g
+          (height, g'') = randomR (minSize, maxSize) g'
 
 generateDungeonAccum :: [Entity] -> [Room] -> TileMap -> Coord -> StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Entity], V2 Int, StdGen)
 generateDungeonAccum enemiesAcc _ d pos g 0 _ _ _ = (d, enemiesAcc, pos, g)
-generateDungeonAccum enemiesAcc acc dungeon playerPos g maxRooms roomMinSize roomMaxSize mapSize
+generateDungeonAccum enemiesAcc acc tileMap playerPos g maxRooms roomMinSize roomMaxSize mapSize
     = generateDungeonAccum newEnemiesAcc newAcc newDungeon newPlayerPos g''''' (maxRooms - 1) roomMinSize roomMaxSize mapSize
     where (roomWidth, g') = randomR (roomMinSize, roomMaxSize) g
           (roomHeight, g'') = randomR (roomMinSize, roomMaxSize) g'
@@ -32,9 +34,10 @@ generateDungeonAccum enemiesAcc acc dungeon playerPos g maxRooms roomMinSize roo
           (enemies, g''''') = placeEnemies g'''' room maxMonstersPerRoom
           (newEnemiesAcc, newAcc, newDungeon, newPlayerPos) = if usable
                                                    then if null acc
-                                                            then (enemies ++ enemiesAcc, room:acc, createRoom room dungeon, center room)
-                                                            else (enemies ++ enemiesAcc, room:acc, tunnelBetween (center room) (center $ head acc) $ createRoom room dungeon, center room)
-                                                   else (enemiesAcc, acc, dungeon, playerPos)
+                                                            then (enemies ++ enemiesAcc, room:acc, createRoom room tileMap, center room)
+                                                            else (enemies ++ enemiesAcc, room:acc, tunnelBetween (center room) (center $ head acc) $ createRoom room tileMap, center room)
+                                                   else (enemiesAcc, acc, tileMap, playerPos)
+          V2 width height = snd (bounds tileMap) + V2 1 1
 
 createRoom :: Room -> TileMap -> TileMap
 createRoom room r

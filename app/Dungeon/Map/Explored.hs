@@ -7,10 +7,11 @@ module Dungeon.Map.Explored
 import           Data.Array       (assocs, (!), (//))
 import           Dungeon.Map.Bool (BoolMap, emptyBoolMap)
 import           Dungeon.Map.Fov  (Fov)
+import           Linear.V2        (V2)
 
 type ExploredMap = BoolMap;
 
-initExploredMap :: ExploredMap
+initExploredMap :: V2 Int -> ExploredMap
 initExploredMap = emptyBoolMap
 
 updateExploredMap :: ExploredMap -> Fov -> ExploredMap

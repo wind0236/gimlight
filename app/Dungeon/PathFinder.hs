@@ -4,12 +4,11 @@ module Dungeon.PathFinder
 
 import           Control.Monad.Trans.State (State, state)
 import           Coord                     (Coord)
-import           Data.Array                ((!))
+import           Data.Array                (bounds, (!))
 import           Data.Graph.AStar          (aStar)
 import           Data.HashSet              (HashSet, fromList)
 import           Dungeon                   (Dungeon, walkableFloor)
 import           Dungeon.Map.Bool          (BoolMap)
-import qualified Dungeon.Size              as DS
 import           Linear.V2                 (V2 (..))
 
 getPathTo :: Coord -> Coord -> State Dungeon (Maybe [Coord])
@@ -31,7 +30,8 @@ candidate walkable (V2 sx sy) = [V2 x y |
                               x <- [sx - 1 .. sx + 1],
                               y <- [sy - 1 .. sy + 1],
                               (x, y) /= (sx, sy),
-                              x >= 0, x < DS.width,
-                              y >= 0, y < DS.height,
+                              x >= 0, x < width,
+                              y >= 0, y < height,
                               walkable ! V2 x y
                               ]
+    where V2 width height = snd (bounds walkable) + V2 1 1

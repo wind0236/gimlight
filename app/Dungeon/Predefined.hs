@@ -32,8 +32,10 @@ firstEventMap player = dungeon (stringArrayToMap
     ]
 
 stringArrayToMap :: [String] -> TileMap
-stringArrayToMap list = allWallTiles // [(V2 x y, tile c) | (y, row) <- zip [0..] list, (x, c) <- zip [0..] row]
+stringArrayToMap list = allWallTiles (V2 width height) // [(V2 x y, tile c) | (y, row) <- zip [0..] list, (x, c) <- zip [0..] row]
     where tile c
             | c == '#' = wallTile
             | c == '.' = floorTile
             | otherwise = error "Invalid tile type."
+          height = length list
+          width = length $ head list

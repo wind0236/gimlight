@@ -13,11 +13,11 @@ import           Data.Array                ((!))
 import           Data.List                 (find)
 import           Data.Maybe                (fromMaybe)
 import           Dungeon                   (Dungeon, getPlayerEntity,
-                                            popActorAt, pushEntity)
+                                            mapWidthAndHeight, popActorAt,
+                                            pushEntity)
 import           Dungeon.Entity            (getHp, updateHp)
 import           Dungeon.Map.Tile          (walkable)
 import           Dungeon.PathFinder        (getPathTo)
-import qualified Dungeon.Size              as DS
 import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
                                             ai, blocksMovement, defence,
                                             entities, isAlive, isEnemy,
@@ -147,14 +147,15 @@ waitAction = pushEntity
 
 updatePosition :: Dungeon -> Entity -> V2 Int -> Entity
 updatePosition d src offset
-    = let next = nextPosition src offset
+    = let next = nextPosition d src offset
       in if movable d next
             then src & position .~ next
             else src
 
-nextPosition :: Entity -> V2 Int -> Coord
-nextPosition src offset =
-    max (V2 0 0) $ min (V2 (DS.width - 1) $ DS.height - 1) $ src ^. position + offset
+nextPosition :: Dungeon -> Entity -> V2 Int -> Coord
+nextPosition d src offset =
+    max (V2 0 0) $ min (V2 (width - 1) $ height - 1) $ src ^. position + offset
+    where V2 width height = mapWidthAndHeight d
 
 movable :: Dungeon -> Coord -> Bool
 movable d c = case getBlockingEntityAtLocation d c of

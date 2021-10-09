@@ -25,8 +25,8 @@ makeLenses ''Tile
 
 type TileMap = Array (V2 Int) Tile
 
-allWallTiles :: TileMap
-allWallTiles = M.generate $ const wallTile
+allWallTiles :: V2 Int -> TileMap
+allWallTiles widthAndHeight = M.generate widthAndHeight (const wallTile)
 
 wallTile :: Tile
 wallTile = Tile { _walkable = False
