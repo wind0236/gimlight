@@ -122,14 +122,14 @@ meleeAction src offset = do
                 pushEntity src
                 pushEntity x
                 return []
-            Just x -> let damage = (src ^. power) - (x ^. defence)
-                          msg = (src ^. name) ++ " attacks " ++ (x ^. name)
+            Just x -> let damage = src ^. power - x ^. defence
+                          msg = src ^. name ++ " attacks " ++ x ^. name
                         in if damage > 0
                             then do
                                 let newHp = getHp x - damage
                                     newEntity = updateHp x newHp
                                     damagedMessage = msg ++ " for " ++ show damage ++ " hit points."
-                                    deathMessage = if x ^. isPlayer then "You died!" else (x ^. name) ++ " is dead!"
+                                    deathMessage = if x ^. isPlayer then "You died!" else x ^. name ++ " is dead!"
                                     messages = if newHp <= 0 then [damagedMessage, deathMessage] else [damagedMessage]
                                 pushEntity src
                                 pushEntity newEntity
@@ -158,6 +158,9 @@ nextPosition d src offset =
     where V2 width height = mapWidthAndHeight d
 
 movable :: Dungeon -> Coord -> Bool
-movable d c = case getBlockingEntityAtLocation d c of
+movable d c@(V2 x y) = case getBlockingEntityAtLocation d c of
                   Just _  -> False
-                  Nothing -> (d ^. tileMap) ! c ^. walkable
+                  Nothing -> isPositionInRange && (d ^. tileMap) ! c ^. walkable
+    where isPositionInRange = let (V2 width height) = mapWidthAndHeight d
+                              in x >= 0 && x < width
+                              && y >= 0 && y < height
