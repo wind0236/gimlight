@@ -63,7 +63,7 @@ mapTiles :: (WidgetModel s, WidgetEvent e) => Engine ->  WidgetNode s e
 mapTiles (PlayerIsExploring d _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` styles
     where V2 bottomLeftX bottomLeftY = bottomLeftCoord d
           rows = [hgrid $ row y | y <- [bottomLeftY + tileRows - 1, bottomLeftY + tileRows - 2 .. bottomLeftY]]
-          row y = [cell (x, y) | x <- [bottomLeftX .. bottomLeftX + tileColumns - 1]]
+          row y = [cell $ V2 x y | x <- [bottomLeftX .. bottomLeftX + tileColumns - 1]]
 
           isVisible c = (d ^. visible) ! c
           isExplored c = (d ^. explored) ! c
@@ -90,7 +90,7 @@ mapEntities (PlayerIsExploring d _ _) = mapMaybe entityToImage $ d ^. entities
           entityPositionOnDisplay e = e ^. position - bottomLeftCoord d
 
           isEntityDrawed e = let pos = entityPositionOnDisplay e
-                                 isVisible = (d ^. visible) ! (e ^. (position . _x), e ^. (position . _y))
+                                 isVisible = (d ^. visible) ! (e ^. position)
                              in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
 
           entityToImage e = guard (isEntityDrawed e) >> return (image (pack $ e ^. DT.walkingImagePath) `styleBasic` style e)

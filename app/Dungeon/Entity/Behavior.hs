@@ -53,7 +53,7 @@ updatePathOrMelee e = do
 
         v <- use visible
 
-        if v ! (pos ^. _x, pos ^. _y)
+        if v ! pos
             then if distance <= 1
                      then do
                          msg <- meleeAction e posDiff
@@ -159,4 +159,4 @@ nextPosition src offset =
 movable :: Dungeon -> Coord -> Bool
 movable d c = case getBlockingEntityAtLocation d c of
                   Just _  -> False
-                  Nothing -> (d ^. tileMap) ! (c ^. _x, c ^. _y) ^. walkable
+                  Nothing -> (d ^. tileMap) ! c ^. walkable

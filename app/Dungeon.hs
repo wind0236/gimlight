@@ -119,8 +119,7 @@ enemies :: Dungeon -> [Entity]
 enemies d = filter (^. isEnemy) $ d ^. entities
 
 mapWidthAndHeight :: Dungeon -> V2 Int
-mapWidthAndHeight d = V2 (maxX + 1) (maxY + 1)
-    where (maxX, maxY) = snd $ bounds $ d ^. tileMap
+mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1
 
 initDungeon :: Dungeon
 initDungeon =

@@ -33,5 +33,5 @@ candidate walkable (V2 sx sy) = [V2 x y |
                               (x, y) /= (sx, sy),
                               x >= 0, x < DS.width,
                               y >= 0, y < DS.height,
-                              walkable ! (x, y)
+                              walkable ! V2 x y
                               ]

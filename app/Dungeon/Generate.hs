@@ -38,7 +38,7 @@ generateDungeonAccum enemiesAcc acc dungeon playerPos g maxRooms roomMinSize roo
 
 createRoom :: Room -> TileMap -> TileMap
 createRoom room r
-    = r // [((x, y), floorTile) | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
+    = r // [(V2 x y, floorTile) | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 
 tunnelBetween :: Coord -> Coord -> TileMap -> TileMap
 tunnelBetween start end d = createRoom path1 $ createRoom path2 d

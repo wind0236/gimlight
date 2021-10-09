@@ -14,6 +14,7 @@ module Dungeon.Map.Tile
 import           Control.Lens.TH (makeLenses)
 import           Data.Array      (Array)
 import qualified Dungeon.Map     as M
+import           Linear.V2       (V2)
 
 data Tile = Tile
           { _walkable    :: Bool
@@ -22,7 +23,7 @@ data Tile = Tile
           } deriving (Show, Ord, Eq)
 makeLenses ''Tile
 
-type TileMap = Array (Int, Int) Tile
+type TileMap = Array (V2 Int) Tile
 
 allWallTiles :: TileMap
 allWallTiles = M.generate $ const wallTile
