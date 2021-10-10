@@ -21,7 +21,7 @@ import           Linear.V2                      (V2)
 import           Log                            (MessageLog, addMessage,
                                                  addMessages)
 import qualified Log                            as L
-import           Scene                          (Scene)
+import           Scene                          (Scene, gameStartScene)
 import           Talking                        (TalkWith)
 
 data Engine = PlayerIsExploring
@@ -107,8 +107,10 @@ currentMapWidthAndHeight (Talking _ e)             = currentMapWidthAndHeight e
 currentMapWidthAndHeight (HandlingScene _ e)       = currentMapWidthAndHeight e
 
 initEngine :: Engine
-initEngine = do
-                    PlayerIsExploring { _dungeon = initDungeon
-                                    , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
-                                    , _isGameOver = False
-                                    }
+initEngine = HandlingScene { _scene = gameStartScene
+                           , _afterFinish = initPlayerIsExploring
+                           }
+    where initPlayerIsExploring = PlayerIsExploring { _dungeon = initDungeon
+                                                    , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
+                                                    , _isGameOver = False
+                                                    }

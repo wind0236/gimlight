@@ -2,10 +2,10 @@ module UI.Event
     ( handleEvent
     ) where
 
-import           Control.Lens              ((^?!))
+import           Control.Lens              ((%~), (&), (^.), (^?!))
 import           Control.Monad             (unless)
 import           Control.Monad.Trans.State (execState, get)
-import           Engine                    (Engine (PlayerIsExploring, Talking),
+import           Engine                    (Engine (HandlingScene, PlayerIsExploring, Talking),
                                             completeThisTurn, isGameOver,
                                             playerBumpAction)
 import           Linear.V2                 (V2 (V2))
@@ -13,6 +13,7 @@ import           Monomer                   (AppEventResponse,
                                             EventResponse (Model), KeyCode,
                                             WidgetEnv, WidgetNode, keyDown,
                                             keyLeft, keyReturn, keyRight, keyUp)
+import           Scene                     (elements)
 import           UI.Types                  (AppEvent (AppInit, AppKeyboardInput))
 
 handleEvent :: WidgetEnv Engine AppEvent -> WidgetNode Engine AppEvent -> Engine -> AppEvent -> [AppEventResponse Engine AppEvent]
@@ -30,6 +31,8 @@ handleKeyInput e@PlayerIsExploring{} k
 handleKeyInput e@(Talking _ after) k
     | k == keyReturn = after
     | otherwise = e
+handleKeyInput e@HandlingScene{} k
+    | k == keyReturn = nextSceneElementOrFinish e
 handleKeyInput e _ = e
 
 handlePlayerMove :: V2 Int -> Engine -> Engine
@@ -43,3 +46,9 @@ handlePlayerMove offset e = flip execState e $ do
         case eng' of
             PlayerIsExploring {} -> completeThisTurn
             _                    -> return ()
+
+nextSceneElementOrFinish :: Engine -> Engine
+nextSceneElementOrFinish (HandlingScene s after) = if length (s ^. elements) == 1
+                                                    then after
+                                                    else HandlingScene (s & elements %~ tail) after
+nextSceneElementOrFinish _                   = error "unreachable."

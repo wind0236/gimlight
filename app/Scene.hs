@@ -1,24 +1,37 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
+
 module Scene
     ( Scene
     , SceneElement(..)
     , withoutSpeaker
     , gameStartScene
+    , backgroundImage
+    , elements
+    , text
     ) where
 
-type Scene = [SceneElement]
+import           Control.Lens (makeLenses)
+import           Data.Text    (Text)
 
-data SceneElement = WithoutSpeaker String
-                  | WithSpeaker { name    :: String
-                                , message :: String
-                                } deriving (Show, Ord, Eq)
-withSpeaker :: String -> String -> SceneElement
-withSpeaker = WithSpeaker
+newtype SceneElement = WithoutSpeaker Text deriving (Show, Eq, Ord)
 
-withoutSpeaker :: String -> SceneElement
+data Scene = Scene
+           { _backgroundImage :: Text
+           , _elements        :: [SceneElement]
+           } deriving (Show, Ord, Eq)
+makeLenses ''Scene
+
+withoutSpeaker :: Text -> SceneElement
 withoutSpeaker = WithoutSpeaker
 
+text :: SceneElement -> Text
+text (WithoutSpeaker t) = t
+
 gameStartScene :: Scene
-gameStartScene = [ withoutSpeaker "This story is about a stupid man, Ruskel. His most significant characteristic is that he has a strong stomach, so he can eat a lump of raw meat and does not end up with diarrhea."
-                 , withSpeaker "Ruskel" "I want to eat delicious foods"
-                 , withoutSpeaker "...His actions are based on this simple desire."
-                 ]
+gameStartScene = Scene { _backgroundImage = "images/game_opening.png"
+                       , _elements = xs
+                       }
+    where xs = [ withoutSpeaker "Planet Kantsarta is a strange planet. There lives not only human, animals, and plants, but also therianthropies, fairies, undeads, and even dragons."
+               , withoutSpeaker "And you will leave from Beaeve, a country town located in one of countries existing on the planet, Karpho. Without knowing what will happen in the future. Having a great hope."
+               ]
