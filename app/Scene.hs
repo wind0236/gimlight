@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
@@ -12,15 +13,19 @@ module Scene
     ) where
 
 import           Control.Lens (makeLenses)
+import           Data.Binary  (Binary)
 import           Data.Text    (Text)
+import           GHC.Generics (Generic)
 
-newtype SceneElement = WithoutSpeaker Text deriving (Show, Eq, Ord)
+newtype SceneElement = WithoutSpeaker Text deriving (Show, Eq, Ord, Generic)
+instance Binary SceneElement
 
 data Scene = Scene
            { _backgroundImage :: Text
            , _elements        :: [SceneElement]
-           } deriving (Show, Ord, Eq)
+           } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Scene
+instance Binary Scene
 
 withoutSpeaker :: Text -> SceneElement
 withoutSpeaker = WithoutSpeaker

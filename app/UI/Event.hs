@@ -10,30 +10,40 @@ import           Engine                    (Engine (HandlingScene, PlayerIsExplo
                                             playerBumpAction)
 import           Linear.V2                 (V2 (V2))
 import           Monomer                   (AppEventResponse,
-                                            EventResponse (Model), KeyCode,
-                                            WidgetEnv, WidgetNode, keyDown,
-                                            keyLeft, keyReturn, keyRight, keyUp)
+                                            EventResponse (Model, Task),
+                                            KeyCode, WidgetEnv, WidgetNode,
+                                            keyDown, keyL, keyLeft, keyReturn,
+                                            keyRight, keyS, keyUp)
+import           Save                      (load, save)
 import           Scene                     (elements)
-import           UI.Types                  (AppEvent (AppInit, AppKeyboardInput))
+import           UI.Types                  (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished))
 
 handleEvent :: WidgetEnv Engine AppEvent -> WidgetNode Engine AppEvent -> Engine -> AppEvent -> [AppEventResponse Engine AppEvent]
 handleEvent _ _ engine evt = case evt of
                                 AppInit            -> []
-                                AppKeyboardInput k -> [Model $ handleKeyInput engine k]
+                                AppSaveFinished    -> []
+                                AppLoadFinished newEngine  -> [Model newEngine]
+                                AppKeyboardInput k -> if k == keyS
+                                                          then [Task (do
+                                                                        save engine
+                                                                        return AppInit)]
+                                                          else handleKeyInput engine k
 
-handleKeyInput :: Engine -> KeyCode -> Engine
+handleKeyInput :: Engine -> KeyCode -> [AppEventResponse Engine AppEvent]
 handleKeyInput e@PlayerIsExploring{} k
-    | k == keyRight = handlePlayerMove (V2 1 0) e
-    | k == keyLeft  = handlePlayerMove (V2 (-1) 0) e
-    | k == keyUp    = handlePlayerMove (V2 0 1) e
-    | k == keyDown  = handlePlayerMove (V2 0 (-1)) e
-    | otherwise = e
-handleKeyInput e@(Talking _ after) k
-    | k == keyReturn = after
-    | otherwise = e
+    | k == keyRight = [Model $ handlePlayerMove (V2 1 0) e]
+    | k == keyLeft  = [Model $ handlePlayerMove (V2 (-1) 0) e]
+    | k == keyUp    = [Model $ handlePlayerMove (V2 0 1) e]
+    | k == keyDown  = [Model $ handlePlayerMove (V2 0 (-1)) e]
+    | k == keyS     = [Task (save e >> return AppSaveFinished)]
+    | k == keyL     = [Task $ AppLoadFinished <$> load]
+    | otherwise = []
+handleKeyInput (Talking _ after) k
+    | k == keyReturn = [Model after]
+    | otherwise = []
 handleKeyInput e@HandlingScene{} k
-    | k == keyReturn = nextSceneElementOrFinish e
-handleKeyInput e _ = e
+    | k == keyReturn = [Model $ nextSceneElementOrFinish e]
+handleKeyInput _ _ = []
 
 handlePlayerMove :: V2 Int -> Engine -> Engine
 handlePlayerMove offset e = flip execState e $ do

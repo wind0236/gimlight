@@ -4,10 +4,14 @@ module UI.Types
     , AppEvent(..)
     ) where
 
+import           Engine  (Engine)
 import           Monomer (KeyCode)
 
 data Tick = Tick
 
 type Name = ()
 
-data AppEvent = AppInit | AppKeyboardInput KeyCode deriving (Eq, Show)
+data AppEvent = AppInit
+              | AppSaveFinished
+              | AppLoadFinished Engine
+              | AppKeyboardInput KeyCode deriving (Eq, Show)

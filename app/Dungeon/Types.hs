@@ -6,6 +6,7 @@
 --
 -- TODO: Define these types in each module if possible.
 
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Dungeon.Types
@@ -38,16 +39,19 @@ module Dungeon.Types
 import           Control.Lens         (makeLenses)
 import           Coord                (Coord)
 import           Data.Array           (bounds)
+import           Data.Binary          (Binary)
 import           Dungeon.Map.Explored (ExploredMap, initExploredMap)
 import           Dungeon.Map.Fov      (Fov, initFov)
 import           Dungeon.Map.Tile     (TileMap)
+import           GHC.Generics         (Generic)
 import           Linear.V2            (V2 (V2))
 
 
 newtype Ai = HostileEnemy
              { _path :: [Coord]
-             } deriving (Show, Ord, Eq)
+             } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Ai
+instance Binary Ai
 
 data Entity = Actor
             { _position          :: Coord
@@ -64,16 +68,18 @@ data Entity = Actor
             , _talkMessage       :: String
             , _walkingImagePath  :: String
             , _standingImagePath :: String
-            } deriving (Show, Ord, Eq)
+            } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Entity
+instance Binary Entity
 
 data Dungeon = Dungeon
           { _tileMap  :: TileMap
           , _visible  :: Fov
           , _explored :: ExploredMap
           , _entities :: [Entity]
-          } deriving (Show, Ord, Eq)
+          } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Dungeon
+instance Binary Dungeon
 
 dungeon :: TileMap -> [Entity] -> Dungeon
 dungeon t e = Dungeon { _tileMap = t

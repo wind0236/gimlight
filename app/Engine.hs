@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric    #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
@@ -8,6 +9,7 @@ import           Control.Lens                   (makeLenses, (%=), (.=), (^.),
 import           Control.Monad.Trans.State      (State, get)
 import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
+import           Data.Binary                    (Binary)
 import           Dungeon                        (Dungeon, aliveEnemies,
                                                  getPlayerEntity, initDungeon,
                                                  mapWidthAndHeight)
@@ -17,6 +19,7 @@ import           Dungeon.Entity.Behavior        (BumpResult (..), bumpAction,
                                                  enemyAction)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (maxHp, position)
+import           GHC.Generics                   (Generic)
 import           Linear.V2                      (V2)
 import           Log                            (MessageLog, addMessage,
                                                  addMessages)
@@ -34,8 +37,9 @@ data Engine = PlayerIsExploring
           } | HandlingScene
           { _scene       :: Scene
           , _afterFinish :: Engine
-          } deriving (Show, Ord, Eq)
+          } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Engine
+instance Binary Engine
 
 completeThisTurn :: State Engine ()
 completeThisTurn = do

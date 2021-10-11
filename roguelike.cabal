@@ -48,6 +48,7 @@ executable roguelike
                       , Dungeon.Turn
                       , Coord
                       , Log
+                      , Save
                       , Scene
                       , Talking
 
@@ -59,6 +60,7 @@ executable roguelike
     build-depends:
         array,
         base,
+        binary,
         containers,
         data-default,
         extra,
