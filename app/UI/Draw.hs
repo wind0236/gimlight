@@ -53,7 +53,7 @@ drawUI _ Title = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSiz
                                         , label "[q] Quit"
                                         ]
 drawUI _ engine = withKeyEvents $ vstack [ mapGrid engine
-                                         , label $ pack "多分ここにログが表示される．"
+                                         , label "多分ここにログが表示される．"
                                          ] `styleBasic` [width 0]
 
 withKeyEvents :: WidgetNode s AppEvent -> WidgetNode s AppEvent
@@ -117,7 +117,7 @@ talkingWindow :: TalkWith -> WidgetNode Engine AppEvent
 talkingWindow tw = hstack [ image (pack $ tw ^. person . standingImagePath)
                           , window
                           ]
-    where window = zstack [ image (pack "images/talking_window.png")
+    where window = zstack [ image "images/talking_window.png"
                           , label (pack $ tw ^. message) `styleBasic` [textColor red, textSize 16, paddingL 50]
                           ]
 
