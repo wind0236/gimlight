@@ -37,7 +37,8 @@ data Engine = PlayerIsExploring
           } | HandlingScene
           { _scene       :: Scene
           , _afterFinish :: Engine
-          } deriving (Show, Ord, Eq, Generic)
+          } | Title
+          deriving (Show, Ord, Eq, Generic)
 makeLenses ''Engine
 instance Binary Engine
 
@@ -104,14 +105,16 @@ playerPosition :: Engine -> Coord
 playerPosition (PlayerIsExploring d _ _) = D.playerPosition d
 playerPosition (Talking _ e)             = playerPosition e
 playerPosition (HandlingScene _ e)       = playerPosition e
+playerPosition Title                     = error "unreachable."
 
 currentMapWidthAndHeight :: Engine -> V2 Int
 currentMapWidthAndHeight (PlayerIsExploring d _ _) = mapWidthAndHeight d
 currentMapWidthAndHeight (Talking _ e)             = currentMapWidthAndHeight e
 currentMapWidthAndHeight (HandlingScene _ e)       = currentMapWidthAndHeight e
+currentMapWidthAndHeight _                         = error "unreachable."
 
-initEngine :: Engine
-initEngine = HandlingScene { _scene = gameStartScene
+newGameEngine :: Engine
+newGameEngine = HandlingScene { _scene = gameStartScene
                            , _afterFinish = initPlayerIsExploring
                            }
     where initPlayerIsExploring = PlayerIsExploring { _dungeon = initDungeon

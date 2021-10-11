@@ -2,7 +2,7 @@
 
 module Main (main) where
 
-import           Engine   (initEngine)
+import           Engine   (Engine (Title))
 import           Monomer  (MainWindowState (MainWindowNormal), appFontDef,
                            appInitEvent, appTheme, appWindowResizable,
                            appWindowState, appWindowTitle, darkTheme, startApp)
@@ -13,7 +13,7 @@ import           UI.Types (AppEvent (..))
 main :: IO ()
 main = startApp model handleEvent buildUI config
     where
-        model = initEngine
+        model = Title
         handleEvent = E.handleEvent
         buildUI = drawUI
         config = [ appWindowTitle "Roguelike"

@@ -18,7 +18,7 @@ import qualified Dungeon.Map.Tile      as MT
 import           Dungeon.Types         (Dungeon, entities, explored, position,
                                         standingImagePath, tileMap, visible)
 import qualified Dungeon.Types         as DT
-import           Engine                (Engine (HandlingScene, PlayerIsExploring, Talking))
+import           Engine                (Engine (HandlingScene, PlayerIsExploring, Talking, Title))
 import           Linear.V2             (V2 (V2), _x, _y)
 import           Monomer               (CmbAlignLeft (alignLeft),
                                         CmbBgColor (bgColor),
@@ -47,6 +47,11 @@ drawUI wenv (Talking with afterEngine) = withKeyEvents $ zstack [ drawUI wenv af
 drawUI _ (HandlingScene s _) = withKeyEvents $ zstack [ image (s ^. backgroundImage)
                                                       , label_  (text $ head $ s ^. elements) [multiline] `styleBasic` [textColor black]
                                                       ]
+drawUI _ Title = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSize 36]
+                                        , label "[n] New game"
+                                        , label "[l] Load the savedata"
+                                        , label "[q] Quit"
+                                        ]
 drawUI _ engine = withKeyEvents $ vstack [ mapGrid engine
                                          , label $ pack "多分ここにログが表示される．"
                                          ] `styleBasic` [width 0]
@@ -59,6 +64,9 @@ withKeyEvents =
     , "Right"
     , "Left"
     , "Enter"
+    , "n"
+    , "l"
+    , "q"
     , "Ctrl-s"
     , "Ctrl-l"
     ]

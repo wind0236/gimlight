@@ -8,13 +8,14 @@ import           Control.Lens              ((%~), (&), (^.), (^?!))
 import           Control.Monad             (unless)
 import           Control.Monad.Trans.State (execState, get)
 import           Data.Text                 (Text)
-import           Engine                    (Engine (HandlingScene, PlayerIsExploring, Talking),
+import           Engine                    (Engine (HandlingScene, PlayerIsExploring, Talking, Title),
                                             completeThisTurn, isGameOver,
-                                            playerBumpAction)
+                                            newGameEngine, playerBumpAction)
 import           Linear.V2                 (V2 (V2))
 import           Monomer                   (AppEventResponse,
                                             EventResponse (Model, Task),
-                                            WidgetEnv, WidgetNode)
+                                            WidgetEnv, WidgetNode,
+                                            exitApplication)
 import           Save                      (load, save)
 import           Scene                     (elements)
 import           UI.Types                  (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished))
@@ -40,6 +41,10 @@ handleKeyInput (Talking _ after) k
     | otherwise = []
 handleKeyInput e@HandlingScene{} k
     | k == "Enter" = [Model $ nextSceneElementOrFinish e]
+handleKeyInput Title k
+    | k == "n" = [Model newGameEngine]
+    | k == "l" = [Task $ AppLoadFinished <$> load]
+    | k == "q" = [exitApplication]
 handleKeyInput _ _ = []
 
 handlePlayerMove :: V2 Int -> Engine -> Engine
