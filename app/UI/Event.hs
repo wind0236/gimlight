@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module UI.Event
     ( handleEvent
     ) where
@@ -5,15 +7,14 @@ module UI.Event
 import           Control.Lens              ((%~), (&), (^.), (^?!))
 import           Control.Monad             (unless)
 import           Control.Monad.Trans.State (execState, get)
+import           Data.Text                 (Text)
 import           Engine                    (Engine (HandlingScene, PlayerIsExploring, Talking),
                                             completeThisTurn, isGameOver,
                                             playerBumpAction)
 import           Linear.V2                 (V2 (V2))
 import           Monomer                   (AppEventResponse,
                                             EventResponse (Model, Task),
-                                            KeyCode, WidgetEnv, WidgetNode,
-                                            keyDown, keyL, keyLeft, keyReturn,
-                                            keyRight, keyS, keyUp)
+                                            WidgetEnv, WidgetNode)
 import           Save                      (load, save)
 import           Scene                     (elements)
 import           UI.Types                  (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished))
@@ -25,20 +26,20 @@ handleEvent _ _ engine evt = case evt of
                                 AppLoadFinished newEngine  -> [Model newEngine]
                                 AppKeyboardInput k -> handleKeyInput engine k
 
-handleKeyInput :: Engine -> KeyCode -> [AppEventResponse Engine AppEvent]
+handleKeyInput :: Engine -> Text -> [AppEventResponse Engine AppEvent]
 handleKeyInput e@PlayerIsExploring{} k
-    | k == keyRight = [Model $ handlePlayerMove (V2 1 0) e]
-    | k == keyLeft  = [Model $ handlePlayerMove (V2 (-1) 0) e]
-    | k == keyUp    = [Model $ handlePlayerMove (V2 0 1) e]
-    | k == keyDown  = [Model $ handlePlayerMove (V2 0 (-1)) e]
-    | k == keyS     = [Task (save e >> return AppSaveFinished)]
-    | k == keyL     = [Task $ AppLoadFinished <$> load]
+    | k == "Right" = [Model $ handlePlayerMove (V2 1 0) e]
+    | k == "Left"  = [Model $ handlePlayerMove (V2 (-1) 0) e]
+    | k == "Up"    = [Model $ handlePlayerMove (V2 0 1) e]
+    | k == "Down"  = [Model $ handlePlayerMove (V2 0 (-1)) e]
+    | k == "Ctrl-s"     = [Task (save e >> return AppSaveFinished)]
+    | k == "Ctrl-l"     = [Task $ AppLoadFinished <$> load]
     | otherwise = []
 handleKeyInput (Talking _ after) k
-    | k == keyReturn = [Model after]
+    | k == "Enter" = [Model after]
     | otherwise = []
 handleKeyInput e@HandlingScene{} k
-    | k == keyReturn = [Model $ nextSceneElementOrFinish e]
+    | k == "Enter" = [Model $ nextSceneElementOrFinish e]
 handleKeyInput _ _ = []
 
 handlePlayerMove :: V2 Int -> Engine -> Engine

@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module UI.Draw
     ( drawUI
     , windowWidth
@@ -9,7 +11,6 @@ import           Control.Lens          ((&), (.~), (^.))
 import           Control.Monad         (guard)
 import           Coord                 (Coord)
 import           Data.Array            ((!))
-import           Data.Bifunctor        (second)
 import           Data.Maybe            (mapMaybe)
 import           Data.Text             (pack)
 import           Dungeon               (mapWidthAndHeight, playerPosition)
@@ -31,10 +32,8 @@ import           Monomer               (CmbAlignLeft (alignLeft),
                                         CmbWidth (width), WidgetEnv,
                                         WidgetEvent, WidgetModel, WidgetNode,
                                         black, box_, filler, gray, hgrid,
-                                        hstack, image, keyDown, keyL, keyLeft,
-                                        keyReturn, keyRight, keyS, keyUp,
-                                        keystroke, label, label_, red, vgrid,
-                                        vstack, zstack)
+                                        hstack, image, keystroke, label, label_,
+                                        red, vgrid, vstack, zstack)
 import qualified Monomer.Graphics.Lens as L
 import           Scene                 (backgroundImage, elements, text)
 import           Talking               (TalkWith, message, person)
@@ -54,14 +53,14 @@ drawUI _ engine = withKeyEvents $ vstack [ mapGrid engine
 
 withKeyEvents :: WidgetNode s AppEvent -> WidgetNode s AppEvent
 withKeyEvents =
-    keystroke $ map (second AppKeyboardInput)
-    [ (pack "Up", keyUp)
-    , (pack "Down", keyDown)
-    , (pack "Right", keyRight)
-    , (pack "Left", keyLeft)
-    , (pack "Enter", keyReturn)
-    , (pack "s", keyS)
-    , (pack "l", keyL)
+    keystroke $ map (\x -> (x, AppKeyboardInput x))
+    [ "Up"
+    , "Down"
+    , "Right"
+    , "Left"
+    , "Enter"
+    , "Ctrl-s"
+    , "Ctrl-l"
     ]
 
 mapGrid :: (WidgetModel s, WidgetEvent e) => Engine -> WidgetNode s e
