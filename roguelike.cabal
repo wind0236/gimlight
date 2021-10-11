@@ -57,22 +57,18 @@ executable roguelike
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:
-        array,
-        base,
-        binary,
-        containers,
-        data-default,
-        extra,
-        linear,
-        lens,
-        random,
-        transformers,
-        split,
-        vty,
-        astar,
-        unordered-containers,
-        monomer,
-        text,
+    build-depends:      astar
+                      , array
+                      , base
+                      , binary
+                      , data-default
+                      , lens
+                      , linear
+                      , monomer
+                      , random
+                      , split
+                      , text
+                      , transformers
+                      , unordered-containers
     hs-source-dirs:   app
     default-language: Haskell2010
