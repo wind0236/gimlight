@@ -23,11 +23,7 @@ handleEvent _ _ engine evt = case evt of
                                 AppInit            -> []
                                 AppSaveFinished    -> []
                                 AppLoadFinished newEngine  -> [Model newEngine]
-                                AppKeyboardInput k -> if k == keyS
-                                                          then [Task (do
-                                                                        save engine
-                                                                        return AppInit)]
-                                                          else handleKeyInput engine k
+                                AppKeyboardInput k -> handleKeyInput engine k
 
 handleKeyInput :: Engine -> KeyCode -> [AppEventResponse Engine AppEvent]
 handleKeyInput e@PlayerIsExploring{} k
