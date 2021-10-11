@@ -1,5 +1,5 @@
-module Dungeon.Predefined
-    ( firstEventMap
+module Dungeon.Predefined.Beaeve
+    ( beaeve
     ) where
 
 import           Data.Array              ((//))
@@ -10,8 +10,8 @@ import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile,
 import           Dungeon.Types           (Dungeon, dungeon)
 import           Linear.V2               (V2 (V2))
 
-firstEventMap :: Entity -> Dungeon
-firstEventMap player = dungeon (stringArrayToMap
+beaeve :: Entity -> Dungeon
+beaeve player = dungeon (stringArrayToMap
     [ "####################"
     , "#..................#"
     , "#..................#"

@@ -35,7 +35,7 @@ import           Dungeon.Map.Bool               (BoolMap)
 import           Dungeon.Map.Explored           (updateExploredMap)
 import           Dungeon.Map.Fov                (calculateFov)
 import           Dungeon.Map.Tile               (transparent, walkable)
-import           Dungeon.Predefined             (firstEventMap)
+import           Dungeon.Predefined.Beaeve      (beaeve)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (Dungeon, dungeon, entities,
                                                  explored, isAlive, isEnemy,
@@ -123,5 +123,5 @@ mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1
 initDungeon :: Dungeon
 initDungeon =
         let player = E.player $ V2 5 5
-            d = firstEventMap player
+            d = beaeve player
         in execState updateMap d
