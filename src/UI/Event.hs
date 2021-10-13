@@ -4,13 +4,19 @@ module UI.Event
     ( handleEvent
     ) where
 
-import           Control.Lens              ((%~), (&), (^.), (^?!))
+import           Control.Lens              ((%=), (%~), (&), (&~), (.=), (.~),
+                                            (^.), (^?!))
 import           Control.Monad             (unless)
-import           Control.Monad.Trans.State (execState, get)
+import           Control.Monad.Trans.State (execState, get, runState)
 import           Data.Text                 (Text)
+import           Dungeon                   (initialPlayerPositionCandidates,
+                                            popPlayer, updateMap)
+import           Dungeon.Types             (entities, position)
 import           Engine                    (Engine (HandlingScene, PlayerIsExploring, Talking, Title),
-                                            completeThisTurn, isGameOver,
-                                            newGameEngine, playerBumpAction)
+                                            completeThisTurn, currentDungeon,
+                                            isGameOver, newGameEngine,
+                                            otherDungeons, playerBumpAction,
+                                            popDungeonAtPlayerPosition)
 import           Linear.V2                 (V2 (V2))
 import           Monomer                   (AppEventResponse,
                                             EventResponse (Model, Task),
@@ -35,6 +41,7 @@ handleKeyInput e@PlayerIsExploring{} k
     | k == "Down"  = [Model $ handlePlayerMove (V2 0 (-1)) e]
     | k == "Ctrl-s"     = [Task (save e >> return AppSaveFinished)]
     | k == "Ctrl-l"     = [Task $ AppLoadFinished <$> load]
+    | k == "Enter" = [Model $ handleEnter e]
     | otherwise = []
 handleKeyInput (Talking _ after) k
     | k == "Enter" = [Model after]
@@ -58,6 +65,16 @@ handlePlayerMove offset e = flip execState e $ do
         case eng' of
             PlayerIsExploring {} -> completeThisTurn
             _                    -> return ()
+
+handleEnter :: Engine -> Engine
+handleEnter e = case popDungeonAtPlayerPosition e of
+                    (Just d, e') -> e' &~ do
+                        let newPosition = head $ initialPlayerPositionCandidates d
+                        let (p, currentDungeon') = runState popPlayer (e ^?! currentDungeon)
+                        otherDungeons %= (:) currentDungeon'
+                        currentDungeon .= (d & entities %~ (:) (p & position .~ newPosition))
+                        currentDungeon %= execState updateMap
+                    (Nothing, _) -> e
 
 nextSceneElementOrFinish :: Engine -> Engine
 nextSceneElementOrFinish (HandlingScene s after) = if length (s ^. elements) == 1

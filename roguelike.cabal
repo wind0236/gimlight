@@ -40,6 +40,7 @@ executable roguelike
                       , Dungeon.Map.Explored
                       , Dungeon.Map.Fov
                       , Dungeon.Predefined.Beaeve
+                      , Dungeon.Predefined.GlobalMap
                       , Dungeon.Types
                       , Dungeon.Size
                       , Dungeon.Generate

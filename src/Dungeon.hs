@@ -19,6 +19,8 @@ module Dungeon
     , aliveEnemies
     , mapWidthAndHeight
     , playerPosition
+    , initialPlayerPositionCandidates
+    , updateMap
     ) where
 
 import           Control.Lens                   ((%~), (&), (.=), (.~), (^.))
@@ -26,7 +28,7 @@ import           Control.Lens.Getter            (use)
 import           Control.Monad.Trans.State      (State, runState, state)
 import           Control.Monad.Trans.State.Lazy (execState, get)
 import           Coord                          (Coord)
-import           Data.Array.Base                (IArray (bounds))
+import           Data.Array.Base                (IArray (bounds), assocs)
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
 import           Dungeon.Entity                 (Entity)
@@ -98,6 +100,10 @@ popActorIf f = state $ \d ->
                       newEntities = take x xs ++ drop (x + 1) xs
                   in (Just entity, d & entities .~ newEntities)
         Nothing -> (Nothing, d)
+
+initialPlayerPositionCandidates :: Dungeon -> [Coord]
+initialPlayerPositionCandidates d = filter (\x -> x `notElem` map (^. position) (d ^. entities)) $
+    map fst $ filter snd $ assocs $ walkableFloor d
 
 walkableFloor :: Dungeon -> BoolMap
 walkableFloor d = fmap (^. walkable) (d ^. tileMap)

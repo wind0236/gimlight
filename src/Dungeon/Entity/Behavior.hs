@@ -28,19 +28,18 @@ import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, message)
 import           Talking                   (TalkWith, talkWith)
 
-data BumpResult = LogReturned [Message] | TalkStarted TalkWith
+data BumpResult = LogReturned [Message]
+                | TalkStarted TalkWith
+                | ExitToGlobalMap Entity
+                | Ok
 
-enemyAction :: Entity -> State Dungeon [Message]
+enemyAction :: Entity -> State Dungeon BumpResult
 enemyAction e = do
         u <- updatePathOrMelee e
 
         case u of
-            Right e' -> do
-                            m <- moveOrWait e'
-                            return $ case m of
-                                         Nothing -> []
-                                         Just x  -> [x]
-            Left m  -> return m
+            Right e' -> moveOrWait e'
+            Left m   -> return $ LogReturned m
 
 updatePathOrMelee :: Entity -> State Dungeon (Either [Message] Entity)
 updatePathOrMelee e = do
@@ -68,20 +67,19 @@ updatePathOrMelee e = do
                          return $ Right newEntity
             else return $ Right e
 
-moveOrWait :: Entity -> State Dungeon (Maybe Message)
+moveOrWait :: Entity -> State Dungeon BumpResult
 moveOrWait e =
         let p = e ^. ai . path
         in if null p
             then do
                     waitAction e
-                    return Nothing
+                    return Ok
             else let (nextCoord, remaining) = (head p, tail p)
                      offset = nextCoord - e ^. position
                      newAi = HostileEnemy { _path = remaining }
                      newEntity = e & ai .~ newAi
                  in do
                      moveAction newEntity offset
-                     return Nothing
 
 bumpAction :: Entity -> V2 Int -> State Dungeon BumpResult
 bumpAction src offset = do
@@ -99,7 +97,6 @@ bumpAction src offset = do
                     return $ TalkStarted $ talkWith e (e ^. talkMessage)
             Nothing -> do
                 moveAction src offset
-                return $ LogReturned []
 
 getBlockingEntityAtLocation :: Dungeon -> Coord -> Maybe Entity
 getBlockingEntityAtLocation d c = find (\x -> x ^. position == c && x ^. blocksMovement) (d ^. entities)
@@ -139,8 +136,10 @@ meleeAction src offset = do
                                     pushEntity x
                                     return [message $ msg ++ " but does not damage."]
 
-moveAction :: Entity -> V2 Int -> State Dungeon ()
-moveAction src offset = state $ \d -> ((), execState (pushEntity $ updatePosition d src offset) d)
+moveAction :: Entity -> V2 Int -> State Dungeon BumpResult
+moveAction src offset = state $ \d -> if isPositionInRange d $ (src ^. position) + offset
+                                        then (Ok, execState (pushEntity $ updatePosition d src offset) d)
+                                        else (ExitToGlobalMap src, d)
 
 waitAction :: Entity -> State Dungeon ()
 waitAction = pushEntity
@@ -158,9 +157,11 @@ nextPosition d src offset =
     where V2 width height = mapWidthAndHeight d
 
 movable :: Dungeon -> Coord -> Bool
-movable d c@(V2 x y) = case getBlockingEntityAtLocation d c of
+movable d c = case getBlockingEntityAtLocation d c of
                   Just _  -> False
-                  Nothing -> isPositionInRange && (d ^. tileMap) ! c ^. walkable
-    where isPositionInRange = let (V2 width height) = mapWidthAndHeight d
-                              in x >= 0 && x < width
-                              && y >= 0 && y < height
+                  Nothing -> isPositionInRange d c && (d ^. tileMap) ! c ^. walkable
+
+isPositionInRange :: Dungeon -> Coord -> Bool
+isPositionInRange d c = x >= 0 && x < width && y >= 0 && y < height
+    where V2 width height = mapWidthAndHeight d
+          V2 x y = c

@@ -34,6 +34,8 @@ module Dungeon.Types
     , talkMessage
     , walkingImagePath
     , standingImagePath
+    , positionOnGlobalMap
+    , isGlobalMap
     ) where
 
 import           Control.Lens         (makeLenses)
@@ -73,19 +75,23 @@ makeLenses ''Entity
 instance Binary Entity
 
 data Dungeon = Dungeon
-          { _tileMap  :: TileMap
-          , _visible  :: Fov
-          , _explored :: ExploredMap
-          , _entities :: [Entity]
+          { _tileMap             :: TileMap
+          , _visible             :: Fov
+          , _explored            :: ExploredMap
+          , _entities            :: [Entity]
+          , _positionOnGlobalMap :: Maybe Coord
+          , _isGlobalMap         :: Bool
           } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Dungeon
 instance Binary Dungeon
 
-dungeon :: TileMap -> [Entity] -> Dungeon
-dungeon t e = Dungeon { _tileMap = t
+dungeon :: TileMap -> [Entity] -> Maybe Coord -> Bool -> Dungeon
+dungeon t e p i = Dungeon { _tileMap = t
                       , _visible = initFov widthAndHeight
                       , _explored = initExploredMap widthAndHeight
                       , _entities = e
+                      , _positionOnGlobalMap = p
+                      , _isGlobalMap = i
                       }
     where widthAndHeight = snd (bounds t) + V2 1 1
 

@@ -7,6 +7,7 @@ module Dungeon.Map.Tile
     , Tile
     , wallTile
     , floorTile
+    , townTile
     , walkable
     , transparent
     , imagePath
@@ -43,3 +44,9 @@ floorTile = Tile { _walkable = True
                  , _transparent = True
                  , _imagePath = "images/grass.png"
                  }
+
+townTile :: Tile
+townTile = Tile { _walkable = True
+                , _transparent = True
+                , _imagePath = "images/town.png"
+                }

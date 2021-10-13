@@ -77,7 +77,7 @@ mapGrid engine = zstack (mapTiles engine:mapEntities engine) `styleBasic` [ widt
                                                                           ]
 
 mapTiles :: (WidgetModel s, WidgetEvent e) => Engine ->  WidgetNode s e
-mapTiles (PlayerIsExploring d _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` styles
+mapTiles (PlayerIsExploring d _ _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` styles
     where V2 bottomLeftX bottomLeftY = bottomLeftCoord d
           rows = [hgrid $ row y | y <- [bottomLeftY + tileRows - 1, bottomLeftY + tileRows - 2 .. bottomLeftY]]
           row y = [cell $ V2 x y | x <- [bottomLeftX .. bottomLeftX + tileColumns - 1]]
@@ -98,7 +98,7 @@ mapTiles (PlayerIsExploring d _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` 
 mapTiles _ = undefined
 
 mapEntities :: (WidgetModel s, WidgetEvent e) => Engine -> [WidgetNode s e]
-mapEntities (PlayerIsExploring d _ _) = mapMaybe entityToImage $ d ^. entities
+mapEntities (PlayerIsExploring d _ _ _) = mapMaybe entityToImage $ d ^. entities
     where leftPadding e = fromIntegral $ entityPositionOnDisplay e ^. _x * tileWidth
           topPadding e = fromIntegral $ mapDrawingHeight - (entityPositionOnDisplay e ^. _y + 1) * tileHeight
 

@@ -25,11 +25,13 @@ beaeve player = dungeon (stringArrayToMap
     , "#..................#"
     , "#..................#"
     , "#..................#"
-    , "####################"
+    , "#####...############"
     ])
     [ player
     , electria $ V2 4 5
     ]
+    (Just (V2 3 16))
+    False
 
 stringArrayToMap :: [String] -> TileMap
 stringArrayToMap list = allWallTiles (V2 width height) // [(V2 x y, tile c) | (y, row) <- zip [0..] list, (x, c) <- zip [0..] row]
