@@ -22,6 +22,7 @@ module Dungeon
     , initialPlayerPositionCandidates
     , updateMap
     , isGlobalMap
+    , isTown
     ) where
 
 import           Control.Lens                   ((%~), (&), (.=), (.~), (^.))
@@ -41,7 +42,7 @@ import           Dungeon.Map.Tile               (transparent, walkable)
 import           Dungeon.Predefined.Beaeve      (beaeve)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (Dungeon,
-                                                 DungeonKind (GlobalMap),
+                                                 DungeonKind (GlobalMap, Town),
                                                  dungeon, dungeonKind, entities,
                                                  explored, isAlive, isEnemy,
                                                  isPlayer, position, tileMap,
@@ -131,6 +132,9 @@ mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1
 
 isGlobalMap :: Dungeon -> Bool
 isGlobalMap d = (d ^. dungeonKind) == GlobalMap
+
+isTown :: Dungeon -> Bool
+isTown d = (d ^. dungeonKind) ==  Town
 
 initDungeon :: Dungeon
 initDungeon =

@@ -15,7 +15,7 @@ import           Data.Array                ((!))
 import           Data.List                 (find)
 import           Data.Maybe                (fromMaybe)
 import           Data.Text                 (append, pack)
-import           Dungeon                   (Dungeon, getPlayerEntity,
+import           Dungeon                   (Dungeon, getPlayerEntity, isTown,
                                             mapWidthAndHeight, popActorAt,
                                             pushEntity)
 import           Dungeon.Entity            (getHp, updateHp)
@@ -140,9 +140,9 @@ meleeAction src offset = do
                                     return [message $ msg `append` " but does not damage."]
 
 moveAction :: Entity -> V2 Int -> State Dungeon BumpResult
-moveAction src offset = state $ \d -> if isPositionInRange d $ src ^. position + offset
-                                        then (Ok, execState (pushEntity $ updatePosition d src offset) d)
-                                        else (ExitToGlobalMap src, d)
+moveAction src offset = state $ \d -> if not (isPositionInRange d (src ^. position + offset)) && isTown d
+                                        then (ExitToGlobalMap src, d)
+                                        else (Ok, execState (pushEntity $ updatePosition d src offset) d)
 
 waitAction :: Entity -> State Dungeon ()
 waitAction = pushEntity
