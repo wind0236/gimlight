@@ -25,10 +25,10 @@ getHp e = e ^. hp
 
 updateHp :: Entity -> Int -> Entity
 updateHp e newHp =
-        let newHpInRange = max 0 $ min (e ^. maxHp) newHp
-        in if newHpInRange == 0 && e ^. isAlive
-               then die e
-               else e & hp .~ newHpInRange
+    let newHpInRange = max 0 $ min (e ^. maxHp) newHp
+    in if newHpInRange == 0 && e ^. isAlive
+        then die e
+        else e & hp .~ newHpInRange
 
 die :: Entity -> Entity
 die e = e &~ do
