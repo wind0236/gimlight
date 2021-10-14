@@ -7,7 +7,7 @@ import           Dungeon.Entity          (Entity)
 import           Dungeon.Entity.Friendly (electria)
 import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile,
                                           wallTile)
-import           Dungeon.Types           (Dungeon, dungeon)
+import           Dungeon.Types           (Dungeon, DungeonKind (Town), dungeon)
 import           Linear.V2               (V2 (V2))
 
 beaeve :: Entity -> Dungeon
@@ -31,7 +31,7 @@ beaeve player = dungeon (stringArrayToMap
     , electria $ V2 4 5
     ]
     (Just (V2 3 16))
-    False
+    Town
 
 stringArrayToMap :: [String] -> TileMap
 stringArrayToMap list = allWallTiles (V2 width height) // [(V2 x y, tile c) | (y, row) <- zip [0..] list, (x, c) <- zip [0..] row]

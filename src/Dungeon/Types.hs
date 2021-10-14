@@ -11,6 +11,7 @@
 
 module Dungeon.Types
     ( Dungeon
+    , DungeonKind(..)
     , Entity
     , Ai(..)
     , path
@@ -35,7 +36,7 @@ module Dungeon.Types
     , walkingImagePath
     , standingImagePath
     , positionOnGlobalMap
-    , isGlobalMap
+    , dungeonKind
     ) where
 
 import           Control.Lens         (makeLenses)
@@ -75,25 +76,28 @@ data Entity = Actor
 makeLenses ''Entity
 instance Binary Entity
 
+data DungeonKind = Town | DungeonType | GlobalMap deriving (Show, Ord, Eq, Generic)
+instance Binary DungeonKind
+
 data Dungeon = Dungeon
           { _tileMap             :: TileMap
           , _visible             :: Fov
           , _explored            :: ExploredMap
           , _entities            :: [Entity]
           , _positionOnGlobalMap :: Maybe Coord
-          , _isGlobalMap         :: Bool
+          , _dungeonKind         :: DungeonKind
           } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Dungeon
 instance Binary Dungeon
 
-dungeon :: TileMap -> [Entity] -> Maybe Coord -> Bool -> Dungeon
-dungeon t e p i = Dungeon { _tileMap = t
-                      , _visible = initFov widthAndHeight
-                      , _explored = initExploredMap widthAndHeight
-                      , _entities = e
-                      , _positionOnGlobalMap = p
-                      , _isGlobalMap = i
-                      }
+dungeon :: TileMap -> [Entity] -> Maybe Coord -> DungeonKind -> Dungeon
+dungeon t e p d = Dungeon { _tileMap = t
+                          , _visible = initFov widthAndHeight
+                          , _explored = initExploredMap widthAndHeight
+                          , _entities = e
+                          , _positionOnGlobalMap = p
+                          , _dungeonKind = d
+                          }
     where widthAndHeight = snd (bounds t) + V2 1 1
 
 actor :: Coord -> Text -> Int -> Int -> Int -> Bool -> Bool -> Bool -> Bool -> Text -> Text -> Text -> Entity

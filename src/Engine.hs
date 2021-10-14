@@ -22,8 +22,8 @@ import           Dungeon.Entity.Behavior        (BumpResult (..), bumpAction,
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
-import           Dungeon.Types                  (entities, isGlobalMap, maxHp,
-                                                 position, positionOnGlobalMap)
+import           Dungeon.Types                  (entities, maxHp, position,
+                                                 positionOnGlobalMap)
 import           GHC.Generics                   (Generic)
 import           Linear.V2                      (V2)
 import           Log                            (MessageLog, addMessage,
@@ -107,7 +107,7 @@ playerBumpAction offset = do
             ExitToGlobalMap p -> do
                 otherDungeons %= (:) newDungeon
                 let newPosition = newDungeon ^. positionOnGlobalMap
-                let g = find (^. isGlobalMap) (e ^?! otherDungeons)
+                let g = find D.isGlobalMap (e ^?! otherDungeons)
                 let newPlayer = p & position .~ case newPosition of
                                                     Just pos -> pos
                                                     Nothing  -> error "whooops."

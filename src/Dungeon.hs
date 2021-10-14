@@ -21,6 +21,7 @@ module Dungeon
     , playerPosition
     , initialPlayerPositionCandidates
     , updateMap
+    , isGlobalMap
     ) where
 
 import           Control.Lens                   ((%~), (&), (.=), (.~), (^.))
@@ -39,7 +40,9 @@ import           Dungeon.Map.Fov                (calculateFov)
 import           Dungeon.Map.Tile               (transparent, walkable)
 import           Dungeon.Predefined.Beaeve      (beaeve)
 import qualified Dungeon.Turn                   as DT
-import           Dungeon.Types                  (Dungeon, dungeon, entities,
+import           Dungeon.Types                  (Dungeon,
+                                                 DungeonKind (GlobalMap),
+                                                 dungeon, dungeonKind, entities,
                                                  explored, isAlive, isEnemy,
                                                  isPlayer, position, tileMap,
                                                  visible)
@@ -125,6 +128,9 @@ enemies d = filter (^. isEnemy) $ d ^. entities
 
 mapWidthAndHeight :: Dungeon -> V2 Int
 mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1
+
+isGlobalMap :: Dungeon -> Bool
+isGlobalMap d = (d ^. dungeonKind) == GlobalMap
 
 initDungeon :: Dungeon
 initDungeon =
