@@ -140,8 +140,8 @@ tileWidth = 48
 tileHeight = 48
 
 tileColumns, tileRows :: Int
-tileColumns = 19
-tileRows = 11
+tileColumns = 23
+tileRows = 13
 
 windowWidth, windowHeight :: Int
 windowWidth = 1280
