@@ -18,6 +18,7 @@ import qualified Dungeon                        as D
 import qualified Dungeon.Entity                 as E
 import           Dungeon.Entity.Behavior        (BumpResult (..), bumpAction,
                                                  enemyAction)
+import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (entities, isGlobalMap, maxHp,
@@ -28,6 +29,7 @@ import           Log                            (MessageLog, addMessage,
                                                  addMessages)
 import qualified Log                            as L
 import           Scene                          (Scene, gameStartScene)
+import           System.Random                  (getStdGen)
 import           Talking                        (TalkWith)
 
 data Engine = PlayerIsExploring
@@ -144,12 +146,18 @@ popDungeonAt p e = let xs = e ^. otherDungeons
                                     in (Just d, e & otherDungeons .~ newOtherDungeons)
                           Nothing -> (Nothing, e)
 
-newGameEngine :: Engine
-newGameEngine = HandlingScene { _scene = gameStartScene
-                           , _afterFinish = initPlayerIsExploring
-                           }
-    where initPlayerIsExploring = PlayerIsExploring { _currentDungeon = initDungeon
-                                                    , _otherDungeons = [globalMap]
-                                                    , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
-                                                    , _isGameOver = False
-                                                    }
+newGameEngine :: IO Engine
+newGameEngine = do
+    g <- getStdGen
+
+    let bats = batsDungeon g
+        initPlayerIsExploring = PlayerIsExploring
+            { _currentDungeon = initDungeon
+            , _otherDungeons = [globalMap, bats]
+            , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
+            , _isGameOver = False
+            }
+    return HandlingScene
+        { _scene = gameStartScene
+        , _afterFinish = initPlayerIsExploring
+        }

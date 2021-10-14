@@ -49,7 +49,7 @@ handleKeyInput (Talking _ after) k
 handleKeyInput e@HandlingScene{} k
     | k == "Enter" = [Model $ nextSceneElementOrFinish e]
 handleKeyInput Title k
-    | k == "n" = [Model newGameEngine]
+    | k == "n" = [Task $ AppLoadFinished <$> newGameEngine]
     | k == "l" = [Task $ AppLoadFinished <$> load]
     | k == "q" = [exitApplication]
 handleKeyInput _ _ = []

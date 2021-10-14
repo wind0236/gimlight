@@ -25,6 +25,7 @@ executable roguelike
                       , Dungeon.Map.Fov
                       , Dungeon.Map.Tile
                       , Dungeon.PathFinder
+                      , Dungeon.Predefined.BatsCave
                       , Dungeon.Predefined.Beaeve
                       , Dungeon.Predefined.GlobalMap
                       , Dungeon.Size
