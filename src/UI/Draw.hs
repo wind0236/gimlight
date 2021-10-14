@@ -110,15 +110,15 @@ mapEntities (PlayerIsExploring d _ _ _) = mapMaybe entityToImage $ d ^. entities
                                  isVisible = (d ^. visible) ! (e ^. position)
                              in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
 
-          entityToImage e = guard (isEntityDrawed e) >> return (image (pack $ e ^. DT.walkingImagePath) `styleBasic` style e)
+          entityToImage e = guard (isEntityDrawed e) >> return (image (e ^. DT.walkingImagePath) `styleBasic` style e)
 mapEntities _                         = undefined
 
 talkingWindow :: TalkWith -> WidgetNode Engine AppEvent
-talkingWindow tw = hstack [ image (pack $ tw ^. person . standingImagePath)
+talkingWindow tw = hstack [ image (tw ^. person . standingImagePath)
                           , window
                           ]
     where window = zstack [ image "images/talking_window.png"
-                          , label (pack $ tw ^. message) `styleBasic` [textColor red, textSize 16, paddingL 50]
+                          , label (tw ^. message) `styleBasic` [textColor red, textSize 16, paddingL 50]
                           ]
 
 topRightCoord :: Dungeon -> Coord

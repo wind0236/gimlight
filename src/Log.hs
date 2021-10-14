@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Log
     ( MessageLog
     , emptyLog
@@ -5,17 +7,18 @@ module Log
     , message
     , addMessage
     , addMaybeMessage
-    , messageToStringList
-    , messageToAttrNameAndStringList
+    , messageToTextList
+    , messageToAttrNameAndTextList
     , height
     , width
     , emptyMessage
     , addMessages
     ) where
 
-import           Data.List.Split (splitOn)
+import           Data.Text (Text, append, pack, splitOn)
+import qualified Data.Text as T
 
-type Message = String
+type Message = Text
 
 type MessageLog = [Message]
 
@@ -27,7 +30,7 @@ emptyLog :: MessageLog
 emptyLog = take height $ replicate height emptyMessage
 
 emptyMessage :: Message
-emptyMessage = replicate width ' '
+emptyMessage = pack $ replicate width ' '
 
 addMessages :: [Message] -> MessageLog -> MessageLog
 addMessages xs l = foldl (flip addMessage) l xs
@@ -39,23 +42,23 @@ addMaybeMessage :: Maybe Message -> MessageLog -> MessageLog
 addMaybeMessage (Just m) l = addMessage m l
 addMaybeMessage Nothing l  = l
 
-message :: String -> Message
+message :: Text -> Message
 message text = text
 
-messageToAttrNameAndStringList :: Message -> [String]
-messageToAttrNameAndStringList m =  take height $ messageToStringList m
+messageToAttrNameAndTextList :: Message -> [Text]
+messageToAttrNameAndTextList m =  take height $ messageToTextList m
 
-messageToStringList :: Message -> [String]
-messageToStringList text = map (\x -> x ++ replicate (width - length x) ' ') $ concatMap wrapString $ splitStringOnNewLine text
+messageToTextList :: Message -> [Text]
+messageToTextList text = map (\x -> x `append` pack (replicate (width - T.length x) ' ')) $ concatMap wrapText $ splitTextOnNewLine text
 
-wrapString :: String -> [String]
-wrapString = wrapStringAcc []
+wrapText :: Text -> [Text]
+wrapText = wrapTextAcc []
 
-wrapStringAcc :: [String] -> String -> [String]
-wrapStringAcc s "" = s
-wrapStringAcc list str = wrapStringAcc newList newStr
-    where (newLine, newStr) = splitAt width str
+wrapTextAcc :: [Text] -> Text -> [Text]
+wrapTextAcc s "" = s
+wrapTextAcc list str = wrapTextAcc newList newStr
+    where (newLine, newStr) = T.splitAt width str
           newList = list ++ [newLine]
 
-splitStringOnNewLine :: String -> [String]
-splitStringOnNewLine = splitOn "\n"
+splitTextOnNewLine :: Text -> [Text]
+splitTextOnNewLine = splitOn "\n"

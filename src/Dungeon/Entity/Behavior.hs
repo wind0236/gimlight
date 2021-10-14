@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Dungeon.Entity.Behavior
     ( bumpAction
     , meleeAction
@@ -12,6 +14,7 @@ import           Coord                     (Coord)
 import           Data.Array                ((!))
 import           Data.List                 (find)
 import           Data.Maybe                (fromMaybe)
+import           Data.Text                 (append, pack)
 import           Dungeon                   (Dungeon, getPlayerEntity,
                                             mapWidthAndHeight, popActorAt,
                                             pushEntity)
@@ -78,7 +81,7 @@ moveOrWait e =
                      offset = nextCoord - e ^. position
                      newAi = HostileEnemy { _path = remaining }
                      newEntity = e & ai .~ newAi
-                 in do
+                 in
                      moveAction newEntity offset
 
 bumpAction :: Entity -> V2 Int -> State Dungeon BumpResult
@@ -95,7 +98,7 @@ bumpAction src offset = do
                 | otherwise -> do
                     pushEntity src
                     return $ TalkStarted $ talkWith e (e ^. talkMessage)
-            Nothing -> do
+            Nothing ->
                 moveAction src offset
 
 getBlockingEntityAtLocation :: Dungeon -> Coord -> Maybe Entity
@@ -120,13 +123,13 @@ meleeAction src offset = do
                 pushEntity x
                 return []
             Just x -> let damage = src ^. power - x ^. defence
-                          msg = src ^. name ++ " attacks " ++ x ^. name
+                          msg = (src ^. name) `append` " attacks " `append` (x ^. name)
                         in if damage > 0
                             then do
                                 let newHp = getHp x - damage
                                     newEntity = updateHp x newHp
-                                    damagedMessage = msg ++ " for " ++ show damage ++ " hit points."
-                                    deathMessage = if x ^. isPlayer then "You died!" else x ^. name ++ " is dead!"
+                                    damagedMessage = msg `append` pack " for " `append` pack (show damage) `append` " hit points."
+                                    deathMessage = if x ^. isPlayer then "You died!" else (x ^. name) `append` " is dead!"
                                     messages = if newHp <= 0 then [damagedMessage, deathMessage] else [damagedMessage]
                                 pushEntity src
                                 pushEntity newEntity
@@ -134,10 +137,10 @@ meleeAction src offset = do
                             else do
                                     pushEntity src
                                     pushEntity x
-                                    return [message $ msg ++ " but does not damage."]
+                                    return [message $ msg `append` " but does not damage."]
 
 moveAction :: Entity -> V2 Int -> State Dungeon BumpResult
-moveAction src offset = state $ \d -> if isPositionInRange d $ (src ^. position) + offset
+moveAction src offset = state $ \d -> if isPositionInRange d $ src ^. position + offset
                                         then (Ok, execState (pushEntity $ updatePosition d src offset) d)
                                         else (ExitToGlobalMap src, d)
 

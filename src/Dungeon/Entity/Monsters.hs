@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Dungeon.Entity.Monsters
     ( orc
     , troll

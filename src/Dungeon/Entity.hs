@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Dungeon.Entity
     ( Entity
     , player
@@ -8,10 +10,11 @@ module Dungeon.Entity
 
 import           Control.Lens  ((&), (&~), (.=), (.~), (^.))
 import           Coord         (Coord)
+import           Data.Text     (Text, append)
 import           Dungeon.Types (Entity, actor, blocksMovement, hp, isAlive,
                                 maxHp, name)
 
-monster :: Coord -> String -> Int -> Int -> Int -> String -> Entity
+monster :: Coord -> Text -> Int -> Int -> Int -> Text -> Entity
 monster position name' maxHp' defence power walking = actor position name' maxHp' defence power True True False True "" walking "images/sample_standing_picture.png"
 
 player :: Coord -> Entity
@@ -30,5 +33,5 @@ updateHp e newHp =
 die :: Entity -> Entity
 die e = e &~ do
     blocksMovement .= False
-    name .= "remains of " ++ (e ^. name)
+    name .= "remains of " `append` (e ^. name)
     isAlive .= False

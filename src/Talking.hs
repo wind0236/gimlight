@@ -10,15 +10,16 @@ module Talking
 
 import           Control.Lens  (makeLenses)
 import           Data.Binary   (Binary)
+import           Data.Text     (Text)
 import           Dungeon.Types (Entity)
 import           GHC.Generics  (Generic)
 
 data TalkWith = TalkWith
               { _person  :: Entity
-              , _message :: String
+              , _message :: Text
               } deriving (Show, Ord, Eq, Generic)
 makeLenses ''TalkWith
 instance Binary TalkWith
 
-talkWith :: Entity -> String -> TalkWith
+talkWith :: Entity -> Text -> TalkWith
 talkWith = TalkWith

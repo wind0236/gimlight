@@ -42,6 +42,7 @@ import           Control.Lens         (makeLenses)
 import           Coord                (Coord)
 import           Data.Array           (bounds)
 import           Data.Binary          (Binary)
+import           Data.Text            (Text)
 import           Dungeon.Map.Explored (ExploredMap, initExploredMap)
 import           Dungeon.Map.Fov      (Fov, initFov)
 import           Dungeon.Map.Tile     (TileMap)
@@ -57,7 +58,7 @@ instance Binary Ai
 
 data Entity = Actor
             { _position          :: Coord
-            , _name              :: String
+            , _name              :: Text
             , _hp                :: Int
             , _maxHp             :: Int
             , _defence           :: Int
@@ -67,9 +68,9 @@ data Entity = Actor
             , _blocksMovement    :: Bool
             , _isPlayer          :: Bool
             , _isEnemy           :: Bool
-            , _talkMessage       :: String
-            , _walkingImagePath  :: String
-            , _standingImagePath :: String
+            , _talkMessage       :: Text
+            , _walkingImagePath  :: Text
+            , _standingImagePath :: Text
             } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Entity
 instance Binary Entity
@@ -95,7 +96,7 @@ dungeon t e p i = Dungeon { _tileMap = t
                       }
     where widthAndHeight = snd (bounds t) + V2 1 1
 
-actor :: Coord -> String -> Int -> Int -> Int -> Bool -> Bool -> Bool -> Bool -> String -> String -> String -> Entity
+actor :: Coord -> Text -> Int -> Int -> Int -> Bool -> Bool -> Bool -> Bool -> Text -> Text -> Text -> Entity
 actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isEnemy' talkMessage' walkingImagePath' standingImagePath'=
         Actor { _position = position'
               , _name = name'
