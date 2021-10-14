@@ -14,5 +14,5 @@ roomMaxSize = 10
 -- Must not be less than `max tileColumns tileWidth`
 --
 -- TODO: Calculate it.
-minSize = 20
+minSize = 25
 maxSize = 100
