@@ -25,12 +25,11 @@ import           Dungeon.PathFinder        (getPathTo)
 import           Dungeon.Types             (BehaviorStructure (HostileEnemy, _path),
                                             Entity, behaviorStructure,
                                             blocksMovement, defence, entities,
-                                            isAlive, isEnemy, name, path,
-                                            position, power, talkMessage,
+                                            isAlive, isEnemy, isPlayer, name,
+                                            path, position, power, talkMessage,
                                             tileMap, visible)
 import           Linear.V2                 (V2 (..), _x, _y)
-import           Log                       (Message, MessageLog, deathMessage,
-                                            message)
+import           Log                       (Message, MessageLog, message)
 import           Talking                   (TalkWith, talkWith)
 
 data BumpResult = TalkStarted TalkWith
@@ -128,7 +127,8 @@ meleeAction src offset = do
                                 let newHp = getHp x - damage
                                     newEntity = updateHp x newHp
                                     damagedMessage = msg `append` pack " for " `append` pack (show damage) `append` " hit points."
-                                    messages = if newHp <= 0 then [damagedMessage, deathMessage x] else [damagedMessage]
+                                    deathMessage = if x ^. isPlayer then "You died!" else (x ^. name) `append` " is dead!"
+                                    messages = if newHp <= 0 then [damagedMessage, deathMessage] else [damagedMessage]
                                 pushEntity src
                                 pushEntity newEntity
                                 return $ fmap message messages

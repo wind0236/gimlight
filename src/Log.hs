@@ -2,7 +2,6 @@
 
 module Log
     ( MessageLog
-    , deathMessage
     , emptyLog
     , Message
     , message
@@ -16,10 +15,8 @@ module Log
     , addMessages
     ) where
 
-import           Control.Lens  ((^.))
-import           Data.Text     (Text, append, pack, splitOn)
-import qualified Data.Text     as T
-import           Dungeon.Types (Entity, isPlayer, name)
+import           Data.Text (Text, append, pack, splitOn)
+import qualified Data.Text as T
 
 type Message = Text
 
@@ -28,11 +25,6 @@ type MessageLog = [Message]
 width, height :: Int
 width = 80
 height = 5
-
-deathMessage :: Entity -> Message
-deathMessage e = if e ^. isPlayer
-                     then "You died!"
-                     else (e ^. name) `append` " is dead!"
 
 emptyLog :: MessageLog
 emptyLog = take height $ replicate height emptyMessage
