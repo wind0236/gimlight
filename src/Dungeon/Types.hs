@@ -13,7 +13,7 @@ module Dungeon.Types
     ( Dungeon
     , DungeonKind(..)
     , Entity
-    , Ai(..)
+    , BehaviorStructure(..)
     , path
     , dungeon
     , actor
@@ -27,7 +27,7 @@ module Dungeon.Types
     , maxHp
     , defence
     , power
-    , ai
+    , behaviorStructure
     , isAlive
     , blocksMovement
     , isPlayer
@@ -51,11 +51,10 @@ import           GHC.Generics         (Generic)
 import           Linear.V2            (V2 (V2))
 
 
-newtype Ai = HostileEnemy
-             { _path :: [Coord]
-             } deriving (Show, Ord, Eq, Generic)
-makeLenses ''Ai
-instance Binary Ai
+newtype BehaviorStructure = HostileEnemy { _path :: [Coord] }
+                            deriving (Show, Ord, Eq, Generic)
+makeLenses ''BehaviorStructure
+instance Binary BehaviorStructure
 
 data Entity = Actor
             { _position          :: Coord
@@ -64,7 +63,7 @@ data Entity = Actor
             , _maxHp             :: Int
             , _defence           :: Int
             , _power             :: Int
-            , _ai                :: Ai
+            , _behaviorStructure :: BehaviorStructure
             , _isAlive           :: Bool
             , _blocksMovement    :: Bool
             , _isPlayer          :: Bool
@@ -108,7 +107,7 @@ actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isE
               , _maxHp = hp'
               , _defence = defence'
               , _power = power'
-              , _ai = hostileEnemy
+              , _behaviorStructure = hostileEnemy
               , _isAlive = isAlive'
               , _blocksMovement = blocksMovement'
               , _isPlayer = isPlayer'
@@ -118,5 +117,5 @@ actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isE
               , _standingImagePath = standingImagePath'
               }
 
-hostileEnemy :: Ai
+hostileEnemy :: BehaviorStructure
 hostileEnemy = HostileEnemy { _path = [] }

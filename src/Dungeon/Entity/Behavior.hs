@@ -22,10 +22,11 @@ import           Dungeon                   (Dungeon, getPlayerEntity, isTown,
 import           Dungeon.Entity            (getHp, updateHp)
 import           Dungeon.Map.Tile          (walkable)
 import           Dungeon.PathFinder        (getPathTo)
-import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
-                                            ai, blocksMovement, defence,
-                                            entities, isAlive, isEnemy, name,
-                                            path, position, power, talkMessage,
+import           Dungeon.Types             (BehaviorStructure (HostileEnemy, _path),
+                                            Entity, behaviorStructure,
+                                            blocksMovement, defence, entities,
+                                            isAlive, isEnemy, name, path,
+                                            position, power, talkMessage,
                                             tileMap, visible)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, MessageLog, deathMessage,
@@ -64,23 +65,23 @@ updatePathOrMelee e = do
                      else do
                          newPath <- getPathTo pos (p ^. position)
 
-                         let newAi = HostileEnemy { _path = fromMaybe [] newPath}
-                             newEntity = e & ai .~ newAi
+                         let behaviorStructure' = HostileEnemy { _path = fromMaybe [] newPath}
+                             newEntity = e & behaviorStructure .~ behaviorStructure'
 
                          return $ Right newEntity
             else return $ Right e
 
 moveOrWait :: Entity -> State Dungeon (BumpResult, MessageLog)
 moveOrWait e =
-        let p = e ^. ai . path
+        let p = e ^. behaviorStructure . path
         in if null p
             then do
                     waitAction e
                     return (Ok, [])
             else let (nextCoord, remaining) = (head p, tail p)
                      offset = nextCoord - e ^. position
-                     newAi = HostileEnemy { _path = remaining }
-                     newEntity = e & ai .~ newAi
+                     behaviorStructure' = HostileEnemy { _path = remaining }
+                     newEntity = e & behaviorStructure .~ behaviorStructure'
                  in (, []) <$> moveAction newEntity offset
 
 bumpAction :: Entity -> V2 Int -> State Dungeon (BumpResult, MessageLog)
