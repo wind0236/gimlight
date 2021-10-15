@@ -27,21 +27,21 @@ import           Dungeon.Types             (Ai (HostileEnemy, _path), Entity,
                                             path, position, power, talkMessage,
                                             tileMap, visible)
 import           Linear.V2                 (V2 (..), _x, _y)
-import           Log                       (Message, deathMessage, message)
+import           Log                       (Message, MessageLog, deathMessage,
+                                            message)
 import           Talking                   (TalkWith, talkWith)
 
-data BumpResult = LogReturned [Message]
-                | TalkStarted TalkWith
+data BumpResult = TalkStarted TalkWith
                 | ExitToGlobalMap Entity
                 | Ok
 
-enemyAction :: Entity -> State Dungeon BumpResult
+enemyAction :: Entity -> State Dungeon (BumpResult, MessageLog)
 enemyAction e = do
         u <- updatePathOrMelee e
 
         case u of
             Right e' -> moveOrWait e'
-            Left m   -> return $ LogReturned m
+            Left m   -> return (Ok, m)
 
 updatePathOrMelee :: Entity -> State Dungeon (Either [Message] Entity)
 updatePathOrMelee e = do
@@ -69,13 +69,13 @@ updatePathOrMelee e = do
                          return $ Right newEntity
             else return $ Right e
 
-moveOrWait :: Entity -> State Dungeon BumpResult
+moveOrWait :: Entity -> State Dungeon (BumpResult, MessageLog)
 moveOrWait e =
         let p = e ^. ai . path
         in if null p
             then do
                     waitAction e
-                    return Ok
+                    return (Ok, [])
             else let (nextCoord, remaining) = (head p, tail p)
                      offset = nextCoord - e ^. position
                      newAi = HostileEnemy { _path = remaining }
@@ -83,7 +83,7 @@ moveOrWait e =
                  in
                      moveAction newEntity offset
 
-bumpAction :: Entity -> V2 Int -> State Dungeon BumpResult
+bumpAction :: Entity -> V2 Int -> State Dungeon (BumpResult, MessageLog)
 bumpAction src offset = do
         d <- get
 
@@ -93,10 +93,10 @@ bumpAction src offset = do
             Just e
                 | e ^. isEnemy -> do
                     logs <- meleeAction src offset
-                    return $ LogReturned logs
+                    return (Ok, logs)
                 | otherwise -> do
                     pushEntity src
-                    return $ TalkStarted $ talkWith e (e ^. talkMessage)
+                    return (TalkStarted $ talkWith e (e ^. talkMessage), [])
             Nothing ->
                 moveAction src offset
 
@@ -137,10 +137,10 @@ meleeAction src offset = do
                                     pushEntity x
                                     return [message $ msg `append` " but does not damage."]
 
-moveAction :: Entity -> V2 Int -> State Dungeon BumpResult
+moveAction :: Entity -> V2 Int -> State Dungeon (BumpResult, MessageLog)
 moveAction src offset = state $ \d -> if not (isPositionInRange d (src ^. position + offset)) && isTown d
-                                        then (ExitToGlobalMap src, d)
-                                        else (Ok, execState (pushEntity $ updatePosition d src offset) d)
+                                        then ((ExitToGlobalMap src, []), d)
+                                        else ((Ok, []), execState (pushEntity $ updatePosition d src offset) d)
 
 waitAction :: Entity -> State Dungeon ()
 waitAction = pushEntity

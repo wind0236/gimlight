@@ -76,16 +76,13 @@ handleEnemyTurn c = do
         e <- get
         let dg = e ^?! currentDungeon
 
-        let (result, dg') = flip runState dg $ do
+        let ((_, l), dg') = flip runState dg $ do
                 e' <- D.popActorAt c
                 case e' of
                     Just e'' -> enemyAction e''
                     Nothing  -> error "No such enemy."
 
-        messageLog %= addMessages (case result of
-                                      LogReturned m -> m
-                                      Ok            -> []
-                                      _             -> error "unreachable")
+        messageLog %= addMessages l
         currentDungeon .= dg'
 
 playerBumpAction :: V2 Int -> State Engine ()
@@ -93,14 +90,13 @@ playerBumpAction offset = do
         e <- get
         let dg = e ^?! currentDungeon
 
-        let (result, newDungeon) = flip runState dg $ do
+        let ((result, l), newDungeon) = flip runState dg $ do
                 e' <- D.popPlayer
                 bumpAction e' offset
 
+        messageLog %= addMessages l
+
         case result of
-            LogReturned x -> do
-                messageLog %= addMessages x
-                currentDungeon .= newDungeon
             TalkStarted tw -> put $ Talking { _talk = tw
                                             , _afterTalking = e
                                             }
