@@ -5,7 +5,7 @@ module Dungeon.Entity.Behavior
     ( bumpAction
     , meleeAction
     , waitAction
-    , enemyAction
+    , npcAction
     , BumpResult(..)
     ) where
 
@@ -37,8 +37,8 @@ data BumpResult = TalkStarted TalkWith
                 | ExitToGlobalMap Entity
                 | Ok
 
-enemyAction :: Entity -> State Dungeon (BumpResult, MessageLog)
-enemyAction e = do
+npcAction :: Entity -> State Dungeon (BumpResult, MessageLog)
+npcAction e = do
         u <- updatePathOrMelee e
 
         case u of

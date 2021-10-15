@@ -16,7 +16,7 @@ module Dungeon
     , walkableFloor
     , getPlayerEntity
     , enemyCoords
-    , aliveEnemies
+    , aliveNpcs
     , mapWidthAndHeight
     , playerPosition
     , initialPlayerPositionCandidates
@@ -120,8 +120,11 @@ enemyCoords d = map (^. position) $ filter (not . isPlayer) $ d ^. entities
 isPlayerAlive :: Dungeon -> Bool
 isPlayerAlive d = getPlayerEntity d ^. isAlive
 
-aliveEnemies :: Dungeon -> [Entity]
-aliveEnemies d = filter (^. isAlive) $ monsters d
+aliveNpcs :: Dungeon -> [Entity]
+aliveNpcs d = filter (^. isAlive) $ npcs d
+
+npcs :: Dungeon -> [Entity]
+npcs d = filter (not . isPlayer) $ d ^. entities
 
 monsters :: Dungeon -> [Entity]
 monsters d = filter isMonster $ d ^. entities

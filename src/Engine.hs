@@ -12,13 +12,13 @@ import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
 import           Data.List                      (find, findIndex)
-import           Dungeon                        (Dungeon, aliveEnemies,
+import           Dungeon                        (Dungeon, aliveNpcs,
                                                  getPlayerEntity, initDungeon,
                                                  mapWidthAndHeight)
 import qualified Dungeon                        as D
 import qualified Dungeon.Entity                 as E
 import           Dungeon.Entity.Behavior        (BumpResult (..), bumpAction,
-                                                 enemyAction)
+                                                 npcAction)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
@@ -51,7 +51,7 @@ instance Binary Engine
 
 completeThisTurn :: State Engine ()
 completeThisTurn = do
-        handleEnemyTurns
+        handleNpcTurns
 
         e <- get
         let dg = e ^?! currentDungeon
@@ -62,24 +62,24 @@ completeThisTurn = do
 
         currentDungeon .= newD
 
-handleEnemyTurns :: State Engine ()
-handleEnemyTurns = do
+handleNpcTurns :: State Engine ()
+handleNpcTurns = do
         e <- get
         let dg = e ^?! currentDungeon
 
-        let xs = aliveEnemies dg
+        let xs = aliveNpcs dg
 
-        mapM_ (handleEnemyTurn . (^. position)) xs
+        mapM_ (handleNpcTurn . (^. position)) xs
 
-handleEnemyTurn :: Coord -> State Engine ()
-handleEnemyTurn c = do
+handleNpcTurn :: Coord -> State Engine ()
+handleNpcTurn c = do
         e <- get
         let dg = e ^?! currentDungeon
 
         let ((_, l), dg') = flip runState dg $ do
                 e' <- D.popActorAt c
                 case e' of
-                    Just e'' -> enemyAction e''
+                    Just e'' -> npcAction e''
                     Nothing  -> error "No such enemy."
 
         messageLog %= addMessages l
