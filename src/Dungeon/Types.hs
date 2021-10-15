@@ -30,13 +30,13 @@ module Dungeon.Types
     , behaviorStructure
     , isAlive
     , blocksMovement
-    , isPlayer
-    , isEnemy
     , talkMessage
     , walkingImagePath
     , standingImagePath
     , positionOnGlobalMap
     , dungeonKind
+    , actorKind
+    , ActorKind(..)
     ) where
 
 import           Control.Lens         (makeLenses)
@@ -56,6 +56,9 @@ newtype BehaviorStructure = HostileEnemy { _path :: [Coord] }
 makeLenses ''BehaviorStructure
 instance Binary BehaviorStructure
 
+data ActorKind = Player | FriendlyNpc | Monster deriving (Show, Ord, Eq, Generic)
+instance Binary ActorKind
+
 data Entity = Actor
             { _position          :: Coord
             , _name              :: Text
@@ -66,8 +69,7 @@ data Entity = Actor
             , _behaviorStructure :: BehaviorStructure
             , _isAlive           :: Bool
             , _blocksMovement    :: Bool
-            , _isPlayer          :: Bool
-            , _isEnemy           :: Bool
+            , _actorKind         :: ActorKind
             , _talkMessage       :: Text
             , _walkingImagePath  :: Text
             , _standingImagePath :: Text
@@ -99,8 +101,8 @@ dungeon t e p d = Dungeon { _tileMap = t
                           }
     where widthAndHeight = snd (bounds t) + V2 1 1
 
-actor :: Coord -> Text -> Int -> Int -> Int -> Bool -> Bool -> Bool -> Bool -> Text -> Text -> Text -> Entity
-actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isEnemy' talkMessage' walkingImagePath' standingImagePath'=
+actor :: Coord -> Text -> Int -> Int -> Int -> Bool -> Bool -> ActorKind -> Text -> Text -> Text -> Entity
+actor position' name' hp' defence' power' isAlive' blocksMovement' ak talkMessage' walkingImagePath' standingImagePath'=
         Actor { _position = position'
               , _name = name'
               , _hp = hp'
@@ -110,11 +112,10 @@ actor position' name' hp' defence' power' isAlive' blocksMovement' isPlayer' isE
               , _behaviorStructure = hostileEnemy
               , _isAlive = isAlive'
               , _blocksMovement = blocksMovement'
-              , _isPlayer = isPlayer'
-              , _isEnemy = isEnemy'
               , _talkMessage = talkMessage'
               , _walkingImagePath = walkingImagePath'
               , _standingImagePath = standingImagePath'
+              , _actorKind = ak
               }
 
 hostileEnemy :: BehaviorStructure

@@ -19,15 +19,16 @@ import           Data.Text                 (append, pack)
 import           Dungeon                   (Dungeon, getPlayerEntity, isTown,
                                             mapWidthAndHeight, popActorAt,
                                             pushEntity)
-import           Dungeon.Entity            (getHp, updateHp)
+import           Dungeon.Entity            (getHp, isMonster, isPlayer,
+                                            updateHp)
 import           Dungeon.Map.Tile          (walkable)
 import           Dungeon.PathFinder        (getPathTo)
 import           Dungeon.Types             (BehaviorStructure (HostileEnemy, _path),
                                             Entity, behaviorStructure,
                                             blocksMovement, defence, entities,
-                                            isAlive, isEnemy, isPlayer, name,
-                                            path, position, power, talkMessage,
-                                            tileMap, visible)
+                                            isAlive, name, path, position,
+                                            power, talkMessage, tileMap,
+                                            visible)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, MessageLog, message)
 import           Talking                   (TalkWith, talkWith)
@@ -91,7 +92,7 @@ bumpAction src offset = do
 
         case x of
             Just e
-                | e ^. isEnemy -> do
+                | isMonster e -> do
                     logs <- meleeAction src offset
                     return (Ok, logs)
                 | otherwise -> do
@@ -127,7 +128,7 @@ meleeAction src offset = do
                                 let newHp = getHp x - damage
                                     newEntity = updateHp x newHp
                                     damagedMessage = msg `append` pack " for " `append` pack (show damage) `append` " hit points."
-                                    deathMessage = if x ^. isPlayer then "You died!" else (x ^. name) `append` " is dead!"
+                                    deathMessage = if isPlayer x then "You died!" else (x ^. name) `append` " is dead!"
                                     messages = if newHp <= 0 then [damagedMessage, deathMessage] else [damagedMessage]
                                 pushEntity src
                                 pushEntity newEntity

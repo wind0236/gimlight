@@ -11,7 +11,7 @@ module Dungeon
     , completeThisTurn
     , popPlayer
     , popActorAt
-    , enemies
+    , monsters
     , pushEntity
     , walkableFloor
     , getPlayerEntity
@@ -33,7 +33,7 @@ import           Coord                          (Coord)
 import           Data.Array.Base                (IArray (bounds), assocs)
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
-import           Dungeon.Entity                 (Entity)
+import           Dungeon.Entity                 (Entity, isMonster, isPlayer)
 import qualified Dungeon.Entity                 as E
 import           Dungeon.Map.Bool               (BoolMap)
 import           Dungeon.Map.Explored           (updateExploredMap)
@@ -44,9 +44,8 @@ import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (Dungeon,
                                                  DungeonKind (GlobalMap, Town),
                                                  dungeon, dungeonKind, entities,
-                                                 explored, isAlive, isEnemy,
-                                                 isPlayer, position, tileMap,
-                                                 visible)
+                                                 explored, isAlive, position,
+                                                 tileMap, visible)
 import           Linear.V2                      (V2 (..))
 
 completeThisTurn :: State Dungeon DT.Status
@@ -81,7 +80,7 @@ playerPosition d = getPlayerEntity d ^. position
 
 getPlayerEntity :: Dungeon -> Entity
 getPlayerEntity d =
-        case find (^. isPlayer) $ d ^. entities of
+        case find isPlayer $ d ^. entities of
             Just p  -> p
             Nothing -> error "No player entity."
 
@@ -89,7 +88,7 @@ pushEntity :: Entity -> State Dungeon ()
 pushEntity e = state $ \d -> ((), d & entities %~ (e :))
 
 popPlayer :: State Dungeon Entity
-popPlayer = state $ \d -> case runState (popActorIf (^. isPlayer)) d of
+popPlayer = state $ \d -> case runState (popActorIf isPlayer) d of
                   (Just x, d') -> (x, d')
                   (Nothing, _) -> error "No player entity."
 
@@ -116,16 +115,16 @@ transparentMap :: Dungeon -> BoolMap
 transparentMap d = fmap (^. transparent) (d ^. tileMap)
 
 enemyCoords :: Dungeon -> [Coord]
-enemyCoords d = map (^. position) $ filter (not . (^. isPlayer)) $ d ^. entities
+enemyCoords d = map (^. position) $ filter (not . isPlayer) $ d ^. entities
 
 isPlayerAlive :: Dungeon -> Bool
 isPlayerAlive d = getPlayerEntity d ^. isAlive
 
 aliveEnemies :: Dungeon -> [Entity]
-aliveEnemies d = filter (^. isAlive) $ enemies d
+aliveEnemies d = filter (^. isAlive) $ monsters d
 
-enemies :: Dungeon -> [Entity]
-enemies d = filter (^. isEnemy) $ d ^. entities
+monsters :: Dungeon -> [Entity]
+monsters d = filter isMonster $ d ^. entities
 
 mapWidthAndHeight :: Dungeon -> V2 Int
 mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1
