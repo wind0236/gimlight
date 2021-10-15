@@ -18,7 +18,8 @@ import qualified Dungeon.Map.Tile      as MT
 import           Dungeon.Types         (Dungeon, entities, explored, position,
                                         standingImagePath, tileMap, visible)
 import qualified Dungeon.Types         as DT
-import           Engine                (Engine (HandlingScene, PlayerIsExploring, Talking, Title))
+import           Engine                (Engine (HandlingScene, PlayerIsExploring, Talking, Title),
+                                        messageLogList)
 import           Linear.V2             (V2 (V2), _x, _y)
 import           Monomer               (CmbAlignLeft (alignLeft),
                                         CmbBgColor (bgColor),
@@ -53,7 +54,7 @@ drawUI _ Title = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSiz
                                         , label "[q] Quit"
                                         ]
 drawUI _ engine = withKeyEvents $ vstack [ mapGrid engine
-                                         , label "多分ここにログが表示される．"
+                                         , messageLogArea engine
                                          ] `styleBasic` [width 0]
 
 withKeyEvents :: WidgetNode s AppEvent -> WidgetNode s AppEvent
@@ -121,6 +122,9 @@ talkingWindow tw = hstack [ image (tw ^. person . standingImagePath)
                           , label (tw ^. message) `styleBasic` [textColor red, textSize 16, paddingL 50]
                           ]
 
+messageLogArea :: (WidgetModel s, WidgetEvent e) => Engine -> WidgetNode s e
+messageLogArea e = vstack $ fmap (\x -> label_ x [multiline]) $ take logRows $ messageLogList e
+
 topRightCoord :: Dungeon -> Coord
 topRightCoord d = bottomLeftCoord d + mapWidthAndHeight d - V2 1 1
 
@@ -142,6 +146,9 @@ tileHeight = 48
 tileColumns, tileRows :: Int
 tileColumns = 23
 tileRows = 13
+
+logRows :: Int
+logRows = 5
 
 windowWidth, windowHeight :: Int
 windowWidth = 1280

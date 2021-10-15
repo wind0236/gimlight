@@ -143,6 +143,12 @@ popDungeonAt p e = let xs = e ^. otherDungeons
                                     in (Just d, e & otherDungeons .~ newOtherDungeons)
                           Nothing -> (Nothing, e)
 
+messageLogList :: Engine -> MessageLog
+messageLogList (PlayerIsExploring _ _ l _) = l
+messageLogList (Talking _ e)               = messageLogList e
+messageLogList (HandlingScene _ e)         = messageLogList e
+messageLogList Title                       = error "no message log."
+
 newGameEngine :: IO Engine
 newGameEngine = do
     g <- getStdGen
