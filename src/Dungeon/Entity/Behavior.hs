@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 
 module Dungeon.Entity.Behavior
     ( bumpAction
@@ -80,8 +81,7 @@ moveOrWait e =
                      offset = nextCoord - e ^. position
                      newAi = HostileEnemy { _path = remaining }
                      newEntity = e & ai .~ newAi
-                 in
-                     moveAction newEntity offset
+                 in (, []) <$> moveAction newEntity offset
 
 bumpAction :: Entity -> V2 Int -> State Dungeon (BumpResult, MessageLog)
 bumpAction src offset = do
@@ -97,8 +97,7 @@ bumpAction src offset = do
                 | otherwise -> do
                     pushEntity src
                     return (TalkStarted $ talkWith e (e ^. talkMessage), [])
-            Nothing ->
-                moveAction src offset
+            Nothing -> (, []) <$> moveAction src offset
 
 getBlockingEntityAtLocation :: Dungeon -> Coord -> Maybe Entity
 getBlockingEntityAtLocation d c = find (\x -> x ^. position == c && x ^. blocksMovement) (d ^. entities)
@@ -137,10 +136,10 @@ meleeAction src offset = do
                                     pushEntity x
                                     return [message $ msg `append` " but does not damage."]
 
-moveAction :: Entity -> V2 Int -> State Dungeon (BumpResult, MessageLog)
+moveAction :: Entity -> V2 Int -> State Dungeon BumpResult
 moveAction src offset = state $ \d -> if not (isPositionInRange d (src ^. position + offset)) && isTown d
-                                        then ((ExitToGlobalMap src, []), d)
-                                        else ((Ok, []), execState (pushEntity $ updatePosition d src offset) d)
+                                        then (ExitToGlobalMap src, d)
+                                        else (Ok, execState (pushEntity $ updatePosition d src offset) d)
 
 waitAction :: Entity -> State Dungeon ()
 waitAction = pushEntity
