@@ -37,10 +37,6 @@ meleeAction offset src = do
             Nothing -> do
                 pushEntity src
                 return []
-            Just x | getHp x == 0 -> do
-                pushEntity src
-                pushEntity x
-                return []
             Just x -> let damage = src ^. power - x ^. defence
                           msg = (src ^. name) `append` " attacks " `append` (x ^. name)
                         in if damage > 0
