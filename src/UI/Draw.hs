@@ -18,7 +18,7 @@ import qualified Dungeon.Map.Tile      as MT
 import           Dungeon.Types         (Dungeon, entities, explored, position,
                                         standingImagePath, tileMap, visible)
 import qualified Dungeon.Types         as DT
-import           GameStatus                (GameStatus (HandlingScene, PlayerIsExploring, Talking, Title),
+import           GameStatus            (GameStatus (HandlingScene, PlayerIsExploring, Talking, Title),
                                         messageLogList)
 import           Linear.V2             (V2 (V2), _x, _y)
 import           Monomer               (CmbAlignLeft (alignLeft),
@@ -130,7 +130,7 @@ topRightCoord d = bottomLeftCoord d + mapWidthAndHeight d - V2 1 1
 
 bottomLeftCoord :: Dungeon -> Coord
 bottomLeftCoord d = V2 x y
-    where V2 unadjustedX unadjestedY = playerPosition d - V2 (tileColumns `div` 2) (tileRows `div` 2)
+    where V2 unadjustedX unadjestedY = maybe (V2 0 0) (\pos -> pos - V2 (tileColumns `div` 2) (tileRows `div` 2)) (playerPosition d)
           V2 maxX maxY = mapWidthAndHeight d - V2 tileColumns tileRows
           x = max 0 $ min maxX unadjustedX
           y = max 0 $ min maxY unadjestedY

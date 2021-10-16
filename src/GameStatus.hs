@@ -12,9 +12,9 @@ import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
 import           Data.List                      (find, findIndex)
-import           Dungeon                        (Dungeon, aliveNpcs,
-                                                 getPlayerEntity, initDungeon,
-                                                 mapWidthAndHeight, popPlayer)
+import           Dungeon                        (Dungeon, getPlayerEntity,
+                                                 initDungeon, mapWidthAndHeight,
+                                                 npcs, popPlayer)
 import qualified Dungeon                        as D
 import           Dungeon.Entity                 (isMonster)
 import qualified Dungeon.Entity                 as E
@@ -69,7 +69,7 @@ handleNpcTurns = do
         e <- get
         let dg = e ^?! currentDungeon
 
-        let xs = aliveNpcs dg
+        let xs = npcs dg
 
         mapM_ (handleNpcTurn . (^. position)) xs
 
@@ -91,7 +91,9 @@ playerBumpAction :: V2 Int -> State GameStatus ()
 playerBumpAction offset = do
     gameStatus <- get
 
-    let destination = playerPosition gameStatus + offset
+    let destination = case playerPosition gameStatus of
+                          Just p  -> p + offset
+                          Nothing -> error "The player is dead."
 
     case actorAt destination gameStatus of
         Just actorAtDestination -> if isMonster actorAtDestination
@@ -125,13 +127,13 @@ playerBumpAction offset = do
                          Just g' -> g' & entities %~ (:) newPlayer
                          Nothing -> error "Global map not found."
 
-playerCurrentHp :: GameStatus -> Int
-playerCurrentHp e = E.getHp $ getPlayerEntity (e ^?! currentDungeon)
+playerCurrentHp :: GameStatus -> Maybe Int
+playerCurrentHp e = E.getHp <$> getPlayerEntity (e ^?! currentDungeon)
 
-playerMaxHp :: GameStatus -> Int
-playerMaxHp e = getPlayerEntity (e ^?! currentDungeon) ^. maxHp
+playerMaxHp :: GameStatus -> Maybe Int
+playerMaxHp e = (^. maxHp) <$> getPlayerEntity (e ^?! currentDungeon)
 
-playerPosition :: GameStatus -> Coord
+playerPosition :: GameStatus -> Maybe Coord
 playerPosition (PlayerIsExploring d _ _ _) = D.playerPosition d
 playerPosition (Talking _ e)               = playerPosition e
 playerPosition (HandlingScene _ e)         = playerPosition e
@@ -156,7 +158,9 @@ currentMapWidthAndHeight (HandlingScene _ e)       = currentMapWidthAndHeight e
 currentMapWidthAndHeight _                         = error "unreachable."
 
 popDungeonAtPlayerPosition :: GameStatus -> (Maybe Dungeon, GameStatus)
-popDungeonAtPlayerPosition e = popDungeonAt (playerPosition e) e
+popDungeonAtPlayerPosition g = case playerPosition g of
+                                   Just p  -> popDungeonAt p g
+                                   Nothing -> (Nothing, g)
 
 popDungeonAt :: Coord -> GameStatus -> (Maybe Dungeon, GameStatus)
 popDungeonAt p e = let xs = e ^. otherDungeons

@@ -16,7 +16,6 @@ module Dungeon
     , walkableFloor
     , getPlayerEntity
     , enemyCoords
-    , aliveNpcs
     , mapWidthAndHeight
     , playerPosition
     , initialPlayerPositionCandidates
@@ -25,6 +24,7 @@ module Dungeon
     , isTown
     , actorAt
     , isPositionInDungeon
+    , npcs
     ) where
 
 import           Control.Lens                   ((%~), (&), (.=), (.~), (^.))
@@ -35,6 +35,7 @@ import           Coord                          (Coord)
 import           Data.Array.Base                (IArray (bounds), assocs)
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
+import           Data.Maybe                     (isJust)
 import           Dungeon.Entity                 (Entity, isActor, isMonster,
                                                  isPlayer)
 import qualified Dungeon.Entity                 as E
@@ -47,8 +48,8 @@ import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (Dungeon,
                                                  DungeonKind (GlobalMap, Town),
                                                  dungeon, dungeonKind, entities,
-                                                 explored, isAlive, position,
-                                                 tileMap, visible)
+                                                 explored, position, tileMap,
+                                                 visible)
 import           Linear.V2                      (V2 (..))
 
 completeThisTurn :: State Dungeon DT.Status
@@ -71,21 +72,20 @@ updateExplored = do
 
 updateFov :: State Dungeon ()
 updateFov = do
-        d <- get
+    d <- get
 
-        let t = transparentMap d
-            p = getPlayerEntity d
+    let t = transparentMap d
+        p = getPlayerEntity d
 
-        visible .= calculateFov (p ^. position) t
+    case p of
+        Just p' -> visible .= calculateFov (p' ^. position) t
+        Nothing -> return ()
 
-playerPosition :: Dungeon -> Coord
-playerPosition d = getPlayerEntity d ^. position
+playerPosition :: Dungeon -> Maybe Coord
+playerPosition d = (^. position) <$> getPlayerEntity d
 
-getPlayerEntity :: Dungeon -> Entity
-getPlayerEntity d =
-        case find isPlayer $ d ^. entities of
-            Just p  -> p
-            Nothing -> error "No player entity."
+getPlayerEntity :: Dungeon -> Maybe Entity
+getPlayerEntity d = find isPlayer $ d ^. entities
 
 actorAt :: Coord -> Dungeon -> Maybe Entity
 actorAt c d = find (\x -> x ^. position == c) $ actors d
@@ -124,10 +124,7 @@ enemyCoords :: Dungeon -> [Coord]
 enemyCoords d = map (^. position) $ filter (not . isPlayer) $ d ^. entities
 
 isPlayerAlive :: Dungeon -> Bool
-isPlayerAlive d = getPlayerEntity d ^. isAlive
-
-aliveNpcs :: Dungeon -> [Entity]
-aliveNpcs d = filter (^. isAlive) $ npcs d
+isPlayerAlive d = isJust $ getPlayerEntity d
 
 actors :: Dungeon -> [Entity]
 actors d = filter isActor $ d ^. entities

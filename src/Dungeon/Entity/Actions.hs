@@ -8,6 +8,7 @@ module Dungeon.Entity.Actions
     ) where
 
 import           Control.Lens              ((&), (.~), (^.))
+import           Control.Monad             (when)
 import           Control.Monad.Trans.State (State, execState, state)
 import           Coord                     (Coord)
 import           Data.Array                ((!))
@@ -49,8 +50,11 @@ meleeAction offset src = do
                                     damagedMessage = msg `append` pack " for " `append` pack (show damage) `append` " hit points."
                                     deathMessage = if isPlayer x then "You died!" else (x ^. name) `append` " is dead!"
                                     messages = if newHp <= 0 then [damagedMessage, deathMessage] else [damagedMessage]
+
                                 pushEntity src
-                                pushEntity newEntity
+
+                                when (newHp > 0) $ pushEntity newEntity
+
                                 return $ fmap message messages
                             else do
                                     pushEntity src

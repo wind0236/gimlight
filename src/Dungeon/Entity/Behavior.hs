@@ -26,14 +26,17 @@ npcAction e = do
 
 updatePath :: Entity -> Dungeon -> Entity
 updatePath e d = e & pathToDestination .~ newPath
-    where newPath = fromMaybe [] $ getPathTo d src dst
+    where newPath = fromMaybe [] $ dst >>= getPathTo d src
           src = e ^. position
-          dst = player ^. position
+          dst = fmap (^. position) player
           player = getPlayerEntity d
 
 selectAction :: Entity -> Dungeon -> Action
 selectAction e d
-    | isEntityNextToPlayer e d = meleeAction (offsetToPlayer e d)
+    | isEntityNextToPlayer e d =
+        case offsetToPlayer e d of
+            Just offset -> meleeAction offset
+            Nothing     -> moveOrWait e
     | otherwise = moveOrWait e
 
 moveOrWait :: Entity -> Action
@@ -51,11 +54,12 @@ popPathToDestinationAndMove e =
           e' = e & pathToDestination .~ remaining
 
 isEntityNextToPlayer :: Entity -> Dungeon -> Bool
-isEntityNextToPlayer e d = distance <= 1
-    where distance = max (abs x) (abs y)
-          V2 x y = p ^. position - e ^. position
-          p = getPlayerEntity d
+isEntityNextToPlayer e d = case distance of
+                            Just d' -> d' <= 1
+                            Nothing -> False
+    where distance = (\(V2 x y) -> max (abs x) (abs y)) <$> offsetToPlayer e d
 
-offsetToPlayer :: Entity -> Dungeon -> V2 Int
-offsetToPlayer e d = p ^. position - e ^. position
+offsetToPlayer :: Entity -> Dungeon -> Maybe (V2 Int)
+offsetToPlayer e d = fmap (\x -> x - e ^. position) playerPos
     where p = getPlayerEntity d
+          playerPos = fmap (^. position) p

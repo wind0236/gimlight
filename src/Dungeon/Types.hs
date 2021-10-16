@@ -26,7 +26,6 @@ module Dungeon.Types
     , maxHp
     , defence
     , power
-    , isAlive
     , blocksMovement
     , talkMessage
     , walkingImagePath
@@ -60,7 +59,6 @@ data Entity = Actor
             , _defence           :: Int
             , _power             :: Int
             , _pathToDestination :: [Coord]
-            , _isAlive           :: Bool
             , _blocksMovement    :: Bool
             , _actorKind         :: ActorKind
             , _talkMessage       :: Text
@@ -94,8 +92,8 @@ dungeon t e p d = Dungeon { _tileMap = t
                           }
     where widthAndHeight = snd (bounds t) + V2 1 1
 
-actor :: Coord -> Text -> Int -> Int -> Int -> Bool -> Bool -> ActorKind -> Text -> Text -> Text -> Entity
-actor position' name' hp' defence' power' isAlive' blocksMovement' ak talkMessage' walkingImagePath' standingImagePath'=
+actor :: Coord -> Text -> Int -> Int -> Int -> Bool -> ActorKind -> Text -> Text -> Text -> Entity
+actor position' name' hp' defence' power' blocksMovement' ak talkMessage' walkingImagePath' standingImagePath'=
         Actor { _position = position'
               , _name = name'
               , _hp = hp'
@@ -103,7 +101,6 @@ actor position' name' hp' defence' power' isAlive' blocksMovement' ak talkMessag
               , _defence = defence'
               , _power = power'
               , _pathToDestination = []
-              , _isAlive = isAlive'
               , _blocksMovement = blocksMovement'
               , _talkMessage = talkMessage'
               , _walkingImagePath = walkingImagePath'
