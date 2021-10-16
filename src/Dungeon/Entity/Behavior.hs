@@ -63,7 +63,8 @@ updatePathOrMelee e = do
                          return $ Left msg
 
                      else do
-                         newPath <- getPathTo pos (p ^. position)
+                         d' <- get
+                         let newPath = getPathTo d' pos (p ^. position)
 
                          let behaviorStructure' = HostileEnemy { _path = fromMaybe [] newPath}
                              newEntity = e & behaviorStructure .~ behaviorStructure'

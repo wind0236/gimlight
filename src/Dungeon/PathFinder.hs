@@ -2,20 +2,16 @@ module Dungeon.PathFinder
     ( getPathTo
     ) where
 
-import           Control.Monad.Trans.State (State, state)
-import           Coord                     (Coord)
-import           Data.Array                (bounds, (!))
-import           Data.Graph.AStar          (aStar)
-import           Data.HashSet              (HashSet, fromList)
-import           Dungeon                   (Dungeon, walkableFloor)
-import           Dungeon.Map.Bool          (BoolMap)
-import           Linear.V2                 (V2 (..))
+import           Coord            (Coord)
+import           Data.Array       (bounds, (!))
+import           Data.Graph.AStar (aStar)
+import           Data.HashSet     (HashSet, fromList)
+import           Dungeon          (Dungeon, walkableFloor)
+import           Dungeon.Map.Bool (BoolMap)
+import           Linear.V2        (V2 (..))
 
-getPathTo :: Coord -> Coord -> State Dungeon (Maybe [Coord])
-getPathTo src dst = state $ \d -> (getPathToNoState d src dst, d)
-
-getPathToNoState :: Dungeon -> Coord -> Coord -> Maybe [Coord]
-getPathToNoState d src dst = aStar (neighbors d) distanceBetween (distanceBetween dst) (== dst) src
+getPathTo :: Dungeon -> Coord -> Coord -> Maybe [Coord]
+getPathTo d src dst = aStar (neighbors d) distanceBetween (distanceBetween dst) (== dst) src
 
 neighbors :: Dungeon -> Coord -> HashSet Coord
 neighbors d src = fromList $ candidate (walkableFloor d) src
