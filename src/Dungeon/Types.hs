@@ -13,8 +13,7 @@ module Dungeon.Types
     ( Dungeon
     , DungeonKind(..)
     , Entity
-    , BehaviorStructure(..)
-    , path
+    , pathToDestination
     , dungeon
     , actor
     , tileMap
@@ -27,7 +26,6 @@ module Dungeon.Types
     , maxHp
     , defence
     , power
-    , behaviorStructure
     , isAlive
     , blocksMovement
     , talkMessage
@@ -51,11 +49,6 @@ import           GHC.Generics         (Generic)
 import           Linear.V2            (V2 (V2))
 
 
-newtype BehaviorStructure = HostileEnemy { _path :: [Coord] }
-                            deriving (Show, Ord, Eq, Generic)
-makeLenses ''BehaviorStructure
-instance Binary BehaviorStructure
-
 data ActorKind = Player | FriendlyNpc | Monster deriving (Show, Ord, Eq, Generic)
 instance Binary ActorKind
 
@@ -66,7 +59,7 @@ data Entity = Actor
             , _maxHp             :: Int
             , _defence           :: Int
             , _power             :: Int
-            , _behaviorStructure :: BehaviorStructure
+            , _pathToDestination :: [Coord]
             , _isAlive           :: Bool
             , _blocksMovement    :: Bool
             , _actorKind         :: ActorKind
@@ -109,7 +102,7 @@ actor position' name' hp' defence' power' isAlive' blocksMovement' ak talkMessag
               , _maxHp = hp'
               , _defence = defence'
               , _power = power'
-              , _behaviorStructure = hostileEnemy
+              , _pathToDestination = []
               , _isAlive = isAlive'
               , _blocksMovement = blocksMovement'
               , _talkMessage = talkMessage'
@@ -117,6 +110,3 @@ actor position' name' hp' defence' power' isAlive' blocksMovement' ak talkMessag
               , _standingImagePath = standingImagePath'
               , _actorKind = ak
               }
-
-hostileEnemy :: BehaviorStructure
-hostileEnemy = HostileEnemy { _path = [] }

@@ -23,12 +23,10 @@ import           Dungeon.Entity            (getHp, isMonster, isPlayer,
                                             updateHp)
 import           Dungeon.Map.Tile          (walkable)
 import           Dungeon.PathFinder        (getPathTo)
-import           Dungeon.Types             (BehaviorStructure (HostileEnemy, _path),
-                                            Entity, behaviorStructure,
-                                            blocksMovement, defence, entities,
-                                            isAlive, name, path, position,
-                                            power, talkMessage, tileMap,
-                                            visible)
+import           Dungeon.Types             (Entity, blocksMovement, defence,
+                                            entities, isAlive, name,
+                                            pathToDestination, position, power,
+                                            talkMessage, tileMap, visible)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, MessageLog, message)
 import           Talking                   (TalkWith, talkWith)
@@ -65,24 +63,21 @@ updatePathOrMelee e = do
                      else do
                          d' <- get
                          let newPath = getPathTo d' pos (p ^. position)
-
-                         let behaviorStructure' = HostileEnemy { _path = fromMaybe [] newPath}
-                             newEntity = e & behaviorStructure .~ behaviorStructure'
+                             newEntity = e & pathToDestination .~ fromMaybe [] newPath
 
                          return $ Right newEntity
             else return $ Right e
 
 moveOrWait :: Entity -> State Dungeon (BumpResult, MessageLog)
 moveOrWait e =
-        let p = e ^. behaviorStructure . path
+        let p = e ^. pathToDestination
         in if null p
             then do
                     waitAction e
                     return (Ok, [])
             else let (nextCoord, remaining) = (head p, tail p)
                      offset = nextCoord - e ^. position
-                     behaviorStructure' = HostileEnemy { _path = remaining }
-                     newEntity = e & behaviorStructure .~ behaviorStructure'
+                     newEntity = e & pathToDestination .~ remaining
                  in (, []) <$> moveAction newEntity offset
 
 bumpAction :: Entity -> V2 Int -> State Dungeon (BumpResult, MessageLog)
