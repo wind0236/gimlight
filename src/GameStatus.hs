@@ -18,8 +18,8 @@ import           Dungeon                        (Dungeon, aliveNpcs,
 import qualified Dungeon                        as D
 import           Dungeon.Entity                 (isMonster)
 import qualified Dungeon.Entity                 as E
-import           Dungeon.Entity.Behavior        (meleeAction, moveAction,
-                                                 npcAction)
+import           Dungeon.Entity.Actions         (meleeAction, moveAction)
+import           Dungeon.Entity.Behavior        (npcAction)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
