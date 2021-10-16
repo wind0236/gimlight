@@ -12,9 +12,9 @@ import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
 import           Data.List                      (find, findIndex)
-import           Dungeon                        (Dungeon, getPlayerEntity,
-                                                 initDungeon, mapWidthAndHeight,
-                                                 npcs, popPlayer)
+import           Dungeon                        (Dungeon, initDungeon,
+                                                 mapWidthAndHeight, npcs,
+                                                 popPlayer)
 import qualified Dungeon                        as D
 import           Dungeon.Entity                 (isMonster)
 import qualified Dungeon.Entity                 as E
@@ -23,8 +23,8 @@ import           Dungeon.Entity.Behavior        (npcAction)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
-import           Dungeon.Types                  (entities, maxHp, position,
-                                                 positionOnGlobalMap,
+import           Dungeon.Types                  (Entity, entities, maxHp,
+                                                 position, positionOnGlobalMap,
                                                  talkMessage)
 import           GHC.Generics                   (Generic)
 import           Linear.V2                      (V2)
@@ -127,11 +127,17 @@ playerBumpAction offset = do
                          Just g' -> g' & entities %~ (:) newPlayer
                          Nothing -> error "Global map not found."
 
+getPlayerEntity :: GameStatus -> Maybe Entity
+getPlayerEntity (PlayerIsExploring d _ _ _) = D.getPlayerEntity d
+getPlayerEntity (Talking _ gs)              = GameStatus.getPlayerEntity gs
+getPlayerEntity (HandlingScene _ gs)        = GameStatus.getPlayerEntity gs
+getPlayerEntity Title                       = error "We are in the title."
+
 playerCurrentHp :: GameStatus -> Maybe Int
-playerCurrentHp e = E.getHp <$> getPlayerEntity (e ^?! currentDungeon)
+playerCurrentHp gs = E.getHp <$> getPlayerEntity gs
 
 playerMaxHp :: GameStatus -> Maybe Int
-playerMaxHp e = (^. maxHp) <$> getPlayerEntity (e ^?! currentDungeon)
+playerMaxHp gs = (^. maxHp) <$> getPlayerEntity gs
 
 playerPosition :: GameStatus -> Maybe Coord
 playerPosition (PlayerIsExploring d _ _ _) = D.playerPosition d
