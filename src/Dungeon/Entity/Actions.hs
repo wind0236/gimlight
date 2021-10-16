@@ -22,8 +22,10 @@ import           Dungeon.Types             (Entity, blocksMovement, defence,
 import           Linear.V2                 (V2 (V2))
 import           Log                       (Message, message)
 
-meleeAction :: Entity -> V2 Int -> State Dungeon [Message]
-meleeAction src offset = do
+type Action = Entity -> State Dungeon [Message]
+
+meleeAction :: V2 Int -> Action
+meleeAction offset src = do
         let pos = src ^. position
             dest = pos + offset
 
@@ -54,14 +56,16 @@ meleeAction src offset = do
                                     pushEntity x
                                     return [message $ msg `append` " but does not damage."]
 
-moveAction :: Entity -> V2 Int -> State Dungeon ()
-moveAction src offset = state $ \d -> ((), result d)
+moveAction :: V2 Int -> Action
+moveAction offset src = state $ \d -> ([], result d)
     where result d = if not (isPositionInRange d (src ^. position + offset)) && isTown d
                         then d
                         else execState (pushEntity $ updatePosition d src offset) d
 
-waitAction :: Entity -> State Dungeon ()
-waitAction = pushEntity
+waitAction :: Action
+waitAction e = do
+        pushEntity e
+        return []
 
 updatePosition :: Dungeon -> Entity -> V2 Int -> Entity
 updatePosition d src offset

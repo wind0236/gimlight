@@ -98,7 +98,7 @@ playerBumpAction offset = do
             then do
                 let (msg, currentDungeon') = flip runState (gameStatus ^?! currentDungeon) $ do
                         p <- popPlayer
-                        meleeAction p offset
+                        meleeAction offset p
                 messageLog %= addMessages msg
                 currentDungeon .= currentDungeon'
             else
@@ -111,7 +111,7 @@ playerBumpAction offset = do
                 then do
                     let currentDungeon' = flip execState (gameStatus ^?! currentDungeon) $ do
                             p <- popPlayer
-                            moveAction p offset
+                            moveAction offset p
                     currentDungeon .= currentDungeon'
                 else let (p, currentDungeon') = runState popPlayer (gameStatus ^?! currentDungeon)
                      in do

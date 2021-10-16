@@ -38,7 +38,7 @@ updatePathOrMelee e = do
         if v ! pos
             then if distance <= 1
                      then do
-                         msg <- meleeAction e posDiff
+                         msg <- meleeAction posDiff e
                          return $ Left msg
 
                      else do
@@ -55,10 +55,8 @@ moveOrWait e =
         in if null p
             then do
                     waitAction e
-                    return []
             else let (nextCoord, remaining) = (head p, tail p)
                      offset = nextCoord - e ^. position
                      newEntity = e & pathToDestination .~ remaining
                  in do
-                     moveAction newEntity offset
-                     return []
+                     moveAction offset newEntity
