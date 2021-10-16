@@ -1,12 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections     #-}
 
 module Dungeon.Entity.Behavior
-    ( bumpAction
-    , meleeAction
+    ( meleeAction
     , waitAction
     , npcAction
-    , BumpResult(..)
+    , moveAction
     ) where
 
 import           Control.Lens              (use, (&), (.~), (^.))
@@ -19,29 +17,22 @@ import           Data.Text                 (append, pack)
 import           Dungeon                   (Dungeon, getPlayerEntity, isTown,
                                             mapWidthAndHeight, popActorAt,
                                             pushEntity)
-import           Dungeon.Entity            (getHp, isMonster, isPlayer,
-                                            updateHp)
+import           Dungeon.Entity            (getHp, isPlayer, updateHp)
 import           Dungeon.Map.Tile          (walkable)
 import           Dungeon.PathFinder        (getPathTo)
 import           Dungeon.Types             (Entity, blocksMovement, defence,
-                                            entities, isAlive, name,
-                                            pathToDestination, position, power,
-                                            talkMessage, tileMap, visible)
+                                            entities, name, pathToDestination,
+                                            position, power, tileMap, visible)
 import           Linear.V2                 (V2 (..), _x, _y)
 import           Log                       (Message, MessageLog, message)
-import           Talking                   (TalkWith, talkWith)
 
-data BumpResult = TalkStarted TalkWith
-                | ExitToGlobalMap Entity
-                | Ok
-
-npcAction :: Entity -> State Dungeon (BumpResult, MessageLog)
+npcAction :: Entity -> State Dungeon MessageLog
 npcAction e = do
         u <- updatePathOrMelee e
 
         case u of
             Right e' -> moveOrWait e'
-            Left m   -> return (Ok, m)
+            Left m   -> return m
 
 updatePathOrMelee :: Entity -> State Dungeon (Either [Message] Entity)
 updatePathOrMelee e = do
@@ -68,39 +59,22 @@ updatePathOrMelee e = do
                          return $ Right newEntity
             else return $ Right e
 
-moveOrWait :: Entity -> State Dungeon (BumpResult, MessageLog)
+moveOrWait :: Entity -> State Dungeon MessageLog
 moveOrWait e =
         let p = e ^. pathToDestination
         in if null p
             then do
                     waitAction e
-                    return (Ok, [])
+                    return []
             else let (nextCoord, remaining) = (head p, tail p)
                      offset = nextCoord - e ^. position
                      newEntity = e & pathToDestination .~ remaining
-                 in (, []) <$> moveAction newEntity offset
-
-bumpAction :: Entity -> V2 Int -> State Dungeon (BumpResult, MessageLog)
-bumpAction src offset = do
-        d <- get
-
-        let x = getAliveActorAtLocation d (src ^. position + offset)
-
-        case x of
-            Just e
-                | isMonster e -> do
-                    logs <- meleeAction src offset
-                    return (Ok, logs)
-                | otherwise -> do
-                    pushEntity src
-                    return (TalkStarted $ talkWith e (e ^. talkMessage), [])
-            Nothing -> (, []) <$> moveAction src offset
+                 in do
+                     moveAction newEntity offset
+                     return []
 
 getBlockingEntityAtLocation :: Dungeon -> Coord -> Maybe Entity
 getBlockingEntityAtLocation d c = find (\x -> x ^. position == c && x ^. blocksMovement) (d ^. entities)
-
-getAliveActorAtLocation :: Dungeon -> Coord -> Maybe Entity
-getAliveActorAtLocation d c = find (\x -> x ^. position == c && x ^. isAlive) $ d ^. entities
 
 meleeAction :: Entity -> V2 Int -> State Dungeon [Message]
 meleeAction src offset = do
@@ -134,10 +108,11 @@ meleeAction src offset = do
                                     pushEntity x
                                     return [message $ msg `append` " but does not damage."]
 
-moveAction :: Entity -> V2 Int -> State Dungeon BumpResult
-moveAction src offset = state $ \d -> if not (isPositionInRange d (src ^. position + offset)) && isTown d
-                                        then (ExitToGlobalMap src, d)
-                                        else (Ok, execState (pushEntity $ updatePosition d src offset) d)
+moveAction :: Entity -> V2 Int -> State Dungeon ()
+moveAction src offset = state $ \d -> ((), result d)
+    where result d = if not (isPositionInRange d (src ^. position + offset)) && isTown d
+                        then d
+                        else execState (pushEntity $ updatePosition d src offset) d
 
 waitAction :: Entity -> State Dungeon ()
 waitAction = pushEntity

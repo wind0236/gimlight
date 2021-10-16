@@ -7,23 +7,25 @@ module Engine where
 
 import           Control.Lens                   (makeLenses, (%=), (%~), (&),
                                                  (.=), (.~), (^.), (^?!))
-import           Control.Monad.Trans.State      (State, get)
+import           Control.Monad.Trans.State      (State, execState, get)
 import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
 import           Data.List                      (find, findIndex)
 import           Dungeon                        (Dungeon, aliveNpcs,
                                                  getPlayerEntity, initDungeon,
-                                                 mapWidthAndHeight)
+                                                 mapWidthAndHeight, popPlayer)
 import qualified Dungeon                        as D
+import           Dungeon.Entity                 (isMonster)
 import qualified Dungeon.Entity                 as E
-import           Dungeon.Entity.Behavior        (BumpResult (..), bumpAction,
+import           Dungeon.Entity.Behavior        (meleeAction, moveAction,
                                                  npcAction)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
 import           Dungeon.Types                  (entities, maxHp, position,
-                                                 positionOnGlobalMap)
+                                                 positionOnGlobalMap,
+                                                 talkMessage)
 import           GHC.Generics                   (Generic)
 import           Linear.V2                      (V2)
 import           Log                            (MessageLog, addMessage,
@@ -31,7 +33,7 @@ import           Log                            (MessageLog, addMessage,
 import qualified Log                            as L
 import           Scene                          (Scene, gameStartScene)
 import           System.Random                  (getStdGen)
-import           Talking                        (TalkWith)
+import           Talking                        (TalkWith, talkWith)
 
 data Engine = PlayerIsExploring
           { _currentDungeon :: Dungeon
@@ -76,7 +78,7 @@ handleNpcTurn c = do
         e <- get
         let dg = e ^?! currentDungeon
 
-        let ((_, l), dg') = flip runState dg $ do
+        let (l, dg') = flip runState dg $ do
                 e' <- D.popActorAt c
                 case e' of
                     Just e'' -> npcAction e''
@@ -87,30 +89,41 @@ handleNpcTurn c = do
 
 playerBumpAction :: V2 Int -> State Engine ()
 playerBumpAction offset = do
-        e <- get
-        let dg = e ^?! currentDungeon
+    engine <- get
 
-        let ((result, l), newDungeon) = flip runState dg $ do
-                e' <- D.popPlayer
-                bumpAction e' offset
+    let destination = playerPosition engine + offset
 
-        messageLog %= addMessages l
-
-        case result of
-            TalkStarted tw -> put $ Talking { _talk = tw
-                                            , _afterTalking = e
-                                            }
-            ExitToGlobalMap p -> do
-                otherDungeons %= (:) newDungeon
-                let newPosition = newDungeon ^. positionOnGlobalMap
-                let g = find D.isGlobalMap (e ^?! otherDungeons)
-                let newPlayer = p & position .~ case newPosition of
-                                                    Just pos -> pos
-                                                    Nothing  -> error "whooops."
-                currentDungeon .= case g of
-                                      Just g' -> g' & entities %~ (:) newPlayer
-                                      Nothing -> error "whoops."
-            Ok -> currentDungeon .= newDungeon
+    case actorAt destination engine of
+        Just actorAtDestination -> if isMonster actorAtDestination
+            then do
+                let (msg, currentDungeon') = flip runState (engine ^?! currentDungeon) $ do
+                        p <- popPlayer
+                        meleeAction p offset
+                messageLog %= addMessages msg
+                currentDungeon .= currentDungeon'
+            else
+                let tw = talkWith actorAtDestination $ actorAtDestination ^. talkMessage
+                in put $ Talking { _talk = tw
+                                 , _afterTalking = engine
+                                 }
+        Nothing                 ->
+            if isPositionInDungeon destination engine
+                then do
+                    let currentDungeon' = flip execState (engine ^?! currentDungeon) $ do
+                            p <- popPlayer
+                            moveAction p offset
+                    currentDungeon .= currentDungeon'
+                else let (p, currentDungeon') = runState popPlayer (engine ^?! currentDungeon)
+                     in do
+                     otherDungeons %= (:) currentDungeon'
+                     let g = find D.isGlobalMap $ engine ^?! otherDungeons
+                         newPosition = currentDungeon' ^?! positionOnGlobalMap
+                         newPlayer = p & position .~ case newPosition of
+                             Just pos -> pos
+                             Nothing -> error "The new position is not specified."
+                     currentDungeon .= case g of
+                         Just g' -> g' & entities %~ (:) newPlayer
+                         Nothing -> error "Global map not found."
 
 playerCurrentHp :: Engine -> Int
 playerCurrentHp e = E.getHp $ getPlayerEntity (e ^?! currentDungeon)
@@ -123,6 +136,18 @@ playerPosition (PlayerIsExploring d _ _ _) = D.playerPosition d
 playerPosition (Talking _ e)               = playerPosition e
 playerPosition (HandlingScene _ e)         = playerPosition e
 playerPosition Title                       = error "unreachable."
+
+actorAt :: Coord -> Engine -> Maybe E.Entity
+actorAt c (PlayerIsExploring d _ _ _) = D.actorAt c d
+actorAt c (Talking _ e)               = actorAt c e
+actorAt c (HandlingScene _ e)         = actorAt c e
+actorAt _ Title                       = error "We are in the title."
+
+isPositionInDungeon :: Coord -> Engine -> Bool
+isPositionInDungeon c (PlayerIsExploring d _ _ _) = D.isPositionInDungeon c d
+isPositionInDungeon c (Talking _ e)               = isPositionInDungeon c e
+isPositionInDungeon c (HandlingScene _ e)         = isPositionInDungeon c e
+isPositionInDungeon _ Title                       = error "We are in the title."
 
 currentMapWidthAndHeight :: Engine -> V2 Int
 currentMapWidthAndHeight (PlayerIsExploring d _ _ _) = mapWidthAndHeight d

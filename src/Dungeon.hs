@@ -23,6 +23,8 @@ module Dungeon
     , updateMap
     , isGlobalMap
     , isTown
+    , actorAt
+    , isPositionInDungeon
     ) where
 
 import           Control.Lens                   ((%~), (&), (.=), (.~), (^.))
@@ -33,7 +35,8 @@ import           Coord                          (Coord)
 import           Data.Array.Base                (IArray (bounds), assocs)
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
-import           Dungeon.Entity                 (Entity, isMonster, isPlayer)
+import           Dungeon.Entity                 (Entity, isActor, isMonster,
+                                                 isPlayer)
 import qualified Dungeon.Entity                 as E
 import           Dungeon.Map.Bool               (BoolMap)
 import           Dungeon.Map.Explored           (updateExploredMap)
@@ -84,6 +87,9 @@ getPlayerEntity d =
             Just p  -> p
             Nothing -> error "No player entity."
 
+actorAt :: Coord -> Dungeon -> Maybe Entity
+actorAt c d = find (\x -> x ^. position == c) $ actors d
+
 pushEntity :: Entity -> State Dungeon ()
 pushEntity e = state $ \d -> ((), d & entities %~ (e :))
 
@@ -123,6 +129,9 @@ isPlayerAlive d = getPlayerEntity d ^. isAlive
 aliveNpcs :: Dungeon -> [Entity]
 aliveNpcs d = filter (^. isAlive) $ npcs d
 
+actors :: Dungeon -> [Entity]
+actors d = filter isActor $ d ^. entities
+
 npcs :: Dungeon -> [Entity]
 npcs d = filter (not . isPlayer) $ d ^. entities
 
@@ -137,6 +146,11 @@ isGlobalMap d = (d ^. dungeonKind) == GlobalMap
 
 isTown :: Dungeon -> Bool
 isTown d = (d ^. dungeonKind) ==  Town
+
+isPositionInDungeon :: Coord -> Dungeon -> Bool
+isPositionInDungeon c d = x >= 0 && x < width && y >= 0 && y < height
+    where V2 width height = mapWidthAndHeight d
+          V2 x y = c
 
 initDungeon :: Dungeon
 initDungeon =

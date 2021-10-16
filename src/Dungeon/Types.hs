@@ -12,7 +12,7 @@
 module Dungeon.Types
     ( Dungeon
     , DungeonKind(..)
-    , Entity
+    , Entity(Actor)
     , pathToDestination
     , dungeon
     , actor
