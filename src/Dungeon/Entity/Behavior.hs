@@ -4,59 +4,58 @@ module Dungeon.Entity.Behavior
     ( npcAction
     ) where
 
-import           Control.Lens              (use, (&), (.~), (^.))
+import           Control.Lens              ((&), (.~), (^.))
 import           Control.Monad.Trans.State (State, get)
-import           Data.Array                ((!))
 import           Data.Maybe                (fromMaybe)
 import           Dungeon                   (Dungeon, getPlayerEntity)
-import           Dungeon.Entity.Actions    (meleeAction, moveAction, waitAction)
+import           Dungeon.Entity.Actions    (Action, meleeAction, moveAction,
+                                            waitAction)
 import           Dungeon.PathFinder        (getPathTo)
-import           Dungeon.Types             (Entity, pathToDestination, position,
-                                            visible)
-import           Linear.V2                 (_x, _y)
-import           Log                       (Message, MessageLog)
+import           Dungeon.Types             (Entity, pathToDestination, position)
+import           Linear.V2                 (V2 (V2))
+import           Log                       (MessageLog)
 
 npcAction :: Entity -> State Dungeon MessageLog
 npcAction e = do
-        u <- updatePathOrMelee e
+    dungeon <- get
 
-        case u of
-            Right e' -> moveOrWait e'
-            Left m   -> return m
+    let e' = updatePath e dungeon
+        action = selectAction e' dungeon
 
-updatePathOrMelee :: Entity -> State Dungeon (Either [Message] Entity)
-updatePathOrMelee e = do
-        d <- get
+    action e'
 
-        let p = getPlayerEntity d
-            pos = e ^. position
-            posDiff = p ^. position - pos
-            distance = max (abs posDiff ^. _x) (abs posDiff ^. _y)
+updatePath :: Entity -> Dungeon -> Entity
+updatePath e d = e & pathToDestination .~ newPath
+    where newPath = fromMaybe [] $ getPathTo d src dst
+          src = e ^. position
+          dst = player ^. position
+          player = getPlayerEntity d
 
-        v <- use visible
+selectAction :: Entity -> Dungeon -> Action
+selectAction e d
+    | isEntityNextToPlayer e d = meleeAction (offsetToPlayer e d)
+    | otherwise = moveOrWait e
 
-        if v ! pos
-            then if distance <= 1
-                     then do
-                         msg <- meleeAction posDiff e
-                         return $ Left msg
-
-                     else do
-                         d' <- get
-                         let newPath = getPathTo d' pos (p ^. position)
-                             newEntity = e & pathToDestination .~ fromMaybe [] newPath
-
-                         return $ Right newEntity
-            else return $ Right e
-
-moveOrWait :: Entity -> State Dungeon MessageLog
+moveOrWait :: Entity -> Action
 moveOrWait e =
-        let p = e ^. pathToDestination
-        in if null p
-            then do
-                    waitAction e
-            else let (nextCoord, remaining) = (head p, tail p)
-                     offset = nextCoord - e ^. position
-                     newEntity = e & pathToDestination .~ remaining
-                 in do
-                     moveAction offset newEntity
+    if null $ e ^. pathToDestination
+        then waitAction
+        else popPathToDestinationAndMove
+
+popPathToDestinationAndMove :: Action
+popPathToDestinationAndMove e =
+    moveAction offset e'
+    where offset = next - e ^. position
+          (next, remaining) = (head path, tail path)
+          path = e ^. pathToDestination
+          e' = e & pathToDestination .~ remaining
+
+isEntityNextToPlayer :: Entity -> Dungeon -> Bool
+isEntityNextToPlayer e d = distance <= 1
+    where distance = max (abs x) (abs y)
+          V2 x y = p ^. position - e ^. position
+          p = getPlayerEntity d
+
+offsetToPlayer :: Entity -> Dungeon -> V2 Int
+offsetToPlayer e d = p ^. position - e ^. position
+    where p = getPlayerEntity d

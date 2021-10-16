@@ -4,6 +4,7 @@ module Dungeon.Entity.Actions
     ( meleeAction
     , moveAction
     , waitAction
+    , Action
     ) where
 
 import           Control.Lens              ((&), (.~), (^.))
@@ -20,9 +21,9 @@ import           Dungeon.Types             (Entity, blocksMovement, defence,
                                             entities, name, position, power,
                                             tileMap)
 import           Linear.V2                 (V2 (V2))
-import           Log                       (Message, message)
+import           Log                       (MessageLog, message)
 
-type Action = Entity -> State Dungeon [Message]
+type Action = Entity -> State Dungeon MessageLog
 
 meleeAction :: V2 Int -> Action
 meleeAction offset src = do
