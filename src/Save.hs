@@ -4,12 +4,12 @@ module Save
     ) where
 
 import           Data.Binary (decodeFile, encodeFile)
-import           Engine      (Engine)
+import           GameStatus      (GameStatus)
 
-save :: Engine -> IO ()
+save :: GameStatus -> IO ()
 save = encodeFile saveFile
 
-load :: IO Engine
+load :: IO GameStatus
 load = decodeFile saveFile
 
 saveFile :: String

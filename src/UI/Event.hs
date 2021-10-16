@@ -12,9 +12,9 @@ import           Data.Text                 (Text)
 import           Dungeon                   (initialPlayerPositionCandidates,
                                             popPlayer, updateMap)
 import           Dungeon.Types             (entities, position)
-import           Engine                    (Engine (HandlingScene, PlayerIsExploring, Talking, Title),
+import           GameStatus                    (GameStatus (HandlingScene, PlayerIsExploring, Talking, Title),
                                             completeThisTurn, currentDungeon,
-                                            isGameOver, newGameEngine,
+                                            isGameOver, newGameGameStatus,
                                             otherDungeons, playerBumpAction,
                                             popDungeonAtPlayerPosition)
 import           Linear.V2                 (V2 (V2))
@@ -26,14 +26,14 @@ import           Save                      (load, save)
 import           Scene                     (elements)
 import           UI.Types                  (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished))
 
-handleEvent :: WidgetEnv Engine AppEvent -> WidgetNode Engine AppEvent -> Engine -> AppEvent -> [AppEventResponse Engine AppEvent]
-handleEvent _ _ engine evt = case evt of
+handleEvent :: WidgetEnv GameStatus AppEvent -> WidgetNode GameStatus AppEvent -> GameStatus -> AppEvent -> [AppEventResponse GameStatus AppEvent]
+handleEvent _ _ gameStatus evt = case evt of
                                 AppInit            -> []
                                 AppSaveFinished    -> []
-                                AppLoadFinished newEngine  -> [Model newEngine]
-                                AppKeyboardInput k -> handleKeyInput engine k
+                                AppLoadFinished newGameStatus  -> [Model newGameStatus]
+                                AppKeyboardInput k -> handleKeyInput gameStatus k
 
-handleKeyInput :: Engine -> Text -> [AppEventResponse Engine AppEvent]
+handleKeyInput :: GameStatus -> Text -> [AppEventResponse GameStatus AppEvent]
 handleKeyInput e@PlayerIsExploring{} k
     | k == "Right" = [Model $ handlePlayerMove (V2 1 0) e]
     | k == "Left"  = [Model $ handlePlayerMove (V2 (-1) 0) e]
@@ -49,12 +49,12 @@ handleKeyInput (Talking _ after) k
 handleKeyInput e@HandlingScene{} k
     | k == "Enter" = [Model $ nextSceneElementOrFinish e]
 handleKeyInput Title k
-    | k == "n" = [Task $ AppLoadFinished <$> newGameEngine]
+    | k == "n" = [Task $ AppLoadFinished <$> newGameGameStatus]
     | k == "l" = [Task $ AppLoadFinished <$> load]
     | k == "q" = [exitApplication]
 handleKeyInput _ _ = []
 
-handlePlayerMove :: V2 Int -> Engine -> Engine
+handlePlayerMove :: V2 Int -> GameStatus -> GameStatus
 handlePlayerMove offset e = flip execState e $ do
     eng <- get
     let finished = eng ^?! isGameOver
@@ -66,7 +66,7 @@ handlePlayerMove offset e = flip execState e $ do
             PlayerIsExploring {} -> completeThisTurn
             _                    -> return ()
 
-handleEnter :: Engine -> Engine
+handleEnter :: GameStatus -> GameStatus
 handleEnter e = case popDungeonAtPlayerPosition e of
                     (Just d, e') -> e' &~ do
                         let newPosition = head $ initialPlayerPositionCandidates d
@@ -76,7 +76,7 @@ handleEnter e = case popDungeonAtPlayerPosition e of
                         currentDungeon %= execState updateMap
                     (Nothing, _) -> e
 
-nextSceneElementOrFinish :: Engine -> Engine
+nextSceneElementOrFinish :: GameStatus -> GameStatus
 nextSceneElementOrFinish (HandlingScene s after) = if length (s ^. elements) == 1
                                                     then after
                                                     else HandlingScene (s & elements %~ tail) after

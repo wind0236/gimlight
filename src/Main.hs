@@ -2,7 +2,7 @@
 
 module Main (main) where
 
-import           Engine   (Engine (Title))
+import           GameStatus   (GameStatus (Title))
 import           Monomer  (MainWindowState (MainWindowNormal), appFontDef,
                            appInitEvent, appTheme, appWindowResizable,
                            appWindowState, appWindowTitle, darkTheme, startApp)

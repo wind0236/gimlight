@@ -5,7 +5,7 @@ module UI.Types
     ) where
 
 import           Data.Text (Text)
-import           Engine    (Engine)
+import           GameStatus    (GameStatus)
 
 data Tick = Tick
 
@@ -13,5 +13,5 @@ type Name = ()
 
 data AppEvent = AppInit
               | AppSaveFinished
-              | AppLoadFinished Engine
+              | AppLoadFinished GameStatus
               | AppKeyboardInput Text deriving (Eq, Show)

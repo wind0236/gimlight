@@ -18,7 +18,7 @@ import qualified Dungeon.Map.Tile      as MT
 import           Dungeon.Types         (Dungeon, entities, explored, position,
                                         standingImagePath, tileMap, visible)
 import qualified Dungeon.Types         as DT
-import           Engine                (Engine (HandlingScene, PlayerIsExploring, Talking, Title),
+import           GameStatus                (GameStatus (HandlingScene, PlayerIsExploring, Talking, Title),
                                         messageLogList)
 import           Linear.V2             (V2 (V2), _x, _y)
 import           Monomer               (CmbAlignLeft (alignLeft),
@@ -40,8 +40,8 @@ import           Scene                 (backgroundImage, elements, text)
 import           Talking               (TalkWith, message, person)
 import           UI.Types              (AppEvent (AppKeyboardInput))
 
-drawUI :: WidgetEnv Engine AppEvent -> Engine -> WidgetNode Engine AppEvent
-drawUI wenv (Talking with afterEngine) = withKeyEvents $ zstack [ drawUI wenv afterEngine `styleBasic` [bgColor $ gray & L.a .~ 0.5]
+drawUI :: WidgetEnv GameStatus AppEvent -> GameStatus -> WidgetNode GameStatus AppEvent
+drawUI wenv (Talking with afterGameStatus) = withKeyEvents $ zstack [ drawUI wenv afterGameStatus `styleBasic` [bgColor $ gray & L.a .~ 0.5]
                                                                 , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
                                                                 , talkingWindow with
                                                                 ]
@@ -53,8 +53,8 @@ drawUI _ Title = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSiz
                                         , label "[l] Load the savedata"
                                         , label "[q] Quit"
                                         ]
-drawUI _ engine = withKeyEvents $ vstack [ mapGrid engine
-                                         , messageLogArea engine
+drawUI _ gameStatus = withKeyEvents $ vstack [ mapGrid gameStatus
+                                         , messageLogArea gameStatus
                                          ] `styleBasic` [width 0]
 
 withKeyEvents :: WidgetNode s AppEvent -> WidgetNode s AppEvent
@@ -72,12 +72,12 @@ withKeyEvents =
     , "Ctrl-l"
     ]
 
-mapGrid :: (WidgetModel s, WidgetEvent e) => Engine -> WidgetNode s e
-mapGrid engine = zstack (mapTiles engine:mapEntities engine) `styleBasic` [ width $ fromIntegral mapDrawingWidth
+mapGrid :: (WidgetModel s, WidgetEvent e) => GameStatus -> WidgetNode s e
+mapGrid gameStatus = zstack (mapTiles gameStatus:mapEntities gameStatus) `styleBasic` [ width $ fromIntegral mapDrawingWidth
                                                                           , height $ fromIntegral mapDrawingHeight
                                                                           ]
 
-mapTiles :: (WidgetModel s, WidgetEvent e) => Engine ->  WidgetNode s e
+mapTiles :: (WidgetModel s, WidgetEvent e) => GameStatus ->  WidgetNode s e
 mapTiles (PlayerIsExploring d _ _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` styles
     where V2 bottomLeftX bottomLeftY = bottomLeftCoord d
           rows = [hgrid $ row y | y <- [bottomLeftY + tileRows - 1, bottomLeftY + tileRows - 2 .. bottomLeftY]]
@@ -98,7 +98,7 @@ mapTiles (PlayerIsExploring d _ _ _) = box_ [alignLeft] $ vgrid rows `styleBasic
                    , height $ fromIntegral mapDrawingHeight]
 mapTiles _ = undefined
 
-mapEntities :: (WidgetModel s, WidgetEvent e) => Engine -> [WidgetNode s e]
+mapEntities :: (WidgetModel s, WidgetEvent e) => GameStatus -> [WidgetNode s e]
 mapEntities (PlayerIsExploring d _ _ _) = mapMaybe entityToImage $ d ^. entities
     where leftPadding e = fromIntegral $ entityPositionOnDisplay e ^. _x * tileWidth
           topPadding e = fromIntegral $ mapDrawingHeight - (entityPositionOnDisplay e ^. _y + 1) * tileHeight
@@ -114,7 +114,7 @@ mapEntities (PlayerIsExploring d _ _ _) = mapMaybe entityToImage $ d ^. entities
           entityToImage e = guard (isEntityDrawed e) >> return (image (e ^. DT.walkingImagePath) `styleBasic` style e)
 mapEntities _                         = undefined
 
-talkingWindow :: TalkWith -> WidgetNode Engine AppEvent
+talkingWindow :: TalkWith -> WidgetNode GameStatus AppEvent
 talkingWindow tw = hstack [ image (tw ^. person . standingImagePath)
                           , window
                           ]
@@ -122,7 +122,7 @@ talkingWindow tw = hstack [ image (tw ^. person . standingImagePath)
                           , label (tw ^. message) `styleBasic` [textColor red, textSize 16, paddingL 50]
                           ]
 
-messageLogArea :: (WidgetModel s, WidgetEvent e) => Engine -> WidgetNode s e
+messageLogArea :: (WidgetModel s, WidgetEvent e) => GameStatus -> WidgetNode s e
 messageLogArea e = vstack $ fmap (\x -> label_ x [multiline]) $ take logRows $ messageLogList e
 
 topRightCoord :: Dungeon -> Coord

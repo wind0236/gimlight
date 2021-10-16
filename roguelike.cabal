@@ -31,7 +31,7 @@ executable roguelike
                       , Dungeon.Size
                       , Dungeon.Turn
                       , Dungeon.Types
-                      , Engine
+                      , GameStatus
                       , Log
                       , Save
                       , Scene
