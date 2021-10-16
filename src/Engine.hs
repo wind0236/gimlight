@@ -112,8 +112,6 @@ playerBumpAction offset = do
                                       Nothing -> error "whoops."
             Ok -> currentDungeon .= newDungeon
 
-
-
 playerCurrentHp :: Engine -> Int
 playerCurrentHp e = E.getHp $ getPlayerEntity (e ^?! currentDungeon)
 
