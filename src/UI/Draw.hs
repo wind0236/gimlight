@@ -13,15 +13,15 @@ import           Coord                 (Coord)
 import           Data.Array            ((!))
 import           Data.Maybe            (mapMaybe)
 import           Data.Text             (append, pack)
-import           Dungeon               (Dungeon, entities, explored,
+import           Dungeon               (Dungeon, actors, explored,
                                         mapWidthAndHeight, playerPosition,
                                         tileMap, visible)
-import           Dungeon.Entity        (defence, getHp, maxHp, position, power,
+import           Dungeon.Actor         (defence, getHp, maxHp, position, power,
                                         standingImagePath, walkingImagePath)
 import qualified Dungeon.Map.Tile      as MT
 import           GameStatus            (GameStatus, destructHandlingScene,
                                         destructTalking, getCurrentDungeon,
-                                        getPlayerEntity, isHandlingScene,
+                                        getPlayerActor, isHandlingScene,
                                         isPlayerTalking, isTitle,
                                         messageLogList)
 import           Linear.V2             (V2 (V2), _x, _y)
@@ -121,20 +121,20 @@ mapTiles e = box_ [alignLeft] $ vgrid rows `styleBasic` styles
                    , height $ fromIntegral mapDrawingHeight]
 
 mapEntities :: (WidgetModel s, WidgetEvent e) => GameStatus -> [WidgetNode s e]
-mapEntities e = mapMaybe entityToImage $ d ^. entities
+mapEntities e = mapMaybe actorToImage $ d ^. actors
     where d = getCurrentDungeon e
-          leftPadding entity = fromIntegral $ entityPositionOnDisplay entity ^. _x * tileWidth
-          topPadding entity = fromIntegral $ mapDrawingHeight - (entityPositionOnDisplay entity ^. _y + 1) * tileHeight
+          leftPadding actor = fromIntegral $ actorPositionOnDisplay actor ^. _x * tileWidth
+          topPadding actor = fromIntegral $ mapDrawingHeight - (actorPositionOnDisplay actor ^. _y + 1) * tileHeight
 
-          style entity = [paddingL $ leftPadding entity, paddingT $ topPadding entity]
+          style actor = [paddingL $ leftPadding actor, paddingT $ topPadding actor]
 
-          entityPositionOnDisplay entity = entity ^. position - bottomLeftCoord d
+          actorPositionOnDisplay actor = actor ^. position - bottomLeftCoord d
 
-          isEntityDrawed entity = let pos = entityPositionOnDisplay entity
-                                      isVisible = (d ^. visible) ! (entity ^. position)
-                             in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
+          isActorDrawed actor = let pos = actorPositionOnDisplay actor
+                                    isVisible = (d ^. visible) ! (actor ^. position)
+                                in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
 
-          entityToImage entity = guard (isEntityDrawed entity) >> return (image (entity ^. walkingImagePath) `styleBasic` style entity)
+          actorToImage actor = guard (isActorDrawed actor) >> return (image (actor ^. walkingImagePath) `styleBasic` style actor)
 
 statusGrid :: GameStatus -> WidgetNode GameStatus AppEvent
 statusGrid gs = vstack $ maybe []
@@ -142,7 +142,7 @@ statusGrid gs = vstack $ maybe []
            , label $ "HP: " `append` pack (show $ getHp x) `append` " / " `append` pack (show $ x ^. maxHp)
            , label $ "ATK: " `append` pack (show $ x ^. power)
            , label $ "DEF: " `append` pack (show $ x ^. defence)
-           ]) $ getPlayerEntity gs
+           ]) $ getPlayerActor gs
 
 talkingWindow :: TalkWith -> WidgetNode GameStatus AppEvent
 talkingWindow tw = hstack [ image (tw ^. person . standingImagePath)

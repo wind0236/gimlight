@@ -1,5 +1,5 @@
 -- I refer to "Dungeon" in this source code as the mixed things of map and
--- entities because I could not come up with a much more proper word.  So,
+-- actors because I could not come up with a much more proper word.  So,
 -- in this code, "Dungeon" means not only dungeon but also towns, etc.
 --
 -- TODO: Change the word to more precise one.
@@ -14,9 +14,9 @@ module Dungeon
     , popPlayer
     , popActorAt
     , monsters
-    , pushEntity
+    , pushActor
     , walkableFloor
-    , getPlayerEntity
+    , getPlayerActor
     , enemyCoords
     , mapWidthAndHeight
     , playerPosition
@@ -29,7 +29,7 @@ module Dungeon
     , npcs
     , positionOnGlobalMap
     , DungeonKind(..)
-    , entities
+    , actors
     , tileMap
     , visible
     , explored
@@ -46,8 +46,8 @@ import           Data.Binary                    (Binary)
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
 import           Data.Maybe                     (isJust)
-import           Dungeon.Entity                 (Entity, isActor, isMonster,
-                                                 isPlayer, position)
+import           Dungeon.Actor                  (Actor, isMonster, isPlayer,
+                                                 position)
 import           Dungeon.Map.Bool               (BoolMap)
 import           Dungeon.Map.Explored           (ExploredMap, initExploredMap,
                                                  updateExploredMap)
@@ -64,18 +64,18 @@ data Dungeon = Dungeon
           { _tileMap             :: TileMap
           , _visible             :: Fov
           , _explored            :: ExploredMap
-          , _entities            :: [Entity]
+          , _actors              :: [Actor]
           , _positionOnGlobalMap :: Maybe Coord
           , _dungeonKind         :: DungeonKind
           } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Dungeon
 instance Binary Dungeon
 
-dungeon :: TileMap -> [Entity] -> Maybe Coord -> DungeonKind -> Dungeon
+dungeon :: TileMap -> [Actor] -> Maybe Coord -> DungeonKind -> Dungeon
 dungeon t e p d = Dungeon { _tileMap = t
                           , _visible = initFov widthAndHeight
                           , _explored = initExploredMap widthAndHeight
-                          , _entities = e
+                          , _actors = e
                           , _positionOnGlobalMap = p
                           , _dungeonKind = d
                           }
@@ -104,43 +104,43 @@ updateFov = do
     d <- get
 
     let t = transparentMap d
-        p = getPlayerEntity d
+        p = getPlayerActor d
 
     case p of
         Just p' -> visible .= calculateFov (p' ^. position) t
         Nothing -> return ()
 
 playerPosition :: Dungeon -> Maybe Coord
-playerPosition d = (^. position) <$> getPlayerEntity d
+playerPosition d = (^. position) <$> getPlayerActor d
 
-getPlayerEntity :: Dungeon -> Maybe Entity
-getPlayerEntity d = find isPlayer $ d ^. entities
+getPlayerActor :: Dungeon -> Maybe Actor
+getPlayerActor d = find isPlayer $ d ^. actors
 
-actorAt :: Coord -> Dungeon -> Maybe Entity
-actorAt c d = find (\x -> x ^. position == c) $ actors d
+actorAt :: Coord -> Dungeon -> Maybe Actor
+actorAt c d = find (\x -> x ^. position == c) $ d ^. actors
 
-pushEntity :: Entity -> State Dungeon ()
-pushEntity e = state $ \d -> ((), d & entities %~ (e :))
+pushActor :: Actor -> State Dungeon ()
+pushActor e = state $ \d -> ((), d & actors %~ (e :))
 
-popPlayer :: State Dungeon Entity
+popPlayer :: State Dungeon Actor
 popPlayer = state $ \d -> case runState (popActorIf isPlayer) d of
                   (Just x, d') -> (x, d')
-                  (Nothing, _) -> error "No player entity."
+                  (Nothing, _) -> error "No player actor."
 
-popActorAt :: Coord -> State Dungeon (Maybe Entity)
+popActorAt :: Coord -> State Dungeon (Maybe Actor)
 popActorAt c = popActorIf (\x -> x ^. position == c)
 
-popActorIf :: (Entity -> Bool) -> State Dungeon (Maybe Entity)
+popActorIf :: (Actor -> Bool) -> State Dungeon (Maybe Actor)
 popActorIf f = state $ \d ->
-    let xs = d ^. entities
+    let xs = d ^. actors
     in case findIndex f xs of
-        Just x -> let entity = xs !! x
+        Just x -> let actor = xs !! x
                       newEntities = take x xs ++ drop (x + 1) xs
-                  in (Just entity, d & entities .~ newEntities)
+                  in (Just actor, d & actors .~ newEntities)
         Nothing -> (Nothing, d)
 
 initialPlayerPositionCandidates :: Dungeon -> [Coord]
-initialPlayerPositionCandidates d = filter (\x -> x `notElem` map (^. position) (d ^. entities)) $
+initialPlayerPositionCandidates d = filter (\x -> x `notElem` map (^. position) (d ^. actors)) $
     map fst $ filter snd $ assocs $ walkableFloor d
 
 walkableFloor :: Dungeon -> BoolMap
@@ -150,19 +150,16 @@ transparentMap :: Dungeon -> BoolMap
 transparentMap d = fmap (^. transparent) (d ^. tileMap)
 
 enemyCoords :: Dungeon -> [Coord]
-enemyCoords d = map (^. position) $ filter (not . isPlayer) $ d ^. entities
+enemyCoords d = map (^. position) $ filter (not . isPlayer) $ d ^. actors
 
 isPlayerAlive :: Dungeon -> Bool
-isPlayerAlive d = isJust $ getPlayerEntity d
+isPlayerAlive d = isJust $ getPlayerActor d
 
-actors :: Dungeon -> [Entity]
-actors d = filter isActor $ d ^. entities
+npcs :: Dungeon -> [Actor]
+npcs d = filter (not . isPlayer) $ d ^. actors
 
-npcs :: Dungeon -> [Entity]
-npcs d = filter (not . isPlayer) $ d ^. entities
-
-monsters :: Dungeon -> [Entity]
-monsters d = filter isMonster $ d ^. entities
+monsters :: Dungeon -> [Actor]
+monsters d = filter isMonster $ d ^. actors
 
 mapWidthAndHeight :: Dungeon -> V2 Int
 mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1

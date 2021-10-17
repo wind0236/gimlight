@@ -4,8 +4,8 @@ module UI.Types
     , AppEvent(..)
     ) where
 
-import           Data.Text (Text)
-import           GameStatus    (GameStatus)
+import           Data.Text  (Text)
+import           GameStatus (GameStatus)
 
 data Tick = Tick
 

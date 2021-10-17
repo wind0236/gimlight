@@ -13,11 +13,11 @@ executable roguelike
 
     other-modules:      Coord
                       , Dungeon
-                      , Dungeon.Entity
-                      , Dungeon.Entity.Actions
-                      , Dungeon.Entity.Behavior
-                      , Dungeon.Entity.Friendly
-                      , Dungeon.Entity.Monsters
+                      , Dungeon.Actor
+                      , Dungeon.Actor.Actions
+                      , Dungeon.Actor.Behavior
+                      , Dungeon.Actor.Friendly
+                      , Dungeon.Actor.Monsters
                       , Dungeon.Generate
                       , Dungeon.Generate.Room
                       , Dungeon.Init

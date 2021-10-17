@@ -17,7 +17,7 @@ module GameStatus
     , getCurrentDungeon
     , destructTalking
     , destructHandlingScene
-    , getPlayerEntity
+    , getPlayerActor
     , messageLogList
     , title
     ) where
@@ -30,17 +30,17 @@ import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
 import           Data.List                      (find, findIndex)
-import           Dungeon                        (Dungeon, entities,
+import           Dungeon                        (Dungeon, actors,
                                                  initialPlayerPositionCandidates,
                                                  isTown, npcs, popPlayer,
                                                  positionOnGlobalMap, updateMap)
 import qualified Dungeon                        as D
-import           Dungeon.Entity                 (Entity, isMonster, position,
+import           Dungeon.Actor                  (Actor, isMonster, position,
                                                  talkMessage)
-import qualified Dungeon.Entity                 as E
-import           Dungeon.Entity.Actions         (Action, meleeAction,
+import qualified Dungeon.Actor                  as E
+import           Dungeon.Actor.Actions          (Action, meleeAction,
                                                  moveAction)
-import           Dungeon.Entity.Behavior        (npcAction)
+import           Dungeon.Actor.Behavior         (npcAction)
 import           Dungeon.Init                   (initDungeon)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
@@ -117,7 +117,7 @@ enterTownAtPlayerPosition e =
             let newPosition = head $ initialPlayerPositionCandidates d
                 (p, currentDungeon') = runState popPlayer (e ^?! currentDungeon)
             otherDungeons %= (:) currentDungeon'
-            currentDungeon .= (d & entities %~ (:) (p & position .~ newPosition))
+            currentDungeon .= (d & actors %~ (:) (p & position .~ newPosition))
             currentDungeon %= execState updateMap
         (Nothing, _) -> e
 
@@ -222,11 +222,11 @@ playerBumpAction offset = do
                              Just pos -> pos
                              Nothing -> error "The new position is not specified."
                      currentDungeon .= case g of
-                         Just g' -> g' & entities %~ (:) newPlayer
+                         Just g' -> g' & actors %~ (:) newPlayer
                          Nothing -> error "Global map not found."
                      return True
 
-meleeOrTalk :: V2 Int -> Entity -> State GameStatus Bool
+meleeOrTalk :: V2 Int -> Actor -> State GameStatus Bool
 meleeOrTalk offset target = do
     gameStatus <- get
 
@@ -249,11 +249,11 @@ doAction action = do
     currentDungeon .= currentDungeon'
     return success
 
-getPlayerEntity :: GameStatus -> Maybe Entity
-getPlayerEntity (PlayerIsExploring d _ _ _) = D.getPlayerEntity d
-getPlayerEntity (Talking _ gs)              = GameStatus.getPlayerEntity gs
-getPlayerEntity (HandlingScene _ gs)        = GameStatus.getPlayerEntity gs
-getPlayerEntity Title                       = error "We are in the title."
+getPlayerActor :: GameStatus -> Maybe Actor
+getPlayerActor (PlayerIsExploring d _ _ _) = D.getPlayerActor d
+getPlayerActor (Talking _ gs)              = GameStatus.getPlayerActor gs
+getPlayerActor (HandlingScene _ gs)        = GameStatus.getPlayerActor gs
+getPlayerActor Title                       = error "We are in the title."
 
 playerPosition :: GameStatus -> Maybe Coord
 playerPosition (PlayerIsExploring d _ _ _) = D.playerPosition d
@@ -261,7 +261,7 @@ playerPosition (Talking _ e)               = playerPosition e
 playerPosition (HandlingScene _ e)         = playerPosition e
 playerPosition Title                       = error "unreachable."
 
-actorAt :: Coord -> GameStatus -> Maybe E.Entity
+actorAt :: Coord -> GameStatus -> Maybe E.Actor
 actorAt c (PlayerIsExploring d _ _ _) = D.actorAt c d
 actorAt c (Talking _ e)               = actorAt c e
 actorAt c (HandlingScene _ e)         = actorAt c e

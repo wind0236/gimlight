@@ -2,15 +2,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Dungeon.Entity
-    ( Entity
+module Dungeon.Actor
+    ( Actor
     , player
     , getHp
     , updateHp
     , monster
     , isPlayer
     , isMonster
-    , isActor
     , ActorKind(FriendlyNpc)
     , actor
     , position
@@ -34,24 +33,24 @@ import           GHC.Generics (Generic)
 data ActorKind = Player | FriendlyNpc | Monster deriving (Show, Ord, Eq, Generic)
 instance Binary ActorKind
 
-data Entity = Actor
-            { _position          :: Coord
-            , _name              :: Text
-            , _hp                :: Int
-            , _maxHp             :: Int
-            , _defence           :: Int
-            , _power             :: Int
-            , _pathToDestination :: [Coord]
-            , _blocksMovement    :: Bool
-            , _actorKind         :: ActorKind
-            , _talkMessage       :: Text
-            , _walkingImagePath  :: Text
-            , _standingImagePath :: Text
-            } deriving (Show, Ord, Eq, Generic)
-makeLenses ''Entity
-instance Binary Entity
+data Actor = Actor
+           { _position          :: Coord
+           , _name              :: Text
+           , _hp                :: Int
+           , _maxHp             :: Int
+           , _defence           :: Int
+           , _power             :: Int
+           , _pathToDestination :: [Coord]
+           , _blocksMovement    :: Bool
+           , _actorKind         :: ActorKind
+           , _talkMessage       :: Text
+           , _walkingImagePath  :: Text
+           , _standingImagePath :: Text
+           } deriving (Show, Ord, Eq, Generic)
+makeLenses ''Actor
+instance Binary Actor
 
-actor :: Coord -> Text -> Int -> Int -> Int -> Bool -> ActorKind -> Text -> Text -> Text -> Entity
+actor :: Coord -> Text -> Int -> Int -> Int -> Bool -> ActorKind -> Text -> Text -> Text -> Actor
 actor position' name' hp' defence' power' blocksMovement' ak talkMessage' walkingImagePath' standingImagePath'=
         Actor { _position = position'
               , _name = name'
@@ -67,24 +66,21 @@ actor position' name' hp' defence' power' blocksMovement' ak talkMessage' walkin
               , _actorKind = ak
               }
 
-monster :: Coord -> Text -> Int -> Int -> Int -> Text -> Entity
+monster :: Coord -> Text -> Int -> Int -> Int -> Text -> Actor
 monster position' name' maxHp' defence' power' walking = actor position' name' maxHp' defence' power' True Monster "" walking "images/sample_standing_picture.png"
 
-player :: Coord -> Entity
+player :: Coord -> Actor
 player c = actor c "Player" 30 2 5 True Player "" "images/player.png" "images/sample_standing_picture.png"
 
-isActor :: Entity -> Bool
-isActor Actor{} = True
-
-isPlayer :: Entity -> Bool
+isPlayer :: Actor -> Bool
 isPlayer e = (e ^. actorKind) == Player
 
-isMonster :: Entity -> Bool
+isMonster :: Actor -> Bool
 isMonster e = (e ^. actorKind) == Monster
 
-getHp :: Entity -> Int
+getHp :: Actor -> Int
 getHp e = e ^. hp
 
-updateHp :: Entity -> Int -> Entity
+updateHp :: Actor -> Int -> Actor
 updateHp e newHp = e & hp .~ newHpInRange
     where newHpInRange = max 0 $ min (e ^. maxHp) newHp

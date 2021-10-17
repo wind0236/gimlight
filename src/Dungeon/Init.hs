@@ -3,7 +3,7 @@ module Dungeon.Init
     ) where
 import           Control.Monad.Trans.State (execState)
 import           Dungeon                   (Dungeon, updateMap)
-import           Dungeon.Entity            (player)
+import           Dungeon.Actor             (player)
 import           Dungeon.Predefined.Beaeve (beaeve)
 import           Linear.V2                 (V2 (V2))
 

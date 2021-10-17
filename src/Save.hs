@@ -4,7 +4,7 @@ module Save
     ) where
 
 import           Data.Binary (decodeFile, encodeFile)
-import           GameStatus      (GameStatus)
+import           GameStatus  (GameStatus)
 
 save :: GameStatus -> IO ()
 save = encodeFile saveFile
