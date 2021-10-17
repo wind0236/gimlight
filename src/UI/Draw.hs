@@ -13,13 +13,12 @@ import           Coord                 (Coord)
 import           Data.Array            ((!))
 import           Data.Maybe            (mapMaybe)
 import           Data.Text             (append, pack)
-import           Dungeon               (mapWidthAndHeight, playerPosition)
-import           Dungeon.Entity        (getHp)
+import           Dungeon               (Dungeon, entities, explored,
+                                        mapWidthAndHeight, playerPosition,
+                                        tileMap, visible)
+import           Dungeon.Entity        (defence, getHp, maxHp, position, power,
+                                        standingImagePath, walkingImagePath)
 import qualified Dungeon.Map.Tile      as MT
-import           Dungeon.Types         (Dungeon, defence, entities, explored,
-                                        maxHp, position, power,
-                                        standingImagePath, tileMap, visible)
-import qualified Dungeon.Types         as DT
 import           GameStatus            (GameStatus, destructHandlingScene,
                                         destructTalking, getCurrentDungeon,
                                         getPlayerEntity, isHandlingScene,
@@ -135,7 +134,7 @@ mapEntities e = mapMaybe entityToImage $ d ^. entities
                                       isVisible = (d ^. visible) ! (entity ^. position)
                              in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
 
-          entityToImage entity = guard (isEntityDrawed entity) >> return (image (entity ^. DT.walkingImagePath) `styleBasic` style entity)
+          entityToImage entity = guard (isEntityDrawed entity) >> return (image (entity ^. walkingImagePath) `styleBasic` style entity)
 
 statusGrid :: GameStatus -> WidgetNode GameStatus AppEvent
 statusGrid gs = vstack $ maybe []

@@ -2,9 +2,9 @@ module Dungeon.Predefined.GlobalMap
     ( globalMap
     ) where
 import           Data.Array       ((//))
+import           Dungeon          (Dungeon, DungeonKind (GlobalMap), dungeon)
 import           Dungeon.Map.Tile (TileMap, allWallTiles, dungeonTile,
                                    floorTile, townTile, wallTile)
-import           Dungeon.Types    (Dungeon, DungeonKind (GlobalMap), dungeon)
 import           Linear.V2        (V2 (V2))
 
 globalMap :: Dungeon

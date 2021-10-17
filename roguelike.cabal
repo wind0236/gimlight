@@ -20,6 +20,7 @@ executable roguelike
                       , Dungeon.Entity.Monsters
                       , Dungeon.Generate
                       , Dungeon.Generate.Room
+                      , Dungeon.Init
                       , Dungeon.Map
                       , Dungeon.Map.Bool
                       , Dungeon.Map.Explored
@@ -31,7 +32,6 @@ executable roguelike
                       , Dungeon.Predefined.GlobalMap
                       , Dungeon.Size
                       , Dungeon.Turn
-                      , Dungeon.Types
                       , GameStatus
                       , Log
                       , Save

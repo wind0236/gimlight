@@ -30,22 +30,21 @@ import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
 import           Data.List                      (find, findIndex)
-import           Dungeon                        (Dungeon, initDungeon,
+import           Dungeon                        (Dungeon, entities,
                                                  initialPlayerPositionCandidates,
                                                  isTown, npcs, popPlayer,
-                                                 updateMap)
+                                                 positionOnGlobalMap, updateMap)
 import qualified Dungeon                        as D
-import           Dungeon.Entity                 (isMonster)
+import           Dungeon.Entity                 (Entity, isMonster, position,
+                                                 talkMessage)
 import qualified Dungeon.Entity                 as E
 import           Dungeon.Entity.Actions         (Action, meleeAction,
                                                  moveAction)
 import           Dungeon.Entity.Behavior        (npcAction)
+import           Dungeon.Init                   (initDungeon)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
-import           Dungeon.Types                  (Entity, entities, position,
-                                                 positionOnGlobalMap,
-                                                 talkMessage)
 import           GHC.Generics                   (Generic)
 import           Linear.V2                      (V2)
 import           Log                            (MessageLog, addMessage,

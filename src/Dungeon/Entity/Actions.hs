@@ -14,13 +14,13 @@ import           Coord                     (Coord)
 import           Data.Array                ((!))
 import           Data.List                 (find)
 import           Data.Text                 (append, pack)
-import           Dungeon                   (Dungeon, mapWidthAndHeight,
-                                            popActorAt, pushEntity)
-import           Dungeon.Entity            (getHp, isPlayer, updateHp)
+import           Dungeon                   (Dungeon, entities,
+                                            mapWidthAndHeight, popActorAt,
+                                            pushEntity, tileMap)
+import           Dungeon.Entity            (Entity, blocksMovement, defence,
+                                            getHp, isPlayer, name, position,
+                                            power, updateHp)
 import           Dungeon.Map.Tile          (walkable)
-import           Dungeon.Types             (Entity, blocksMovement, defence,
-                                            entities, name, position, power,
-                                            tileMap)
 import           Linear.V2                 (V2 (V2))
 import           Log                       (MessageLog, message)
 

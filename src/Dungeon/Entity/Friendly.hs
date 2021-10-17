@@ -6,8 +6,7 @@ module Dungeon.Entity.Friendly
 
 import           Coord          (Coord)
 import           Data.Text      (Text)
-import           Dungeon.Entity (Entity)
-import           Dungeon.Types  (ActorKind (FriendlyNpc), actor)
+import           Dungeon.Entity (ActorKind (FriendlyNpc), Entity, actor)
 
 electria :: Coord -> Entity
 electria position = friendly position "Electria" 1 1 1 "How's it going, Ruskell?" "images/electria.png" "images/sample_standing_picture.png"

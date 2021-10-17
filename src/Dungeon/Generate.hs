@@ -5,14 +5,13 @@ module Dungeon.Generate
 import           Control.Lens            ((^.))
 import           Coord                   (Coord)
 import           Data.Array              (bounds, (//))
-import           Dungeon.Entity          (Entity)
+import           Dungeon.Entity          (Entity, position)
 import           Dungeon.Entity.Monsters (orc, troll)
 import           Dungeon.Generate.Room   (Room (..), center,
                                           roomFromTwoPositionInclusive,
                                           roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile)
 import           Dungeon.Size            (maxSize, minSize)
-import           Dungeon.Types           (position)
 import           Linear.V2               (V2 (..), _x, _y)
 import           System.Random           (Random (randomR), StdGen, random)
 

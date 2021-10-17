@@ -4,9 +4,11 @@
 --
 -- TODO: Change the word to more precise one.
 
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Dungeon
-    ( initDungeon
-    , Dungeon
+    ( Dungeon
     , dungeon
     , completeThisTurn
     , popPlayer
@@ -25,32 +27,59 @@ module Dungeon
     , actorAt
     , isPositionInDungeon
     , npcs
+    , positionOnGlobalMap
+    , DungeonKind(..)
+    , entities
+    , tileMap
+    , visible
+    , explored
     ) where
 
-import           Control.Lens                   ((%~), (&), (.=), (.~), (^.))
+import           Control.Lens                   (makeLenses, (%~), (&), (.=),
+                                                 (.~), (^.))
 import           Control.Lens.Getter            (use)
 import           Control.Monad.Trans.State      (State, runState, state)
-import           Control.Monad.Trans.State.Lazy (execState, get)
+import           Control.Monad.Trans.State.Lazy (get)
 import           Coord                          (Coord)
 import           Data.Array.Base                (IArray (bounds), assocs)
+import           Data.Binary                    (Binary)
 import           Data.Foldable                  (find)
 import           Data.List                      (findIndex)
 import           Data.Maybe                     (isJust)
 import           Dungeon.Entity                 (Entity, isActor, isMonster,
-                                                 isPlayer)
-import qualified Dungeon.Entity                 as E
+                                                 isPlayer, position)
 import           Dungeon.Map.Bool               (BoolMap)
-import           Dungeon.Map.Explored           (updateExploredMap)
-import           Dungeon.Map.Fov                (calculateFov)
-import           Dungeon.Map.Tile               (transparent, walkable)
-import           Dungeon.Predefined.Beaeve      (beaeve)
+import           Dungeon.Map.Explored           (ExploredMap, initExploredMap,
+                                                 updateExploredMap)
+import           Dungeon.Map.Fov                (Fov, calculateFov, initFov)
+import           Dungeon.Map.Tile               (TileMap, transparent, walkable)
 import qualified Dungeon.Turn                   as DT
-import           Dungeon.Types                  (Dungeon,
-                                                 DungeonKind (GlobalMap, Town),
-                                                 dungeon, dungeonKind, entities,
-                                                 explored, position, tileMap,
-                                                 visible)
+import           GHC.Generics                   (Generic)
 import           Linear.V2                      (V2 (..))
+
+data DungeonKind = Town | DungeonType | GlobalMap deriving (Show, Ord, Eq, Generic)
+instance Binary DungeonKind
+
+data Dungeon = Dungeon
+          { _tileMap             :: TileMap
+          , _visible             :: Fov
+          , _explored            :: ExploredMap
+          , _entities            :: [Entity]
+          , _positionOnGlobalMap :: Maybe Coord
+          , _dungeonKind         :: DungeonKind
+          } deriving (Show, Ord, Eq, Generic)
+makeLenses ''Dungeon
+instance Binary Dungeon
+
+dungeon :: TileMap -> [Entity] -> Maybe Coord -> DungeonKind -> Dungeon
+dungeon t e p d = Dungeon { _tileMap = t
+                          , _visible = initFov widthAndHeight
+                          , _explored = initExploredMap widthAndHeight
+                          , _entities = e
+                          , _positionOnGlobalMap = p
+                          , _dungeonKind = d
+                          }
+    where widthAndHeight = snd (bounds t) + V2 1 1
 
 completeThisTurn :: State Dungeon DT.Status
 completeThisTurn = do
@@ -148,9 +177,3 @@ isPositionInDungeon :: Coord -> Dungeon -> Bool
 isPositionInDungeon c d = x >= 0 && x < width && y >= 0 && y < height
     where V2 width height = mapWidthAndHeight d
           V2 x y = c
-
-initDungeon :: Dungeon
-initDungeon =
-        let player = E.player $ V2 5 5
-            d = beaeve player
-        in execState updateMap d

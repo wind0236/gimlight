@@ -1,8 +1,9 @@
 module Dungeon.Predefined.BatsCave
     ( batsDungeon
     ) where
+
+import           Dungeon          (Dungeon, DungeonKind (DungeonType), dungeon)
 import           Dungeon.Generate (generateDungeon)
-import           Dungeon.Types    (Dungeon, DungeonKind (DungeonType), dungeon)
 import           Linear.V2        (V2 (V2))
 import           System.Random    (StdGen)
 

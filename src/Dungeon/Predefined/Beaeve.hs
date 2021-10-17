@@ -3,11 +3,11 @@ module Dungeon.Predefined.Beaeve
     ) where
 
 import           Data.Array              ((//))
+import           Dungeon                 (Dungeon, DungeonKind (Town), dungeon)
 import           Dungeon.Entity          (Entity)
 import           Dungeon.Entity.Friendly (electria)
 import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile,
                                           wallTile)
-import           Dungeon.Types           (Dungeon, DungeonKind (Town), dungeon)
 import           Linear.V2               (V2 (V2))
 
 beaeve :: Entity -> Dungeon

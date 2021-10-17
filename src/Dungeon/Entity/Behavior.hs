@@ -8,10 +8,10 @@ import           Control.Lens              ((&), (.~), (^.))
 import           Control.Monad.Trans.State (State, get)
 import           Data.Maybe                (fromMaybe)
 import           Dungeon                   (Dungeon, getPlayerEntity)
+import           Dungeon.Entity            (Entity, pathToDestination, position)
 import           Dungeon.Entity.Actions    (Action, meleeAction, moveAction,
                                             waitAction)
 import           Dungeon.PathFinder        (getPathTo)
-import           Dungeon.Types             (Entity, pathToDestination, position)
 import           Linear.V2                 (V2 (V2))
 import           Log                       (MessageLog)
 
