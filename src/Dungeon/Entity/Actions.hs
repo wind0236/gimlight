@@ -14,7 +14,7 @@ import           Coord                     (Coord)
 import           Data.Array                ((!))
 import           Data.List                 (find)
 import           Data.Text                 (append, pack)
-import           Dungeon                   (Dungeon, isTown, mapWidthAndHeight,
+import           Dungeon                   (Dungeon, mapWidthAndHeight,
                                             popActorAt, pushEntity)
 import           Dungeon.Entity            (getHp, isPlayer, updateHp)
 import           Dungeon.Map.Tile          (walkable)
@@ -58,11 +58,11 @@ meleeAction offset src = do
                                     return [message $ msg `append` " but does not damage."]
 
 moveAction :: V2 Int -> Action
-moveAction offset src = state $ \d -> ([], result d)
-    where result d = execState (pushEntity $ newEntity d) d
-          newEntity d = if not (movable d (src ^. position + offset)) && isTown d
-                            then src
-                            else updatePosition d src offset
+moveAction offset src = state $ \d -> result d
+    where result d = (\(x, y) -> (x, execState y d)) $ messageAndNewEntity d
+          messageAndNewEntity d = if not (movable d (src ^. position + offset))
+                                    then (["That way is blocked."], pushEntity src)
+                                    else ([], pushEntity $ updatePosition d src offset)
 
 waitAction :: Action
 waitAction e = do

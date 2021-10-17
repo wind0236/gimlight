@@ -7,7 +7,7 @@ module GameStatus where
 
 import           Control.Lens                   (makeLenses, (%=), (%~), (&),
                                                  (.=), (.~), (^.), (^?!))
-import           Control.Monad.Trans.State      (State, execState, get)
+import           Control.Monad.Trans.State      (State, get)
 import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
@@ -111,9 +111,10 @@ playerBumpAction offset = do
         Nothing                 ->
             if isPositionInDungeon destination gameStatus
                 then do
-                    let currentDungeon' = flip execState (gameStatus ^?! currentDungeon) $ do
+                    let (msg, currentDungeon') = flip runState (gameStatus ^?! currentDungeon) $ do
                             p <- popPlayer
                             moveAction offset p
+                    messageLog %= addMessages msg
                     currentDungeon .= currentDungeon'
                 else let (p, currentDungeon') = runState popPlayer (gameStatus ^?! currentDungeon)
                      in do
