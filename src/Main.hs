@@ -2,18 +2,19 @@
 
 module Main (main) where
 
-import           GameStatus   (GameStatus (Title))
-import           Monomer  (MainWindowState (MainWindowNormal), appFontDef,
-                           appInitEvent, appTheme, appWindowResizable,
-                           appWindowState, appWindowTitle, darkTheme, startApp)
-import           UI.Draw  (drawUI, windowHeight, windowWidth)
-import qualified UI.Event as E
-import           UI.Types (AppEvent (..))
+import           GameStatus (title)
+import           Monomer    (MainWindowState (MainWindowNormal), appFontDef,
+                             appInitEvent, appTheme, appWindowResizable,
+                             appWindowState, appWindowTitle, darkTheme,
+                             startApp)
+import           UI.Draw    (drawUI, windowHeight, windowWidth)
+import qualified UI.Event   as E
+import           UI.Types   (AppEvent (..))
 
 main :: IO ()
 main = startApp model handleEvent buildUI config
     where
-        model = Title
+        model = title
         handleEvent = E.handleEvent
         buildUI = drawUI
         config = [ appWindowTitle "Roguelike"

@@ -3,19 +3,37 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module GameStatus where
+module GameStatus
+    ( GameStatus
+    , handlePlayerMoving
+    , isPlayerExploring
+    , isPlayerTalking
+    , isHandlingScene
+    , isTitle
+    , nextSceneElementOrFinish
+    , enterTownAtPlayerPosition
+    , finishTalking
+    , newGameStatus
+    , getCurrentDungeon
+    , destructTalking
+    , destructHandlingScene
+    , getPlayerEntity
+    , messageLogList
+    , title
+    ) where
 
-import           Control.Lens                   (makeLenses, (%=), (%~), (&),
-                                                 (.=), (.~), (^.), (^?!))
+import           Control.Lens                   (makeLensesFor, (%=), (%~), (&),
+                                                 (&~), (.=), (.~), (^.), (^?!))
 import           Control.Monad                  (unless, when)
-import           Control.Monad.Trans.State      (State, get)
+import           Control.Monad.Trans.State      (State, execState, get)
 import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
 import           Data.List                      (find, findIndex)
-import           Dungeon                        (Dungeon, initDungeon, isTown,
-                                                 mapWidthAndHeight, npcs,
-                                                 popPlayer)
+import           Dungeon                        (Dungeon, initDungeon,
+                                                 initialPlayerPositionCandidates,
+                                                 isTown, npcs, popPlayer,
+                                                 updateMap)
 import qualified Dungeon                        as D
 import           Dungeon.Entity                 (isMonster)
 import qualified Dungeon.Entity                 as E
@@ -25,15 +43,16 @@ import           Dungeon.Entity.Behavior        (npcAction)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
-import           Dungeon.Types                  (Entity, entities, maxHp,
-                                                 position, positionOnGlobalMap,
+import           Dungeon.Types                  (Entity, entities, position,
+                                                 positionOnGlobalMap,
                                                  talkMessage)
 import           GHC.Generics                   (Generic)
 import           Linear.V2                      (V2)
 import           Log                            (MessageLog, addMessage,
                                                  addMessages)
 import qualified Log                            as L
-import           Scene                          (Scene, gameStartScene)
+import           Scene                          (Scene, elements,
+                                                 gameStartScene)
 import           System.Random                  (getStdGen)
 import           Talking                        (TalkWith, talkWith)
 
@@ -50,7 +69,11 @@ data GameStatus = PlayerIsExploring
           , _afterFinish :: GameStatus
           } | Title
           deriving (Show, Ord, Eq, Generic)
-makeLenses ''GameStatus
+makeLensesFor [ ("_currentDungeon", "currentDungeon")
+              , ("_otherDungeons", "otherDungeons")
+              , ("_messageLog", "messageLog")
+              , ("_isGameOver", "isGameOver")
+              ] ''GameStatus
 instance Binary GameStatus
 
 handlePlayerMoving :: V2 Int -> State GameStatus ()
@@ -65,6 +88,82 @@ handlePlayerMoving offset = do
             case eng' of
                 PlayerIsExploring {} -> completeThisTurn
                 _                    -> return ()
+
+isPlayerExploring :: GameStatus -> Bool
+isPlayerExploring PlayerIsExploring{} = True
+isPlayerExploring _                   = False
+
+isPlayerTalking :: GameStatus -> Bool
+isPlayerTalking Talking{} = True
+isPlayerTalking _         = False
+
+isHandlingScene :: GameStatus -> Bool
+isHandlingScene HandlingScene{} = True
+isHandlingScene _               = False
+
+isTitle :: GameStatus -> Bool
+isTitle Title = True
+isTitle _     = False
+
+nextSceneElementOrFinish :: GameStatus -> GameStatus
+nextSceneElementOrFinish (HandlingScene s after) = if length (s ^. elements) == 1
+                                                    then after
+                                                    else HandlingScene (s & elements %~ tail) after
+nextSceneElementOrFinish _                   = error "We are not handling a scene."
+
+enterTownAtPlayerPosition :: GameStatus -> GameStatus
+enterTownAtPlayerPosition e =
+    case popDungeonAtPlayerPosition e of
+        (Just d, e') -> e' &~ do
+            let newPosition = head $ initialPlayerPositionCandidates d
+                (p, currentDungeon') = runState popPlayer (e ^?! currentDungeon)
+            otherDungeons %= (:) currentDungeon'
+            currentDungeon .= (d & entities %~ (:) (p & position .~ newPosition))
+            currentDungeon %= execState updateMap
+        (Nothing, _) -> e
+
+finishTalking :: GameStatus -> GameStatus
+finishTalking (Talking _ after) = after
+finishTalking _                 = error "We are not in the talking."
+
+newGameStatus :: IO GameStatus
+newGameStatus = do
+    g <- getStdGen
+
+    let bats = batsDungeon g
+        initPlayerIsExploring = PlayerIsExploring
+            { _currentDungeon = initDungeon
+            , _otherDungeons = [globalMap, bats]
+            , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
+            , _isGameOver = False
+            }
+    return HandlingScene
+        { _scene = gameStartScene
+        , _afterFinish = initPlayerIsExploring
+        }
+
+getCurrentDungeon :: GameStatus -> Dungeon
+getCurrentDungeon (PlayerIsExploring d _ _ _) = d
+getCurrentDungeon (Talking _ after)           = getCurrentDungeon after
+getCurrentDungeon (HandlingScene _ after)     = getCurrentDungeon after
+getCurrentDungeon Title                       = error "We are in the title."
+
+destructTalking :: GameStatus -> (TalkWith, GameStatus)
+destructTalking (Talking tw after) = (tw, after)
+destructTalking _                  = error "We are not in the talking."
+
+destructHandlingScene :: GameStatus -> (Scene, GameStatus)
+destructHandlingScene (HandlingScene s after) = (s, after)
+destructHandlingScene _ = error "We are not handling a scene."
+
+messageLogList :: GameStatus -> MessageLog
+messageLogList (PlayerIsExploring _ _ l _) = l
+messageLogList (Talking _ e)               = messageLogList e
+messageLogList (HandlingScene _ e)         = messageLogList e
+messageLogList Title                       = error "no message log."
+
+title :: GameStatus
+title = Title
 
 completeThisTurn :: State GameStatus ()
 completeThisTurn = do
@@ -151,18 +250,11 @@ doAction action = do
     currentDungeon .= currentDungeon'
     return success
 
-
 getPlayerEntity :: GameStatus -> Maybe Entity
 getPlayerEntity (PlayerIsExploring d _ _ _) = D.getPlayerEntity d
 getPlayerEntity (Talking _ gs)              = GameStatus.getPlayerEntity gs
 getPlayerEntity (HandlingScene _ gs)        = GameStatus.getPlayerEntity gs
 getPlayerEntity Title                       = error "We are in the title."
-
-playerCurrentHp :: GameStatus -> Maybe Int
-playerCurrentHp gs = E.getHp <$> getPlayerEntity gs
-
-playerMaxHp :: GameStatus -> Maybe Int
-playerMaxHp gs = (^. maxHp) <$> getPlayerEntity gs
 
 playerPosition :: GameStatus -> Maybe Coord
 playerPosition (PlayerIsExploring d _ _ _) = D.playerPosition d
@@ -182,12 +274,6 @@ isPositionInDungeon c (Talking _ e)               = isPositionInDungeon c e
 isPositionInDungeon c (HandlingScene _ e)         = isPositionInDungeon c e
 isPositionInDungeon _ Title                       = error "We are in the title."
 
-currentMapWidthAndHeight :: GameStatus -> V2 Int
-currentMapWidthAndHeight (PlayerIsExploring d _ _ _) = mapWidthAndHeight d
-currentMapWidthAndHeight (Talking _ e)             = currentMapWidthAndHeight e
-currentMapWidthAndHeight (HandlingScene _ e)       = currentMapWidthAndHeight e
-currentMapWidthAndHeight _                         = error "unreachable."
-
 popDungeonAtPlayerPosition :: GameStatus -> (Maybe Dungeon, GameStatus)
 popDungeonAtPlayerPosition g = case playerPosition g of
                                    Just p  -> popDungeonAt p g
@@ -200,25 +286,3 @@ popDungeonAt p e = let xs = e ^. otherDungeons
                                         newOtherDungeons = take x xs ++ drop (x + 1) xs
                                     in (Just d, e & otherDungeons .~ newOtherDungeons)
                           Nothing -> (Nothing, e)
-
-messageLogList :: GameStatus -> MessageLog
-messageLogList (PlayerIsExploring _ _ l _) = l
-messageLogList (Talking _ e)               = messageLogList e
-messageLogList (HandlingScene _ e)         = messageLogList e
-messageLogList Title                       = error "no message log."
-
-newGameGameStatus :: IO GameStatus
-newGameGameStatus = do
-    g <- getStdGen
-
-    let bats = batsDungeon g
-        initPlayerIsExploring = PlayerIsExploring
-            { _currentDungeon = initDungeon
-            , _otherDungeons = [globalMap, bats]
-            , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
-            , _isGameOver = False
-            }
-    return HandlingScene
-        { _scene = gameStartScene
-        , _afterFinish = initPlayerIsExploring
-        }

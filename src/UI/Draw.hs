@@ -20,8 +20,11 @@ import           Dungeon.Types         (Dungeon, defence, entities, explored,
                                         maxHp, position, power,
                                         standingImagePath, tileMap, visible)
 import qualified Dungeon.Types         as DT
-import           GameStatus            (GameStatus (HandlingScene, PlayerIsExploring, Talking, Title),
-                                        getPlayerEntity, messageLogList)
+import           GameStatus            (GameStatus, destructHandlingScene,
+                                        destructTalking, getCurrentDungeon,
+                                        getPlayerEntity, isHandlingScene,
+                                        isPlayerTalking, isTitle,
+                                        messageLogList)
 import           Linear.V2             (V2 (V2), _x, _y)
 import           Monomer               (CmbAlignLeft (alignLeft),
                                         CmbBgColor (bgColor),
@@ -43,24 +46,11 @@ import           Talking               (TalkWith, message, person)
 import           UI.Types              (AppEvent (AppKeyboardInput))
 
 drawUI :: WidgetEnv GameStatus AppEvent -> GameStatus -> WidgetNode GameStatus AppEvent
-drawUI wenv (Talking with afterGameStatus) = withKeyEvents $ zstack [ drawUI wenv afterGameStatus `styleBasic` [bgColor $ gray & L.a .~ 0.5]
-                                                                , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
-                                                                , talkingWindow with
-                                                                ]
-drawUI _ (HandlingScene s _) = withKeyEvents $ zstack [ image (s ^. backgroundImage)
-                                                      , label_  (text $ head $ s ^. elements) [multiline] `styleBasic` [textColor black]
-                                                      ]
-drawUI _ Title = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSize 36]
-                                        , label "[n] New game"
-                                        , label "[l] Load the savedata"
-                                        , label "[q] Quit"
-                                        ]
-drawUI _ gameStatus = withKeyEvents $ vstack [ statusAndMapGrid
-                                             , messageLogArea gameStatus
-                                             ] `styleBasic` [width 0]
-    where statusAndMapGrid = hstack [ mapGrid gameStatus
-                                    , statusGrid gameStatus `styleBasic` [width $ fromIntegral $ windowWidth - tileWidth * tileColumns]
-                                    ]
+drawUI wenv gs
+    | isPlayerTalking gs = drawTalking wenv gs
+    | isHandlingScene gs = drawHandlingScene gs
+    | isTitle gs = drawTitle
+    | otherwise = drawGameMap gs
 
 withKeyEvents :: WidgetNode s AppEvent -> WidgetNode s AppEvent
 withKeyEvents =
@@ -77,14 +67,43 @@ withKeyEvents =
     , "Ctrl-l"
     ]
 
+drawTalking ::  WidgetEnv GameStatus AppEvent -> GameStatus -> WidgetNode GameStatus AppEvent
+drawTalking wenv e = withKeyEvents $ zstack [ drawUI wenv afterGameStatus `styleBasic` [bgColor $ gray & L.a .~ 0.5]
+                                            , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
+                                            , talkingWindow with
+                                            ]
+    where (with, afterGameStatus) = destructTalking e
+
+drawHandlingScene :: GameStatus -> WidgetNode GameStatus AppEvent
+drawHandlingScene e = withKeyEvents $ zstack [ image (s ^. backgroundImage)
+                                             , label_  (text $ head $ s ^. elements) [multiline] `styleBasic` [textColor black]
+                                             ]
+    where (s, _) = destructHandlingScene e
+
+drawTitle :: WidgetNode GameStatus AppEvent
+drawTitle = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSize 36]
+                                   , label "[n] New game"
+                                   , label "[l] Load the savedata"
+                                   , label "[q] Quit"
+                                   ]
+
+drawGameMap :: GameStatus -> WidgetNode GameStatus AppEvent
+drawGameMap gs = withKeyEvents $ vstack [ statusAndMapGrid
+                                        , messageLogArea gs
+                                        ] `styleBasic` [width 0]
+    where statusAndMapGrid = hstack [ mapGrid gs
+                                    , statusGrid gs `styleBasic` [width $ fromIntegral $ windowWidth - tileWidth * tileColumns]
+                                    ]
+
 mapGrid :: (WidgetModel s, WidgetEvent e) => GameStatus -> WidgetNode s e
 mapGrid gameStatus = zstack (mapTiles gameStatus:mapEntities gameStatus) `styleBasic` [ width $ fromIntegral mapDrawingWidth
                                                                           , height $ fromIntegral mapDrawingHeight
                                                                           ]
 
 mapTiles :: (WidgetModel s, WidgetEvent e) => GameStatus ->  WidgetNode s e
-mapTiles (PlayerIsExploring d _ _ _) = box_ [alignLeft] $ vgrid rows `styleBasic` styles
-    where V2 bottomLeftX bottomLeftY = bottomLeftCoord d
+mapTiles e = box_ [alignLeft] $ vgrid rows `styleBasic` styles
+    where d = getCurrentDungeon e
+          V2 bottomLeftX bottomLeftY = bottomLeftCoord d
           rows = [hgrid $ row y | y <- [bottomLeftY + tileRows - 1, bottomLeftY + tileRows - 2 .. bottomLeftY]]
           row y = [cell $ V2 x y | x <- [bottomLeftX .. bottomLeftX + tileColumns - 1]]
 
@@ -101,23 +120,22 @@ mapTiles (PlayerIsExploring d _ _ _) = box_ [alignLeft] $ vgrid rows `styleBasic
 
           styles = [ width $ fromIntegral mapDrawingWidth
                    , height $ fromIntegral mapDrawingHeight]
-mapTiles _ = undefined
 
 mapEntities :: (WidgetModel s, WidgetEvent e) => GameStatus -> [WidgetNode s e]
-mapEntities (PlayerIsExploring d _ _ _) = mapMaybe entityToImage $ d ^. entities
-    where leftPadding e = fromIntegral $ entityPositionOnDisplay e ^. _x * tileWidth
-          topPadding e = fromIntegral $ mapDrawingHeight - (entityPositionOnDisplay e ^. _y + 1) * tileHeight
+mapEntities e = mapMaybe entityToImage $ d ^. entities
+    where d = getCurrentDungeon e
+          leftPadding entity = fromIntegral $ entityPositionOnDisplay entity ^. _x * tileWidth
+          topPadding entity = fromIntegral $ mapDrawingHeight - (entityPositionOnDisplay entity ^. _y + 1) * tileHeight
 
-          style e = [paddingL $ leftPadding e, paddingT $ topPadding e]
+          style entity = [paddingL $ leftPadding entity, paddingT $ topPadding entity]
 
-          entityPositionOnDisplay e = e ^. position - bottomLeftCoord d
+          entityPositionOnDisplay entity = entity ^. position - bottomLeftCoord d
 
-          isEntityDrawed e = let pos = entityPositionOnDisplay e
-                                 isVisible = (d ^. visible) ! (e ^. position)
+          isEntityDrawed entity = let pos = entityPositionOnDisplay entity
+                                      isVisible = (d ^. visible) ! (entity ^. position)
                              in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
 
-          entityToImage e = guard (isEntityDrawed e) >> return (image (e ^. DT.walkingImagePath) `styleBasic` style e)
-mapEntities _                         = undefined
+          entityToImage entity = guard (isEntityDrawed entity) >> return (image (entity ^. DT.walkingImagePath) `styleBasic` style entity)
 
 statusGrid :: GameStatus -> WidgetNode GameStatus AppEvent
 statusGrid gs = vstack $ maybe []
