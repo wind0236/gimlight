@@ -12,7 +12,7 @@ import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
 import           Data.List                      (find, findIndex)
-import           Dungeon                        (Dungeon, initDungeon,
+import           Dungeon                        (Dungeon, initDungeon, isTown,
                                                  mapWidthAndHeight, npcs,
                                                  popPlayer)
 import qualified Dungeon                        as D
@@ -99,7 +99,7 @@ playerBumpAction offset = do
     case actorAt destination gameStatus of
         Just actorAtDestination -> meleeOrTalk offset actorAtDestination
         Nothing                 ->
-            if isPositionInDungeon destination gameStatus
+            if isPositionInDungeon destination gameStatus || not (isTown (gameStatus ^?! currentDungeon))
                 then doAction $ moveAction offset
                 else let (p, currentDungeon') = runState popPlayer (gameStatus ^?! currentDungeon)
                      in do
