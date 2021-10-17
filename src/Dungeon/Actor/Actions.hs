@@ -12,13 +12,12 @@ import           Control.Monad             (when)
 import           Control.Monad.Trans.State (State, execState, state)
 import           Coord                     (Coord)
 import           Data.Array                ((!))
-import           Data.List                 (find)
+import           Data.Maybe                (isNothing)
 import           Data.Text                 (append, pack)
-import           Dungeon                   (Dungeon, actors, mapWidthAndHeight,
+import           Dungeon                   (Dungeon, actorAt, mapWidthAndHeight,
                                             popActorAt, pushActor, tileMap)
-import           Dungeon.Actor             (Actor, blocksMovement, defence,
-                                            getHp, isPlayer, name, position,
-                                            power, updateHp)
+import           Dungeon.Actor             (Actor, defence, getHp, isPlayer,
+                                            name, position, power, updateHp)
 import           Dungeon.Map.Tile          (walkable)
 import           Linear.V2                 (V2 (V2))
 import           Log                       (MessageLog, message)
@@ -76,12 +75,7 @@ updatePosition d src offset
             else src
 
 movable :: Dungeon -> Coord -> Bool
-movable d c = case getBlockingActorAtLocation d c of
-                  Just _  -> False
-                  Nothing -> isPositionInRange d c && (d ^. tileMap) ! c ^. walkable
-
-getBlockingActorAtLocation :: Dungeon -> Coord -> Maybe Actor
-getBlockingActorAtLocation d c = find (\x -> x ^. position == c && x ^. blocksMovement) (d ^. actors)
+movable d c = isNothing (actorAt c d) && isPositionInRange d c && (d ^. tileMap) ! c ^. walkable
 
 nextPosition :: Dungeon -> Actor -> V2 Int -> Coord
 nextPosition d src offset =
