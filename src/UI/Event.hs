@@ -6,17 +6,16 @@ module UI.Event
 
 import           Control.Lens              ((%=), (%~), (&), (&~), (.=), (.~),
                                             (^.), (^?!))
-import           Control.Monad             (unless, when)
-import           Control.Monad.Trans.State (execState, get, runState)
+import           Control.Monad.Trans.State (execState, runState)
 import           Data.Text                 (Text)
 import           Dungeon                   (initialPlayerPositionCandidates,
                                             popPlayer, updateMap)
 import           Dungeon.Types             (entities, position)
 import           GameStatus                (GameStatus (HandlingScene, PlayerIsExploring, Talking, Title),
-                                            completeThisTurn, currentDungeon,
-                                            isGameOver, newGameGameStatus,
-                                            otherDungeons, playerBumpAction,
+                                            currentDungeon, newGameGameStatus,
+                                            otherDungeons,
                                             popDungeonAtPlayerPosition)
+import qualified GameStatus                as GS
 import           Linear.V2                 (V2 (V2))
 import           Monomer                   (AppEventResponse,
                                             EventResponse (Model, Task),
@@ -35,10 +34,10 @@ handleEvent _ _ gameStatus evt = case evt of
 
 handleKeyInput :: GameStatus -> Text -> [AppEventResponse GameStatus AppEvent]
 handleKeyInput e@PlayerIsExploring{} k
-    | k == "Right" = [Model $ handlePlayerMove (V2 1 0) e]
-    | k == "Left"  = [Model $ handlePlayerMove (V2 (-1) 0) e]
-    | k == "Up"    = [Model $ handlePlayerMove (V2 0 1) e]
-    | k == "Down"  = [Model $ handlePlayerMove (V2 0 (-1)) e]
+    | k == "Right" = [Model $ handlePlayerMoving (V2 1 0) e]
+    | k == "Left"  = [Model $ handlePlayerMoving (V2 (-1) 0) e]
+    | k == "Up"    = [Model $ handlePlayerMoving (V2 0 1) e]
+    | k == "Down"  = [Model $ handlePlayerMoving (V2 0 (-1)) e]
     | k == "Ctrl-s"     = [Task (save e >> return AppSaveFinished)]
     | k == "Ctrl-l"     = [Task $ AppLoadFinished <$> load]
     | k == "Enter" = [Model $ handleEnter e]
@@ -54,18 +53,8 @@ handleKeyInput Title k
     | k == "q" = [exitApplication]
 handleKeyInput _ _ = []
 
-handlePlayerMove :: V2 Int -> GameStatus -> GameStatus
-handlePlayerMove offset e = flip execState e $ do
-    eng <- get
-    let finished = eng ^?! isGameOver
-    unless finished $ do
-        success <- playerBumpAction offset
-
-        when success $ do
-            eng' <- get
-            case eng' of
-                PlayerIsExploring {} -> completeThisTurn
-                _                    -> return ()
+handlePlayerMoving :: V2 Int -> GameStatus -> GameStatus
+handlePlayerMoving offset e = flip execState e $ GS.handlePlayerMoving offset
 
 handleEnter :: GameStatus -> GameStatus
 handleEnter e = case popDungeonAtPlayerPosition e of

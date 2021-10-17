@@ -7,6 +7,7 @@ module GameStatus where
 
 import           Control.Lens                   (makeLenses, (%=), (%~), (&),
                                                  (.=), (.~), (^.), (^?!))
+import           Control.Monad                  (unless, when)
 import           Control.Monad.Trans.State      (State, get)
 import           Control.Monad.Trans.State.Lazy (put, runState)
 import           Coord                          (Coord)
@@ -51,6 +52,19 @@ data GameStatus = PlayerIsExploring
           deriving (Show, Ord, Eq, Generic)
 makeLenses ''GameStatus
 instance Binary GameStatus
+
+handlePlayerMoving :: V2 Int -> State GameStatus ()
+handlePlayerMoving offset = do
+    eng <- get
+    let finished = eng ^?! isGameOver
+    unless finished $ do
+        success <- playerBumpAction offset
+
+        when success $ do
+            eng' <- get
+            case eng' of
+                PlayerIsExploring {} -> completeThisTurn
+                _                    -> return ()
 
 completeThisTurn :: State GameStatus ()
 completeThisTurn = do
