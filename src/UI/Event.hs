@@ -6,13 +6,13 @@ module UI.Event
 
 import           Control.Lens              ((%=), (%~), (&), (&~), (.=), (.~),
                                             (^.), (^?!))
-import           Control.Monad             (unless)
+import           Control.Monad             (unless, when)
 import           Control.Monad.Trans.State (execState, get, runState)
 import           Data.Text                 (Text)
 import           Dungeon                   (initialPlayerPositionCandidates,
                                             popPlayer, updateMap)
 import           Dungeon.Types             (entities, position)
-import           GameStatus                    (GameStatus (HandlingScene, PlayerIsExploring, Talking, Title),
+import           GameStatus                (GameStatus (HandlingScene, PlayerIsExploring, Talking, Title),
                                             completeThisTurn, currentDungeon,
                                             isGameOver, newGameGameStatus,
                                             otherDungeons, playerBumpAction,
@@ -59,12 +59,13 @@ handlePlayerMove offset e = flip execState e $ do
     eng <- get
     let finished = eng ^?! isGameOver
     unless finished $ do
-        playerBumpAction offset
+        success <- playerBumpAction offset
 
-        eng' <- get
-        case eng' of
-            PlayerIsExploring {} -> completeThisTurn
-            _                    -> return ()
+        when success $ do
+            eng' <- get
+            case eng' of
+                PlayerIsExploring {} -> completeThisTurn
+                _                    -> return ()
 
 handleEnter :: GameStatus -> GameStatus
 handleEnter e = case popDungeonAtPlayerPosition e of

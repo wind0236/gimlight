@@ -22,7 +22,8 @@ npcAction e = do
     let e' = updatePath e dungeon
         action = selectAction e' dungeon
 
-    action e'
+    r <- action e'
+    return $ fst r
 
 updatePath :: Entity -> Dungeon -> Entity
 updatePath e d = e & pathToDestination .~ newPath

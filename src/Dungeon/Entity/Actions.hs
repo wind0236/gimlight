@@ -24,7 +24,7 @@ import           Dungeon.Types             (Entity, blocksMovement, defence,
 import           Linear.V2                 (V2 (V2))
 import           Log                       (MessageLog, message)
 
-type Action = Entity -> State Dungeon MessageLog
+type Action = Entity -> State Dungeon (MessageLog, Bool)
 
 meleeAction :: V2 Int -> Action
 meleeAction offset src = do
@@ -36,7 +36,7 @@ meleeAction offset src = do
         case target of
             Nothing -> do
                 pushEntity src
-                return []
+                return ([], False)
             Just x -> let damage = src ^. power - x ^. defence
                           msg = (src ^. name) `append` " attacks " `append` (x ^. name)
                         in if damage > 0
@@ -51,23 +51,23 @@ meleeAction offset src = do
 
                                 when (newHp > 0) $ pushEntity newEntity
 
-                                return $ fmap message messages
+                                return (fmap message messages, True)
                             else do
                                     pushEntity src
                                     pushEntity x
-                                    return [message $ msg `append` " but does not damage."]
+                                    return ([message $ msg `append` " but does not damage."], True)
 
 moveAction :: V2 Int -> Action
 moveAction offset src = state $ \d -> result d
     where result d = (\(x, y) -> (x, execState y d)) $ messageAndNewEntity d
           messageAndNewEntity d = if not (movable d (src ^. position + offset))
-                                    then (["That way is blocked."], pushEntity src)
-                                    else ([], pushEntity $ updatePosition d src offset)
+                                    then ((["That way is blocked."], False), pushEntity src)
+                                    else (([], True), pushEntity $ updatePosition d src offset)
 
 waitAction :: Action
 waitAction e = do
         pushEntity e
-        return []
+        return ([], True)
 
 updatePosition :: Dungeon -> Entity -> V2 Int -> Entity
 updatePosition d src offset

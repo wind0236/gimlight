@@ -18,7 +18,8 @@ import           Dungeon                        (Dungeon, initDungeon,
 import qualified Dungeon                        as D
 import           Dungeon.Entity                 (isMonster)
 import qualified Dungeon.Entity                 as E
-import           Dungeon.Entity.Actions         (meleeAction, moveAction)
+import           Dungeon.Entity.Actions         (Action, meleeAction,
+                                                 moveAction)
 import           Dungeon.Entity.Behavior        (npcAction)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
@@ -87,7 +88,7 @@ handleNpcTurn c = do
         messageLog %= addMessages l
         currentDungeon .= dg'
 
-playerBumpAction :: V2 Int -> State GameStatus ()
+playerBumpAction :: V2 Int -> State GameStatus Bool
 playerBumpAction offset = do
     gameStatus <- get
 
@@ -96,26 +97,10 @@ playerBumpAction offset = do
                           Nothing -> error "The player is dead."
 
     case actorAt destination gameStatus of
-        Just actorAtDestination -> if isMonster actorAtDestination
-            then do
-                let (msg, currentDungeon') = flip runState (gameStatus ^?! currentDungeon) $ do
-                        p <- popPlayer
-                        meleeAction offset p
-                messageLog %= addMessages msg
-                currentDungeon .= currentDungeon'
-            else
-                let tw = talkWith actorAtDestination $ actorAtDestination ^. talkMessage
-                in put $ Talking { _talk = tw
-                                 , _afterTalking = gameStatus
-                                 }
+        Just actorAtDestination -> meleeOrTalk offset actorAtDestination
         Nothing                 ->
             if isPositionInDungeon destination gameStatus
-                then do
-                    let (msg, currentDungeon') = flip runState (gameStatus ^?! currentDungeon) $ do
-                            p <- popPlayer
-                            moveAction offset p
-                    messageLog %= addMessages msg
-                    currentDungeon .= currentDungeon'
+                then doAction $ moveAction offset
                 else let (p, currentDungeon') = runState popPlayer (gameStatus ^?! currentDungeon)
                      in do
                      otherDungeons %= (:) currentDungeon'
@@ -127,6 +112,31 @@ playerBumpAction offset = do
                      currentDungeon .= case g of
                          Just g' -> g' & entities %~ (:) newPlayer
                          Nothing -> error "Global map not found."
+                     return True
+
+meleeOrTalk :: V2 Int -> Entity -> State GameStatus Bool
+meleeOrTalk offset target = do
+    gameStatus <- get
+
+    if isMonster target
+        then doAction $ meleeAction offset
+        else do
+            put $ Talking { _talk = talkWith target $ target ^. talkMessage
+                          , _afterTalking = gameStatus
+                          }
+            return True
+
+doAction :: Action -> State GameStatus Bool
+doAction action = do
+    gs <- get
+
+    let ((msg, success), currentDungeon') = flip runState (gs ^?! currentDungeon) $ do
+            p <- popPlayer
+            action p
+    messageLog %= addMessages msg
+    currentDungeon .= currentDungeon'
+    return success
+
 
 getPlayerEntity :: GameStatus -> Maybe Entity
 getPlayerEntity (PlayerIsExploring d _ _ _) = D.getPlayerEntity d
