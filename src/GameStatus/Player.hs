@@ -40,21 +40,7 @@ playerBumpAction offset = do
 
     case actorAt destination gameStatus of
         Just actorAtDestination -> meleeOrTalk offset actorAtDestination
-        Nothing                 ->
-            if isPositionInDungeon destination gameStatus || not (isTown (getCurrentDungeon gameStatus))
-                then doAction $ moveAction offset
-                else let (p, currentDungeon') = runState popPlayer (getCurrentDungeon gameStatus)
-                     in do
-                     pushDungeonAsOtherDungeons currentDungeon'
-                     let g = find isGlobalMap $ getOtherDungeons gameStatus
-                         newPosition = currentDungeon' ^?! positionOnGlobalMap
-                         newPlayer = p & position .~ case newPosition of
-                             Just pos -> pos
-                             Nothing -> error "The new position is not specified."
-                     currentDungeon .= case g of
-                         Just g' -> g' & actors %~ (:) newPlayer
-                         Nothing -> error "Global map not found."
-                     return True
+        Nothing                 -> moveOrExitMap offset
 
 meleeOrTalk :: V2 Int -> Actor -> State GameStatus Bool
 meleeOrTalk offset target = do
@@ -65,6 +51,29 @@ meleeOrTalk offset target = do
         else do
             put $ talking (talkWith target $ target ^. talkMessage) gameStatus
             return True
+
+moveOrExitMap :: V2 Int -> State GameStatus Bool
+moveOrExitMap offset = do
+    gameStatus <- get
+
+    let destination = case playerPosition gameStatus of
+                          Just p  -> p + offset
+                          Nothing -> error "The player is dead."
+
+    if isPositionInDungeon destination gameStatus || not (isTown (getCurrentDungeon gameStatus))
+        then doAction $ moveAction offset
+        else let (p, currentDungeon') = runState popPlayer (getCurrentDungeon gameStatus)
+                in do
+                pushDungeonAsOtherDungeons currentDungeon'
+                let g = find isGlobalMap $ getOtherDungeons gameStatus
+                    newPosition = currentDungeon' ^?! positionOnGlobalMap
+                    newPlayer = p & position .~ case newPosition of
+                        Just pos -> pos
+                        Nothing  -> error "The new position is not specified."
+                currentDungeon .= case g of
+                    Just g' -> g' & actors %~ (:) newPlayer
+                    Nothing -> error "Global map not found."
+                return True
 
 handlePlayerMoving :: V2 Int -> State GameStatus ()
 handlePlayerMoving offset = do
