@@ -25,9 +25,10 @@ import qualified Dungeon.Map.Tile      as MT
 import           GameStatus            (GameStatus, destructHandlingScene,
                                         destructTalking, getCurrentDungeon,
                                         getItems, getPlayerActor,
-                                        getSelectingIndex, isHandlingScene,
-                                        isPlayerTalking, isSelectingItemToUse,
-                                        isTitle, messageLogList)
+                                        getSelectingIndex, isGameOver,
+                                        isHandlingScene, isPlayerTalking,
+                                        isSelectingItemToUse, isTitle,
+                                        messageLogList)
 import           Linear.V2             (V2 (V2), _x, _y)
 import           Monomer               (CmbAlignLeft (alignLeft),
                                         CmbBgColor (bgColor),
@@ -54,6 +55,7 @@ drawUI wenv gs
     | isHandlingScene gs = drawHandlingScene gs
     | isSelectingItemToUse gs = drawSelectingItem gs
     | isTitle gs = drawTitle
+    | isGameOver gs = drawGameOver
     | otherwise = drawGameMap gs
 
 withKeyEvents :: WidgetNode s AppEvent -> WidgetNode s AppEvent
@@ -102,6 +104,9 @@ drawTitle = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSize 36]
                                    , label "[l] Load the savedata"
                                    , label "[q] Quit"
                                    ]
+
+drawGameOver :: WidgetNode GameStatus AppEvent
+drawGameOver = vstack [label "Game Over" `styleBasic` [textSize 72]]
 
 drawGameMap :: GameStatus -> WidgetNode GameStatus AppEvent
 drawGameMap gs = withKeyEvents $ vstack [ statusAndMapGrid

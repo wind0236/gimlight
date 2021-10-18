@@ -88,7 +88,7 @@ exitDungeon = do
 handlePlayerMoving :: V2 Int -> State GameStatus ()
 handlePlayerMoving offset = do
     eng <- get
-    let finished = eng ^?! isGameOver
+    let finished = isGameOver eng
     unless finished $ do
         success <- playerBumpAction offset
 
@@ -100,7 +100,7 @@ handlePlayerMoving offset = do
 handlePlayerPickingUp :: State GameStatus ()
 handlePlayerPickingUp = do
     eng <- get
-    let finished = eng ^?! isGameOver
+    let finished = isGameOver eng
     unless finished $ do
         success <- doAction pickUpAction
 
