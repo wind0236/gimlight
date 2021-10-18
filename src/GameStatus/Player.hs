@@ -62,18 +62,28 @@ moveOrExitMap offset = do
 
     if isPositionInDungeon destination gameStatus || not (isTown (getCurrentDungeon gameStatus))
         then doAction $ moveAction offset
-        else let (p, currentDungeon') = runState popPlayer (getCurrentDungeon gameStatus)
-                in do
-                pushDungeonAsOtherDungeons currentDungeon'
-                let g = find isGlobalMap $ getOtherDungeons gameStatus
-                    newPosition = currentDungeon' ^?! positionOnGlobalMap
-                    newPlayer = p & position .~ case newPosition of
-                        Just pos -> pos
-                        Nothing  -> error "The new position is not specified."
-                currentDungeon .= case g of
-                    Just g' -> g' & actors %~ (:) newPlayer
-                    Nothing -> error "Global map not found."
-                return True
+        else do
+            exitDungeon
+            return True
+
+exitDungeon :: State GameStatus ()
+exitDungeon = do
+    gs <- get
+
+    let (p, currentDungeon') = runState popPlayer (getCurrentDungeon gs)
+
+    pushDungeonAsOtherDungeons currentDungeon'
+
+    let g = find isGlobalMap $ getOtherDungeons gs
+        newPosition = currentDungeon' ^. positionOnGlobalMap
+        newPlayer = p & position .~ case newPosition of
+            Just pos -> pos
+            Nothing  -> error "The new position is not specified."
+    currentDungeon .= case g of
+        Just g' -> g' & actors %~ (:) newPlayer
+        Nothing -> error "Global map not found."
+    return ()
+
 
 handlePlayerMoving :: V2 Int -> State GameStatus ()
 handlePlayerMoving offset = do
