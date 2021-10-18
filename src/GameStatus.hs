@@ -265,8 +265,8 @@ doAction action = do
 
 getPlayerActor :: GameStatus -> Maybe Actor
 getPlayerActor (PlayerIsExploring d _ _ _) = D.getPlayerActor d
-getPlayerActor (Talking _ gs)              = GameStatus.getPlayerActor gs
-getPlayerActor (HandlingScene _ gs)        = GameStatus.getPlayerActor gs
+getPlayerActor (Talking _ gs)              = getPlayerActor gs
+getPlayerActor (HandlingScene _ gs)        = getPlayerActor gs
 getPlayerActor Title                       = error "We are in the title."
 
 playerPosition :: GameStatus -> Maybe Coord
