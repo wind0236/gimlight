@@ -24,9 +24,10 @@ import qualified Dungeon.Item          as I
 import qualified Dungeon.Map.Tile      as MT
 import           GameStatus            (GameStatus, destructHandlingScene,
                                         destructTalking, getCurrentDungeon,
-                                        getPlayerActor, isHandlingScene,
-                                        isPlayerTalking, isTitle,
-                                        messageLogList)
+                                        getItems, getPlayerActor,
+                                        getSelectingIndex, isHandlingScene,
+                                        isPlayerTalking, isSelectingItemToUse,
+                                        isTitle, messageLogList)
 import           Linear.V2             (V2 (V2), _x, _y)
 import           Monomer               (CmbAlignLeft (alignLeft),
                                         CmbBgColor (bgColor),
@@ -51,6 +52,7 @@ drawUI :: WidgetEnv GameStatus AppEvent -> GameStatus -> WidgetNode GameStatus A
 drawUI wenv gs
     | isPlayerTalking gs = drawTalking wenv gs
     | isHandlingScene gs = drawHandlingScene gs
+    | isSelectingItemToUse gs = drawSelectingItem gs
     | isTitle gs = drawTitle
     | otherwise = drawGameMap gs
 
@@ -66,8 +68,10 @@ withKeyEvents =
     , "l"
     , "q"
     , "g"
+    , "u"
     , "Ctrl-s"
     , "Ctrl-l"
+    , "Esc"
     ]
 
 drawTalking ::  WidgetEnv GameStatus AppEvent -> GameStatus -> WidgetNode GameStatus AppEvent
@@ -82,6 +86,15 @@ drawHandlingScene e = withKeyEvents $ zstack [ image (s ^. backgroundImage)
                                              , label_  (text $ head $ s ^. elements) [multiline] `styleBasic` [textColor black]
                                              ]
     where (s, _) = destructHandlingScene e
+
+drawSelectingItem :: GameStatus -> WidgetNode GameStatus AppEvent
+drawSelectingItem gs = withKeyEvents $ vstack labels
+    where labels = label "Which Item do you use?":map label addAsterlist
+          addAsterlist = zipWith (\idx x -> if idx == getSelectingIndex gs
+                                                          then "* " `append` pack (show idx) `append` " " `append`x
+                                                          else pack (show idx) `append` " " `append` x
+                                               ) [0..] itemNames
+          itemNames = map (^. I.name) $ getItems gs
 
 drawTitle :: WidgetNode GameStatus AppEvent
 drawTitle = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSize 36]
@@ -154,9 +167,6 @@ mapItems e = mapMaybe itemToImage $ d ^. items
           style item = [paddingL $ leftPadding item, paddingT $ topPadding item]
 
           itemPositionOnDisplay item = item ^. I.position - bottomLeftCoord d
-
-
-
 
 statusGrid :: GameStatus -> WidgetNode GameStatus AppEvent
 statusGrid gs = vstack $ maybe []

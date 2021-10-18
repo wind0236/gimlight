@@ -5,6 +5,7 @@ module Dungeon.Actor.Actions
     , moveAction
     , waitAction
     , pickUpAction
+    , consumeAction
     , Action
     ) where
 
@@ -18,10 +19,12 @@ import           Data.Text                 (append, pack)
 import           Dungeon                   (Dungeon, actorAt, mapWidthAndHeight,
                                             popActorAt, popItemAt, pushActor,
                                             pushItem, tileMap)
-import           Dungeon.Actor             (Actor, defence, getHp,
+import           Dungeon.Actor             (Actor, defence, getHp, healHp,
                                             inventoryItems, isPlayer, name,
-                                            position, power, updateHp)
+                                            position, power, removeNthItem,
+                                            updateHp)
 import           Dungeon.Actor.Inventory   (addItem)
+import           Dungeon.Item              (healAmount)
 import qualified Dungeon.Item              as I
 import           Dungeon.Map.Tile          (walkable)
 import           Linear.V2                 (V2 (V2))
@@ -90,6 +93,19 @@ pickUpAction e = do
         Nothing -> do
             pushActor e
             return (["You got nothing."], False)
+
+consumeAction :: Int -> Action
+consumeAction n e = do
+    let (item, newActor) = removeNthItem n e
+
+    case item of
+        Just x -> do
+            let healedActor = healHp newActor (x ^. healAmount)
+            pushActor healedActor
+            return ([(healedActor ^. name) `append` " healed " `append` pack (show (x ^. healAmount))], True)
+        Nothing -> do
+            pushActor newActor
+            return (["What did you consume?"], False)
 
 updatePosition :: Dungeon -> Actor -> V2 Int -> Actor
 updatePosition d src offset

@@ -21,7 +21,10 @@ module Dungeon.Actor
     , talkMessage
     , walkingImagePath
     , maxHp
+    , healHp
     , inventoryItems
+    , getItems
+    , removeNthItem
     ) where
 
 import           Control.Lens            (makeLenses, (&), (.~), (^.))
@@ -29,6 +32,8 @@ import           Coord                   (Coord)
 import           Data.Binary             (Binary)
 import           Data.Text               (Text)
 import           Dungeon.Actor.Inventory (Inventory, inventory)
+import qualified Dungeon.Actor.Inventory as I
+import           Dungeon.Item            (Item)
 import           GHC.Generics            (Generic)
 
 data ActorKind = Player | FriendlyNpc | Monster deriving (Show, Ord, Eq, Generic)
@@ -85,3 +90,13 @@ getHp e = e ^. hp
 updateHp :: Actor -> Int -> Actor
 updateHp e newHp = e & hp .~ newHpInRange
     where newHpInRange = max 0 $ min (e ^. maxHp) newHp
+
+healHp :: Actor -> Int -> Actor
+healHp e amount = updateHp e $ getHp e + amount
+
+getItems :: Actor -> [Item]
+getItems a = I.getItems $ a ^. inventoryItems
+
+removeNthItem :: Int -> Actor -> (Maybe Item, Actor)
+removeNthItem n a = (removed, a & inventoryItems .~ newItems)
+    where (removed, newItems) = I.removeNthItem n $ a ^. inventoryItems

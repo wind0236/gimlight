@@ -8,10 +8,13 @@ import           Control.Monad.Trans.State (execState)
 import           Data.Text                 (Text)
 import           GameStatus                (GameStatus,
                                             enterTownAtPlayerPosition,
-                                            finishTalking, isHandlingScene,
-                                            isPlayerExploring, isPlayerTalking,
-                                            isTitle, newGameStatus,
-                                            nextSceneElementOrFinish)
+                                            finishSelecting, finishTalking,
+                                            isHandlingScene, isPlayerExploring,
+                                            isPlayerTalking,
+                                            isSelectingItemToUse, isTitle,
+                                            newGameStatus,
+                                            nextSceneElementOrFinish,
+                                            selectNextItem, selectPrevItem)
 import qualified GameStatus                as GS
 import           Linear.V2                 (V2 (V2))
 import           Monomer                   (AppEventResponse,
@@ -33,6 +36,7 @@ handleKeyInput e k
     | isPlayerExploring e = handleKeyInputDuringExploring e k
     | isPlayerTalking e = handleKeyInputDuringTalking e k
     | isHandlingScene e = handleKeyInputDuringHandlingScene e k
+    | isSelectingItemToUse e = handleKeyInputDuringSelectingItemToUse e k
     | isTitle e = handleKeyInputDuringTitle k
     | otherwise = undefined
 
@@ -43,6 +47,7 @@ handleKeyInputDuringExploring e k
     | k == "Up"    = [Model $ handlePlayerMoving (V2 0 1) e]
     | k == "Down"  = [Model $ handlePlayerMoving (V2 0 (-1)) e]
     | k == "g" = [Model $ handlePlayerPickingUp e]
+    | k == "u" = [Model $ GS.handlePlayerSelectingItemToUse e]
     | k == "Ctrl-s"     = [Task (save e >> return AppSaveFinished)]
     | k == "Ctrl-l"     = [Task $ AppLoadFinished <$> load]
     | k == "Enter" = [Model $ enterTownAtPlayerPosition e]
@@ -58,6 +63,14 @@ handleKeyInputDuringHandlingScene e k
     | k == "Enter" = [Model $ nextSceneElementOrFinish e]
     | otherwise = []
 
+handleKeyInputDuringSelectingItemToUse :: GameStatus -> Text -> [AppEventResponse GameStatus AppEvent]
+handleKeyInputDuringSelectingItemToUse e k
+    | k == "Up" = [Model $ selectPrevItem e]
+    | k == "Down" = [Model $ selectNextItem e]
+    | k == "Enter" = [Model $ handlePlayerConsumeItem e]
+    | k == "Esc" = [Model $ finishSelecting e]
+    | otherwise = []
+
 handleKeyInputDuringTitle :: Text -> [AppEventResponse GameStatus AppEvent]
 handleKeyInputDuringTitle k
     | k == "n" = [Task $ AppLoadFinished <$> newGameStatus]
@@ -70,3 +83,6 @@ handlePlayerMoving offset e = flip execState e $ GS.handlePlayerMoving offset
 
 handlePlayerPickingUp :: GameStatus -> GameStatus
 handlePlayerPickingUp = execState GS.handlePlayerPickingUp
+
+handlePlayerConsumeItem :: GameStatus -> GameStatus
+handlePlayerConsumeItem = execState GS.handlePlayerConsumeItem

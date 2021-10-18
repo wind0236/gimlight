@@ -7,13 +7,21 @@ module GameStatus
     ( GameStatus
     , handlePlayerMoving
     , handlePlayerPickingUp
+    , handlePlayerSelectingItemToUse
+    , handlePlayerConsumeItem
     , isPlayerExploring
     , isPlayerTalking
     , isHandlingScene
+    , isSelectingItemToUse
     , isTitle
     , nextSceneElementOrFinish
     , enterTownAtPlayerPosition
     , finishTalking
+    , finishSelecting
+    , selectPrevItem
+    , selectNextItem
+    , getItems
+    , getSelectingIndex
     , newGameStatus
     , getCurrentDungeon
     , destructTalking
@@ -38,11 +46,14 @@ import           Dungeon                        (Dungeon, actors,
 import qualified Dungeon                        as D
 import           Dungeon.Actor                  (Actor, isMonster, position,
                                                  talkMessage)
+import qualified Dungeon.Actor                  as A
 import qualified Dungeon.Actor                  as E
-import           Dungeon.Actor.Actions          (Action, meleeAction,
-                                                 moveAction, pickUpAction)
+import           Dungeon.Actor.Actions          (Action, consumeAction,
+                                                 meleeAction, moveAction,
+                                                 pickUpAction)
 import           Dungeon.Actor.Behavior         (npcAction)
 import           Dungeon.Init                   (initDungeon)
+import           Dungeon.Item                   (Item)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
@@ -67,12 +78,17 @@ data GameStatus = PlayerIsExploring
           } | HandlingScene
           { _scene       :: Scene
           , _afterFinish :: GameStatus
+          } | SelectingItemToUse
+          { _items          :: [Item]
+          , _selecting      :: Int
+          , _afterSelecting :: GameStatus
           } | Title
           deriving (Show, Ord, Eq, Generic)
 makeLensesFor [ ("_currentDungeon", "currentDungeon")
               , ("_otherDungeons", "otherDungeons")
               , ("_messageLog", "messageLog")
               , ("_isGameOver", "isGameOver")
+              , ("_selecting", "selecting")
               ] ''GameStatus
 instance Binary GameStatus
 
@@ -102,6 +118,31 @@ handlePlayerPickingUp = do
                 PlayerIsExploring {} -> completeThisTurn
                 _                    -> return ()
 
+handlePlayerSelectingItemToUse :: GameStatus -> GameStatus
+handlePlayerSelectingItemToUse e =
+    SelectingItemToUse { _items = xs
+                       , _selecting = 0
+                       , _afterSelecting = e
+                       }
+    where xs = A.getItems p
+          p = case getPlayerActor e of
+                Just x  -> x
+                Nothing -> error "Player is dead."
+
+handlePlayerConsumeItem :: State GameStatus ()
+handlePlayerConsumeItem = do
+    gs <- get
+
+    unless (isSelectingListEmpty gs) $ do
+        let n = getSelectingIndex gs
+
+        put $ finishSelecting gs
+
+        success <- doAction $ consumeAction n
+
+        when success $ do
+            completeThisTurn
+
 isPlayerExploring :: GameStatus -> Bool
 isPlayerExploring PlayerIsExploring{} = True
 isPlayerExploring _                   = False
@@ -113,6 +154,10 @@ isPlayerTalking _         = False
 isHandlingScene :: GameStatus -> Bool
 isHandlingScene HandlingScene{} = True
 isHandlingScene _               = False
+
+isSelectingItemToUse :: GameStatus -> Bool
+isSelectingItemToUse SelectingItemToUse{} = True
+isSelectingItemToUse _                    = False
 
 isTitle :: GameStatus -> Bool
 isTitle Title = True
@@ -139,6 +184,32 @@ finishTalking :: GameStatus -> GameStatus
 finishTalking (Talking _ after) = after
 finishTalking _                 = error "We are not in the talking."
 
+finishSelecting :: GameStatus -> GameStatus
+finishSelecting (SelectingItemToUse _ _ after) = after
+finishSelecting _ = error "We are not selecting anything."
+
+selectPrevItem :: GameStatus -> GameStatus
+selectPrevItem e@(SelectingItemToUse l n _)
+    | null l = e
+    | otherwise = e & selecting .~ newIndex
+    where newIndex = (n - 1) `mod` length l
+selectPrevItem _ = error "We are not selecting anything."
+
+selectNextItem :: GameStatus -> GameStatus
+selectNextItem e@(SelectingItemToUse l n _)
+    | null l = e
+    | otherwise = e & selecting .~ newIndex
+    where newIndex = (n + 1) `mod` length l
+selectNextItem _ = error "We are not selecting anything."
+
+getItems :: GameStatus -> [Item]
+getItems (SelectingItemToUse i _ _) = i
+getItems _                          = error "We are not selecting anything."
+
+getSelectingIndex :: GameStatus -> Int
+getSelectingIndex (SelectingItemToUse _ n _) = n
+getSelectingIndex _ = error "We are not selecting anything."
+
 newGameStatus :: IO GameStatus
 newGameStatus = do
     g <- getStdGen
@@ -156,10 +227,11 @@ newGameStatus = do
         }
 
 getCurrentDungeon :: GameStatus -> Dungeon
-getCurrentDungeon (PlayerIsExploring d _ _ _) = d
-getCurrentDungeon (Talking _ after)           = getCurrentDungeon after
-getCurrentDungeon (HandlingScene _ after)     = getCurrentDungeon after
-getCurrentDungeon Title                       = error "We are in the title."
+getCurrentDungeon (PlayerIsExploring d _ _ _)    = d
+getCurrentDungeon (Talking _ after)              = getCurrentDungeon after
+getCurrentDungeon (HandlingScene _ after)        = getCurrentDungeon after
+getCurrentDungeon (SelectingItemToUse _ _ after) = getCurrentDungeon after
+getCurrentDungeon Title                          = error "We are in the title."
 
 destructTalking :: GameStatus -> (TalkWith, GameStatus)
 destructTalking (Talking tw after) = (tw, after)
@@ -170,10 +242,11 @@ destructHandlingScene (HandlingScene s after) = (s, after)
 destructHandlingScene _ = error "We are not handling a scene."
 
 messageLogList :: GameStatus -> MessageLog
-messageLogList (PlayerIsExploring _ _ l _) = l
-messageLogList (Talking _ e)               = messageLogList e
-messageLogList (HandlingScene _ e)         = messageLogList e
-messageLogList Title                       = error "no message log."
+messageLogList (PlayerIsExploring _ _ l _)    = l
+messageLogList (Talking _ e)                  = messageLogList e
+messageLogList (HandlingScene _ e)            = messageLogList e
+messageLogList (SelectingItemToUse _ _ after) = messageLogList after
+messageLogList Title                          = error "no message log."
 
 title :: GameStatus
 title = Title
@@ -267,24 +340,28 @@ getPlayerActor :: GameStatus -> Maybe Actor
 getPlayerActor (PlayerIsExploring d _ _ _) = D.getPlayerActor d
 getPlayerActor (Talking _ gs)              = getPlayerActor gs
 getPlayerActor (HandlingScene _ gs)        = getPlayerActor gs
+getPlayerActor (SelectingItemToUse _ _ gs) = getPlayerActor gs
 getPlayerActor Title                       = error "We are in the title."
 
 playerPosition :: GameStatus -> Maybe Coord
 playerPosition (PlayerIsExploring d _ _ _) = D.playerPosition d
 playerPosition (Talking _ e)               = playerPosition e
 playerPosition (HandlingScene _ e)         = playerPosition e
+playerPosition (SelectingItemToUse _ _ gs) = playerPosition gs
 playerPosition Title                       = error "unreachable."
 
 actorAt :: Coord -> GameStatus -> Maybe E.Actor
 actorAt c (PlayerIsExploring d _ _ _) = D.actorAt c d
 actorAt c (Talking _ e)               = actorAt c e
 actorAt c (HandlingScene _ e)         = actorAt c e
+actorAt c (SelectingItemToUse _ _ e)  = actorAt c e
 actorAt _ Title                       = error "We are in the title."
 
 isPositionInDungeon :: Coord -> GameStatus -> Bool
 isPositionInDungeon c (PlayerIsExploring d _ _ _) = D.isPositionInDungeon c d
 isPositionInDungeon c (Talking _ e)               = isPositionInDungeon c e
 isPositionInDungeon c (HandlingScene _ e)         = isPositionInDungeon c e
+isPositionInDungeon c (SelectingItemToUse _ _ e)  = isPositionInDungeon c e
 isPositionInDungeon _ Title                       = error "We are in the title."
 
 popDungeonAtPlayerPosition :: GameStatus -> (Maybe Dungeon, GameStatus)
@@ -299,3 +376,7 @@ popDungeonAt p e = let xs = e ^. otherDungeons
                                         newOtherDungeons = take x xs ++ drop (x + 1) xs
                                     in (Just d, e & otherDungeons .~ newOtherDungeons)
                           Nothing -> (Nothing, e)
+
+isSelectingListEmpty :: GameStatus -> Bool
+isSelectingListEmpty (SelectingItemToUse l _ _) = null l
+isSelectingListEmpty _ = error "We are not selecting anything."
