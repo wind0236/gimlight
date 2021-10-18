@@ -15,7 +15,7 @@ import           GameStatus                (GameStatus,
                                             newGameStatus,
                                             nextSceneElementOrFinish,
                                             selectNextItem, selectPrevItem)
-import qualified GameStatus                as GS
+import qualified GameStatus.Player         as GSP
 import           Linear.V2                 (V2 (V2))
 import           Monomer                   (AppEventResponse,
                                             EventResponse (Model, Task),
@@ -47,7 +47,7 @@ handleKeyInputDuringExploring e k
     | k == "Up"    = [Model $ handlePlayerMoving (V2 0 1) e]
     | k == "Down"  = [Model $ handlePlayerMoving (V2 0 (-1)) e]
     | k == "g" = [Model $ handlePlayerPickingUp e]
-    | k == "u" = [Model $ GS.handlePlayerSelectingItemToUse e]
+    | k == "u" = [Model $ GSP.handlePlayerSelectingItemToUse e]
     | k == "Ctrl-s"     = [Task (save e >> return AppSaveFinished)]
     | k == "Ctrl-l"     = [Task $ AppLoadFinished <$> load]
     | k == "Enter" = [Model $ enterTownAtPlayerPosition e]
@@ -79,10 +79,10 @@ handleKeyInputDuringTitle k
     | otherwise = []
 
 handlePlayerMoving :: V2 Int -> GameStatus -> GameStatus
-handlePlayerMoving offset e = flip execState e $ GS.handlePlayerMoving offset
+handlePlayerMoving offset e = flip execState e $ GSP.handlePlayerMoving offset
 
 handlePlayerPickingUp :: GameStatus -> GameStatus
-handlePlayerPickingUp = execState GS.handlePlayerPickingUp
+handlePlayerPickingUp = execState GSP.handlePlayerPickingUp
 
 handlePlayerConsumeItem :: GameStatus -> GameStatus
-handlePlayerConsumeItem = execState GS.handlePlayerConsumeItem
+handlePlayerConsumeItem = execState GSP.handlePlayerConsumeItem

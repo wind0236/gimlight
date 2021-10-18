@@ -1,19 +1,18 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
 module GameStatus
     ( GameStatus
-    , handlePlayerMoving
-    , handlePlayerPickingUp
-    , handlePlayerSelectingItemToUse
-    , handlePlayerConsumeItem
     , isPlayerExploring
     , isPlayerTalking
     , isHandlingScene
     , isSelectingItemToUse
     , isTitle
+    , isGameOver
+    , completeThisTurn
     , nextSceneElementOrFinish
     , enterTownAtPlayerPosition
     , finishTalking
@@ -24,33 +23,37 @@ module GameStatus
     , getSelectingIndex
     , newGameStatus
     , getCurrentDungeon
+    , getOtherDungeons
+    , currentDungeon
     , destructTalking
     , destructHandlingScene
     , getPlayerActor
     , messageLogList
     , title
+    , talking
+    , selectingItemToUse
+    , addMessages
+    , actorAt
+    , playerPosition
+    , isPositionInDungeon
+    , pushDungeonAsOtherDungeons
+    , isSelectingListEmpty
     ) where
 
 import           Control.Lens                   (makeLensesFor, (%=), (%~), (&),
                                                  (&~), (.=), (.~), (^.), (^?!))
-import           Control.Monad                  (unless, when)
-import           Control.Monad.Trans.State      (State, execState, get)
-import           Control.Monad.Trans.State.Lazy (put, runState)
+import           Control.Monad.Trans.State      (State, execState, get, state)
+import           Control.Monad.Trans.State.Lazy (runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
-import           Data.List                      (find, findIndex)
+import           Data.List                      (findIndex)
 import           Dungeon                        (Dungeon, actors,
                                                  initialPlayerPositionCandidates,
-                                                 isTown, npcs, popPlayer,
+                                                 npcs, popPlayer,
                                                  positionOnGlobalMap, updateMap)
 import qualified Dungeon                        as D
-import           Dungeon.Actor                  (Actor, isMonster, position,
-                                                 talkMessage)
-import qualified Dungeon.Actor                  as A
+import           Dungeon.Actor                  (Actor, position)
 import qualified Dungeon.Actor                  as E
-import           Dungeon.Actor.Actions          (Action, consumeAction,
-                                                 meleeAction, moveAction,
-                                                 pickUpAction)
 import           Dungeon.Actor.Behavior         (npcAction)
 import           Dungeon.Init                   (initDungeon)
 import           Dungeon.Item                   (Item)
@@ -58,14 +61,12 @@ import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
 import           GHC.Generics                   (Generic)
-import           Linear.V2                      (V2)
-import           Log                            (MessageLog, addMessage,
-                                                 addMessages)
+import           Log                            (Message, MessageLog)
 import qualified Log                            as L
 import           Scene                          (Scene, elements,
                                                  gameStartScene)
 import           System.Random                  (getStdGen)
-import           Talking                        (TalkWith, talkWith)
+import           Talking                        (TalkWith)
 
 data GameStatus = PlayerIsExploring
           { _currentDungeon :: Dungeon
@@ -92,56 +93,11 @@ makeLensesFor [ ("_currentDungeon", "currentDungeon")
               ] ''GameStatus
 instance Binary GameStatus
 
-handlePlayerMoving :: V2 Int -> State GameStatus ()
-handlePlayerMoving offset = do
-    eng <- get
-    let finished = eng ^?! isGameOver
-    unless finished $ do
-        success <- playerBumpAction offset
-
-        when success $ do
-            eng' <- get
-            case eng' of
-                PlayerIsExploring {} -> completeThisTurn
-                _                    -> return ()
-
-handlePlayerPickingUp :: State GameStatus ()
-handlePlayerPickingUp = do
-    eng <- get
-    let finished = eng ^?! isGameOver
-    unless finished $ do
-        success <- doAction pickUpAction
-
-        when success $ do
-            eng' <- get
-            case eng' of
-                PlayerIsExploring {} -> completeThisTurn
-                _                    -> return ()
-
-handlePlayerSelectingItemToUse :: GameStatus -> GameStatus
-handlePlayerSelectingItemToUse e =
-    SelectingItemToUse { _items = xs
-                       , _selecting = 0
-                       , _afterSelecting = e
-                       }
-    where xs = A.getItems p
-          p = case getPlayerActor e of
-                Just x  -> x
-                Nothing -> error "Player is dead."
-
-handlePlayerConsumeItem :: State GameStatus ()
-handlePlayerConsumeItem = do
-    gs <- get
-
-    unless (isSelectingListEmpty gs) $ do
-        let n = getSelectingIndex gs
-
-        put $ finishSelecting gs
-
-        success <- doAction $ consumeAction n
-
-        when success $ do
-            completeThisTurn
+selectingItemToUse :: [Item] -> GameStatus -> GameStatus
+selectingItemToUse i st = SelectingItemToUse { _items = i
+                                             , _selecting = 0
+                                             , _afterSelecting = st
+                                             }
 
 isPlayerExploring :: GameStatus -> Bool
 isPlayerExploring PlayerIsExploring{} = True
@@ -218,7 +174,7 @@ newGameStatus = do
         initPlayerIsExploring = PlayerIsExploring
             { _currentDungeon = initDungeon
             , _otherDungeons = [globalMap, bats]
-            , _messageLog = foldr (addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
+            , _messageLog = foldr (L.addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
             , _isGameOver = False
             }
     return HandlingScene
@@ -232,6 +188,13 @@ getCurrentDungeon (Talking _ after)              = getCurrentDungeon after
 getCurrentDungeon (HandlingScene _ after)        = getCurrentDungeon after
 getCurrentDungeon (SelectingItemToUse _ _ after) = getCurrentDungeon after
 getCurrentDungeon Title                          = error "We are in the title."
+
+getOtherDungeons :: GameStatus -> [Dungeon]
+getOtherDungeons (PlayerIsExploring _ o _ _)    = o
+getOtherDungeons (Talking _ after)              = getOtherDungeons after
+getOtherDungeons (HandlingScene _ after)        = getOtherDungeons after
+getOtherDungeons (SelectingItemToUse _ _ after) = getOtherDungeons after
+getOtherDungeons Title                          = error "We are in tht title."
 
 destructTalking :: GameStatus -> (TalkWith, GameStatus)
 destructTalking (Talking tw after) = (tw, after)
@@ -247,6 +210,20 @@ messageLogList (Talking _ e)                  = messageLogList e
 messageLogList (HandlingScene _ e)            = messageLogList e
 messageLogList (SelectingItemToUse _ _ after) = messageLogList after
 messageLogList Title                          = error "no message log."
+
+addMessages :: [Message] -> State GameStatus ()
+addMessages m = state
+    $ \case
+        e@PlayerIsExploring{}       -> ((), e & messageLog %~ L.addMessages m)
+        (Talking _ gs)              -> runState (addMessages m) gs
+        (HandlingScene _ gs)        -> runState (addMessages m) gs
+        (SelectingItemToUse _ _ gs) -> runState (addMessages m) gs
+        Title                       -> error "No message log."
+
+talking :: TalkWith -> GameStatus -> GameStatus
+talking tw gs = Talking { _talk = tw
+                        , _afterTalking = gs
+                        }
 
 title :: GameStatus
 title = Title
@@ -284,57 +261,8 @@ handleNpcTurn c = do
                     Just e'' -> npcAction e''
                     Nothing  -> error "No such enemy."
 
-        messageLog %= addMessages l
+        messageLog %= L.addMessages l
         currentDungeon .= dg'
-
-playerBumpAction :: V2 Int -> State GameStatus Bool
-playerBumpAction offset = do
-    gameStatus <- get
-
-    let destination = case playerPosition gameStatus of
-                          Just p  -> p + offset
-                          Nothing -> error "The player is dead."
-
-    case actorAt destination gameStatus of
-        Just actorAtDestination -> meleeOrTalk offset actorAtDestination
-        Nothing                 ->
-            if isPositionInDungeon destination gameStatus || not (isTown (gameStatus ^?! currentDungeon))
-                then doAction $ moveAction offset
-                else let (p, currentDungeon') = runState popPlayer (gameStatus ^?! currentDungeon)
-                     in do
-                     otherDungeons %= (:) currentDungeon'
-                     let g = find D.isGlobalMap $ gameStatus ^?! otherDungeons
-                         newPosition = currentDungeon' ^?! positionOnGlobalMap
-                         newPlayer = p & position .~ case newPosition of
-                             Just pos -> pos
-                             Nothing -> error "The new position is not specified."
-                     currentDungeon .= case g of
-                         Just g' -> g' & actors %~ (:) newPlayer
-                         Nothing -> error "Global map not found."
-                     return True
-
-meleeOrTalk :: V2 Int -> Actor -> State GameStatus Bool
-meleeOrTalk offset target = do
-    gameStatus <- get
-
-    if isMonster target
-        then doAction $ meleeAction offset
-        else do
-            put $ Talking { _talk = talkWith target $ target ^. talkMessage
-                          , _afterTalking = gameStatus
-                          }
-            return True
-
-doAction :: Action -> State GameStatus Bool
-doAction action = do
-    gs <- get
-
-    let ((msg, success), currentDungeon') = flip runState (gs ^?! currentDungeon) $ do
-            p <- popPlayer
-            action p
-    messageLog %= addMessages msg
-    currentDungeon .= currentDungeon'
-    return success
 
 getPlayerActor :: GameStatus -> Maybe Actor
 getPlayerActor (PlayerIsExploring d _ _ _) = D.getPlayerActor d
@@ -376,6 +304,15 @@ popDungeonAt p e = let xs = e ^. otherDungeons
                                         newOtherDungeons = take x xs ++ drop (x + 1) xs
                                     in (Just d, e & otherDungeons .~ newOtherDungeons)
                           Nothing -> (Nothing, e)
+
+pushDungeonAsOtherDungeons :: Dungeon -> State GameStatus ()
+pushDungeonAsOtherDungeons d = state
+    $ \case
+        gs@PlayerIsExploring{} -> ((), gs & otherDungeons %~ (:) d)
+        (Talking _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
+        (HandlingScene _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
+        (SelectingItemToUse _ _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
+        Title -> error "We are in the title."
 
 isSelectingListEmpty :: GameStatus -> Bool
 isSelectingListEmpty (SelectingItemToUse l _ _) = null l
