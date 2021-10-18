@@ -30,6 +30,7 @@ beaeve player = dungeon (stringArrayToMap
     [ player
     , electria $ V2 4 5
     ]
+    []
     (Just (V2 3 16))
     Town
 

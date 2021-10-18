@@ -6,6 +6,7 @@
 module GameStatus
     ( GameStatus
     , handlePlayerMoving
+    , handlePlayerPickingUp
     , isPlayerExploring
     , isPlayerTalking
     , isHandlingScene
@@ -39,7 +40,7 @@ import           Dungeon.Actor                  (Actor, isMonster, position,
                                                  talkMessage)
 import qualified Dungeon.Actor                  as E
 import           Dungeon.Actor.Actions          (Action, meleeAction,
-                                                 moveAction)
+                                                 moveAction, pickUpAction)
 import           Dungeon.Actor.Behavior         (npcAction)
 import           Dungeon.Init                   (initDungeon)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
@@ -81,6 +82,19 @@ handlePlayerMoving offset = do
     let finished = eng ^?! isGameOver
     unless finished $ do
         success <- playerBumpAction offset
+
+        when success $ do
+            eng' <- get
+            case eng' of
+                PlayerIsExploring {} -> completeThisTurn
+                _                    -> return ()
+
+handlePlayerPickingUp :: State GameStatus ()
+handlePlayerPickingUp = do
+    eng <- get
+    let finished = eng ^?! isGameOver
+    unless finished $ do
+        success <- doAction pickUpAction
 
         when success $ do
             eng' <- get

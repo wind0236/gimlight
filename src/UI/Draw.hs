@@ -13,11 +13,14 @@ import           Coord                 (Coord)
 import           Data.Array            ((!))
 import           Data.Maybe            (mapMaybe)
 import           Data.Text             (append, pack)
-import           Dungeon               (Dungeon, actors, explored,
+import           Dungeon               (Dungeon, actors, explored, items,
                                         mapWidthAndHeight, playerPosition,
                                         tileMap, visible)
-import           Dungeon.Actor         (defence, getHp, maxHp, position, power,
+import           Dungeon.Actor         (defence, getHp, maxHp, power,
                                         standingImagePath, walkingImagePath)
+import qualified Dungeon.Actor         as A
+import           Dungeon.Item          (iconImagePath)
+import qualified Dungeon.Item          as I
 import qualified Dungeon.Map.Tile      as MT
 import           GameStatus            (GameStatus, destructHandlingScene,
                                         destructTalking, getCurrentDungeon,
@@ -62,6 +65,7 @@ withKeyEvents =
     , "n"
     , "l"
     , "q"
+    , "g"
     , "Ctrl-s"
     , "Ctrl-l"
     ]
@@ -94,10 +98,11 @@ drawGameMap gs = withKeyEvents $ vstack [ statusAndMapGrid
                                     , statusGrid gs `styleBasic` [width $ fromIntegral $ windowWidth - tileWidth * tileColumns]
                                     ]
 
-mapGrid :: (WidgetModel s, WidgetEvent e) => GameStatus -> WidgetNode s e
-mapGrid gameStatus = zstack (mapTiles gameStatus:mapEntities gameStatus) `styleBasic` [ width $ fromIntegral mapDrawingWidth
-                                                                          , height $ fromIntegral mapDrawingHeight
-                                                                          ]
+mapGrid :: GameStatus -> WidgetNode GameStatus AppEvent
+mapGrid gs = zstack (mapTiles gs:(mapItems gs ++ mapActors gs))
+    `styleBasic` [ width $ fromIntegral mapDrawingWidth
+                 , height $ fromIntegral mapDrawingHeight
+                 ]
 
 mapTiles :: (WidgetModel s, WidgetEvent e) => GameStatus ->  WidgetNode s e
 mapTiles e = box_ [alignLeft] $ vgrid rows `styleBasic` styles
@@ -120,21 +125,38 @@ mapTiles e = box_ [alignLeft] $ vgrid rows `styleBasic` styles
           styles = [ width $ fromIntegral mapDrawingWidth
                    , height $ fromIntegral mapDrawingHeight]
 
-mapEntities :: (WidgetModel s, WidgetEvent e) => GameStatus -> [WidgetNode s e]
-mapEntities e = mapMaybe actorToImage $ d ^. actors
+mapActors :: GameStatus -> [WidgetNode GameStatus AppEvent]
+mapActors e = mapMaybe actorToImage $ d ^. actors
     where d = getCurrentDungeon e
           leftPadding actor = fromIntegral $ actorPositionOnDisplay actor ^. _x * tileWidth
           topPadding actor = fromIntegral $ mapDrawingHeight - (actorPositionOnDisplay actor ^. _y + 1) * tileHeight
 
           style actor = [paddingL $ leftPadding actor, paddingT $ topPadding actor]
 
-          actorPositionOnDisplay actor = actor ^. position - bottomLeftCoord d
+          actorPositionOnDisplay actor = actor ^. A.position - bottomLeftCoord d
 
           isActorDrawed actor = let pos = actorPositionOnDisplay actor
-                                    isVisible = (d ^. visible) ! (actor ^. position)
+                                    isVisible = (d ^. visible) ! (actor ^. A.position)
                                 in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
 
           actorToImage actor = guard (isActorDrawed actor) >> return (image (actor ^. walkingImagePath) `styleBasic` style actor)
+
+mapItems :: GameStatus -> [WidgetNode GameStatus AppEvent]
+mapItems e = mapMaybe itemToImage $ d ^. items
+    where itemToImage item = guard (isItemDrawed item) >> return (image (item ^. iconImagePath) `styleBasic` style item)
+          isItemDrawed item = let pos = itemPositionOnDisplay item
+                                  isVisible = (d ^. visible) ! (item ^. I.position)
+                                in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
+          d = getCurrentDungeon e
+          leftPadding item = fromIntegral $ itemPositionOnDisplay item ^. _x * tileWidth
+          topPadding item = fromIntegral $ mapDrawingHeight - (itemPositionOnDisplay item ^. _y + 1) * tileHeight
+
+          style item = [paddingL $ leftPadding item, paddingT $ topPadding item]
+
+          itemPositionOnDisplay item = item ^. I.position - bottomLeftCoord d
+
+
+
 
 statusGrid :: GameStatus -> WidgetNode GameStatus AppEvent
 statusGrid gs = vstack $ maybe []

@@ -21,13 +21,15 @@ module Dungeon.Actor
     , talkMessage
     , walkingImagePath
     , maxHp
+    , inventoryItems
     ) where
 
-import           Control.Lens (makeLenses, (&), (.~), (^.))
-import           Coord        (Coord)
-import           Data.Binary  (Binary)
-import           Data.Text    (Text)
-import           GHC.Generics (Generic)
+import           Control.Lens            (makeLenses, (&), (.~), (^.))
+import           Coord                   (Coord)
+import           Data.Binary             (Binary)
+import           Data.Text               (Text)
+import           Dungeon.Actor.Inventory (Inventory, inventory)
+import           GHC.Generics            (Generic)
 
 data ActorKind = Player | FriendlyNpc | Monster deriving (Show, Ord, Eq, Generic)
 instance Binary ActorKind
@@ -44,6 +46,7 @@ data Actor = Actor
            , _talkMessage       :: Text
            , _walkingImagePath  :: Text
            , _standingImagePath :: Text
+           , _inventoryItems    :: Inventory
            } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Actor
 instance Binary Actor
@@ -61,6 +64,7 @@ actor position' name' hp' defence' power' ak talkMessage' walkingImagePath' stan
               , _walkingImagePath = walkingImagePath'
               , _standingImagePath = standingImagePath'
               , _actorKind = ak
+              , _inventoryItems = inventory 5
               }
 
 monster :: Coord -> Text -> Int -> Int -> Int -> Text -> Actor

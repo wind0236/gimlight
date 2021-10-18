@@ -42,6 +42,7 @@ handleKeyInputDuringExploring e k
     | k == "Left"  = [Model $ handlePlayerMoving (V2 (-1) 0) e]
     | k == "Up"    = [Model $ handlePlayerMoving (V2 0 1) e]
     | k == "Down"  = [Model $ handlePlayerMoving (V2 0 (-1)) e]
+    | k == "g" = [Model $ handlePlayerPickingUp e]
     | k == "Ctrl-s"     = [Task (save e >> return AppSaveFinished)]
     | k == "Ctrl-l"     = [Task $ AppLoadFinished <$> load]
     | k == "Enter" = [Model $ enterTownAtPlayerPosition e]
@@ -66,3 +67,6 @@ handleKeyInputDuringTitle k
 
 handlePlayerMoving :: V2 Int -> GameStatus -> GameStatus
 handlePlayerMoving offset e = flip execState e $ GS.handlePlayerMoving offset
+
+handlePlayerPickingUp :: GameStatus -> GameStatus
+handlePlayerPickingUp = execState GS.handlePlayerPickingUp

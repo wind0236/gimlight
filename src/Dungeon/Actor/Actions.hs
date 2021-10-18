@@ -4,6 +4,7 @@ module Dungeon.Actor.Actions
     ( meleeAction
     , moveAction
     , waitAction
+    , pickUpAction
     , Action
     ) where
 
@@ -15,9 +16,13 @@ import           Data.Array                ((!))
 import           Data.Maybe                (isNothing)
 import           Data.Text                 (append, pack)
 import           Dungeon                   (Dungeon, actorAt, mapWidthAndHeight,
-                                            popActorAt, pushActor, tileMap)
-import           Dungeon.Actor             (Actor, defence, getHp, isPlayer,
-                                            name, position, power, updateHp)
+                                            popActorAt, popItemAt, pushActor,
+                                            pushItem, tileMap)
+import           Dungeon.Actor             (Actor, defence, getHp,
+                                            inventoryItems, isPlayer, name,
+                                            position, power, updateHp)
+import           Dungeon.Actor.Inventory   (addItem)
+import qualified Dungeon.Item              as I
 import           Dungeon.Map.Tile          (walkable)
 import           Linear.V2                 (V2 (V2))
 import           Log                       (MessageLog, message)
@@ -66,6 +71,25 @@ waitAction :: Action
 waitAction e = do
         pushActor e
         return ([], True)
+
+pickUpAction :: Action
+pickUpAction e = do
+    item <- popItemAt (e ^. position)
+    case item of
+        Just x -> do
+            let currentItems = e ^. inventoryItems
+                newItems = addItem x currentItems
+            case newItems of
+                Just xs -> do
+                    pushActor $ e & inventoryItems .~ xs
+                    return (["You got " `append` (x ^. I.name)], True)
+                Nothing -> do
+                    pushActor e
+                    pushItem x
+                    return (["Your bag is full."], False)
+        Nothing -> do
+            pushActor e
+            return (["You got nothing."], False)
 
 updatePosition :: Dungeon -> Actor -> V2 Int -> Actor
 updatePosition d src offset
