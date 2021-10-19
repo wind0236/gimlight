@@ -111,7 +111,7 @@ drawGameOver = vstack [label "Game Over" `styleBasic` [textSize 72]]
 drawGameMap :: GameStatus -> WidgetNode GameStatus AppEvent
 drawGameMap gs = withKeyEvents $ vstack [ statusAndMapGrid
                                         , messageLogArea gs
-                                        ] `styleBasic` [width 0]
+                                        ]
     where statusAndMapGrid = hstack [ mapGrid gs
                                     , statusGrid gs `styleBasic` [width $ fromIntegral $ windowWidth - tileWidth * tileColumns]
                                     ]
