@@ -49,7 +49,10 @@ import           Scene                 (backgroundImage, elements, text)
 import           Talking               (TalkWith, message, person)
 import           UI.Types              (AppEvent (AppKeyboardInput))
 
-drawUI :: WidgetEnv GameStatus AppEvent -> GameStatus -> WidgetNode GameStatus AppEvent
+type GameWidgetEnv = WidgetEnv GameStatus AppEvent
+type GameWidgetNode = WidgetNode GameStatus AppEvent
+
+drawUI :: GameWidgetEnv -> GameStatus -> GameWidgetNode
 drawUI wenv gs
     | isPlayerTalking gs = drawTalking wenv gs
     | isHandlingScene gs = drawHandlingScene gs
@@ -76,20 +79,20 @@ withKeyEvents =
     , "Esc"
     ]
 
-drawTalking ::  WidgetEnv GameStatus AppEvent -> GameStatus -> WidgetNode GameStatus AppEvent
+drawTalking ::  GameWidgetEnv -> GameStatus -> GameWidgetNode
 drawTalking wenv e = withKeyEvents $ zstack [ drawUI wenv afterGameStatus `styleBasic` [bgColor $ gray & L.a .~ 0.5]
                                             , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
                                             , talkingWindow with
                                             ]
     where (with, afterGameStatus) = destructTalking e
 
-drawHandlingScene :: GameStatus -> WidgetNode GameStatus AppEvent
+drawHandlingScene :: GameStatus -> GameWidgetNode
 drawHandlingScene e = withKeyEvents $ zstack [ image (s ^. backgroundImage)
                                              , label_  (text $ head $ s ^. elements) [multiline] `styleBasic` [textColor black]
                                              ]
     where (s, _) = destructHandlingScene e
 
-drawSelectingItem :: GameStatus -> WidgetNode GameStatus AppEvent
+drawSelectingItem :: GameStatus -> GameWidgetNode
 drawSelectingItem gs = withKeyEvents $ vstack labels
     where labels = label "Which Item do you use?":map label addAsterlist
           addAsterlist = zipWith (\idx x -> if idx == getSelectingIndex gs
@@ -98,17 +101,17 @@ drawSelectingItem gs = withKeyEvents $ vstack labels
                                                ) [0..] itemNames
           itemNames = map (^. I.name) $ getItems gs
 
-drawTitle :: WidgetNode GameStatus AppEvent
+drawTitle :: GameWidgetNode
 drawTitle = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSize 36]
                                    , label "[n] New game"
                                    , label "[l] Load the savedata"
                                    , label "[q] Quit"
                                    ]
 
-drawGameOver :: WidgetNode GameStatus AppEvent
+drawGameOver :: GameWidgetNode
 drawGameOver = vstack [label "Game Over" `styleBasic` [textSize 72]]
 
-drawGameMap :: GameStatus -> WidgetNode GameStatus AppEvent
+drawGameMap :: GameStatus -> GameWidgetNode
 drawGameMap gs = withKeyEvents $ vstack [ statusAndMapGrid
                                         , messageLogArea gs
                                         ]
@@ -116,7 +119,7 @@ drawGameMap gs = withKeyEvents $ vstack [ statusAndMapGrid
                                     , statusGrid gs `styleBasic` [width $ fromIntegral $ windowWidth - tileWidth * tileColumns]
                                     ]
 
-mapGrid :: GameStatus -> WidgetNode GameStatus AppEvent
+mapGrid :: GameStatus -> GameWidgetNode
 mapGrid gs = zstack (mapTiles gs:(mapItems gs ++ mapActors gs))
     `styleBasic` [ width $ fromIntegral mapDrawingWidth
                  , height $ fromIntegral mapDrawingHeight
@@ -143,7 +146,7 @@ mapTiles e = box_ [alignLeft] $ vgrid rows `styleBasic` styles
           styles = [ width $ fromIntegral mapDrawingWidth
                    , height $ fromIntegral mapDrawingHeight]
 
-mapActors :: GameStatus -> [WidgetNode GameStatus AppEvent]
+mapActors :: GameStatus -> [GameWidgetNode]
 mapActors e = mapMaybe actorToImage $ d ^. actors
     where d = getCurrentDungeon e
           leftPadding actor = fromIntegral $ actorPositionOnDisplay actor ^. _x * tileWidth
@@ -159,7 +162,7 @@ mapActors e = mapMaybe actorToImage $ d ^. actors
 
           actorToImage actor = guard (isActorDrawed actor) >> return (image (actor ^. walkingImagePath) `styleBasic` style actor)
 
-mapItems :: GameStatus -> [WidgetNode GameStatus AppEvent]
+mapItems :: GameStatus -> [GameWidgetNode]
 mapItems e = mapMaybe itemToImage $ d ^. items
     where itemToImage item = guard (isItemDrawed item) >> return (image (item ^. iconImagePath) `styleBasic` style item)
           isItemDrawed item = let pos = itemPositionOnDisplay item
@@ -173,7 +176,7 @@ mapItems e = mapMaybe itemToImage $ d ^. items
 
           itemPositionOnDisplay item = item ^. I.position - bottomLeftCoord d
 
-statusGrid :: GameStatus -> WidgetNode GameStatus AppEvent
+statusGrid :: GameStatus -> GameWidgetNode
 statusGrid gs = vstack $ maybe []
     (\x -> [ label "Player"
            , label $ "HP: " `append` pack (show $ getHp x) `append` " / " `append` pack (show $ x ^. maxHp)
@@ -181,7 +184,7 @@ statusGrid gs = vstack $ maybe []
            , label $ "DEF: " `append` pack (show $ x ^. defence)
            ]) $ getPlayerActor gs
 
-talkingWindow :: TalkWith -> WidgetNode GameStatus AppEvent
+talkingWindow :: TalkWith -> GameWidgetNode
 talkingWindow tw = hstack [ image (tw ^. person . standingImagePath)
                           , window
                           ]
@@ -189,7 +192,7 @@ talkingWindow tw = hstack [ image (tw ^. person . standingImagePath)
                           , label (tw ^. message) `styleBasic` [textColor red, textSize 16, paddingL 50]
                           ]
 
-messageLogArea :: (WidgetModel s, WidgetEvent e) => GameStatus -> WidgetNode s e
+messageLogArea :: GameStatus -> GameWidgetNode
 messageLogArea e = vstack $ fmap (\x -> label_ x [multiline]) $ take logRows $ messageLogList e
 
 topRightCoord :: Dungeon -> Coord
