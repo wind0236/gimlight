@@ -2,10 +2,10 @@ module UI.Types
     ( AppEvent(..)
     ) where
 
-import           Data.Text  (Text)
-import           GameStatus (GameStatus)
+import           Data.Text (Text)
+import           Game      (Game)
 
 data AppEvent = AppInit
               | AppSaveFinished
-              | AppLoadFinished GameStatus
+              | AppLoadFinished Game
               | AppKeyboardInput Text deriving (Eq, Show)

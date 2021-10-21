@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module GameStatus
+module Game.Status
     ( GameStatus
     , isPlayerExploring
     , isPlayerTalking
@@ -12,6 +12,7 @@ module GameStatus
     , isSelectingItemToUse
     , isTitle
     , isGameOver
+    , isSelectingLocale
     , completeThisTurn
     , nextSceneElementOrFinish
     , enterTownAtPlayerPosition
@@ -30,6 +31,7 @@ module GameStatus
     , getPlayerActor
     , messageLogList
     , title
+    , selectingLocale
     , talking
     , selectingItemToUse
     , addMessages
@@ -62,6 +64,7 @@ import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
 import qualified Dungeon.Turn                   as DT
 import           GHC.Generics                   (Generic)
+import           Localization                   (multilingualText)
 import           Log                            (Message, MessageLog)
 import qualified Log                            as L
 import           Scene                          (Scene, elements,
@@ -86,6 +89,7 @@ data GameStatus = PlayerIsExploring
           }
           | Title
           | GameOver
+          | SelectingLocale
           deriving (Show, Ord, Eq, Generic)
 makeLensesFor [ ("_currentDungeon", "currentDungeon")
               , ("_otherDungeons", "otherDungeons")
@@ -124,6 +128,10 @@ isTitle _     = False
 isGameOver :: GameStatus -> Bool
 isGameOver GameOver = True
 isGameOver _        = False
+
+isSelectingLocale :: GameStatus -> Bool
+isSelectingLocale SelectingLocale = True
+isSelectingLocale _               = False
 
 nextSceneElementOrFinish :: GameStatus -> GameStatus
 nextSceneElementOrFinish (HandlingScene s after) = if length (s ^. elements) == 1
@@ -180,7 +188,8 @@ newGameStatus = do
         initPlayerIsExploring = PlayerIsExploring
             { _currentDungeon = initDungeon
             , _otherDungeons = [globalMap, bats]
-            , _messageLog = foldr (L.addMessage . L.message) L.emptyLog ["Welcome to a roguelike game!"]
+            , _messageLog = foldr (L.addMessage . L.message) L.emptyLog
+                [multilingualText "Welcome to a roguelike game!" "ローグライクゲームへようこそ！"]
             }
     return HandlingScene
         { _scene = gameStartScene
@@ -232,6 +241,9 @@ talking tw gs = Talking { _talk = tw
 
 title :: GameStatus
 title = Title
+
+selectingLocale :: GameStatus
+selectingLocale = SelectingLocale
 
 completeThisTurn :: State GameStatus ()
 completeThisTurn = do

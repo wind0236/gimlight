@@ -10,9 +10,9 @@ module Log
     , addMessages
     ) where
 
-import           Data.Text (Text)
+import           Localization (MultilingualText)
 
-type Message = Text
+type Message = MultilingualText
 
 type MessageLog = [Message]
 
@@ -29,7 +29,7 @@ addMaybeMessage :: Maybe Message -> MessageLog -> MessageLog
 addMaybeMessage (Just m) l = addMessage m l
 addMaybeMessage Nothing l  = l
 
-message :: Text -> Message
+message :: MultilingualText -> Message
 message text = text
 
 maxLog :: Int

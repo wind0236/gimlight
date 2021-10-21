@@ -34,8 +34,11 @@ executable roguelike
                       , Dungeon.Predefined.GlobalMap
                       , Dungeon.Size
                       , Dungeon.Turn
-                      , GameStatus
-                      , GameStatus.Player
+                      , Game
+                      , Game.Config
+                      , Game.Status
+                      , Game.Status.Player
+                      , Localization
                       , Log
                       , Save
                       , Scene
@@ -49,6 +52,7 @@ executable roguelike
                       , base >= 4.14.3 && < 5
                       , binary >= 0.8.8 && < 1
                       , data-default >= 0.7.1 && < 1
+                      , directory >= 1.3.7 && < 2
                       , lens >= 5.0.1 && < 6
                       , linear >= 1.21.7 && < 2
                       , monomer >= 1.1.1 && < 2

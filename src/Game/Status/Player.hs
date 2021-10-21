@@ -1,4 +1,4 @@
-module GameStatus.Player
+module Game.Status.Player
     ( playerBumpAction
     , handlePlayerMoving
     , handlePlayerPickingUp
@@ -16,7 +16,7 @@ import           Dungeon.Actor             (Actor, isMonster, position,
 import qualified Dungeon.Actor             as A
 import           Dungeon.Actor.Actions     (Action, consumeAction, meleeAction,
                                             moveAction, pickUpAction)
-import           GameStatus                (GameStatus, actorAt, addMessages,
+import           Game.Status               (GameStatus, actorAt, addMessages,
                                             completeThisTurn, currentDungeon,
                                             finishSelecting, getCurrentDungeon,
                                             getOtherDungeons, getPlayerActor,

@@ -35,20 +35,21 @@ import           Dungeon.Actor.Inventory (Inventory, inventory)
 import qualified Dungeon.Actor.Inventory as I
 import           Dungeon.Item            (Item)
 import           GHC.Generics            (Generic)
+import           Localization            (MultilingualText, multilingualText)
 
 data ActorKind = Player | FriendlyNpc | Monster deriving (Show, Ord, Eq, Generic)
 instance Binary ActorKind
 
 data Actor = Actor
            { _position          :: Coord
-           , _name              :: Text
+           , _name              :: MultilingualText
            , _hp                :: Int
            , _maxHp             :: Int
            , _defence           :: Int
            , _power             :: Int
            , _pathToDestination :: [Coord]
            , _actorKind         :: ActorKind
-           , _talkMessage       :: Text
+           , _talkMessage       :: MultilingualText
            , _walkingImagePath  :: Text
            , _standingImagePath :: Text
            , _inventoryItems    :: Inventory
@@ -56,7 +57,7 @@ data Actor = Actor
 makeLenses ''Actor
 instance Binary Actor
 
-actor :: Coord -> Text -> Int -> Int -> Int -> ActorKind -> Text -> Text -> Text -> Actor
+actor :: Coord -> MultilingualText -> Int -> Int -> Int -> ActorKind -> MultilingualText -> Text -> Text -> Actor
 actor position' name' hp' defence' power' ak talkMessage' walkingImagePath' standingImagePath'=
         Actor { _position = position'
               , _name = name'
@@ -72,11 +73,12 @@ actor position' name' hp' defence' power' ak talkMessage' walkingImagePath' stan
               , _inventoryItems = inventory 5
               }
 
-monster :: Coord -> Text -> Int -> Int -> Int -> Text -> Actor
-monster position' name' maxHp' defence' power' walking = actor position' name' maxHp' defence' power' Monster "" walking "images/sample_standing_picture.png"
+monster :: Coord -> MultilingualText -> Int -> Int -> Int -> Text -> Actor
+monster position' name' maxHp' defence' power' walking = actor position' name' maxHp' defence' power' Monster mempty walking "images/sample_standing_picture.png"
 
 player :: Coord -> Actor
-player c = actor c "Player" 30 2 5 Player "" "images/player.png" "images/sample_standing_picture.png"
+player c = actor c playerName 30 2 5 Player mempty "images/player.png" "images/sample_standing_picture.png"
+    where playerName = multilingualText "Player" "プレイヤー"
 
 isPlayer :: Actor -> Bool
 isPlayer e = (e ^. actorKind) == Player

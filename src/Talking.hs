@@ -10,16 +10,16 @@ module Talking
 
 import           Control.Lens  (makeLenses)
 import           Data.Binary   (Binary)
-import           Data.Text     (Text)
 import           Dungeon.Actor (Actor)
 import           GHC.Generics  (Generic)
+import           Localization  (MultilingualText)
 
 data TalkWith = TalkWith
               { _person  :: Actor
-              , _message :: Text
+              , _message :: MultilingualText
               } deriving (Show, Ord, Eq, Generic)
 makeLenses ''TalkWith
 instance Binary TalkWith
 
-talkWith :: Actor -> Text -> TalkWith
+talkWith :: Actor -> MultilingualText -> TalkWith
 talkWith = TalkWith

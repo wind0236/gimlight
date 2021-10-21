@@ -20,54 +20,66 @@ import           Dungeon                   (Dungeon, actorAt, mapWidthAndHeight,
                                             popActorAt, popItemAt, pushActor,
                                             pushItem, tileMap)
 import           Dungeon.Actor             (Actor, defence, getHp, healHp,
-                                            inventoryItems, isPlayer, name,
-                                            position, power, removeNthItem,
-                                            updateHp)
+                                            inventoryItems, name, position,
+                                            power, removeNthItem, updateHp)
 import           Dungeon.Actor.Inventory   (addItem)
 import           Dungeon.Item              (healAmount)
 import qualified Dungeon.Item              as I
 import           Dungeon.Map.Tile          (walkable)
 import           Linear.V2                 (V2 (V2))
+import           Localization              (multilingualText)
 import           Log                       (MessageLog, message)
 
 type Action = Actor -> State Dungeon (MessageLog, Bool)
 
 meleeAction :: V2 Int -> Action
 meleeAction offset src = do
-        let pos = src ^. position
-            dest = pos + offset
+    let pos = src ^. position
+        dest = pos + offset
 
-        target <- popActorAt dest
+    target <- popActorAt dest
 
-        case target of
-            Nothing -> do
-                pushActor src
-                return ([], False)
-            Just x -> let damage = src ^. power - x ^. defence
-                          msg = (src ^. name) `append` " attacks " `append` (x ^. name)
-                        in if damage > 0
-                            then do
-                                let newHp = getHp x - damage
-                                    newActor = updateHp x newHp
-                                    damagedMessage = msg `append` pack " for " `append` pack (show damage) `append` " hit points."
-                                    deathMessage = if isPlayer x then "You died!" else (x ^. name) `append` " is dead!"
-                                    messages = if newHp <= 0 then [damagedMessage, deathMessage] else [damagedMessage]
+    case target of
+        Nothing -> do
+            pushActor src
+            return ([], False)
+        Just x -> let damage = src ^. power - x ^. defence
+                  in if damage > 0
+                      then do
+                          let newHp = getHp x - damage
+                              newActor = updateHp x newHp
+                              messages = if newHp <= 0 then [damagedMessage src x damage, deathMessage x] else [damagedMessage src x damage]
 
-                                pushActor src
+                          pushActor src
 
-                                when (newHp > 0) $ pushActor newActor
+                          when (newHp > 0) $ pushActor newActor
 
-                                return (fmap message messages, True)
-                            else do
-                                    pushActor src
-                                    pushActor x
-                                    return ([message $ msg `append` " but does not damage."], True)
+                          return (fmap message messages, True)
+                      else do
+                              pushActor src
+                              pushActor x
+                              return ([message $ noDamage src x ], True)
+    where attackMessage from to =
+            mconcat [ from ^. name
+                    , multilingualText " attacks" "は"
+                    , to ^. name
+                    , multilingualText "" "に攻撃"
+                    ]
+
+          damagedMessage from to damage =
+
+              attackMessage from to <>
+                multilingualText (" for " `append` pack (show damage) `append` " hit points.")
+                                 ("して" `append` pack (show damage) `append` "ポイントのダメージを与えた．")
+          deathMessage who = (who ^. name) <> multilingualText " is dead!" "は死んだ．"
+          noDamage from to = attackMessage from to `mappend`
+                                multilingualText " but does not damage." "したがダメージを受けなかった．"
 
 moveAction :: V2 Int -> Action
 moveAction offset src = state $ \d -> result d
     where result d = (\(x, y) -> (x, execState y d)) $ messageAndNewActor d
           messageAndNewActor d = if not (movable d (src ^. position + offset))
-                                    then ((["That way is blocked."], False), pushActor src)
+                                    then (([multilingualText "That way is blocked." "その方向には進めない．"], False), pushActor src)
                                     else (([], True), pushActor $ updatePosition d src offset)
 
 waitAction :: Action
@@ -85,14 +97,14 @@ pickUpAction e = do
             case newItems of
                 Just xs -> do
                     pushActor $ e & inventoryItems .~ xs
-                    return (["You got " `append` (x ^. I.name)], True)
+                    return ([multilingualText "You got " "アイテムを入手した：" <> (x ^. I.name)], True)
                 Nothing -> do
                     pushActor e
                     pushItem x
-                    return (["Your bag is full."], False)
+                    return ([multilingualText "Your bag is full." "バッグは一杯だ．"], False)
         Nothing -> do
             pushActor e
-            return (["You got nothing."], False)
+            return ([multilingualText "You got nothing." "あなたは無を入手した．"], False)
 
 consumeAction :: Int -> Action
 consumeAction n e = do
@@ -102,10 +114,13 @@ consumeAction n e = do
         Just x -> do
             let healedActor = healHp newActor (x ^. healAmount)
             pushActor healedActor
-            return ([(healedActor ^. name) `append` " healed " `append` pack (show (x ^. healAmount))], True)
+            return ( [(healedActor ^. name) <>
+                        multilingualText (" healed " `append` pack (show (x ^. healAmount)))
+                                         ("は" `append` pack (show (x ^. healAmount)) `append` "ポイント回復した．")]
+                   , True)
         Nothing -> do
             pushActor newActor
-            return (["What did you consume?"], False)
+            return ([multilingualText "What do you consume?" "何を使う？"], False)
 
 updatePosition :: Dungeon -> Actor -> V2 Int -> Actor
 updatePosition d src offset
