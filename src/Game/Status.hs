@@ -72,7 +72,7 @@ import           Scene                          (Scene, elements,
 import           System.Random                  (getStdGen)
 import           Talking                        (TalkWith)
 
-data GameStatus = PlayerIsExploring
+data GameStatus = Exploring
           { _currentDungeon :: Dungeon
           , _otherDungeons  :: [Dungeon]
           , _messageLog     :: MessageLog
@@ -106,8 +106,8 @@ selectingItemToUse i st = SelectingItemToUse { _items = i
                                              }
 
 isPlayerExploring :: GameStatus -> Bool
-isPlayerExploring PlayerIsExploring{} = True
-isPlayerExploring _                   = False
+isPlayerExploring Exploring{} = True
+isPlayerExploring _           = False
 
 isPlayerTalking :: GameStatus -> Bool
 isPlayerTalking Talking{} = True
@@ -185,7 +185,7 @@ newGameStatus = do
     g <- getStdGen
 
     let bats = batsDungeon g
-        initPlayerIsExploring = PlayerIsExploring
+        initExploring = Exploring
             { _currentDungeon = initDungeon
             , _otherDungeons = [globalMap, bats]
             , _messageLog = foldr (L.addMessage . L.message) L.emptyLog
@@ -193,18 +193,18 @@ newGameStatus = do
             }
     return HandlingScene
         { _scene = gameStartScene
-        , _afterFinish = initPlayerIsExploring
+        , _afterFinish = initExploring
         }
 
 getCurrentDungeon :: GameStatus -> Dungeon
-getCurrentDungeon (PlayerIsExploring d _ _)      = d
+getCurrentDungeon (Exploring d _ _)      = d
 getCurrentDungeon (Talking _ after)              = getCurrentDungeon after
 getCurrentDungeon (HandlingScene _ after)        = getCurrentDungeon after
 getCurrentDungeon (SelectingItemToUse _ _ after) = getCurrentDungeon after
 getCurrentDungeon _ = error "Cannot get the current dungeon."
 
 getOtherDungeons :: GameStatus -> [Dungeon]
-getOtherDungeons (PlayerIsExploring _ o _)      = o
+getOtherDungeons (Exploring _ o _)      = o
 getOtherDungeons (Talking _ after)              = getOtherDungeons after
 getOtherDungeons (HandlingScene _ after)        = getOtherDungeons after
 getOtherDungeons (SelectingItemToUse _ _ after) = getOtherDungeons after
@@ -219,7 +219,7 @@ destructHandlingScene (HandlingScene s after) = (s, after)
 destructHandlingScene _ = error "We are not handling a scene."
 
 messageLogList :: GameStatus -> MessageLog
-messageLogList (PlayerIsExploring _ _ l)      = l
+messageLogList (Exploring _ _ l)      = l
 messageLogList (Talking _ e)                  = messageLogList e
 messageLogList (HandlingScene _ e)            = messageLogList e
 messageLogList (SelectingItemToUse _ _ after) = messageLogList after
@@ -228,7 +228,7 @@ messageLogList _                          = error "Cannot get the message log li
 addMessages :: [Message] -> State GameStatus ()
 addMessages m = state
     $ \case
-        e@PlayerIsExploring{}       -> ((), e & messageLog %~ L.addMessages m)
+        e@Exploring{}               -> ((), e & messageLog %~ L.addMessages m)
         (Talking _ gs)              -> runState (addMessages m) gs
         (HandlingScene _ gs)        -> runState (addMessages m) gs
         (SelectingItemToUse _ _ gs) -> runState (addMessages m) gs
@@ -282,28 +282,28 @@ handleNpcTurn c = do
         currentDungeon .= dg'
 
 getPlayerActor :: GameStatus -> Maybe Actor
-getPlayerActor (PlayerIsExploring d _ _)   = D.getPlayerActor d
+getPlayerActor (Exploring d _ _)           = D.getPlayerActor d
 getPlayerActor (Talking _ gs)              = getPlayerActor gs
 getPlayerActor (HandlingScene _ gs)        = getPlayerActor gs
 getPlayerActor (SelectingItemToUse _ _ gs) = getPlayerActor gs
 getPlayerActor _                           = error "Cannot get the player data."
 
 playerPosition :: GameStatus -> Maybe Coord
-playerPosition (PlayerIsExploring d _ _)   = D.playerPosition d
+playerPosition (Exploring d _ _)   = D.playerPosition d
 playerPosition (Talking _ e)               = playerPosition e
 playerPosition (HandlingScene _ e)         = playerPosition e
 playerPosition (SelectingItemToUse _ _ gs) = playerPosition gs
 playerPosition _                       = error "Cannot get the player position."
 
 actorAt :: Coord -> GameStatus -> Maybe E.Actor
-actorAt c (PlayerIsExploring d _ _)  = D.actorAt c d
+actorAt c (Exploring d _ _)          = D.actorAt c d
 actorAt c (Talking _ e)              = actorAt c e
 actorAt c (HandlingScene _ e)        = actorAt c e
 actorAt c (SelectingItemToUse _ _ e) = actorAt c e
 actorAt _ _                          = error "Cannot get the actor data"
 
 isPositionInDungeon :: Coord -> GameStatus -> Bool
-isPositionInDungeon c (PlayerIsExploring d _ _)  = D.isPositionInDungeon c d
+isPositionInDungeon c (Exploring d _ _)  = D.isPositionInDungeon c d
 isPositionInDungeon c (Talking _ e)              = isPositionInDungeon c e
 isPositionInDungeon c (HandlingScene _ e)        = isPositionInDungeon c e
 isPositionInDungeon c (SelectingItemToUse _ _ e) = isPositionInDungeon c e
@@ -325,7 +325,7 @@ popDungeonAt p e = let xs = e ^. otherDungeons
 pushDungeonAsOtherDungeons :: Dungeon -> State GameStatus ()
 pushDungeonAsOtherDungeons d = state
     $ \case
-        gs@PlayerIsExploring{} -> ((), gs & otherDungeons %~ (:) d)
+        gs@Exploring{} -> ((), gs & otherDungeons %~ (:) d)
         (Talking _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
         (HandlingScene _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
         (SelectingItemToUse _ _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
