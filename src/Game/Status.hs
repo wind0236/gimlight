@@ -5,7 +5,7 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Game.Status
-    ( GameStatus
+    ( GameStatus(Exploring)
     , isPlayerExploring
     , isPlayerTalking
     , isHandlingScene
@@ -25,7 +25,6 @@ module Game.Status
     , newGameStatus
     , getCurrentDungeon
     , getOtherDungeons
-    , currentDungeon
     , destructTalking
     , destructHandlingScene
     , getPlayerActor
@@ -42,28 +41,23 @@ module Game.Status
     , isSelectingListEmpty
     ) where
 
-import           Control.Lens                   (makeLensesFor, (%=), (%~), (&),
-                                                 (&~), (.=), (.~), (^.), (^?!))
-import           Control.Monad.Trans.State      (State, execState, get, put,
-                                                 state)
+import           Control.Lens                   (makeLensesFor, (%~), (&), (.~),
+                                                 (^.))
+import           Control.Monad.Trans.State      (State, state)
 import           Control.Monad.Trans.State.Lazy (runState)
 import           Coord                          (Coord)
 import           Data.Binary                    (Binary)
-import           Data.List                      (findIndex)
-import           Dungeon                        (Dungeon, actors,
-                                                 initialPlayerPositionCandidates,
-                                                 npcs, popPlayer,
-                                                 positionOnGlobalMap, updateMap)
-import qualified Dungeon                        as D
-import           Dungeon.Actor                  (Actor, position)
+import           Dungeon                        (Dungeon)
+import           Dungeon.Actor                  (Actor)
 import qualified Dungeon.Actor                  as E
-import           Dungeon.Actor.Behavior         (npcAction)
 import           Dungeon.Init                   (initDungeon)
 import           Dungeon.Item                   (Item)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
-import qualified Dungeon.Turn                   as DT
 import           GHC.Generics                   (Generic)
+import           Game.Status.Exploring          (ExploringHandler,
+                                                 exploringHandler)
+import qualified Game.Status.Exploring          as GSE
 import           Localization                   (multilingualText)
 import           Log                            (Message, MessageLog)
 import qualified Log                            as L
@@ -72,11 +66,8 @@ import           Scene                          (Scene, elements,
 import           System.Random                  (getStdGen)
 import           Talking                        (TalkWith)
 
-data GameStatus = Exploring
-          { _currentDungeon :: Dungeon
-          , _otherDungeons  :: [Dungeon]
-          , _messageLog     :: MessageLog
-          } | Talking
+data GameStatus = Exploring ExploringHandler
+            | Talking
           { _talk         :: TalkWith
           , _afterTalking :: GameStatus
           } | HandlingScene
@@ -140,15 +131,8 @@ nextSceneElementOrFinish (HandlingScene s after) = if length (s ^. elements) == 
 nextSceneElementOrFinish _                   = error "We are not handling a scene."
 
 enterTownAtPlayerPosition :: GameStatus -> GameStatus
-enterTownAtPlayerPosition e =
-    case popDungeonAtPlayerPosition e of
-        (Just d, e') -> e' &~ do
-            let newPosition = head $ initialPlayerPositionCandidates d
-                (p, currentDungeon') = runState popPlayer (e ^?! currentDungeon)
-            otherDungeons %= (:) currentDungeon'
-            currentDungeon .= (d & actors %~ (:) (p & position .~ newPosition))
-            currentDungeon %= execState updateMap
-        (Nothing, _) -> e
+enterTownAtPlayerPosition (Exploring eh) = Exploring $ GSE.enterTownAtPlayerPosition eh
+enterTownAtPlayerPosition _ = undefined
 
 finishTalking :: GameStatus -> GameStatus
 finishTalking (Talking _ after) = after
@@ -185,26 +169,26 @@ newGameStatus = do
     g <- getStdGen
 
     let bats = batsDungeon g
-        initExploring = Exploring
-            { _currentDungeon = initDungeon
-            , _otherDungeons = [globalMap, bats]
-            , _messageLog = foldr (L.addMessage . L.message) L.emptyLog
+        initExploring = exploringHandler
+            initDungeon
+            [globalMap, bats] $
+            foldr (L.addMessage . L.message) L.emptyLog
                 [multilingualText "Welcome to a roguelike game!" "ローグライクゲームへようこそ！"]
-            }
+
     return HandlingScene
         { _scene = gameStartScene
-        , _afterFinish = initExploring
+        , _afterFinish = Exploring initExploring
         }
 
 getCurrentDungeon :: GameStatus -> Dungeon
-getCurrentDungeon (Exploring d _ _)      = d
+getCurrentDungeon (Exploring eh)      = GSE.getCurrentDungeon eh
 getCurrentDungeon (Talking _ after)              = getCurrentDungeon after
 getCurrentDungeon (HandlingScene _ after)        = getCurrentDungeon after
 getCurrentDungeon (SelectingItemToUse _ _ after) = getCurrentDungeon after
 getCurrentDungeon _ = error "Cannot get the current dungeon."
 
 getOtherDungeons :: GameStatus -> [Dungeon]
-getOtherDungeons (Exploring _ o _)      = o
+getOtherDungeons (Exploring eh) = GSE.getOtherDungeons eh
 getOtherDungeons (Talking _ after)              = getOtherDungeons after
 getOtherDungeons (HandlingScene _ after)        = getOtherDungeons after
 getOtherDungeons (SelectingItemToUse _ _ after) = getOtherDungeons after
@@ -219,7 +203,7 @@ destructHandlingScene (HandlingScene s after) = (s, after)
 destructHandlingScene _ = error "We are not handling a scene."
 
 messageLogList :: GameStatus -> MessageLog
-messageLogList (Exploring _ _ l)      = l
+messageLogList (Exploring eh)      = GSE.getMessageLog eh
 messageLogList (Talking _ e)                  = messageLogList e
 messageLogList (HandlingScene _ e)            = messageLogList e
 messageLogList (SelectingItemToUse _ _ after) = messageLogList after
@@ -228,7 +212,7 @@ messageLogList _                          = error "Cannot get the message log li
 addMessages :: [Message] -> State GameStatus ()
 addMessages m = state
     $ \case
-        e@Exploring{}               -> ((), e & messageLog %~ L.addMessages m)
+        (Exploring eh)              -> ((), Exploring $ GSE.addMessages m eh)
         (Talking _ gs)              -> runState (addMessages m) gs
         (HandlingScene _ gs)        -> runState (addMessages m) gs
         (SelectingItemToUse _ _ gs) -> runState (addMessages m) gs
@@ -246,86 +230,42 @@ selectingLocale :: GameStatus
 selectingLocale = SelectingLocale
 
 completeThisTurn :: State GameStatus ()
-completeThisTurn = do
-        handleNpcTurns
-
-        e <- get
-        let dg = e ^?! currentDungeon
-
-        let (status, newD) = runState D.completeThisTurn dg
-
-        if status == DT.PlayerKilled
-            then put GameOver
-            else currentDungeon .= newD
-
-handleNpcTurns :: State GameStatus ()
-handleNpcTurns = do
-        e <- get
-        let dg = e ^?! currentDungeon
-
-        let xs = npcs dg
-
-        mapM_ (handleNpcTurn . (^. position)) xs
-
-handleNpcTurn :: Coord -> State GameStatus ()
-handleNpcTurn c = do
-        e <- get
-        let dg = e ^?! currentDungeon
-
-        let (l, dg') = flip runState dg $ do
-                e' <- D.popActorAt c
-                case e' of
-                    Just e'' -> npcAction e''
-                    Nothing  -> error "No such enemy."
-
-        messageLog %= L.addMessages l
-        currentDungeon .= dg'
+completeThisTurn = state $ \case
+    Exploring eh -> ((), maybe GameOver Exploring (GSE.completeThisTurn eh))
+    _            -> undefined
 
 getPlayerActor :: GameStatus -> Maybe Actor
-getPlayerActor (Exploring d _ _)           = D.getPlayerActor d
+getPlayerActor (Exploring eh)              = GSE.getPlayerActor eh
 getPlayerActor (Talking _ gs)              = getPlayerActor gs
 getPlayerActor (HandlingScene _ gs)        = getPlayerActor gs
 getPlayerActor (SelectingItemToUse _ _ gs) = getPlayerActor gs
 getPlayerActor _                           = error "Cannot get the player data."
 
 playerPosition :: GameStatus -> Maybe Coord
-playerPosition (Exploring d _ _)   = D.playerPosition d
+playerPosition (Exploring eh)   = GSE.getPlayerPosition eh
 playerPosition (Talking _ e)               = playerPosition e
 playerPosition (HandlingScene _ e)         = playerPosition e
 playerPosition (SelectingItemToUse _ _ gs) = playerPosition gs
 playerPosition _                       = error "Cannot get the player position."
 
 actorAt :: Coord -> GameStatus -> Maybe E.Actor
-actorAt c (Exploring d _ _)          = D.actorAt c d
+actorAt c (Exploring eh)             = GSE.actorAt c eh
 actorAt c (Talking _ e)              = actorAt c e
 actorAt c (HandlingScene _ e)        = actorAt c e
 actorAt c (SelectingItemToUse _ _ e) = actorAt c e
 actorAt _ _                          = error "Cannot get the actor data"
 
 isPositionInDungeon :: Coord -> GameStatus -> Bool
-isPositionInDungeon c (Exploring d _ _)  = D.isPositionInDungeon c d
+isPositionInDungeon c (Exploring eh)  = GSE.isPositionInDungeon c eh
 isPositionInDungeon c (Talking _ e)              = isPositionInDungeon c e
 isPositionInDungeon c (HandlingScene _ e)        = isPositionInDungeon c e
 isPositionInDungeon c (SelectingItemToUse _ _ e) = isPositionInDungeon c e
 isPositionInDungeon _ _                      = error "Cannot access to a dungeon."
 
-popDungeonAtPlayerPosition :: GameStatus -> (Maybe Dungeon, GameStatus)
-popDungeonAtPlayerPosition g = case playerPosition g of
-                                   Just p  -> popDungeonAt p g
-                                   Nothing -> (Nothing, g)
-
-popDungeonAt :: Coord -> GameStatus -> (Maybe Dungeon, GameStatus)
-popDungeonAt p e = let xs = e ^. otherDungeons
-                   in case findIndex (\x -> x ^. positionOnGlobalMap == Just p) xs of
-                          Just x -> let d = xs !! x
-                                        newOtherDungeons = take x xs ++ drop (x + 1) xs
-                                    in (Just d, e & otherDungeons .~ newOtherDungeons)
-                          Nothing -> (Nothing, e)
-
 pushDungeonAsOtherDungeons :: Dungeon -> State GameStatus ()
 pushDungeonAsOtherDungeons d = state
     $ \case
-        gs@Exploring{} -> ((), gs & otherDungeons %~ (:) d)
+        (Exploring eh) -> ((), Exploring $ GSE.pushDungeonAsOtherDungeons d eh)
         (Talking _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
         (HandlingScene _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
         (SelectingItemToUse _ _ gs) -> runState (pushDungeonAsOtherDungeons d) gs

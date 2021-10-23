@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 module Game.Status.Player
     ( playerBumpAction
     , handlePlayerMoving
@@ -5,28 +6,24 @@ module Game.Status.Player
     , handlePlayerSelectingItemToUse
     , handlePlayerConsumeItem
     ) where
-import           Control.Lens              ((%~), (&), (.=), (.~), (^.), (^?!))
+import           Control.Lens              ((^.))
 import           Control.Monad             (unless, when)
-import           Control.Monad.Trans.State (State, get, put, runState)
-import           Data.Foldable             (find)
-import           Dungeon                   (actors, isGlobalMap, isTown,
-                                            popPlayer, positionOnGlobalMap)
-import           Dungeon.Actor             (Actor, isMonster, position,
-                                            talkMessage)
+import           Control.Monad.Trans.State (State, get, put, state)
+import           Dungeon                   (isTown)
+import           Dungeon.Actor             (Actor, isMonster, talkMessage)
 import qualified Dungeon.Actor             as A
 import           Dungeon.Actor.Actions     (Action, consumeAction, meleeAction,
                                             moveAction, pickUpAction)
-import           Game.Status               (GameStatus, actorAt, addMessages,
-                                            completeThisTurn, currentDungeon,
-                                            finishSelecting, getCurrentDungeon,
-                                            getOtherDungeons, getPlayerActor,
+import           Game.Status               (GameStatus (Exploring), actorAt,
+                                            completeThisTurn, finishSelecting,
+                                            getCurrentDungeon, getPlayerActor,
                                             getSelectingIndex, isGameOver,
                                             isPlayerExploring,
                                             isPositionInDungeon,
                                             isSelectingListEmpty,
-                                            playerPosition,
-                                            pushDungeonAsOtherDungeons,
-                                            selectingItemToUse, talking)
+                                            playerPosition, selectingItemToUse,
+                                            talking)
+import qualified Game.Status.Exploring     as GSE
 import           Linear.V2                 (V2)
 import           Talking                   (talkWith)
 
@@ -67,23 +64,11 @@ moveOrExitMap offset = do
             return True
 
 exitDungeon :: State GameStatus ()
-exitDungeon = do
-    gs <- get
-
-    let (p, currentDungeon') = runState popPlayer (getCurrentDungeon gs)
-
-    pushDungeonAsOtherDungeons currentDungeon'
-
-    let g = find isGlobalMap $ getOtherDungeons gs
-        newPosition = currentDungeon' ^. positionOnGlobalMap
-        newPlayer = p & position .~ case newPosition of
-            Just pos -> pos
-            Nothing  -> error "The new position is not specified."
-    currentDungeon .= case g of
-        Just g' -> g' & actors %~ (:) newPlayer
-        Nothing -> error "Global map not found."
-    return ()
-
+exitDungeon = state $ \case
+    Exploring eh -> case GSE.exitDungeon eh of
+                        Just newEh -> ((), Exploring newEh)
+                        Nothing    -> error "Failed to exit from the dungeon."
+    _ -> undefined
 
 handlePlayerMoving :: V2 Int -> State GameStatus ()
 handlePlayerMoving offset = do
@@ -131,12 +116,6 @@ handlePlayerConsumeItem = do
             completeThisTurn
 
 doAction :: Action -> State GameStatus Bool
-doAction action = do
-    gs <- get
-
-    let ((msg, success), currentDungeon') = flip runState (gs ^?! currentDungeon) $ do
-            p <- popPlayer
-            action p
-    addMessages msg
-    currentDungeon .= currentDungeon'
-    return success
+doAction action = state $ \case
+    Exploring eh -> (\(newEh, s) -> (s, Exploring newEh)) $ GSE.doAction action eh
+    _            -> undefined
