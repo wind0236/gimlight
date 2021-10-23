@@ -41,8 +41,7 @@ module Game.Status
     , isSelectingListEmpty
     ) where
 
-import           Control.Lens                 (makeLensesFor, (%~), (&), (.~),
-                                               (^.))
+import           Control.Lens                 (makeLensesFor, (&), (.~))
 import           Control.Monad.Trans.State    (State, state)
 import           Coord                        (Coord)
 import           Data.Bifunctor               (Bifunctor (second))
@@ -58,21 +57,21 @@ import           GHC.Generics                 (Generic)
 import           Game.Status.Exploring        (ExploringHandler,
                                                exploringHandler)
 import qualified Game.Status.Exploring        as GSE
+import           Game.Status.Scene            (SceneHandler, sceneHandler)
+import qualified Game.Status.Scene            as GSS
 import           Game.Status.Talking          (TalkingHandler, talkingHandler)
 import qualified Game.Status.Talking          as GST
 import           Localization                 (multilingualText)
 import           Log                          (Message, MessageLog)
 import qualified Log                          as L
-import           Scene                        (Scene, elements, gameStartScene)
+import           Scene                        (Scene, gameStartScene)
 import           System.Random                (getStdGen)
 import           Talking                      (TalkWith)
 
 data GameStatus = Exploring ExploringHandler
-            | Talking TalkingHandler
-            | HandlingScene
-          { _scene       :: Scene
-          , _afterFinish :: GameStatus
-          } | SelectingItemToUse
+                | Talking TalkingHandler
+                | HandlingScene SceneHandler
+                | SelectingItemToUse
           { _items          :: [Item]
           , _selecting      :: Int
           , _afterSelecting :: GameStatus
@@ -124,9 +123,9 @@ isSelectingLocale SelectingLocale = True
 isSelectingLocale _               = False
 
 nextSceneElementOrFinish :: GameStatus -> GameStatus
-nextSceneElementOrFinish (HandlingScene s after) = if length (s ^. elements) == 1
-                                                    then after
-                                                    else HandlingScene (s & elements %~ tail) after
+nextSceneElementOrFinish (HandlingScene sh) = case GSS.nextSceneOrFinish sh of
+    Right newSh -> HandlingScene newSh
+    Left after  -> Exploring after
 nextSceneElementOrFinish _                   = error "We are not handling a scene."
 
 enterTownAtPlayerPosition :: GameStatus -> GameStatus
@@ -174,10 +173,7 @@ newGameStatus = do
             foldr (L.addMessage . L.message) L.emptyLog
                 [multilingualText "Welcome to a roguelike game!" "ローグライクゲームへようこそ！"]
 
-    return HandlingScene
-        { _scene = gameStartScene
-        , _afterFinish = Exploring initExploring
-        }
+    return $ HandlingScene $ sceneHandler gameStartScene initExploring
 
 getCurrentDungeon :: GameStatus -> Dungeon
 getCurrentDungeon (Exploring eh) = GSE.getCurrentDungeon eh
@@ -192,8 +188,8 @@ destructTalking (Talking th) = second Exploring $ GST.destructHandler th
 destructTalking _            = error "We are not in the talking."
 
 destructHandlingScene :: GameStatus -> (Scene, GameStatus)
-destructHandlingScene (HandlingScene s after) = (s, after)
-destructHandlingScene _ = error "We are not handling a scene."
+destructHandlingScene (HandlingScene sh) = second Exploring $ GSS.destructHandler sh
+destructHandlingScene _                  = error "We are not handling a scene."
 
 messageLogList :: GameStatus -> MessageLog
 messageLogList (Exploring eh) = GSE.getMessageLog eh
