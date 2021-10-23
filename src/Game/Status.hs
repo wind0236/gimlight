@@ -41,36 +41,35 @@ module Game.Status
     , isSelectingListEmpty
     ) where
 
-import           Control.Lens                   (makeLensesFor, (%~), (&), (.~),
-                                                 (^.))
-import           Control.Monad.Trans.State      (State, state)
-import           Control.Monad.Trans.State.Lazy (runState)
-import           Coord                          (Coord)
-import           Data.Binary                    (Binary)
-import           Dungeon                        (Dungeon)
-import           Dungeon.Actor                  (Actor)
-import qualified Dungeon.Actor                  as E
-import           Dungeon.Init                   (initDungeon)
-import           Dungeon.Item                   (Item)
-import           Dungeon.Predefined.BatsCave    (batsDungeon)
-import           Dungeon.Predefined.GlobalMap   (globalMap)
-import           GHC.Generics                   (Generic)
-import           Game.Status.Exploring          (ExploringHandler,
-                                                 exploringHandler)
-import qualified Game.Status.Exploring          as GSE
-import           Localization                   (multilingualText)
-import           Log                            (Message, MessageLog)
-import qualified Log                            as L
-import           Scene                          (Scene, elements,
-                                                 gameStartScene)
-import           System.Random                  (getStdGen)
-import           Talking                        (TalkWith)
+import           Control.Lens                 (makeLensesFor, (%~), (&), (.~),
+                                               (^.))
+import           Control.Monad.Trans.State    (State, state)
+import           Coord                        (Coord)
+import           Data.Bifunctor               (Bifunctor (second))
+import           Data.Binary                  (Binary)
+import           Dungeon                      (Dungeon)
+import           Dungeon.Actor                (Actor)
+import qualified Dungeon.Actor                as E
+import           Dungeon.Init                 (initDungeon)
+import           Dungeon.Item                 (Item)
+import           Dungeon.Predefined.BatsCave  (batsDungeon)
+import           Dungeon.Predefined.GlobalMap (globalMap)
+import           GHC.Generics                 (Generic)
+import           Game.Status.Exploring        (ExploringHandler,
+                                               exploringHandler)
+import qualified Game.Status.Exploring        as GSE
+import           Game.Status.Talking          (TalkingHandler, talkingHandler)
+import qualified Game.Status.Talking          as GST
+import           Localization                 (multilingualText)
+import           Log                          (Message, MessageLog)
+import qualified Log                          as L
+import           Scene                        (Scene, elements, gameStartScene)
+import           System.Random                (getStdGen)
+import           Talking                      (TalkWith)
 
 data GameStatus = Exploring ExploringHandler
-            | Talking
-          { _talk         :: TalkWith
-          , _afterTalking :: GameStatus
-          } | HandlingScene
+            | Talking TalkingHandler
+            | HandlingScene
           { _scene       :: Scene
           , _afterFinish :: GameStatus
           } | SelectingItemToUse
@@ -135,8 +134,8 @@ enterTownAtPlayerPosition (Exploring eh) = Exploring $ GSE.enterTownAtPlayerPosi
 enterTownAtPlayerPosition _ = undefined
 
 finishTalking :: GameStatus -> GameStatus
-finishTalking (Talking _ after) = after
-finishTalking _                 = error "We are not in the talking."
+finishTalking (Talking th) = Exploring $ GST.finishTalking th
+finishTalking _            = error "We are not in the talking."
 
 finishSelecting :: GameStatus -> GameStatus
 finishSelecting (SelectingItemToUse _ _ after) = after
@@ -181,47 +180,34 @@ newGameStatus = do
         }
 
 getCurrentDungeon :: GameStatus -> Dungeon
-getCurrentDungeon (Exploring eh)      = GSE.getCurrentDungeon eh
-getCurrentDungeon (Talking _ after)              = getCurrentDungeon after
-getCurrentDungeon (HandlingScene _ after)        = getCurrentDungeon after
-getCurrentDungeon (SelectingItemToUse _ _ after) = getCurrentDungeon after
-getCurrentDungeon _ = error "Cannot get the current dungeon."
+getCurrentDungeon (Exploring eh) = GSE.getCurrentDungeon eh
+getCurrentDungeon _              = error "Cannot get the current dungeon."
 
 getOtherDungeons :: GameStatus -> [Dungeon]
 getOtherDungeons (Exploring eh) = GSE.getOtherDungeons eh
-getOtherDungeons (Talking _ after)              = getOtherDungeons after
-getOtherDungeons (HandlingScene _ after)        = getOtherDungeons after
-getOtherDungeons (SelectingItemToUse _ _ after) = getOtherDungeons after
-getOtherDungeons _                          = error "Cannot get the non-active dungeons."
+getOtherDungeons _              = error "Cannot get the non-active dungeons."
 
 destructTalking :: GameStatus -> (TalkWith, GameStatus)
-destructTalking (Talking tw after) = (tw, after)
-destructTalking _                  = error "We are not in the talking."
+destructTalking (Talking th) = second Exploring $ GST.destructHandler th
+destructTalking _            = error "We are not in the talking."
 
 destructHandlingScene :: GameStatus -> (Scene, GameStatus)
 destructHandlingScene (HandlingScene s after) = (s, after)
 destructHandlingScene _ = error "We are not handling a scene."
 
 messageLogList :: GameStatus -> MessageLog
-messageLogList (Exploring eh)      = GSE.getMessageLog eh
-messageLogList (Talking _ e)                  = messageLogList e
-messageLogList (HandlingScene _ e)            = messageLogList e
-messageLogList (SelectingItemToUse _ _ after) = messageLogList after
-messageLogList _                          = error "Cannot get the message log list."
+messageLogList (Exploring eh) = GSE.getMessageLog eh
+messageLogList _              = error "Cannot get the message log list."
 
 addMessages :: [Message] -> State GameStatus ()
 addMessages m = state
     $ \case
-        (Exploring eh)              -> ((), Exploring $ GSE.addMessages m eh)
-        (Talking _ gs)              -> runState (addMessages m) gs
-        (HandlingScene _ gs)        -> runState (addMessages m) gs
-        (SelectingItemToUse _ _ gs) -> runState (addMessages m) gs
-        _                           -> error "Cannot add messages."
+        (Exploring eh) -> ((), Exploring $ GSE.addMessages m eh)
+        _              -> error "Cannot add messages."
 
 talking :: TalkWith -> GameStatus -> GameStatus
-talking tw gs = Talking { _talk = tw
-                        , _afterTalking = gs
-                        }
+talking tw (Exploring eh) = Talking $ talkingHandler tw eh
+talking _ _               = undefined
 
 title :: GameStatus
 title = Title
@@ -235,41 +221,26 @@ completeThisTurn = state $ \case
     _            -> undefined
 
 getPlayerActor :: GameStatus -> Maybe Actor
-getPlayerActor (Exploring eh)              = GSE.getPlayerActor eh
-getPlayerActor (Talking _ gs)              = getPlayerActor gs
-getPlayerActor (HandlingScene _ gs)        = getPlayerActor gs
-getPlayerActor (SelectingItemToUse _ _ gs) = getPlayerActor gs
-getPlayerActor _                           = error "Cannot get the player data."
+getPlayerActor (Exploring eh) = GSE.getPlayerActor eh
+getPlayerActor _              = error "Cannot get the player data."
 
 playerPosition :: GameStatus -> Maybe Coord
-playerPosition (Exploring eh)   = GSE.getPlayerPosition eh
-playerPosition (Talking _ e)               = playerPosition e
-playerPosition (HandlingScene _ e)         = playerPosition e
-playerPosition (SelectingItemToUse _ _ gs) = playerPosition gs
-playerPosition _                       = error "Cannot get the player position."
+playerPosition (Exploring eh) = GSE.getPlayerPosition eh
+playerPosition _              = error "Cannot get the player position."
 
 actorAt :: Coord -> GameStatus -> Maybe E.Actor
-actorAt c (Exploring eh)             = GSE.actorAt c eh
-actorAt c (Talking _ e)              = actorAt c e
-actorAt c (HandlingScene _ e)        = actorAt c e
-actorAt c (SelectingItemToUse _ _ e) = actorAt c e
-actorAt _ _                          = error "Cannot get the actor data"
+actorAt c (Exploring eh) = GSE.actorAt c eh
+actorAt _ _              = error "Cannot get the actor data"
 
 isPositionInDungeon :: Coord -> GameStatus -> Bool
-isPositionInDungeon c (Exploring eh)  = GSE.isPositionInDungeon c eh
-isPositionInDungeon c (Talking _ e)              = isPositionInDungeon c e
-isPositionInDungeon c (HandlingScene _ e)        = isPositionInDungeon c e
-isPositionInDungeon c (SelectingItemToUse _ _ e) = isPositionInDungeon c e
-isPositionInDungeon _ _                      = error "Cannot access to a dungeon."
+isPositionInDungeon c (Exploring eh) = GSE.isPositionInDungeon c eh
+isPositionInDungeon _ _              = error "Cannot access to a dungeon."
 
 pushDungeonAsOtherDungeons :: Dungeon -> State GameStatus ()
 pushDungeonAsOtherDungeons d = state
     $ \case
         (Exploring eh) -> ((), Exploring $ GSE.pushDungeonAsOtherDungeons d eh)
-        (Talking _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
-        (HandlingScene _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
-        (SelectingItemToUse _ _ gs) -> runState (pushDungeonAsOtherDungeons d) gs
-        _ -> error "Cannot push a dungeon."
+        _              -> error "Cannot push a dungeon."
 
 isSelectingListEmpty :: GameStatus -> Bool
 isSelectingListEmpty (SelectingItemToUse l _ _) = null l

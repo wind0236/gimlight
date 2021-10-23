@@ -39,6 +39,7 @@ executable roguelike
                       , Game.Status
                       , Game.Status.Exploring
                       , Game.Status.Player
+                      , Game.Status.Talking
                       , Localization
                       , Log
                       , Save
