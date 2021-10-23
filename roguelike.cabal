@@ -40,6 +40,7 @@ executable roguelike
                       , Game.Status.Exploring
                       , Game.Status.Player
                       , Game.Status.Scene
+                      , Game.Status.SelectingItemToUse
                       , Game.Status.Talking
                       , Localization
                       , Log

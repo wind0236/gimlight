@@ -5,7 +5,7 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Game.Status
-    ( GameStatus(Exploring)
+    ( GameStatus(Exploring, SelectingItemToUse)
     , isPlayerExploring
     , isPlayerTalking
     , isHandlingScene
@@ -32,7 +32,6 @@ module Game.Status
     , title
     , selectingLocale
     , talking
-    , selectingItemToUse
     , addMessages
     , actorAt
     , playerPosition
@@ -41,45 +40,43 @@ module Game.Status
     , isSelectingListEmpty
     ) where
 
-import           Control.Lens                 (makeLensesFor, (&), (.~))
-import           Control.Monad.Trans.State    (State, state)
-import           Coord                        (Coord)
-import           Data.Bifunctor               (Bifunctor (second))
-import           Data.Binary                  (Binary)
-import           Dungeon                      (Dungeon)
-import           Dungeon.Actor                (Actor)
-import qualified Dungeon.Actor                as E
-import           Dungeon.Init                 (initDungeon)
-import           Dungeon.Item                 (Item)
-import           Dungeon.Predefined.BatsCave  (batsDungeon)
-import           Dungeon.Predefined.GlobalMap (globalMap)
-import           GHC.Generics                 (Generic)
-import           Game.Status.Exploring        (ExploringHandler,
-                                               exploringHandler)
-import qualified Game.Status.Exploring        as GSE
-import           Game.Status.Scene            (SceneHandler, sceneHandler)
-import qualified Game.Status.Scene            as GSS
-import           Game.Status.Talking          (TalkingHandler, talkingHandler)
-import qualified Game.Status.Talking          as GST
-import           Localization                 (multilingualText)
-import           Log                          (Message, MessageLog)
-import qualified Log                          as L
-import           Scene                        (Scene, gameStartScene)
-import           System.Random                (getStdGen)
-import           Talking                      (TalkWith)
+import           Control.Lens                   (makeLensesFor)
+import           Control.Monad.Trans.State      (State, state)
+import           Coord                          (Coord)
+import           Data.Bifunctor                 (Bifunctor (second))
+import           Data.Binary                    (Binary)
+import           Dungeon                        (Dungeon)
+import           Dungeon.Actor                  (Actor)
+import qualified Dungeon.Actor                  as E
+import           Dungeon.Init                   (initDungeon)
+import           Dungeon.Item                   (Item)
+import           Dungeon.Predefined.BatsCave    (batsDungeon)
+import           Dungeon.Predefined.GlobalMap   (globalMap)
+import           GHC.Generics                   (Generic)
+import           Game.Status.Exploring          (ExploringHandler,
+                                                 exploringHandler)
+import qualified Game.Status.Exploring          as GSE
+import           Game.Status.Scene              (SceneHandler, sceneHandler)
+import qualified Game.Status.Scene              as GSS
+import           Game.Status.SelectingItemToUse (SelectingItemToUseHandler)
+import qualified Game.Status.SelectingItemToUse as GSSI
+import           Game.Status.Talking            (TalkingHandler, talkingHandler)
+import qualified Game.Status.Talking            as GST
+import           Localization                   (multilingualText)
+import           Log                            (Message, MessageLog)
+import qualified Log                            as L
+import           Scene                          (Scene, gameStartScene)
+import           System.Random                  (getStdGen)
+import           Talking                        (TalkWith)
 
 data GameStatus = Exploring ExploringHandler
                 | Talking TalkingHandler
                 | HandlingScene SceneHandler
-                | SelectingItemToUse
-          { _items          :: [Item]
-          , _selecting      :: Int
-          , _afterSelecting :: GameStatus
-          }
-          | Title
-          | GameOver
-          | SelectingLocale
-          deriving (Show, Ord, Eq, Generic)
+                | SelectingItemToUse SelectingItemToUseHandler
+                | Title
+                | GameOver
+                | SelectingLocale
+                deriving (Show, Ord, Eq, Generic)
 makeLensesFor [ ("_currentDungeon", "currentDungeon")
               , ("_otherDungeons", "otherDungeons")
               , ("_messageLog", "messageLog")
@@ -87,12 +84,6 @@ makeLensesFor [ ("_currentDungeon", "currentDungeon")
               , ("_selecting", "selecting")
               ] ''GameStatus
 instance Binary GameStatus
-
-selectingItemToUse :: [Item] -> GameStatus -> GameStatus
-selectingItemToUse i st = SelectingItemToUse { _items = i
-                                             , _selecting = 0
-                                             , _afterSelecting = st
-                                             }
 
 isPlayerExploring :: GameStatus -> Bool
 isPlayerExploring Exploring{} = True
@@ -137,29 +128,23 @@ finishTalking (Talking th) = Exploring $ GST.finishTalking th
 finishTalking _            = error "We are not in the talking."
 
 finishSelecting :: GameStatus -> GameStatus
-finishSelecting (SelectingItemToUse _ _ after) = after
-finishSelecting _ = error "We are not selecting anything."
+finishSelecting (SelectingItemToUse sh) = Exploring $ GSSI.finishSelecting sh
+finishSelecting _                       = error "We are not selecting anything."
 
 selectPrevItem :: GameStatus -> GameStatus
-selectPrevItem e@(SelectingItemToUse l n _)
-    | null l = e
-    | otherwise = e & selecting .~ newIndex
-    where newIndex = (n - 1) `mod` length l
-selectPrevItem _ = error "We are not selecting anything."
+selectPrevItem (SelectingItemToUse sh) = SelectingItemToUse $ GSSI.selectPrevItem sh
+selectPrevItem _                       = error "We are not selecting anything."
 
 selectNextItem :: GameStatus -> GameStatus
-selectNextItem e@(SelectingItemToUse l n _)
-    | null l = e
-    | otherwise = e & selecting .~ newIndex
-    where newIndex = (n + 1) `mod` length l
+selectNextItem (SelectingItemToUse sh) = SelectingItemToUse $ GSSI.selectNextItem sh
 selectNextItem _ = error "We are not selecting anything."
 
 getItems :: GameStatus -> [Item]
-getItems (SelectingItemToUse i _ _) = i
-getItems _                          = error "We are not selecting anything."
+getItems (SelectingItemToUse sh) = GSSI.getItems sh
+getItems _                       = error "We are not selecting anything."
 
 getSelectingIndex :: GameStatus -> Int
-getSelectingIndex (SelectingItemToUse _ n _) = n
+getSelectingIndex (SelectingItemToUse sh) = GSSI.getSelectingIndex sh
 getSelectingIndex _ = error "We are not selecting anything."
 
 newGameStatus :: IO GameStatus
@@ -239,5 +224,5 @@ pushDungeonAsOtherDungeons d = state
         _              -> error "Cannot push a dungeon."
 
 isSelectingListEmpty :: GameStatus -> Bool
-isSelectingListEmpty (SelectingItemToUse l _ _) = null l
+isSelectingListEmpty (SelectingItemToUse sh) = GSSI.isSelectingListEmpty sh
 isSelectingListEmpty _ = error "We are not selecting anything."

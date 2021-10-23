@@ -6,26 +6,29 @@ module Game.Status.Player
     , handlePlayerSelectingItemToUse
     , handlePlayerConsumeItem
     ) where
-import           Control.Lens              ((^.))
-import           Control.Monad             (unless, when)
-import           Control.Monad.Trans.State (State, get, put, state)
-import           Dungeon                   (isTown)
-import           Dungeon.Actor             (Actor, isMonster, talkMessage)
-import qualified Dungeon.Actor             as A
-import           Dungeon.Actor.Actions     (Action, consumeAction, meleeAction,
-                                            moveAction, pickUpAction)
-import           Game.Status               (GameStatus (Exploring), actorAt,
-                                            completeThisTurn, finishSelecting,
-                                            getCurrentDungeon, getPlayerActor,
-                                            getSelectingIndex, isGameOver,
-                                            isPlayerExploring,
-                                            isPositionInDungeon,
-                                            isSelectingListEmpty,
-                                            playerPosition, selectingItemToUse,
-                                            talking)
-import qualified Game.Status.Exploring     as GSE
-import           Linear.V2                 (V2)
-import           Talking                   (talkWith)
+import           Control.Lens                   ((^.))
+import           Control.Monad                  (unless, when)
+import           Control.Monad.Trans.State      (State, get, put, state)
+import           Dungeon                        (isTown)
+import           Dungeon.Actor                  (Actor, isMonster, talkMessage)
+import qualified Dungeon.Actor                  as A
+import           Dungeon.Actor.Actions          (Action, consumeAction,
+                                                 meleeAction, moveAction,
+                                                 pickUpAction)
+import           Game.Status                    (GameStatus (Exploring, SelectingItemToUse),
+                                                 actorAt, completeThisTurn,
+                                                 finishSelecting,
+                                                 getCurrentDungeon,
+                                                 getPlayerActor,
+                                                 getSelectingIndex, isGameOver,
+                                                 isPlayerExploring,
+                                                 isPositionInDungeon,
+                                                 isSelectingListEmpty,
+                                                 playerPosition, talking)
+import qualified Game.Status.Exploring          as GSE
+import           Game.Status.SelectingItemToUse (selectingItemToUseHandler)
+import           Linear.V2                      (V2)
+import           Talking                        (talkWith)
 
 playerBumpAction :: V2 Int -> State GameStatus Bool
 playerBumpAction offset = do
@@ -94,12 +97,13 @@ handlePlayerPickingUp = do
             when (isPlayerExploring eng') completeThisTurn
 
 handlePlayerSelectingItemToUse :: GameStatus -> GameStatus
-handlePlayerSelectingItemToUse e =
-    selectingItemToUse xs e
+handlePlayerSelectingItemToUse e@(Exploring eh) =
+    SelectingItemToUse $ selectingItemToUseHandler xs eh
     where xs = A.getItems p
           p = case getPlayerActor e of
                 Just x  -> x
                 Nothing -> error "Player is dead."
+handlePlayerSelectingItemToUse _ = undefined
 
 handlePlayerConsumeItem :: State GameStatus ()
 handlePlayerConsumeItem = do
