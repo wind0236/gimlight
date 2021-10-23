@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
 
 module Game.Status
     ( GameStatus(Exploring, SelectingItemToUse)
@@ -40,7 +39,6 @@ module Game.Status
     , isSelectingListEmpty
     ) where
 
-import           Control.Lens                   (makeLensesFor)
 import           Control.Monad.Trans.State      (State, state)
 import           Coord                          (Coord)
 import           Data.Bifunctor                 (Bifunctor (second))
@@ -77,12 +75,6 @@ data GameStatus = Exploring ExploringHandler
                 | GameOver
                 | SelectingLocale
                 deriving (Show, Ord, Eq, Generic)
-makeLensesFor [ ("_currentDungeon", "currentDungeon")
-              , ("_otherDungeons", "otherDungeons")
-              , ("_messageLog", "messageLog")
-              , ("_isGameOver", "isGameOver")
-              , ("_selecting", "selecting")
-              ] ''GameStatus
 instance Binary GameStatus
 
 isPlayerExploring :: GameStatus -> Bool
