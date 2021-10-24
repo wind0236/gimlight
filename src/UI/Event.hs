@@ -4,32 +4,29 @@ module UI.Event
     ( handleEvent
     ) where
 
-import           Control.Monad.Trans.State (execState)
-import           Data.Text                 (Text)
-import           Game                      (Game (Game, config, status))
-import           Game.Config               (Language (English, Japanese),
-                                            setLocale, writeConfig)
-import           Game.Status               (enterTownAtPlayerPosition,
-                                            finishSelecting, finishTalking,
-                                            isHandlingScene, isPlayerExploring,
-                                            isPlayerTalking,
-                                            isSelectingItemToUse,
-                                            isSelectingLocale, isTitle,
-                                            newGameStatus,
-                                            nextSceneElementOrFinish,
-                                            selectNextItem, selectPrevItem,
-                                            title)
-import           Game.Status.Player        (handlePlayerConsumeItem,
-                                            handlePlayerMoving,
-                                            handlePlayerPickingUp,
-                                            handlePlayerSelectingItemToUse)
-import           Linear.V2                 (V2 (V2))
-import           Monomer                   (AppEventResponse,
-                                            EventResponse (Model, Task),
-                                            WidgetEnv, WidgetNode,
-                                            exitApplication)
-import           Save                      (load, save)
-import           UI.Types                  (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished))
+import           Control.Monad.Trans.State      (execState)
+import           Data.Text                      (Text)
+import           Game                           (Game (Game, config, status))
+import           Game.Config                    (Language (English, Japanese),
+                                                 setLocale, writeConfig)
+import           Game.Status                    (GameStatus (Exploring, GameOver, HandlingScene, SelectingItemToUse, SelectingLocale, Talking, Title),
+                                                 newGameStatus)
+import           Game.Status.Exploring          (enterTownAtPlayerPosition)
+import           Game.Status.Player             (handlePlayerConsumeItem,
+                                                 handlePlayerMoving,
+                                                 handlePlayerPickingUp,
+                                                 handlePlayerSelectingItemToUse)
+import           Game.Status.Scene              (nextSceneOrFinish)
+import           Game.Status.SelectingItemToUse (finishSelecting,
+                                                 selectNextItem, selectPrevItem)
+import           Game.Status.Talking            (finishTalking)
+import           Linear.V2                      (V2 (V2))
+import           Monomer                        (AppEventResponse,
+                                                 EventResponse (Model, Task),
+                                                 WidgetEnv, WidgetNode,
+                                                 exitApplication)
+import           Save                           (load, save)
+import           UI.Types                       (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished))
 
 handleEvent :: WidgetEnv Game AppEvent -> WidgetNode Game AppEvent -> Game -> AppEvent -> [AppEventResponse Game AppEvent]
 handleEvent _ _ gameStatus evt =
@@ -40,17 +37,19 @@ handleEvent _ _ gameStatus evt =
         AppKeyboardInput k  -> handleKeyInput gameStatus k
 
 handleKeyInput :: Game -> Text -> [AppEventResponse Game AppEvent]
-handleKeyInput e@Game { status = s } k
-    | isPlayerExploring s = handleKeyInputDuringExploring e k
-    | isPlayerTalking s = handleKeyInputDuringTalking e k
-    | isHandlingScene s = handleKeyInputDuringHandlingScene e k
-    | isSelectingItemToUse s = handleKeyInputDuringSelectingItemToUse e k
-    | isTitle s = handleKeyInputDuringTitle e k
-    | isSelectingLocale s = handleKeyInputDuringSelectingLanguage e k
-    | otherwise = undefined
+handleKeyInput e@Game { status = s } k =
+    case s of
+        Exploring _          -> handleKeyInputDuringExploring e k
+        Talking _            -> handleKeyInputDuringTalking e k
+        HandlingScene _      -> handleKeyInputDuringHandlingScene e k
+        SelectingItemToUse _ -> handleKeyInputDuringSelectingItemToUse e k
+        Title                -> handleKeyInputDuringTitle e k
+        SelectingLocale      -> handleKeyInputDuringSelectingLanguage e k
+        GameOver             -> []
+
 
 handleKeyInputDuringExploring :: Game -> Text -> [AppEventResponse Game AppEvent]
-handleKeyInputDuringExploring e@Game { status = st } k
+handleKeyInputDuringExploring e@Game { status = st@(Exploring eh) } k
     | k == "Right" = [Model $ e { status = execState (handlePlayerMoving (V2 1 0)) st }]
     | k == "Left"  = [Model $ e { status = execState (handlePlayerMoving (V2 (-1) 0)) st }]
     | k == "Up"    = [Model $ e { status = execState (handlePlayerMoving (V2 0 1)) st}]
@@ -61,26 +60,33 @@ handleKeyInputDuringExploring e@Game { status = st } k
     | k == "Ctrl-l"     = [Task $ do
                             s <- load
                             return $ AppLoadFinished e { status = s }]
-    | k == "Enter" = [Model e { status = enterTownAtPlayerPosition st }]
+    | k == "Enter" = [Model e { status = Exploring $ enterTownAtPlayerPosition eh }]
     | otherwise = []
+handleKeyInputDuringExploring _ _ = error "We are not exploring."
 
 handleKeyInputDuringTalking :: Game -> Text -> [AppEventResponse Game AppEvent]
-handleKeyInputDuringTalking e@Game { status = s } k
-    | k == "Enter" = [Model $ e { status = finishTalking s }]
+handleKeyInputDuringTalking e@Game { status = Talking th } k
+    | k == "Enter" = [Model $ e { status = Exploring $ finishTalking th }]
     | otherwise = []
+handleKeyInputDuringTalking _ _ = error "We are not talking."
 
 handleKeyInputDuringHandlingScene :: Game -> Text -> [AppEventResponse Game AppEvent]
-handleKeyInputDuringHandlingScene e@Game { status = s } k
-    | k == "Enter" = [Model $ e { status = nextSceneElementOrFinish s }]
+handleKeyInputDuringHandlingScene e@Game { status = HandlingScene sh } k
+    | k == "Enter" = [Model $ e { status = nextStatus }]
     | otherwise = []
+    where nextStatus = case nextSceneOrFinish sh of
+                           Right r -> HandlingScene r
+                           Left l  -> Exploring l
+handleKeyInputDuringHandlingScene _ _ = error "We are not handling a scene."
 
 handleKeyInputDuringSelectingItemToUse :: Game -> Text -> [AppEventResponse Game AppEvent]
-handleKeyInputDuringSelectingItemToUse e@Game { status = s } k
-    | k == "Up" = [Model $ e { status = selectPrevItem s }]
-    | k == "Down" = [Model $ e { status = selectNextItem s }]
+handleKeyInputDuringSelectingItemToUse e@Game { status = s@(SelectingItemToUse sh) } k
+    | k == "Up" = [Model $ e { status = SelectingItemToUse $ selectPrevItem sh }]
+    | k == "Down" = [Model $ e { status = SelectingItemToUse $ selectNextItem sh }]
     | k == "Enter" = [Model $ e { status = execState handlePlayerConsumeItem s }]
-    | k == "Esc" = [Model $ e { status =  finishSelecting s }]
+    | k == "Esc" = [Model $ e { status = Exploring $ finishSelecting sh }]
     | otherwise = []
+handleKeyInputDuringSelectingItemToUse _ _ = error "We are not selecting an item."
 
 handleKeyInputDuringTitle :: Game -> Text -> [AppEventResponse Game AppEvent]
 handleKeyInputDuringTitle g k
@@ -105,6 +111,6 @@ handleKeyInputDuringSelectingLanguage g@Game { config = c } k
     where updateConfig l = do
             let newConfig = setLocale l c
             writeConfig newConfig
-            return $ g { status = title,
-                    config = newConfig
-                    }
+            return $ g { status = Title
+                       , config = newConfig
+                       }

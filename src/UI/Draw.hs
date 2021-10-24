@@ -7,61 +7,68 @@ module UI.Draw
     , tileColumns
     , tileRows
     ) where
-import           Control.Lens          ((&), (.~), (^.))
-import           Control.Monad         (guard)
-import           Coord                 (Coord)
-import           Data.Array            ((!))
-import           Data.Maybe            (mapMaybe)
-import           Data.Text             (append, pack)
-import           Dungeon               (Dungeon, actors, explored, items,
-                                        mapWidthAndHeight, playerPosition,
-                                        tileMap, visible)
-import           Dungeon.Actor         (defence, getHp, maxHp, power,
-                                        standingImagePath, walkingImagePath)
-import qualified Dungeon.Actor         as A
-import           Dungeon.Item          (iconImagePath)
-import qualified Dungeon.Item          as I
-import qualified Dungeon.Map.Tile      as MT
-import           Game                  (Game (Game, config, status))
-import           Game.Status           (destructHandlingScene, destructTalking,
-                                        getCurrentDungeon, getItems,
-                                        getPlayerActor, getSelectingIndex,
-                                        isGameOver, isHandlingScene,
-                                        isPlayerTalking, isSelectingItemToUse,
-                                        isSelectingLocale, isTitle,
-                                        messageLogList)
-import           Linear.V2             (V2 (V2), _x, _y)
-import           Localization          (getLocalizedText, multilingualText)
-import           Monomer               (CmbAlignLeft (alignLeft),
-                                        CmbBgColor (bgColor),
-                                        CmbHeight (height),
-                                        CmbMultiline (multiline),
-                                        CmbPaddingL (paddingL),
-                                        CmbPaddingT (paddingT),
-                                        CmbStyleBasic (styleBasic),
-                                        CmbTextColor (textColor),
-                                        CmbTextSize (textSize),
-                                        CmbWidth (width), WidgetEnv, WidgetNode,
-                                        black, box_, filler, gray, hgrid,
-                                        hstack, image, keystroke, label, label_,
-                                        red, vgrid, vstack, zstack)
-import qualified Monomer.Graphics.Lens as L
-import           Scene                 (backgroundImage, elements, text)
-import           Talking               (TalkWith, message, person)
-import           UI.Types              (AppEvent (AppKeyboardInput))
+import           Control.Lens                   ((&), (.~), (^.))
+import           Control.Monad                  (guard)
+import           Coord                          (Coord)
+import           Data.Array                     ((!))
+import           Data.Maybe                     (mapMaybe)
+import           Data.Text                      (append, pack)
+import           Dungeon                        (Dungeon, actors, explored,
+                                                 items, mapWidthAndHeight,
+                                                 playerPosition, tileMap,
+                                                 visible)
+import           Dungeon.Actor                  (defence, getHp, maxHp, power,
+                                                 standingImagePath,
+                                                 walkingImagePath)
+import qualified Dungeon.Actor                  as A
+import           Dungeon.Item                   (iconImagePath)
+import qualified Dungeon.Item                   as I
+import qualified Dungeon.Map.Tile               as MT
+import           Game                           (Game (Game, config, status))
+import           Game.Status                    (GameStatus (Exploring, GameOver, HandlingScene, SelectingItemToUse, SelectingLocale, Talking, Title))
+import           Game.Status.Exploring          (getCurrentDungeon,
+                                                 getMessageLog, getPlayerActor)
+import qualified Game.Status.Scene              as GSS
+import           Game.Status.SelectingItemToUse (finishSelecting, getItems,
+                                                 getSelectingIndex)
+import qualified Game.Status.Talking            as GST
+import           Linear.V2                      (V2 (V2), _x, _y)
+import           Localization                   (getLocalizedText,
+                                                 multilingualText)
+import           Monomer                        (CmbAlignLeft (alignLeft),
+                                                 CmbBgColor (bgColor),
+                                                 CmbHeight (height),
+                                                 CmbMultiline (multiline),
+                                                 CmbPaddingL (paddingL),
+                                                 CmbPaddingT (paddingT),
+                                                 CmbStyleBasic (styleBasic),
+                                                 CmbTextColor (textColor),
+                                                 CmbTextSize (textSize),
+                                                 CmbWidth (width), WidgetEnv,
+                                                 WidgetNode, black, box_,
+                                                 filler, gray, hgrid, hstack,
+                                                 image, keystroke, label,
+                                                 label_, red, vgrid, vstack,
+                                                 zstack)
+import qualified Monomer.Graphics.Lens          as L
+import           Scene                          (backgroundImage, elements,
+                                                 text)
+import           Talking                        (TalkWith, message, person)
+import           UI.Types                       (AppEvent (AppKeyboardInput))
 
 type GameWidgetEnv = WidgetEnv Game AppEvent
 type GameWidgetNode = WidgetNode Game AppEvent
 
 drawUI :: GameWidgetEnv -> Game -> GameWidgetNode
-drawUI wenv gs@Game { status = s }
-    | isPlayerTalking s = drawTalking wenv gs
-    | isHandlingScene s = drawHandlingScene gs
-    | isSelectingItemToUse s = drawSelectingItem gs
-    | isTitle s = drawTitle gs
-    | isGameOver s = drawGameOver
-    | isSelectingLocale s = drawSelectingLanguage
-    | otherwise = drawGameMap gs
+drawUI wenv gs@Game { status = s } =
+    case s of
+        Exploring _          -> drawGameMap gs
+        Talking _            -> drawTalking wenv gs
+        HandlingScene _      -> drawHandlingScene gs
+        SelectingItemToUse _ -> drawSelectingItem gs
+        Title                -> drawTitle gs
+        GameOver             -> drawGameOver
+        SelectingLocale      -> drawSelectingLanguage
 
 withKeyEvents :: WidgetNode s AppEvent -> WidgetNode s AppEvent
 withKeyEvents =
@@ -84,29 +91,32 @@ withKeyEvents =
     ]
 
 drawTalking ::  GameWidgetEnv -> Game -> GameWidgetNode
-drawTalking wenv e@Game { status = s } =
-    withKeyEvents $ zstack [ drawUI wenv (e { status = afterGameStatus }) `styleBasic` [bgColor $ gray & L.a .~ 0.5]
+drawTalking wenv e@Game { status = Talking th } =
+    withKeyEvents $ zstack [ drawUI wenv (e { status = Exploring afterGameStatus }) `styleBasic` [bgColor $ gray & L.a .~ 0.5]
                            , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
                            , talkingWindow e with
                            ]
-    where (with, afterGameStatus) = destructTalking s
+    where (with, afterGameStatus) = GST.destructHandler th
+drawTalking _ _ = error "We are not handling a talk event."
 
 drawHandlingScene :: Game -> GameWidgetNode
-drawHandlingScene Game { status = st, config = c } =
+drawHandlingScene Game { status = HandlingScene sh, config = c } =
     withKeyEvents $ zstack [ image (s ^. backgroundImage)
                            , label_  (getLocalizedText c $ text $ head $ s ^. elements) [multiline] `styleBasic` [textColor black]
                            ]
-    where (s, _) = destructHandlingScene st
+    where (s, _) = GSS.destructHandler sh
+drawHandlingScene _ = error "We are not handling a scene."
 
 drawSelectingItem :: Game -> GameWidgetNode
-drawSelectingItem Game { status = s, config = c } = withKeyEvents $ vstack labels
+drawSelectingItem Game { status = SelectingItemToUse sh, config = c } = withKeyEvents $ vstack labels
     where labels = label topLabel:map label addAsterlist
-          addAsterlist = zipWith (\idx x -> if Just idx == getSelectingIndex s
+          addAsterlist = zipWith (\idx x -> if Just idx == getSelectingIndex sh
                                                 then "* " `append` pack (show idx) `append` " " `append`x
                                                 else pack (show idx) `append` " " `append` x
                                                ) [0..] $ map (getLocalizedText c) itemNames
-          itemNames = map (^. I.name) $ getItems s
+          itemNames = map (^. I.name) $ getItems sh
           topLabel = getLocalizedText c $ multilingualText "Which Item do you use?" "どのアイテムを使う？"
+drawSelectingItem _ = error "We are not selecting an item."
 
 drawSelectingLanguage :: GameWidgetNode
 drawSelectingLanguage = withKeyEvents $ vstack [ label "Choose your language. / 言語を選択してください．"
@@ -143,7 +153,7 @@ mapGrid gs = zstack (mapTiles gs:(mapItems gs ++ mapActors gs))
 
 mapTiles :: Game ->  GameWidgetNode
 mapTiles Game { status = s } = box_ [alignLeft] $ vgrid rows `styleBasic` styles
-    where d = getCurrentDungeon s
+    where d = getCurrentDungeon $ eh s
           V2 bottomLeftX bottomLeftY = bottomLeftCoord d
           rows = [hgrid $ row y | y <- [bottomLeftY + tileRows - 1, bottomLeftY + tileRows - 2 .. bottomLeftY]]
           row y = [cell $ V2 x y | x <- [bottomLeftX .. bottomLeftX + tileColumns - 1]]
@@ -161,10 +171,15 @@ mapTiles Game { status = s } = box_ [alignLeft] $ vgrid rows `styleBasic` styles
 
           styles = [ width $ fromIntegral mapDrawingWidth
                    , height $ fromIntegral mapDrawingHeight]
+          eh st = case st of
+                      Exploring e      -> e
+                      Talking th       -> snd $ GST.destructHandler th
+                      HandlingScene sh -> snd $ GSS.destructHandler sh
+                      _                -> error "unreachable."
 
 mapActors :: Game -> [GameWidgetNode]
 mapActors Game { status = s } = mapMaybe actorToImage $ d ^. actors
-    where d = getCurrentDungeon s
+    where d = getCurrentDungeon $ eh s
           leftPadding actor = fromIntegral $ actorPositionOnDisplay actor ^. _x * tileWidth
           topPadding actor = fromIntegral $ mapDrawingHeight - (actorPositionOnDisplay actor ^. _y + 1) * tileHeight
 
@@ -177,6 +192,11 @@ mapActors Game { status = s } = mapMaybe actorToImage $ d ^. actors
                                 in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
 
           actorToImage actor = guard (isActorDrawed actor) >> return (image (actor ^. walkingImagePath) `styleBasic` style actor)
+          eh st = case st of
+                      Exploring e      -> e
+                      Talking th       -> snd $ GST.destructHandler th
+                      HandlingScene sh -> snd $ GSS.destructHandler sh
+                      _                -> error "unreachable."
 
 mapItems :: Game -> [GameWidgetNode]
 mapItems Game { status = s } = mapMaybe itemToImage $ d ^. items
@@ -184,13 +204,18 @@ mapItems Game { status = s } = mapMaybe itemToImage $ d ^. items
           isItemDrawed item = let pos = itemPositionOnDisplay item
                                   isVisible = (d ^. visible) ! (item ^. I.position)
                                 in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
-          d = getCurrentDungeon s
+          d = getCurrentDungeon $ eh s
           leftPadding item = fromIntegral $ itemPositionOnDisplay item ^. _x * tileWidth
           topPadding item = fromIntegral $ mapDrawingHeight - (itemPositionOnDisplay item ^. _y + 1) * tileHeight
 
           style item = [paddingL $ leftPadding item, paddingT $ topPadding item]
 
           itemPositionOnDisplay item = item ^. I.position - bottomLeftCoord d
+          eh st = case st of
+                      Exploring e      -> e
+                      Talking th       -> snd $ GST.destructHandler th
+                      HandlingScene sh -> snd $ GSS.destructHandler sh
+                      _                -> error "unreachable."
 
 statusGrid :: Game -> GameWidgetNode
 statusGrid Game { status = s, config = c } = vstack $ maybe []
@@ -198,9 +223,15 @@ statusGrid Game { status = s, config = c } = vstack $ maybe []
            , label $ "HP: " `append` pack (show $ getHp x) `append` " / " `append` pack (show $ x ^. maxHp)
            , label $ atk `append` pack (show $ x ^. power)
            , label $ def `append` pack (show $ x ^. defence)
-           ]) $ getPlayerActor s
+           ]) $ player s
     where atk = getLocalizedText c $ multilingualText "ATK: " "攻撃: "
           def = getLocalizedText c $ multilingualText "DEF: " "防御: "
+          player st = case st of
+                       Exploring eh -> getPlayerActor eh
+                       Talking th   -> getPlayerActor $ snd $ GST.destructHandler th
+                       HandlingScene sh -> getPlayerActor $ snd $ GSS.destructHandler sh
+                       SelectingItemToUse i -> player $ Exploring $ finishSelecting i
+                       _ -> error "No player entity."
 
 talkingWindow :: Game -> TalkWith -> GameWidgetNode
 talkingWindow Game { config = c } tw = hstack [ image (tw ^. person . standingImagePath)
@@ -212,7 +243,12 @@ talkingWindow Game { config = c } tw = hstack [ image (tw ^. person . standingIm
 
 messageLogArea :: Game -> GameWidgetNode
 messageLogArea Game { status = s, config = c } =
-    vstack $ fmap (\x -> label_ (getLocalizedText c x) [multiline] ) $ take logRows $ messageLogList s
+    vstack $ fmap (\x -> label_ (getLocalizedText c x) [multiline] ) $ take logRows $ ls s
+    where ls st = case st of
+                   Exploring eh     -> getMessageLog eh
+                   Talking th       -> getMessageLog $ snd $ GST.destructHandler th
+                   HandlingScene sh -> getMessageLog $ snd $ GSS.destructHandler sh
+                   _                -> error "unable to print logs."
 
 topRightCoord :: Dungeon -> Coord
 topRightCoord d = bottomLeftCoord d + mapWidthAndHeight d - V2 1 1
