@@ -23,7 +23,6 @@ import           Game.Status                    (GameStatus (Exploring, Selectin
                                                  getSelectingIndex, isGameOver,
                                                  isPlayerExploring,
                                                  isPositionInDungeon,
-                                                 isSelectingListEmpty,
                                                  playerPosition, talking)
 import qualified Game.Status.Exploring          as GSE
 import           Game.Status.SelectingItemToUse (selectingItemToUseHandler)
@@ -109,15 +108,15 @@ handlePlayerConsumeItem :: State GameStatus ()
 handlePlayerConsumeItem = do
     gs <- get
 
-    unless (isSelectingListEmpty gs) $ do
-        let n = getSelectingIndex gs
+    case getSelectingIndex gs of
+        Just n -> do
+            put $ finishSelecting gs
 
-        put $ finishSelecting gs
+            success <- doAction $ consumeAction n
 
-        success <- doAction $ consumeAction n
-
-        when success $ do
-            completeThisTurn
+            when success $ do
+                completeThisTurn
+        Nothing -> return ()
 
 doAction :: Action -> State GameStatus Bool
 doAction action = state $ \case

@@ -101,7 +101,7 @@ drawHandlingScene Game { status = st, config = c } =
 drawSelectingItem :: Game -> GameWidgetNode
 drawSelectingItem Game { status = s, config = c } = withKeyEvents $ vstack labels
     where labels = label topLabel:map label addAsterlist
-          addAsterlist = zipWith (\idx x -> if idx == getSelectingIndex s
+          addAsterlist = zipWith (\idx x -> if Just idx == getSelectingIndex s
                                                 then "* " `append` pack (show idx) `append` " " `append`x
                                                 else pack (show idx) `append` " " `append` x
                                                ) [0..] $ map (getLocalizedText c) itemNames

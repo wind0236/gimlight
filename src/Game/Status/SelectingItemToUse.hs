@@ -5,7 +5,6 @@ module Game.Status.SelectingItemToUse
     , selectingItemToUseHandler
     , getItems
     , getSelectingIndex
-    , isSelectingListEmpty
     , selectPrevItem
     , selectNextItem
     , finishSelecting
@@ -30,11 +29,9 @@ selectingItemToUseHandler is = SelectingItemToUseHandler is 0
 getItems :: SelectingItemToUseHandler -> [Item]
 getItems SelectingItemToUseHandler { items = is } = is
 
-getSelectingIndex :: SelectingItemToUseHandler -> Int
-getSelectingIndex SelectingItemToUseHandler { selecting = n } = n
-
-isSelectingListEmpty :: SelectingItemToUseHandler -> Bool
-isSelectingListEmpty SelectingItemToUseHandler { items = is } = null is
+getSelectingIndex :: SelectingItemToUseHandler -> Maybe Int
+getSelectingIndex SelectingItemToUseHandler { items = is, selecting = n } =
+    if null is then Nothing else Just n
 
 selectPrevItem :: SelectingItemToUseHandler -> SelectingItemToUseHandler
 selectPrevItem sh@SelectingItemToUseHandler { items = is, selecting = n }
