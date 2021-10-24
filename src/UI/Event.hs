@@ -4,7 +4,6 @@ module UI.Event
     ( handleEvent
     ) where
 
-import           Control.Monad.Trans.State      (execState)
 import           Data.Text                      (Text)
 import           Game                           (Game (Game, config, status))
 import           Game.Config                    (Language (English, Japanese),
@@ -50,12 +49,12 @@ handleKeyInput e@Game { status = s } k =
 
 handleKeyInputDuringExploring :: Game -> Text -> [AppEventResponse Game AppEvent]
 handleKeyInputDuringExploring e@Game { status = st@(Exploring eh) } k
-    | k == "Right" = [Model $ e { status = execState (handlePlayerMoving (V2 1 0)) st }]
-    | k == "Left"  = [Model $ e { status = execState (handlePlayerMoving (V2 (-1) 0)) st }]
-    | k == "Up"    = [Model $ e { status = execState (handlePlayerMoving (V2 0 1)) st}]
-    | k == "Down"  = [Model $ e { status = execState (handlePlayerMoving (V2 0 (-1))) st}]
-    | k == "g" = [Model e { status = execState handlePlayerPickingUp st}]
-    | k == "u" = [Model e { status = handlePlayerSelectingItemToUse st }]
+    | k == "Right" = [Model $ e { status = handlePlayerMoving (V2 1 0) eh }]
+    | k == "Left"  = [Model $ e { status = handlePlayerMoving (V2 (-1) 0) eh }]
+    | k == "Up"    = [Model $ e { status = handlePlayerMoving (V2 0 1) eh}]
+    | k == "Down"  = [Model $ e { status = handlePlayerMoving (V2 0 (-1)) eh}]
+    | k == "g" = [Model e { status = handlePlayerPickingUp eh }]
+    | k == "u" = [Model e { status = handlePlayerSelectingItemToUse eh }]
     | k == "Ctrl-s"     = [Task (save st >> return AppSaveFinished)]
     | k == "Ctrl-l"     = [Task $ do
                             s <- load
@@ -80,10 +79,10 @@ handleKeyInputDuringHandlingScene e@Game { status = HandlingScene sh } k
 handleKeyInputDuringHandlingScene _ _ = error "We are not handling a scene."
 
 handleKeyInputDuringSelectingItemToUse :: Game -> Text -> [AppEventResponse Game AppEvent]
-handleKeyInputDuringSelectingItemToUse e@Game { status = s@(SelectingItemToUse sh) } k
+handleKeyInputDuringSelectingItemToUse e@Game { status = SelectingItemToUse sh } k
     | k == "Up" = [Model $ e { status = SelectingItemToUse $ selectPrevItem sh }]
     | k == "Down" = [Model $ e { status = SelectingItemToUse $ selectNextItem sh }]
-    | k == "Enter" = [Model $ e { status = execState handlePlayerConsumeItem s }]
+    | k == "Enter" = [Model $ e { status = handlePlayerConsumeItem sh }]
     | k == "Esc" = [Model $ e { status = Exploring $ finishSelecting sh }]
     | otherwise = []
 handleKeyInputDuringSelectingItemToUse _ _ = error "We are not selecting an item."

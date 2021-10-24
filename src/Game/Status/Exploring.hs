@@ -72,8 +72,8 @@ exitDungeon eh = fmap (\cd -> eh { currentDungeon = cd, otherDungeons = getOther
                                (Just g, Just p) -> Just $ g & actors %~ (:) p
                                _                -> Nothing
 
-doAction :: Action -> ExploringHandler -> (ExploringHandler, Bool)
-doAction action eh = (newHandler, isSuccess)
+doAction :: Action -> ExploringHandler -> (Bool, ExploringHandler)
+doAction action eh = (isSuccess, newHandler)
     where ((newLogs, isSuccess), newCurrentDungeon) = flip runState (getCurrentDungeon eh) $ do
             p <- popPlayer
             action p
