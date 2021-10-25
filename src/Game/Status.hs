@@ -8,6 +8,7 @@ module Game.Status
     ) where
 
 import           Data.Binary                    (Binary)
+import           Data.Tree                      (Tree (Node, rootLabel, subForest))
 import           Dungeon.Init                   (initDungeon)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
@@ -21,6 +22,7 @@ import           Localization                   (multilingualText)
 import qualified Log                            as L
 import           Scene                          (gameStartScene)
 import           System.Random                  (getStdGen)
+import           TreeZipper                     (goDownBy, treeZipper)
 
 data GameStatus = Exploring ExploringHandler
                 | Talking TalkingHandler
@@ -37,9 +39,22 @@ newGameStatus = do
     g <- getStdGen
 
     let bats = batsDungeon g
+        dungeonTree = Node { rootLabel = globalMap
+                           , subForest = [ Node { rootLabel = bats
+                                                , subForest = []
+                                                }
+                                         , Node { rootLabel = initDungeon
+                                                , subForest = []
+                                                }
+                                         ]
+                           }
+        zipper = treeZipper dungeonTree
+        initZipper = case goDownBy (== initDungeon) zipper of
+                         Just x  -> x
+                         Nothing -> error "Unreachable."
+
         initExploring = exploringHandler
-            initDungeon
-            [globalMap, bats] $
+            initZipper $
             foldr (L.addMessage . L.message) L.emptyLog
                 [multilingualText "Welcome to a roguelike game!" "ローグライクゲームへようこそ！"]
 

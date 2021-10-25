@@ -47,6 +47,7 @@ executable roguelike
                       , Save
                       , Scene
                       , Talking
+                      , TreeZipper
                       , UI.Draw
                       , UI.Event
                       , UI.Types
@@ -55,6 +56,7 @@ executable roguelike
                       , array >= 0.5.4 && < 1
                       , base >= 4.14.3 && < 5
                       , binary >= 0.8.8 && < 1
+                      , containers >= 0.6.5.1 && < 1
                       , data-default >= 0.7.1 && < 1
                       , directory >= 1.3.7 && < 2
                       , lens >= 5.0.1 && < 6
