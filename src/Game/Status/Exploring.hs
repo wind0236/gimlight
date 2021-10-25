@@ -57,7 +57,7 @@ ascendStairsAtPlayerPosition eh@ExploringHandler { dungeons = ds } =
           newPosition = upStairs <$> getFocused ds ^. ascendingStairs
           newZipper = case (zipperFocusingNextDungeon, newPlayer, ascendable) of
                           (Just g, Just p, True) ->
-                                Just $ modify (\d -> execState updateMap $ d & actors %~ (:) p) g
+                                Just $ modify (\d -> updateMap $ d & actors %~ (:) p) g
                           _ -> Nothing
 
 descendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
@@ -68,7 +68,7 @@ descendStairsAtPlayerPosition eh@ExploringHandler{ dungeons = ds } =
           zipperFocusingNextDungeon = goDownBy (\x -> x ^. positionOnParentMap == Just (player ^. position)) zipperWithoutPlayer
           newPosition = downStairs <$> find (\(StairsPair from _) -> from == player ^. position) (getFocused ds ^. descendingStairs)
           newZipper = case (zipperFocusingNextDungeon, newPlayer) of
-                          (Just g, Just p) -> Just $ modify (\d -> execState updateMap $ d & actors %~ (:) p) g
+                          (Just g, Just p) -> Just $ modify (\d -> updateMap $ d & actors %~ (:) p) g
                           _ -> Nothing
 
 popPlayerFromZipper :: TreeZipper Dungeon -> (Actor, TreeZipper Dungeon)
@@ -102,7 +102,7 @@ completeThisTurn eh =
         then Nothing
         else Just handlerAfterNpcTurns { dungeons = modify (const newCurrentDungeon) $ dungeons handlerAfterNpcTurns }
     where handlerAfterNpcTurns = handleNpcTurns eh
-          (status, newCurrentDungeon) = runState D.completeThisTurn $ getFocused $ dungeons handlerAfterNpcTurns
+          (status, newCurrentDungeon) = D.completeThisTurn $ getFocused $ dungeons handlerAfterNpcTurns
 
 handleNpcTurns :: ExploringHandler -> ExploringHandler
 handleNpcTurns eh = foldl (\acc x -> handleNpcTurn (x ^. position) acc) eh $ npcs $ getCurrentDungeon eh

@@ -42,30 +42,27 @@ module Dungeon
     , ascendingStairs
     ) where
 
-import           Control.Lens                   (makeLenses, (%~), (&), (.=),
-                                                 (.~), (^.))
-import           Control.Lens.Getter            (use)
-import           Control.Monad.Trans.State      (State, runState, state)
-import           Control.Monad.Trans.State.Lazy (get)
-import           Coord                          (Coord)
-import           Data.Array.Base                (IArray (bounds), assocs)
-import           Data.Binary                    (Binary)
-import           Data.Foldable                  (find)
-import           Data.List                      (findIndex)
-import           Data.Maybe                     (isJust)
-import           Dungeon.Actor                  (Actor, isMonster, isPlayer)
-import qualified Dungeon.Actor                  as A
-import           Dungeon.Item                   (Item)
-import qualified Dungeon.Item                   as I
-import           Dungeon.Map.Bool               (BoolMap)
-import           Dungeon.Map.Explored           (ExploredMap, initExploredMap,
-                                                 updateExploredMap)
-import           Dungeon.Map.Fov                (Fov, calculateFov, initFov)
-import           Dungeon.Map.Tile               (TileMap, transparent, walkable)
-import           Dungeon.Stairs                 (StairsPair (StairsPair))
-import qualified Dungeon.Turn                   as DT
-import           GHC.Generics                   (Generic)
-import           Linear.V2                      (V2 (..))
+import           Control.Lens              (makeLenses, (%~), (&), (.~), (^.))
+import           Control.Monad.Trans.State (State, runState, state)
+import           Coord                     (Coord)
+import           Data.Array.Base           (IArray (bounds), assocs)
+import           Data.Binary               (Binary)
+import           Data.Foldable             (find)
+import           Data.List                 (findIndex)
+import           Data.Maybe                (isJust)
+import           Dungeon.Actor             (Actor, isMonster, isPlayer)
+import qualified Dungeon.Actor             as A
+import           Dungeon.Item              (Item)
+import qualified Dungeon.Item              as I
+import           Dungeon.Map.Bool          (BoolMap)
+import           Dungeon.Map.Explored      (ExploredMap, initExploredMap,
+                                            updateExploredMap)
+import           Dungeon.Map.Fov           (Fov, calculateFov, initFov)
+import           Dungeon.Map.Tile          (TileMap, transparent, walkable)
+import           Dungeon.Stairs            (StairsPair (StairsPair))
+import qualified Dungeon.Turn              as DT
+import           GHC.Generics              (Generic)
+import           Linear.V2                 (V2 (..))
 
 data DungeonKind = Town | DungeonType | GlobalMap deriving (Show, Ord, Eq, Generic)
 instance Binary DungeonKind
@@ -115,34 +112,22 @@ addDescendingStairs sp@(StairsPair upper _) (parent@Dungeon { _descendingStairs 
     (parent { _descendingStairs = sp:ss }, child { _positionOnParentMap = Just upper })
 addDescendingStairs _ _ = error "The child's position in the parent map is already set."
 
-completeThisTurn :: State Dungeon DT.Status
-completeThisTurn = do
-        updateMap
-        d <- get
-        return $ if isPlayerAlive d then DT.Success else DT.PlayerKilled
+completeThisTurn :: Dungeon -> (DT.Status, Dungeon)
+completeThisTurn d = (result, updatedMap)
+    where result = if isPlayerAlive updatedMap then DT.Success else DT.PlayerKilled
+          updatedMap = updateMap d
 
-updateMap :: State Dungeon ()
-updateMap = do
-        updateExplored
-        updateFov
+updateMap :: Dungeon -> Dungeon
+updateMap = updateFov . updateExplored
 
-updateExplored :: State Dungeon ()
-updateExplored = do
-        v <- use visible
-        e <- use explored
+updateExplored :: Dungeon -> Dungeon
+updateExplored d = d & explored .~ updateExploredMap (d ^. visible) (d ^. explored)
 
-        explored .= updateExploredMap e v
-
-updateFov :: State Dungeon ()
-updateFov = do
-    d <- get
-
-    let t = transparentMap d
-        p = getPlayerActor d
-
-    case p of
-        Just p' -> visible .= calculateFov (p' ^. A.position) t
-        Nothing -> return ()
+updateFov :: Dungeon -> Dungeon
+updateFov d =
+    case getPlayerActor d of
+        Just p  -> d & visible .~ calculateFov (p ^. A.position) (transparentMap d)
+        Nothing -> d
 
 playerPosition :: Dungeon -> Maybe Coord
 playerPosition d = (^. A.position) <$> getPlayerActor d
