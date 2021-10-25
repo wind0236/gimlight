@@ -4,6 +4,7 @@ module UI.Event
     ( handleEvent
     ) where
 
+import           Data.Maybe                     (fromMaybe)
 import           Data.Text                      (Text)
 import           Game                           (Game (Game, config, status))
 import           Game.Config                    (Language (English, Japanese),
@@ -60,8 +61,8 @@ handleKeyInputDuringExploring e@Game { status = st@(Exploring eh) } k
     | k == "Ctrl-l"     = [Task $ do
                             s <- load
                             return $ AppLoadFinished e { status = s }]
-    | k == "Shift-." = [Model e { status = Exploring $ descendStairsAtPlayerPosition eh }]
-    | k == "Shift-," = [Model e { status = Exploring $ ascendStairsAtPlayerPosition eh }]
+    | k == "Shift-." = [Model e { status = Exploring $ fromMaybe eh $ descendStairsAtPlayerPosition eh }]
+    | k == "Shift-," = [Model e { status = Exploring $ fromMaybe eh $ ascendStairsAtPlayerPosition eh }]
     | otherwise = []
 handleKeyInputDuringExploring _ _ = error "We are not exploring."
 

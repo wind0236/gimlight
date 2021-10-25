@@ -22,7 +22,6 @@ import           Control.Monad.Trans.State (evalState, execState, runState)
 import           Coord                     (Coord)
 import           Data.Binary               (Binary)
 import           Data.Foldable             (find)
-import           Data.Maybe                (fromMaybe)
 import           Dungeon                   (Dungeon, actors, ascendingStairs,
                                             descendingStairs, npcs, popPlayer,
                                             positionOnParentMap, updateMap)
@@ -48,9 +47,9 @@ instance Binary ExploringHandler
 exploringHandler :: TreeZipper Dungeon -> MessageLog -> ExploringHandler
 exploringHandler = ExploringHandler
 
-ascendStairsAtPlayerPosition :: ExploringHandler -> ExploringHandler
+ascendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 ascendStairsAtPlayerPosition eh@ExploringHandler { dungeons = ds } =
-        eh { dungeons = newZipper }
+        fmap (\x -> eh { dungeons = x }) newZipper
     where (player, zipperWithoutPlayer) = popPlayerFromZipper ds
           newPlayer = fmap (\x -> player & position .~ x) newPosition
           ascendable = (downStairs <$> getFocused ds ^. ascendingStairs) == Just (player ^. position)
@@ -58,12 +57,12 @@ ascendStairsAtPlayerPosition eh@ExploringHandler { dungeons = ds } =
           newPosition = upStairs <$> getFocused ds ^. ascendingStairs
           newZipper = case (zipperFocusingNextDungeon, newPlayer, ascendable) of
                           (Just g, Just p, True) ->
-                                modify (\d -> execState updateMap $ d & actors %~ (:) p) g
-                          _ -> ds
+                                Just $ modify (\d -> execState updateMap $ d & actors %~ (:) p) g
+                          _ -> Nothing
 
-descendStairsAtPlayerPosition :: ExploringHandler -> ExploringHandler
+descendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 descendStairsAtPlayerPosition eh@ExploringHandler{ dungeons = ds } =
-    eh { dungeons = fromMaybe ds newZipper }
+    fmap (\x -> eh { dungeons = x }) newZipper
     where (player, zipperWithoutPlayer) = popPlayerFromZipper ds
           newPlayer = fmap (\x -> player & position .~ x) newPosition
           zipperFocusingNextDungeon = goDownBy (\x -> x ^. positionOnParentMap == Just (player ^. position)) zipperWithoutPlayer
