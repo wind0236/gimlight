@@ -79,6 +79,7 @@ withKeyEvents =
     , "Left"
     , "Enter"
     , "Shift-."
+    , "Shift-,"
     , "n"
     , "l"
     , "q"

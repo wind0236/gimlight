@@ -12,6 +12,7 @@ module Dungeon.Map.Tile
     , transparent
     , imagePath
     , dungeonTile
+    , upstairs
     ) where
 
 import           Control.Lens.TH (makeLenses)
@@ -57,3 +58,9 @@ dungeonTile = Tile { _walkable = True
                    , _transparent = True
                    , _imagePath = "images/dungeon_chip.png"
                    }
+
+upstairs :: Tile
+upstairs = Tile { _walkable = True
+                , _transparent = True
+                , _imagePath = "images/up_stairs.png"
+                }

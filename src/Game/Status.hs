@@ -9,15 +9,19 @@ module Game.Status
 
 import           Data.Binary                    (Binary)
 import           Data.Tree                      (Tree (Node, rootLabel, subForest))
+import           Dungeon                        (addAscendingAndDescendingStiars,
+                                                 addDescendingStairs)
 import           Dungeon.Init                   (initDungeon)
 import           Dungeon.Predefined.BatsCave    (batsDungeon)
 import           Dungeon.Predefined.GlobalMap   (globalMap)
+import           Dungeon.Stairs                 (StairsPair (StairsPair))
 import           GHC.Generics                   (Generic)
 import           Game.Status.Exploring          (ExploringHandler,
                                                  exploringHandler)
 import           Game.Status.Scene              (SceneHandler, sceneHandler)
 import           Game.Status.SelectingItemToUse (SelectingItemToUseHandler)
 import           Game.Status.Talking            (TalkingHandler)
+import           Linear.V2                      (V2 (V2))
 import           Localization                   (multilingualText)
 import qualified Log                            as L
 import           Scene                          (gameStartScene)
@@ -38,18 +42,27 @@ newGameStatus :: IO GameStatus
 newGameStatus = do
     g <- getStdGen
 
-    let bats = batsDungeon g
-        dungeonTree = Node { rootLabel = globalMap
-                           , subForest = [ Node { rootLabel = bats
+    let (stairsPosition, bats) = batsDungeon g
+        beaeve = initDungeon
+        gm = globalMap
+
+        (gmWithBatsStairs, batsWithParentMap) =
+            addAscendingAndDescendingStiars (StairsPair (V2 9 6) stairsPosition) (gm, bats)
+
+        (initGm, beaeveWithParentMap) =
+            addDescendingStairs (StairsPair (V2 3 16) (V2 5 5)) (gmWithBatsStairs, beaeve)
+
+        dungeonTree = Node { rootLabel = initGm
+                           , subForest = [ Node { rootLabel = batsWithParentMap
                                                 , subForest = []
                                                 }
-                                         , Node { rootLabel = initDungeon
+                                         , Node { rootLabel = beaeveWithParentMap
                                                 , subForest = []
                                                 }
                                          ]
                            }
         zipper = treeZipper dungeonTree
-        initZipper = case goDownBy (== initDungeon) zipper of
+        initZipper = case goDownBy (== beaeveWithParentMap) zipper of
                          Just x  -> x
                          Nothing -> error "Unreachable."
 

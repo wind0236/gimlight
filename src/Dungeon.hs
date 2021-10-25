@@ -27,7 +27,7 @@ module Dungeon
     , actorAt
     , isPositionInDungeon
     , npcs
-    , positionOnGlobalMap
+    , positionOnParentMap
     , DungeonKind(..)
     , actors
     , tileMap
@@ -36,6 +36,10 @@ module Dungeon
     , items
     , popItemAt
     , pushItem
+    , descendingStairs
+    , addAscendingAndDescendingStiars
+    , addDescendingStairs
+    , ascendingStairs
     ) where
 
 import           Control.Lens                   (makeLenses, (%~), (&), (.=),
@@ -58,6 +62,7 @@ import           Dungeon.Map.Explored           (ExploredMap, initExploredMap,
                                                  updateExploredMap)
 import           Dungeon.Map.Fov                (Fov, calculateFov, initFov)
 import           Dungeon.Map.Tile               (TileMap, transparent, walkable)
+import           Dungeon.Stairs                 (StairsPair (StairsPair))
 import qualified Dungeon.Turn                   as DT
 import           GHC.Generics                   (Generic)
 import           Linear.V2                      (V2 (..))
@@ -71,22 +76,44 @@ data Dungeon = Dungeon
           , _explored            :: ExploredMap
           , _actors              :: [Actor]
           , _items               :: [Item]
-          , _positionOnGlobalMap :: Maybe Coord
+          , _positionOnParentMap :: Maybe Coord
+
+          -- Do not integrate `_ascendingStairs` with
+          -- `_positionOnParentMap` For example, towns have a `Just`
+          -- `_positionOnParentMap` but they do not have ascending stairs
+          -- to the global map.
+          , _ascendingStairs     :: Maybe StairsPair
+          , _descendingStairs    :: [StairsPair]
           , _dungeonKind         :: DungeonKind
           } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Dungeon
 instance Binary Dungeon
 
-dungeon :: TileMap -> [Actor] -> [Item] -> Maybe Coord -> DungeonKind -> Dungeon
-dungeon t e i p d = Dungeon { _tileMap = t
+dungeon :: TileMap -> [Actor] -> [Item] -> DungeonKind -> Dungeon
+dungeon t e i d = Dungeon { _tileMap = t
                           , _visible = initFov widthAndHeight
                           , _explored = initExploredMap widthAndHeight
                           , _actors = e
                           , _items = i
-                          , _positionOnGlobalMap = p
+                          , _positionOnParentMap = Nothing
+                          , _ascendingStairs = Nothing
+                          , _descendingStairs = []
                           , _dungeonKind = d
                           }
     where widthAndHeight = snd (bounds t) + V2 1 1
+
+addAscendingAndDescendingStiars :: StairsPair -> (Dungeon, Dungeon) -> (Dungeon, Dungeon)
+addAscendingAndDescendingStiars
+    sp@(StairsPair upper _)
+    ( parent@Dungeon { _descendingStairs = ss }
+    , child@Dungeon { _ascendingStairs = Nothing, _positionOnParentMap = Nothing }) =
+    (parent { _descendingStairs = sp: ss }, child { _ascendingStairs = Just sp, _positionOnParentMap = Just upper })
+addAscendingAndDescendingStiars _ _ = error "The child's position and the ascending stairs are already set."
+
+addDescendingStairs :: StairsPair -> (Dungeon, Dungeon) -> (Dungeon, Dungeon)
+addDescendingStairs sp@(StairsPair upper _) (parent@Dungeon { _descendingStairs = ss }, child@Dungeon { _positionOnParentMap = Nothing } ) =
+    (parent { _descendingStairs = sp:ss }, child { _positionOnParentMap = Just upper })
+addDescendingStairs _ _ = error "The child's position in the parent map is already set."
 
 completeThisTurn :: State Dungeon DT.Status
 completeThisTurn = do

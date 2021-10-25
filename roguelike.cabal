@@ -33,6 +33,7 @@ executable roguelike
                       , Dungeon.Predefined.Beaeve
                       , Dungeon.Predefined.GlobalMap
                       , Dungeon.Size
+                      , Dungeon.Stairs
                       , Dungeon.Turn
                       , Game
                       , Game.Config

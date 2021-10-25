@@ -13,14 +13,17 @@ import           Dungeon.Generate.Room  (Room (..), center,
                                          roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Item           (Item, herb)
 import qualified Dungeon.Item           as I
-import           Dungeon.Map.Tile       (TileMap, allWallTiles, floorTile)
+import           Dungeon.Map.Tile       (TileMap, allWallTiles, floorTile,
+                                         upstairs)
 import           Dungeon.Size           (maxSize, minSize)
 import           Linear.V2              (V2 (..), _x, _y)
 import           System.Random          (Random (randomR), StdGen, random)
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Actor], [Item], V2 Int, StdGen)
-generateDungeon g = generateDungeonAccum [] [] [] (allWallTiles (V2 width height)) (V2 0 0) g''
-    where (width, g') = randomR (minSize, maxSize) g
+generateDungeon g maxRooms roomMinSize roomMaxSize mapSize = (tiles // [(enterPosition, upstairs)], actors, items, enterPosition, g''')
+    where (tiles, actors, items, enterPosition, g''') =
+            generateDungeonAccum [] [] [] (allWallTiles (V2 width height)) (V2 0 0) g'' maxRooms roomMinSize roomMaxSize mapSize
+          (width, g') = randomR (minSize, maxSize) g
           (height, g'') = randomR (minSize, maxSize) g'
 
 generateDungeonAccum :: [Item] -> [Actor] -> [Room] -> TileMap -> Coord -> StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Actor], [Item], V2 Int, StdGen)
