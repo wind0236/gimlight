@@ -5,6 +5,8 @@ module Dungeon.Generate
 import           Control.Lens           ((^.))
 import           Coord                  (Coord)
 import           Data.Array             (bounds, (//))
+import           Dungeon                (Dungeon, DungeonKind (DungeonType),
+                                         dungeon)
 import           Dungeon.Actor          (Actor)
 import qualified Dungeon.Actor          as A
 import           Dungeon.Actor.Monsters (orc, troll)
@@ -19,8 +21,8 @@ import           Dungeon.Size           (maxSize, minSize)
 import           Linear.V2              (V2 (..), _x, _y)
 import           System.Random          (Random (randomR), StdGen, random)
 
-generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (TileMap, [Actor], [Item], V2 Int, StdGen)
-generateDungeon g maxRooms roomMinSize roomMaxSize mapSize = (tiles // [(enterPosition, upstairs)], actors, items, enterPosition, g''')
+generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (Dungeon, Coord, StdGen)
+generateDungeon g maxRooms roomMinSize roomMaxSize mapSize = (dungeon (tiles // [(enterPosition, upstairs)]) actors items DungeonType, enterPosition, g''')
     where (tiles, actors, items, enterPosition, g''') =
             generateDungeonAccum [] [] [] (allWallTiles (V2 width height)) (V2 0 0) g'' maxRooms roomMinSize roomMaxSize mapSize
           (width, g') = randomR (minSize, maxSize) g
