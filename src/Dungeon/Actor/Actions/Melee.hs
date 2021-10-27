@@ -5,7 +5,6 @@ module Dungeon.Actor.Actions.Melee
     ) where
 
 import           Control.Lens          ((^.))
-import           Data.Text             (append, pack)
 import           Dungeon               (Dungeon, popActorAt, pushActor)
 import           Dungeon.Actor         (Actor, defence, getHp, name, position,
                                         power, updateHp)
@@ -13,6 +12,7 @@ import           Dungeon.Actor.Actions (Action)
 import           Linear.V2             (V2)
 import           Localization          (multilingualText)
 import           Log                   (Message, MessageLog, message)
+import           TextShow              (TextShow (showt))
 
 meleeAction :: V2 Int -> Action
 meleeAction offset src dungeon =
@@ -45,8 +45,8 @@ attackFromTo attacker defender dungeonWithoutTarget =
 damagedMessage :: Actor -> Actor -> Int -> Message
 damagedMessage from to damage =
     attackMessage from to <>
-        multilingualText (" for " `append` pack (show damage) `append` " hit points.")
-                         ("して" `append` pack (show damage) `append` "ポイントのダメージを与えた．")
+        multilingualText (" for " <> showt damage <> " hit points.")
+                         ("して" <> showt damage <> "ポイントのダメージを与えた．")
 
 deathMessage :: Actor -> Message
 deathMessage who = (who ^. name) <> multilingualText " is dead!" "は死んだ．"
@@ -54,11 +54,10 @@ deathMessage who = (who ^. name) <> multilingualText " is dead!" "は死んだ�
 attackMessage :: Actor -> Actor -> Message
 attackMessage from to =
     mconcat [ from ^. name
-            , multilingualText " attacks" "は"
+            , multilingualText " attacks " "は"
             , to ^. name
             , multilingualText "" "に攻撃"
             ]
-
 
 noDamageMessage :: Actor -> Actor -> Message
 noDamageMessage from to = attackMessage from to `mappend`
