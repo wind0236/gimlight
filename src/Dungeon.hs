@@ -42,27 +42,26 @@ module Dungeon
     , ascendingStairs
     ) where
 
-import           Control.Lens              (makeLenses, (%~), (&), (.~), (^.))
-import           Control.Monad.Trans.State (State, runState, state)
-import           Coord                     (Coord)
-import           Data.Array.Base           (IArray (bounds), assocs)
-import           Data.Binary               (Binary)
-import           Data.Foldable             (find)
-import           Data.List                 (findIndex)
-import           Data.Maybe                (isJust)
-import           Dungeon.Actor             (Actor, isMonster, isPlayer)
-import qualified Dungeon.Actor             as A
-import           Dungeon.Item              (Item)
-import qualified Dungeon.Item              as I
-import           Dungeon.Map.Bool          (BoolMap)
-import           Dungeon.Map.Explored      (ExploredMap, initExploredMap,
-                                            updateExploredMap)
-import           Dungeon.Map.Fov           (Fov, calculateFov, initFov)
-import           Dungeon.Map.Tile          (TileMap, transparent, walkable)
-import           Dungeon.Stairs            (StairsPair (StairsPair))
-import qualified Dungeon.Turn              as DT
-import           GHC.Generics              (Generic)
-import           Linear.V2                 (V2 (..))
+import           Control.Lens         (makeLenses, (%~), (&), (.~), (^.))
+import           Coord                (Coord)
+import           Data.Array.Base      (IArray (bounds), assocs)
+import           Data.Binary          (Binary)
+import           Data.Foldable        (find)
+import           Data.List            (findIndex)
+import           Data.Maybe           (isJust)
+import           Dungeon.Actor        (Actor, isMonster, isPlayer)
+import qualified Dungeon.Actor        as A
+import           Dungeon.Item         (Item)
+import qualified Dungeon.Item         as I
+import           Dungeon.Map.Bool     (BoolMap)
+import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
+                                       updateExploredMap)
+import           Dungeon.Map.Fov      (Fov, calculateFov, initFov)
+import           Dungeon.Map.Tile     (TileMap, transparent, walkable)
+import           Dungeon.Stairs       (StairsPair (StairsPair))
+import qualified Dungeon.Turn         as DT
+import           GHC.Generics         (Generic)
+import           Linear.V2            (V2 (..))
 
 data DungeonKind = Town | DungeonType | GlobalMap deriving (Show, Ord, Eq, Generic)
 instance Binary DungeonKind
@@ -138,19 +137,19 @@ getPlayerActor d = find isPlayer $ d ^. actors
 actorAt :: Coord -> Dungeon -> Maybe Actor
 actorAt c d = find (\x -> x ^. A.position == c) $ d ^. actors
 
-pushActor :: Actor -> State Dungeon ()
-pushActor e = state $ \d -> ((), d & actors %~ (e :))
+pushActor :: Actor -> Dungeon -> Dungeon
+pushActor e d = d & actors %~ (e :)
 
-popPlayer :: State Dungeon Actor
-popPlayer = state $ \d -> case runState (popActorIf isPlayer) d of
+popPlayer :: Dungeon -> (Actor, Dungeon)
+popPlayer d = case popActorIf isPlayer d of
                   (Just x, d') -> (x, d')
                   (Nothing, _) -> error "No player actor."
 
-popActorAt :: Coord -> State Dungeon (Maybe Actor)
+popActorAt :: Coord -> Dungeon -> (Maybe Actor, Dungeon)
 popActorAt c = popActorIf (\x -> x ^. A.position == c)
 
-popActorIf :: (Actor -> Bool) -> State Dungeon (Maybe Actor)
-popActorIf f = state $ \d ->
+popActorIf :: (Actor -> Bool) -> Dungeon -> (Maybe Actor, Dungeon)
+popActorIf f d =
     let xs = d ^. actors
     in case findIndex f xs of
         Just x -> let actor = xs !! x
@@ -158,14 +157,14 @@ popActorIf f = state $ \d ->
                   in (Just actor, d & actors .~ newEntities)
         Nothing -> (Nothing, d)
 
-pushItem :: Item -> State Dungeon ()
-pushItem i = state $ \d -> ((), d & items %~ (i :))
+pushItem :: Item -> Dungeon -> Dungeon
+pushItem i d = d & items %~ (i :)
 
-popItemAt :: Coord -> State Dungeon (Maybe Item)
+popItemAt :: Coord -> Dungeon -> (Maybe Item, Dungeon)
 popItemAt c = popItemIf (\x -> x ^. I.position == c)
 
-popItemIf :: (Item -> Bool) -> State Dungeon (Maybe Item)
-popItemIf f = state $ \d ->
+popItemIf :: (Item -> Bool) -> Dungeon -> (Maybe Item, Dungeon)
+popItemIf f d =
     let xs = d ^. items
     in case findIndex f xs of
         Just x -> let item = xs !! x

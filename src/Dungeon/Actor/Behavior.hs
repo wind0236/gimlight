@@ -4,26 +4,22 @@ module Dungeon.Actor.Behavior
     ( npcAction
     ) where
 
-import           Control.Lens              ((&), (.~), (^.))
-import           Control.Monad.Trans.State (State, get)
-import           Data.Maybe                (fromMaybe)
-import           Dungeon                   (Dungeon, getPlayerActor)
-import           Dungeon.Actor             (Actor, pathToDestination, position)
-import           Dungeon.Actor.Actions     (Action, meleeAction, moveAction,
-                                            waitAction)
-import           Dungeon.PathFinder        (getPathTo)
-import           Linear.V2                 (V2 (V2))
-import           Log                       (MessageLog)
+import           Control.Lens          ((&), (.~), (^.))
+import           Data.Bifunctor        (Bifunctor (first))
+import           Data.Maybe            (fromMaybe)
+import           Dungeon               (Dungeon, getPlayerActor)
+import           Dungeon.Actor         (Actor, pathToDestination, position)
+import           Dungeon.Actor.Actions (Action, meleeAction, moveAction,
+                                        waitAction)
+import           Dungeon.PathFinder    (getPathTo)
+import           Linear.V2             (V2 (V2))
+import           Log                   (MessageLog)
 
-npcAction :: Actor -> State Dungeon MessageLog
-npcAction e = do
-    dungeon <- get
-
-    let e' = updatePath e dungeon
-        action = selectAction e' dungeon
-
-    r <- action e'
-    return $ fst r
+npcAction :: Actor -> Dungeon -> (MessageLog, Dungeon)
+npcAction e d = first fst result
+    where result = action entityAfterUpdatingPath d
+          entityAfterUpdatingPath = updatePath e d
+          action = selectAction entityAfterUpdatingPath d
 
 updatePath :: Actor -> Dungeon -> Actor
 updatePath e d = e & pathToDestination .~ newPath

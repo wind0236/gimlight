@@ -9,57 +9,55 @@ module Dungeon.Actor.Actions
     , Action
     ) where
 
-import           Control.Lens              ((&), (.~), (^.))
-import           Control.Monad             (when)
-import           Control.Monad.Trans.State (State, execState, state)
-import           Coord                     (Coord)
-import           Data.Array                ((!))
-import           Data.Maybe                (isNothing)
-import           Data.Text                 (append, pack)
-import           Dungeon                   (Dungeon, actorAt, mapWidthAndHeight,
-                                            popActorAt, popItemAt, pushActor,
-                                            pushItem, tileMap)
-import           Dungeon.Actor             (Actor, defence, getHp, healHp,
-                                            inventoryItems, name, position,
-                                            power, removeNthItem, updateHp)
-import           Dungeon.Actor.Inventory   (addItem)
-import           Dungeon.Item              (healAmount)
-import qualified Dungeon.Item              as I
-import           Dungeon.Map.Tile          (walkable)
-import           Linear.V2                 (V2 (V2))
-import           Localization              (multilingualText)
-import           Log                       (MessageLog, message)
+import           Control.Lens            ((&), (.~), (^.))
+import           Coord                   (Coord)
+import           Data.Array              ((!))
+import           Data.Maybe              (isNothing)
+import           Data.Text               (append, pack)
+import           Dungeon                 (Dungeon, actorAt, mapWidthAndHeight,
+                                          popActorAt, popItemAt, pushActor,
+                                          pushItem, tileMap)
+import           Dungeon.Actor           (Actor, defence, getHp, healHp,
+                                          inventoryItems, name, position, power,
+                                          removeNthItem, updateHp)
+import           Dungeon.Actor.Inventory (addItem)
+import           Dungeon.Item            (healAmount)
+import qualified Dungeon.Item            as I
+import           Dungeon.Map.Tile        (walkable)
+import           Linear.V2               (V2 (V2))
+import           Localization            (multilingualText)
+import           Log                     (MessageLog, message)
 
-type Action = Actor -> State Dungeon (MessageLog, Bool)
+type Action = Actor -> Dungeon -> ((MessageLog, Bool), Dungeon)
 
 meleeAction :: V2 Int -> Action
-meleeAction offset src = do
-    let pos = src ^. position
-        dest = pos + offset
+meleeAction offset src dungeon =
+    result
+    where dstPosition = (src ^. position) + offset
+          (target, dungeonWithoutTarget) = popActorAt dstPosition dungeon
 
-    target <- popActorAt dest
+          result =
+            case target of
+                Nothing       -> (([], False), pushActor src dungeon)
+                Just defender -> attackFromTo src defender
 
-    case target of
-        Nothing -> do
-            pushActor src
-            return ([], False)
-        Just x -> let damage = src ^. power - x ^. defence
-                  in if damage > 0
-                      then do
-                          let newHp = getHp x - damage
-                              newActor = updateHp x newHp
-                              messages = if newHp <= 0 then [damagedMessage src x damage, deathMessage x] else [damagedMessage src x damage]
+          attackFromTo attacker defender =
+            let damage = attacker ^. power - defender ^. defence
+            in if damage > 0
+                  then let newHp = getHp defender - damage
+                           newDefender = updateHp defender newHp
+                           messages = if newHp <= 0
+                                          then [damagedMessage attacker defender damage, deathMessage defender]
+                                          else [damagedMessage attacker defender damage]
+                           actorHandler = if newHp > 0
+                                            then pushActor attacker . pushActor newDefender
+                                            else pushActor attacker
+                           dungeonAfterAttack = actorHandler dungeonWithoutTarget
+                       in ((map message messages, True), dungeonAfterAttack)
+                    else (([message $ noDamage attacker defender], True), pushActor attacker $ pushActor defender dungeonWithoutTarget)
 
-                          pushActor src
 
-                          when (newHp > 0) $ pushActor newActor
-
-                          return (fmap message messages, True)
-                      else do
-                              pushActor src
-                              pushActor x
-                              return ([message $ noDamage src x ], True)
-    where attackMessage from to =
+          attackMessage from to =
             mconcat [ from ^. name
                     , multilingualText " attacks" "は"
                     , to ^. name
@@ -76,51 +74,44 @@ meleeAction offset src = do
                                 multilingualText " but does not damage." "したがダメージを受けなかった．"
 
 moveAction :: V2 Int -> Action
-moveAction offset src = state $ \d -> result d
-    where result d = (\(x, y) -> (x, execState y d)) $ messageAndNewActor d
-          messageAndNewActor d = if not (movable d (src ^. position + offset))
-                                    then (([multilingualText "That way is blocked." "その方向には進めない．"], False), pushActor src)
-                                    else (([], True), pushActor $ updatePosition d src offset)
+moveAction offset src d = if not (movable d (src ^. position + offset))
+                                then (([multilingualText "That way is blocked." "その方向には進めない．"], False), pushActor src d)
+                                else (([], True), pushActor (updatePosition d src offset) d)
 
 waitAction :: Action
-waitAction e = do
-        pushActor e
-        return ([], True)
+waitAction e d = (([], True), pushActor e d)
 
 pickUpAction :: Action
-pickUpAction e = do
-    item <- popItemAt (e ^. position)
+pickUpAction e d =
     case item of
-        Just x -> do
-            let currentItems = e ^. inventoryItems
-                newItems = addItem x currentItems
-            case newItems of
-                Just xs -> do
-                    pushActor $ e & inventoryItems .~ xs
-                    return ([multilingualText "You got " "アイテムを入手した：" <> (x ^. I.name)], True)
-                Nothing -> do
-                    pushActor e
-                    pushItem x
-                    return ([multilingualText "Your bag is full." "バッグは一杯だ．"], False)
-        Nothing -> do
-            pushActor e
-            return ([multilingualText "You got nothing." "あなたは無を入手した．"], False)
+        Just x ->
+            case addItem x (e ^. inventoryItems) of
+                Just xs ->
+                    (
+                        ([multilingualText "You got " "アイテムを入手しました：" <> (x ^. I.name)], True),
+                        pushActor (e & inventoryItems .~ xs) dungeonAfterPickingUp
+                    )
+                Nothing ->
+                    (([multilingualText "Your bag is full." "バッグは一杯だ．"], False), pushItem x $ pushActor e dungeonAfterPickingUp)
+        Nothing -> (([multilingualText "You got nothing." "あなたは無を手に入れた．"], False), pushActor e dungeonAfterPickingUp)
+    where (item, dungeonAfterPickingUp) = popItemAt (e ^. position) d
 
 consumeAction :: Int -> Action
-consumeAction n e = do
-    let (item, newActor) = removeNthItem n e
-
+consumeAction n e d =
     case item of
-        Just x -> do
-            let healedActor = healHp newActor (x ^. healAmount)
-            pushActor healedActor
-            return ( [(healedActor ^. name) <>
-                        multilingualText (" healed " `append` pack (show (x ^. healAmount)))
-                                         ("は" `append` pack (show (x ^. healAmount)) `append` "ポイント回復した．")]
-                   , True)
-        Nothing -> do
-            pushActor newActor
-            return ([multilingualText "What do you consume?" "何を使う？"], False)
+        Just x ->
+            (
+                ([(e ^. name)
+                    <> multilingualText
+                        (" healed " `append` pack (show (x ^. healAmount)))
+                        ("は" `append` pack (show (x ^. healAmount)) `append` "ポイント回復した．")
+                ]
+                , True)
+                , pushActor (healHp newActor (x ^. healAmount)) d
+            )
+        Nothing -> (([multilingualText "What do you consume?" "何を使う？"], False), pushActor e d)
+
+    where (item, newActor) = removeNthItem n e
 
 updatePosition :: Dungeon -> Actor -> V2 Int -> Actor
 updatePosition d src offset

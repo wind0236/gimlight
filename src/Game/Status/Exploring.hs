@@ -17,25 +17,24 @@ module Game.Status.Exploring
     , getMessageLog
     ) where
 
-import           Control.Lens              ((%~), (&), (.~), (^.))
-import           Control.Monad.Trans.State (evalState, execState, runState)
-import           Coord                     (Coord)
-import           Data.Binary               (Binary)
-import           Data.Foldable             (find)
-import           Dungeon                   (Dungeon, actors, ascendingStairs,
-                                            descendingStairs, npcs, popPlayer,
-                                            positionOnParentMap, updateMap)
-import qualified Dungeon                   as D
-import           Dungeon.Actor             (Actor, position)
-import           Dungeon.Actor.Actions     (Action)
-import           Dungeon.Actor.Behavior    (npcAction)
-import           Dungeon.Stairs            (StairsPair (StairsPair, downStairs, upStairs))
-import           Dungeon.Turn              (Status (PlayerKilled))
-import           GHC.Generics              (Generic)
-import           Log                       (Message, MessageLog)
-import qualified Log                       as L
-import           TreeZipper                (TreeZipper, getFocused, goDownBy,
-                                            goUp, modify)
+import           Control.Lens           ((%~), (&), (.~), (^.))
+import           Coord                  (Coord)
+import           Data.Binary            (Binary)
+import           Data.Foldable          (find)
+import           Dungeon                (Dungeon, actors, ascendingStairs,
+                                         descendingStairs, npcs, popPlayer,
+                                         positionOnParentMap, updateMap)
+import qualified Dungeon                as D
+import           Dungeon.Actor          (Actor, position)
+import           Dungeon.Actor.Actions  (Action)
+import           Dungeon.Actor.Behavior (npcAction)
+import           Dungeon.Stairs         (StairsPair (StairsPair, downStairs, upStairs))
+import           Dungeon.Turn           (Status (PlayerKilled))
+import           GHC.Generics           (Generic)
+import           Log                    (Message, MessageLog)
+import qualified Log                    as L
+import           TreeZipper             (TreeZipper, getFocused, goDownBy, goUp,
+                                         modify)
 
 data ExploringHandler = ExploringHandler
                       { dungeons   :: TreeZipper Dungeon
@@ -72,14 +71,14 @@ descendStairsAtPlayerPosition eh@ExploringHandler{ dungeons = ds } =
                           _ -> Nothing
 
 popPlayerFromZipper :: TreeZipper Dungeon -> (Actor, TreeZipper Dungeon)
-popPlayerFromZipper z = (evalState popPlayer $ getFocused z, modify (execState popPlayer) z)
+popPlayerFromZipper z = (fst $ popPlayer $ getFocused z, modify (snd . popPlayer) z)
 
 exitDungeon :: ExploringHandler -> Maybe ExploringHandler
 exitDungeon eh@ExploringHandler { dungeons = ds } =
     fmap (\ds' -> eh { dungeons = ds' }) newZipper
-    where zipperWithoutPlayer = modify (execState popPlayer) ds
+    where zipperWithoutPlayer = modify (snd . popPlayer) ds
           currentDungeon = getFocused ds
-          player = evalState popPlayer currentDungeon
+          player = fst $ popPlayer currentDungeon
           newPosition = currentDungeon ^. positionOnParentMap
           newPlayer = fmap (\x -> player & position .~ x) newPosition
           zipperFocusingGlobalMap = goUp zipperWithoutPlayer
@@ -90,9 +89,8 @@ exitDungeon eh@ExploringHandler { dungeons = ds } =
 doAction :: Action -> ExploringHandler -> (Bool, ExploringHandler)
 doAction action eh@ExploringHandler { dungeons = ds } = (isSuccess, newHandler)
     where currentDungeon = getFocused ds
-          ((newLogs, isSuccess), newCurrentDungeon) = flip runState currentDungeon $ do
-              p <- popPlayer
-              action p
+          (player, dungeonWithoutPlayer) = popPlayer currentDungeon
+          ((newLogs, isSuccess), newCurrentDungeon) = action player dungeonWithoutPlayer
           handlerWithNewLog = addMessages newLogs eh
           newHandler = handlerWithNewLog { dungeons = modify (const newCurrentDungeon) ds }
 
@@ -109,12 +107,12 @@ handleNpcTurns eh = foldl (\acc x -> handleNpcTurn (x ^. position) acc) eh $ npc
 
 handleNpcTurn :: Coord -> ExploringHandler -> ExploringHandler
 handleNpcTurn c eh@ExploringHandler { dungeons = ds } = newHandler
-    where dungeonsWithoutTheActor = modify (execState $ D.popActorAt c) ds
-          theActor = evalState (D.popActorAt c) $ getFocused ds
+    where dungeonsWithoutTheActor = modify (snd . D.popActorAt c) ds
+          theActor = fst . D.popActorAt c $ getFocused ds
           newHandler = case theActor of
                            Just x ->
                             let (generatedLog, newCurrentDungeon) =
-                                    runState (npcAction x) $ getFocused dungeonsWithoutTheActor
+                                    npcAction x $ getFocused dungeonsWithoutTheActor
                                 newMessageLog = L.addMessages generatedLog (getMessageLog eh)
                             in eh { dungeons = modify (const newCurrentDungeon) dungeonsWithoutTheActor
                                   , messageLog = newMessageLog
