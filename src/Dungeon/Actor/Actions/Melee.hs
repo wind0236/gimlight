@@ -25,7 +25,6 @@ meleeAction offset src dungeon =
                 Nothing       -> (([], False), pushActor src dungeon)
                 Just defender -> attackFromTo src defender dungeonWithoutTarget
 
-
 attackFromTo :: Actor -> Actor -> Dungeon -> ((MessageLog, Bool), Dungeon)
 attackFromTo attacker defender dungeonWithoutTarget =
   let damage = attacker ^. power - defender ^. defence
