@@ -11,8 +11,10 @@ import           Data.Bifunctor                 (Bifunctor (second))
 import           Dungeon                        (isTown)
 import           Dungeon.Actor                  (Actor, isMonster, talkMessage)
 import qualified Dungeon.Actor                  as A
-import           Dungeon.Actor.Actions          (consumeAction, meleeAction,
-                                                 moveAction, pickUpAction)
+import           Dungeon.Actor.Actions.Consume  (consumeAction)
+import           Dungeon.Actor.Actions.Melee    (meleeAction)
+import           Dungeon.Actor.Actions.Move     (moveAction)
+import           Dungeon.Actor.Actions.PickUp   (pickUpAction)
 import           Game.Status                    (GameStatus (Exploring, GameOver, SelectingItemToUse, Talking))
 import           Game.Status.Exploring          (ExploringHandler, actorAt,
                                                  completeThisTurn, doAction,

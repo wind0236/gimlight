@@ -15,6 +15,11 @@ executable roguelike
                       , Dungeon
                       , Dungeon.Actor
                       , Dungeon.Actor.Actions
+                      , Dungeon.Actor.Actions.Consume
+                      , Dungeon.Actor.Actions.Melee
+                      , Dungeon.Actor.Actions.Move
+                      , Dungeon.Actor.Actions.PickUp
+                      , Dungeon.Actor.Actions.Wait
                       , Dungeon.Actor.Behavior
                       , Dungeon.Actor.Friendly
                       , Dungeon.Actor.Inventory
