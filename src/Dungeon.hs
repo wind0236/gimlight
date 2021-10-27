@@ -107,7 +107,7 @@ addAscendingAndDescendingStiars
     sp@(StairsPair upper _)
     ( parent@Dungeon { _descendingStairs = ss }
     , child@Dungeon { _ascendingStairs = Nothing, _positionOnParentMap = Nothing }) =
-    (parent { _descendingStairs = sp: ss }, child { _ascendingStairs = Just sp, _positionOnParentMap = Just upper })
+    (parent { _descendingStairs = sp:ss }, child { _ascendingStairs = Just sp, _positionOnParentMap = Just upper })
 addAscendingAndDescendingStiars _ _ = error "The child's position and the ascending stairs are already set."
 
 addDescendingStairs :: StairsPair -> (Dungeon, Dungeon) -> (Dungeon, Dungeon)
