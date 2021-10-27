@@ -26,7 +26,8 @@ import           Localization                   (multilingualText)
 import qualified Log                            as L
 import           Scene                          (gameStartScene)
 import           System.Random                  (getStdGen)
-import           TreeZipper                     (goDownBy, treeZipper)
+import           TreeZipper                     (appendTree, goDownBy,
+                                                 treeZipper)
 
 data GameStatus = Exploring ExploringHandler
                 | Talking TalkingHandler
@@ -46,22 +47,21 @@ newGameStatus = do
         beaeve = initDungeon
         gm = globalMap
 
-        (gmWithBatsStairs, batsWithParentMap) =
-            addAscendingAndDescendingStiars (StairsPair (V2 9 6) stairsPosition) (gm, bats)
+        (gmWithBatsStairs, batsRootMapWithParentMap) =
+            addAscendingAndDescendingStiars (StairsPair (V2 9 6) stairsPosition) (gm, rootLabel bats)
+
+        batsTreeWithParentMap = bats { rootLabel = batsRootMapWithParentMap }
 
         (initGm, beaeveWithParentMap) =
             addDescendingStairs (StairsPair (V2 3 16) (V2 5 5)) (gmWithBatsStairs, beaeve)
 
         dungeonTree = Node { rootLabel = initGm
-                           , subForest = [ Node { rootLabel = batsWithParentMap
-                                                , subForest = []
-                                                }
-                                         , Node { rootLabel = beaeveWithParentMap
+                           , subForest = [ Node { rootLabel = beaeveWithParentMap
                                                 , subForest = []
                                                 }
                                          ]
                            }
-        zipper = treeZipper dungeonTree
+        zipper = appendTree batsTreeWithParentMap $ treeZipper dungeonTree
         initZipper = case goDownBy (== beaeveWithParentMap) zipper of
                          Just x  -> x
                          Nothing -> error "Unreachable."

@@ -1,12 +1,15 @@
 module Dungeon.Generate
-    ( generateDungeon
+    ( generateMultipleFloorsDungeon
     ) where
 
 import           Control.Lens           ((^.))
 import           Coord                  (Coord)
 import           Data.Array             (bounds, (//))
+import           Data.Tree              (Tree (Node, rootLabel, subForest))
 import           Dungeon                (Dungeon, DungeonKind (DungeonType),
-                                         dungeon)
+                                         addAscendingAndDescendingStiars,
+                                         changeTile, dungeon,
+                                         stairsPositionCandidates)
 import           Dungeon.Actor          (Actor)
 import qualified Dungeon.Actor          as A
 import           Dungeon.Actor.Monsters (orc, troll)
@@ -15,14 +18,50 @@ import           Dungeon.Generate.Room  (Room (..), center,
                                          roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Item           (Item, herb)
 import qualified Dungeon.Item           as I
-import           Dungeon.Map.Tile       (TileMap, allWallTiles, floorTile,
-                                         upstairs)
+import           Dungeon.Map.Tile       (TileMap, allWallTiles, downStairs,
+                                         floorTile, upStairs)
 import           Dungeon.Size           (maxSize, minSize)
+import           Dungeon.Stairs         (StairsPair (StairsPair))
 import           Linear.V2              (V2 (..), _x, _y)
 import           System.Random          (Random (randomR), StdGen, random)
+import           TreeZipper             (TreeZipper, appendNode, getFocused,
+                                         goDownBy, goToRootAndGetTree, modify,
+                                         treeZipper)
+
+generateMultipleFloorsDungeon :: StdGen -> Int -> Int -> Int -> Int -> V2 Int -> (Tree Dungeon, Coord, StdGen)
+generateMultipleFloorsDungeon g floorsNum maxRooms roomMinSize roomMaxSize mapSize =
+    (goToRootAndGetTree dungeonZipper, ascendingStairsInFirstFloor, g'')
+    where (firstFloor, ascendingStairsInFirstFloor, g') = generateDungeon g maxRooms roomMinSize roomMaxSize mapSize
+          treeWithFirstFloor = Node { rootLabel = firstFloor
+                                    , subForest = []
+                                    }
+          zipperWithFirstFloor = treeZipper treeWithFirstFloor
+          (dungeonZipper, g'') =
+            foldl (\acc _ -> uncurry generateDungeonAndAppend acc maxRooms roomMinSize roomMaxSize mapSize) (zipperWithFirstFloor, g') [1 .. floorsNum - 1]
+
+generateDungeonAndAppend :: TreeZipper Dungeon -> StdGen -> Int -> Int -> Int -> V2 Int -> (TreeZipper Dungeon, StdGen)
+generateDungeonAndAppend zipper g maxRooms roomMinSize roomMaxSize mapSize =
+    (zipperFocusingNext, g'')
+    where (generatedDungeon, lowerStairsPosition, g') = generateDungeon g maxRooms roomMinSize roomMaxSize mapSize
+
+          (upperStairsPosition, g'') = newStairsPosition g' $ getFocused zipper
+
+          (newUpperDungeon, newLowerDungeon) =
+            addAscendingAndDescendingStiars (StairsPair upperStairsPosition lowerStairsPosition) (getFocused zipper, generatedDungeon)
+
+          newZipper = appendNode newLowerDungeon $ modify (changeTile upperStairsPosition downStairs) $  modify (const newUpperDungeon) zipper
+
+          zipperFocusingNext = case goDownBy (== newLowerDungeon) newZipper of
+                                   Just x  -> x
+                                   Nothing -> error "unreachable."
+
+newStairsPosition :: StdGen -> Dungeon -> (Coord, StdGen)
+newStairsPosition g d = (candidates !! index, g')
+    where candidates = stairsPositionCandidates d
+          (index, g') = randomR (0, length candidates - 1) g
 
 generateDungeon :: StdGen -> Int -> Int -> Int -> V2 Int -> (Dungeon, Coord, StdGen)
-generateDungeon g maxRooms roomMinSize roomMaxSize mapSize = (dungeon (tiles // [(enterPosition, upstairs)]) actors items DungeonType, enterPosition, g''')
+generateDungeon g maxRooms roomMinSize roomMaxSize mapSize = (dungeon (tiles // [(enterPosition, upStairs)]) actors items DungeonType, enterPosition, g''')
     where (tiles, actors, items, enterPosition, g''') =
             generateDungeonAccum [] [] [] (allWallTiles (V2 width height)) (V2 0 0) g'' maxRooms roomMinSize roomMaxSize mapSize
           (width, g') = randomR (minSize, maxSize) g
