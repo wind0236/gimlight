@@ -1,5 +1,6 @@
-{-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Dungeon.Map.Tile
     ( TileMap
@@ -19,6 +20,7 @@ module Dungeon.Map.Tile
 import           Control.Lens.TH (makeLenses)
 import           Data.Array      (Array)
 import           Data.Binary     (Binary)
+import           Data.Text       (Text)
 import qualified Dungeon.Map     as M
 import           GHC.Generics    (Generic)
 import           Linear.V2       (V2)
@@ -26,7 +28,7 @@ import           Linear.V2       (V2)
 data Tile = Tile
           { _walkable    :: Bool
           , _transparent :: Bool
-          , _imagePath   :: String
+          , _imagePath   :: Text
           } deriving (Show, Ord, Eq, Generic)
 makeLenses ''Tile
 instance Binary Tile

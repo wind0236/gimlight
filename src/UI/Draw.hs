@@ -12,7 +12,7 @@ import           Control.Monad                  (guard)
 import           Coord                          (Coord)
 import           Data.Array                     ((!))
 import           Data.Maybe                     (mapMaybe)
-import           Data.Text                      (append, pack)
+import           Data.Text                      (append)
 import           Dungeon                        (Dungeon, actors, explored,
                                                  items, mapWidthAndHeight,
                                                  playerPosition, tileMap,
@@ -164,7 +164,7 @@ mapTiles Game { status = s } = box_ [alignLeft] $ vgrid rows `styleBasic` styles
           isVisible c = (d ^. visible) ! c
           isExplored c = (d ^. explored) ! c
 
-          cell c = zstack [ image $ pack $ (d ^. tileMap) ! c ^. MT.imagePath
+          cell c = zstack [ image $ (d ^. tileMap) ! c ^. MT.imagePath
                           , filler `styleBasic` [bgColor $ black & L.a .~ cellOpacity c]
                           ]
           cellOpacity c = case (isVisible c, isExplored c) of
