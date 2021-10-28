@@ -23,7 +23,7 @@ consumeAction n e d =
                         ("は" `append` pack (show (x ^. healAmount)) `append` "ポイント回復した．")
                 ]
                 , True)
-                , pushActor (healHp newActor (x ^. healAmount)) d
+                , pushActor (healHp (x ^. healAmount) newActor) d
             )
         Nothing -> (([multilingualText "What do you consume?" "何を使う？"], False), pushActor e d)
 

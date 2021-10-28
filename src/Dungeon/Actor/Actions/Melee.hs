@@ -30,7 +30,7 @@ attackFromTo attacker defender dungeonWithoutTarget =
   let damage = attacker ^. power - defender ^. defence
   in if damage > 0
         then let newHp = getHp defender - damage
-                 newDefender = updateHp defender newHp
+                 newDefender = updateHp newHp defender
                  messages = if newHp <= 0
                                 then [damagedMessage attacker defender damage, deathMessage defender]
                                 else [damagedMessage attacker defender damage]

@@ -89,12 +89,12 @@ isMonster e = (e ^. actorKind) == Monster
 getHp :: Actor -> Int
 getHp e = e ^. hp
 
-updateHp :: Actor -> Int -> Actor
-updateHp e newHp = e & hp .~ newHpInRange
+updateHp :: Int -> Actor -> Actor
+updateHp newHp e = e & hp .~ newHpInRange
     where newHpInRange = max 0 $ min (e ^. maxHp) newHp
 
-healHp :: Actor -> Int -> Actor
-healHp e amount = updateHp e $ getHp e + amount
+healHp :: Int -> Actor -> Actor
+healHp amount e = updateHp (getHp e + amount) e
 
 getItems :: Actor -> [Item]
 getItems a = I.getItems $ a ^. inventoryItems
