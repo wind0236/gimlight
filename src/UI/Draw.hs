@@ -17,8 +17,8 @@ import           Dungeon                        (Dungeon, actors, explored,
                                                  items, mapWidthAndHeight,
                                                  playerPosition, tileMap,
                                                  visible)
-import           Dungeon.Actor                  (defence, getHp, maxHp, power,
-                                                 standingImagePath,
+import           Dungeon.Actor                  (getDefence, getHp, getMaxHp,
+                                                 getPower, standingImagePath,
                                                  walkingImagePath)
 import qualified Dungeon.Actor                  as A
 import           Dungeon.Item                   (iconImagePath)
@@ -222,9 +222,9 @@ mapItems Game { status = s } = mapMaybe itemToImage $ d ^. items
 statusGrid :: Game -> GameWidgetNode
 statusGrid Game { status = s, config = c } = vstack $ maybe []
     (\x -> [ label "Player"
-           , label $ "HP: " `append` pack (show $ getHp x) `append` " / " `append` pack (show $ x ^. maxHp)
-           , label $ atk `append` pack (show $ x ^. power)
-           , label $ def `append` pack (show $ x ^. defence)
+           , label $ "HP: " `append` pack (show $ getHp x) `append` " / " `append` pack (show $ getMaxHp x)
+           , label $ atk `append` pack (show $ getPower x)
+           , label $ def `append` pack (show $ getDefence x)
            ]) $ player s
     where atk = getLocalizedText c $ multilingualText "ATK: " "攻撃: "
           def = getLocalizedText c $ multilingualText "DEF: " "防御: "

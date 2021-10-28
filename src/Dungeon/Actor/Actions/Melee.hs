@@ -6,8 +6,8 @@ module Dungeon.Actor.Actions.Melee
 
 import           Control.Lens          ((^.))
 import           Dungeon               (Dungeon, popActorAt, pushActor)
-import           Dungeon.Actor         (Actor, defence, getHp, name, position,
-                                        power, receiveDamage)
+import           Dungeon.Actor         (Actor, getDefence, getHp, getPower,
+                                        name, position, receiveDamage)
 import           Dungeon.Actor.Actions (Action)
 import           Linear.V2             (V2)
 import           Localization          (multilingualText)
@@ -27,7 +27,7 @@ meleeAction offset src dungeon =
 
 attackFromTo :: Actor -> Actor -> Dungeon -> ((MessageLog, Bool), Dungeon)
 attackFromTo attacker defender dungeonWithoutTarget =
-  let damage = attacker ^. power - defender ^. defence
+  let damage = getPower attacker - getDefence defender
   in if damage > 0
         then let newDefender = receiveDamage damage defender
                  messages = if getHp newDefender <= 0

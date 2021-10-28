@@ -6,6 +6,9 @@ module Dungeon.Actor
     ( Actor
     , player
     , getHp
+    , getMaxHp
+    , getPower
+    , getDefence
     , receiveDamage
     , monster
     , isPlayer
@@ -13,26 +16,25 @@ module Dungeon.Actor
     , ActorKind(FriendlyNpc)
     , actor
     , position
-    , defence
     , name
     , pathToDestination
-    , power
     , standingImagePath
     , talkMessage
     , walkingImagePath
-    , maxHp
     , healHp
     , inventoryItems
     , getItems
     , removeNthItem
     ) where
 
-import           Control.Lens            (makeLenses, (&), (.~), (^.))
+import           Control.Lens            (makeLenses, (%~), (&), (.~), (^.))
 import           Coord                   (Coord)
 import           Data.Binary             (Binary)
 import           Data.Text               (Text)
 import           Dungeon.Actor.Inventory (Inventory, inventory)
 import qualified Dungeon.Actor.Inventory as I
+import           Dungeon.Actor.Status    (Status)
+import qualified Dungeon.Actor.Status    as S
 import           Dungeon.Item            (Item)
 import           GHC.Generics            (Generic)
 import           Localization            (MultilingualText, multilingualText)
@@ -43,10 +45,7 @@ instance Binary ActorKind
 data Actor = Actor
            { _position          :: Coord
            , _name              :: MultilingualText
-           , _hp                :: Int
-           , _maxHp             :: Int
-           , _defence           :: Int
-           , _power             :: Int
+           , _status            :: Status
            , _pathToDestination :: [Coord]
            , _actorKind         :: ActorKind
            , _talkMessage       :: MultilingualText
@@ -61,10 +60,7 @@ actor :: Coord -> MultilingualText -> Int -> Int -> Int -> ActorKind -> Multilin
 actor position' name' hp' defence' power' ak talkMessage' walkingImagePath' standingImagePath'=
         Actor { _position = position'
               , _name = name'
-              , _hp = hp'
-              , _maxHp = hp'
-              , _defence = defence'
-              , _power = power'
+              , _status = S.status hp' power' defence'
               , _pathToDestination = []
               , _talkMessage = talkMessage'
               , _walkingImagePath = walkingImagePath'
@@ -87,17 +83,22 @@ isMonster :: Actor -> Bool
 isMonster e = (e ^. actorKind) == Monster
 
 getHp :: Actor -> Int
-getHp e = e ^. hp
+getHp e = S.getHp $ e ^. status
 
-updateHp :: Int -> Actor -> Actor
-updateHp newHp e = e & hp .~ newHpInRange
-    where newHpInRange = max 0 $ min (e ^. maxHp) newHp
+getMaxHp :: Actor -> Int
+getMaxHp e = S.getMaxHp $ e ^. status
 
 receiveDamage :: Int -> Actor -> Actor
-receiveDamage damage e = updateHp (getHp e - damage) e
+receiveDamage damage a = a & status %~ S.receiveDamage damage
 
 healHp :: Int -> Actor -> Actor
-healHp amount e = updateHp (getHp e + amount) e
+healHp amount a = a & status %~ S.healHp amount
+
+getPower :: Actor -> Int
+getPower a = S.getPower $ a ^. status
+
+getDefence :: Actor -> Int
+getDefence a = S.getDefence $ a ^. status
 
 getItems :: Actor -> [Item]
 getItems a = I.getItems $ a ^. inventoryItems
