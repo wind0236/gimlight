@@ -54,6 +54,7 @@ import qualified Monomer.Graphics.Lens          as L
 import           Scene                          (backgroundImage, elements,
                                                  text)
 import           Talking                        (TalkWith, message, person)
+import           TextShow                       (TextShow (showt))
 import           UI.Types                       (AppEvent (AppKeyboardInput))
 
 type GameWidgetEnv = WidgetEnv Game AppEvent
@@ -113,8 +114,8 @@ drawSelectingItem :: Game -> GameWidgetNode
 drawSelectingItem Game { status = SelectingItemToUse sh, config = c } = withKeyEvents $ vstack labels
     where labels = label topLabel:map label addAsterlist
           addAsterlist = zipWith (\idx x -> if Just idx == getSelectingIndex sh
-                                                then "* " `append` pack (show idx) `append` " " `append`x
-                                                else pack (show idx) `append` " " `append` x
+                                                then "* " `append` showt idx `append` " " `append`x
+                                                else showt idx `append` " " `append` x
                                                ) [0..] $ map (getLocalizedText c) itemNames
           itemNames = map (^. I.name) $ getItems sh
           topLabel = getLocalizedText c $ multilingualText "Which Item do you use?" "どのアイテムを使う？"
@@ -222,9 +223,9 @@ mapItems Game { status = s } = mapMaybe itemToImage $ d ^. items
 statusGrid :: Game -> GameWidgetNode
 statusGrid Game { status = s, config = c } = vstack $ maybe []
     (\x -> [ label "Player"
-           , label $ "HP: " `append` pack (show $ getHp x) `append` " / " `append` pack (show $ getMaxHp x)
-           , label $ atk `append` pack (show $ getPower x)
-           , label $ def `append` pack (show $ getDefence x)
+           , label $ "HP: " `append` showt (getHp x) `append` " / " `append` showt (getMaxHp x)
+           , label $ atk `append` showt (getPower x)
+           , label $ def `append` showt (getDefence x)
            ]) $ player s
     where atk = getLocalizedText c $ multilingualText "ATK: " "攻撃: "
           def = getLocalizedText c $ multilingualText "DEF: " "防御: "
