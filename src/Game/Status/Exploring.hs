@@ -50,8 +50,10 @@ ascendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 ascendStairsAtPlayerPosition eh@ExploringHandler { dungeons = ds } =
         fmap (\x -> eh { dungeons = x }) newZipper
     where (player, zipperWithoutPlayer) = popPlayerFromZipper ds
-          newPlayer = fmap (\x -> player & position .~ x) newPosition
-          ascendable = (downStairs <$> getFocused ds ^. ascendingStairs) == Just (player ^. position)
+          newPlayer = case (player, newPosition) of
+                          (Just p, Just pos) -> Just $ p & position .~ pos
+                          _                  -> Nothing
+          ascendable = (downStairs <$> getFocused ds ^. ascendingStairs) == fmap (^. position) player
           zipperFocusingNextDungeon = goUp zipperWithoutPlayer
           newPosition = upStairs <$> getFocused ds ^. ascendingStairs
           newZipper = case (zipperFocusingNextDungeon, newPlayer, ascendable) of
@@ -63,14 +65,16 @@ descendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 descendStairsAtPlayerPosition eh@ExploringHandler{ dungeons = ds } =
     fmap (\x -> eh { dungeons = x }) newZipper
     where (player, zipperWithoutPlayer) = popPlayerFromZipper ds
-          newPlayer = fmap (\x -> player & position .~ x) newPosition
-          zipperFocusingNextDungeon = goDownBy (\x -> x ^. positionOnParentMap == Just (player ^. position)) zipperWithoutPlayer
-          newPosition = downStairs <$> find (\(StairsPair from _) -> from == player ^. position) (getFocused ds ^. descendingStairs)
+          newPlayer = case (player, newPosition) of
+                          (Just p, Just pos) -> Just $ p & position .~ pos
+                          _                  -> Nothing
+          zipperFocusingNextDungeon = goDownBy (\x -> x ^. positionOnParentMap == fmap (^. position) player) zipperWithoutPlayer
+          newPosition = downStairs <$> find (\(StairsPair from _) -> Just from == fmap (^. position) player) (getFocused ds ^. descendingStairs)
           newZipper = case (zipperFocusingNextDungeon, newPlayer) of
                           (Just g, Just p) -> Just $ modify (\d -> updateMap $ d & actors %~ (:) p) g
                           _ -> Nothing
 
-popPlayerFromZipper :: TreeZipper Dungeon -> (Actor, TreeZipper Dungeon)
+popPlayerFromZipper :: TreeZipper Dungeon -> (Maybe Actor, TreeZipper Dungeon)
 popPlayerFromZipper z = (fst $ popPlayer $ getFocused z, modify (snd . popPlayer) z)
 
 exitDungeon :: ExploringHandler -> Maybe ExploringHandler
@@ -80,19 +84,28 @@ exitDungeon eh@ExploringHandler { dungeons = ds } =
           currentDungeon = getFocused ds
           player = fst $ popPlayer currentDungeon
           newPosition = currentDungeon ^. positionOnParentMap
-          newPlayer = fmap (\x -> player & position .~ x) newPosition
+          newPlayer = case (player, newPosition) of
+                          (Just p, Just pos) -> Just $ p & position .~ pos
+                          _                  -> Nothing
           zipperFocusingGlobalMap = goUp zipperWithoutPlayer
           newZipper = case (zipperFocusingGlobalMap, newPlayer) of
                           (Just g, Just p) -> Just $ modify (\d -> d & actors %~ (:) p) g
                           _                -> Nothing
 
 doAction :: Action -> ExploringHandler -> (Bool, ExploringHandler)
-doAction action eh@ExploringHandler { dungeons = ds } = (isSuccess, newHandler)
+doAction action eh@ExploringHandler { dungeons = ds } = result
     where currentDungeon = getFocused ds
           (player, dungeonWithoutPlayer) = popPlayer currentDungeon
-          ((newLogs, isSuccess), newCurrentDungeon) = action player dungeonWithoutPlayer
-          handlerWithNewLog = addMessages newLogs eh
-          newHandler = handlerWithNewLog { dungeons = modify (const newCurrentDungeon) ds }
+          result = case player of
+                    Just p -> let ((newLogs, isSuccess), newCurrentDungeon) =
+                                    action p dungeonWithoutPlayer
+                                  handlerWithNewLog =
+                                    addMessages newLogs eh
+                                  newHandler =
+                                    handlerWithNewLog { dungeons = modify (const newCurrentDungeon) ds }
+                              in (isSuccess, newHandler)
+                    Nothing -> (False, eh)
+
 
 completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
 completeThisTurn eh =

@@ -144,10 +144,8 @@ actorAt c d = find (\x -> x ^. A.position == c) $ d ^. actors
 pushActor :: Actor -> Dungeon -> Dungeon
 pushActor e d = d & actors %~ (e :)
 
-popPlayer :: Dungeon -> (Actor, Dungeon)
-popPlayer d = case popActorIf isPlayer d of
-                  (Just x, d') -> (x, d')
-                  (Nothing, _) -> error "No player actor."
+popPlayer :: Dungeon -> (Maybe Actor, Dungeon)
+popPlayer = popActorIf isPlayer
 
 popActorAt :: Coord -> Dungeon -> (Maybe Actor, Dungeon)
 popActorAt c = popActorIf (\x -> x ^. A.position == c)
