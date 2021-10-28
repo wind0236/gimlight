@@ -106,7 +106,6 @@ doAction action eh@ExploringHandler { dungeons = ds } = result
                               in (isSuccess, newHandler)
                     Nothing -> (False, eh)
 
-
 completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
 completeThisTurn eh =
     if status == PlayerKilled
