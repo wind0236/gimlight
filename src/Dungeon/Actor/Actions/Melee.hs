@@ -7,7 +7,7 @@ module Dungeon.Actor.Actions.Melee
 import           Control.Lens          ((^.))
 import           Dungeon               (Dungeon, popActorAt, pushActor)
 import           Dungeon.Actor         (Actor, defence, getHp, name, position,
-                                        power, updateHp)
+                                        power, receiveDamage)
 import           Dungeon.Actor.Actions (Action)
 import           Linear.V2             (V2)
 import           Localization          (multilingualText)
@@ -29,12 +29,11 @@ attackFromTo :: Actor -> Actor -> Dungeon -> ((MessageLog, Bool), Dungeon)
 attackFromTo attacker defender dungeonWithoutTarget =
   let damage = attacker ^. power - defender ^. defence
   in if damage > 0
-        then let newHp = getHp defender - damage
-                 newDefender = updateHp newHp defender
-                 messages = if newHp <= 0
+        then let newDefender = receiveDamage damage defender
+                 messages = if getHp newDefender <= 0
                                 then [damagedMessage attacker defender damage, deathMessage defender]
                                 else [damagedMessage attacker defender damage]
-                 actorHandler = if newHp > 0
+                 actorHandler = if getHp newDefender > 0
                                   then pushActor attacker . pushActor newDefender
                                   else pushActor attacker
                  dungeonAfterAttack = actorHandler dungeonWithoutTarget

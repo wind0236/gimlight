@@ -6,7 +6,7 @@ module Dungeon.Actor
     ( Actor
     , player
     , getHp
-    , updateHp
+    , receiveDamage
     , monster
     , isPlayer
     , isMonster
@@ -92,6 +92,9 @@ getHp e = e ^. hp
 updateHp :: Int -> Actor -> Actor
 updateHp newHp e = e & hp .~ newHpInRange
     where newHpInRange = max 0 $ min (e ^. maxHp) newHp
+
+receiveDamage :: Int -> Actor -> Actor
+receiveDamage damage e = updateHp (getHp e - damage) e
 
 healHp :: Int -> Actor -> Actor
 healHp amount e = updateHp (getHp e + amount) e
