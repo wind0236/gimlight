@@ -7,12 +7,12 @@ module UI.Draw
     , tileColumns
     , tileRows
     ) where
+
 import           Control.Lens                   ((&), (.~), (^.))
 import           Control.Monad                  (guard)
 import           Coord                          (Coord)
 import           Data.Array                     ((!))
 import           Data.Maybe                     (mapMaybe)
-import           Data.Text                      (append)
 import           Dungeon                        (Dungeon, actors, explored,
                                                  items, mapWidthAndHeight,
                                                  playerPosition, tileMap,
@@ -114,8 +114,8 @@ drawSelectingItem :: Game -> GameWidgetNode
 drawSelectingItem Game { status = SelectingItemToUse sh, config = c } = withKeyEvents $ vstack labels
     where labels = label topLabel:map label addAsterlist
           addAsterlist = zipWith (\idx x -> if Just idx == getSelectingIndex sh
-                                                then "* " `append` showt idx `append` " " `append`x
-                                                else showt idx `append` " " `append` x
+                                                then "* " <> showt idx <> " " <> x
+                                                else showt idx <> " " <> x
                                                ) [0..] $ map (getLocalizedText c) itemNames
           itemNames = map (^. I.name) $ getItems sh
           topLabel = getLocalizedText c $ multilingualText "Which Item do you use?" "どのアイテムを使う？"
@@ -129,9 +129,9 @@ drawSelectingLanguage = withKeyEvents $ vstack [ label "Choose your language. / 
 
 drawTitle :: Game -> GameWidgetNode
 drawTitle Game { config = c } = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSize 36]
-                                     , label $ "[n] " `append` getLocalizedText c newGame
-                                     , label $ "[l] " `append` getLocalizedText c loadGame
-                                     , label $ "[q] " `append` getLocalizedText c quitGame
+                                     , label $ "[n] " <> getLocalizedText c newGame
+                                     , label $ "[l] " <> getLocalizedText c loadGame
+                                     , label $ "[q] " <> getLocalizedText c quitGame
                                      ]
     where newGame = multilingualText "New game" "新しく始める"
           loadGame = multilingualText " Load the savedata" "セーブデータを読み込む"
@@ -223,9 +223,9 @@ mapItems Game { status = s } = mapMaybe itemToImage $ d ^. items
 statusGrid :: Game -> GameWidgetNode
 statusGrid Game { status = s, config = c } = vstack $ maybe []
     (\x -> [ label "Player"
-           , label $ "HP: " `append` showt (getHp x) `append` " / " `append` showt (getMaxHp x)
-           , label $ atk `append` showt (getPower x)
-           , label $ def `append` showt (getDefence x)
+           , label $ "HP: " <> showt (getHp x) <> " / " <> showt (getMaxHp x)
+           , label $ atk <> showt (getPower x)
+           , label $ def <> showt (getDefence x)
            ]) $ player s
     where atk = getLocalizedText c $ multilingualText "ATK: " "攻撃: "
           def = getLocalizedText c $ multilingualText "DEF: " "防御: "
