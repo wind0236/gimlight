@@ -12,16 +12,10 @@ import           Localization            (multilingualText)
 
 orc :: Coord -> Actor
 orc c = monster c name st "images/orc.png"
-    where st = status h 0 3
-          h = case hp 10 of
-                  Just x  -> x
-                  Nothing -> error "Unreachable as the value is positive."
+    where st = status (hp 10) 0 3
           name = multilingualText "Orc" "オーク"
 
 troll :: Coord -> Actor
 troll c = monster c name st "images/troll.png"
-    where st = status h 1 4
-          h = case hp 16 of
-                  Just x  -> x
-                  Nothing -> error "Unreachable as the value is positive."
+    where st = status (hp 16) 1 4
           name = multilingualText "Troll" "トロール"

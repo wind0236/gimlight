@@ -75,11 +75,7 @@ monster position' name' st walking = actor position' name' st Monster mempty wal
 
 player :: Coord -> Actor
 player c = actor c playerName st Player mempty "images/player.png" "images/sample_standing_picture.png"
-    where st = S.status h 2 5
-
-          h = case hp 30 of
-                  Just x  -> x
-                  Nothing -> error "Unreachable as the value is positive."
+    where st = S.status (hp 30) 2 5
 
           playerName = multilingualText "Player" "プレイヤー"
 

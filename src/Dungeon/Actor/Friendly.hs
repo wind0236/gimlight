@@ -13,10 +13,7 @@ import           Localization            (MultilingualText, multilingualText)
 
 electria :: Coord -> Actor
 electria position = friendly position name st talking "images/electria.png" "images/sample_standing_picture.png"
-    where st = status h 1 1
-          h = case hp 1 of
-                  Just x  -> x
-                  Nothing -> error "Unreachable as the value is positive."
+    where st = status (hp 1) 1 1
           name = multilingualText "Electria" "エレクトリア"
           talking = multilingualText "Talking test." "会話テスト"
 

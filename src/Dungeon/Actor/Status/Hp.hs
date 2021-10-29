@@ -19,10 +19,10 @@ data Hp = Hp
 
 instance Binary Hp
 
-hp :: Int -> Maybe Hp
-hp h
-    | h > 0 = Just $ Hp h h
-    | otherwise = Nothing
+hp :: Int -> Hp
+hp h = case hpOrFail h of
+                 Just x  -> x
+                 Nothing -> error "The initial HP value must be positive."
 
 getHp :: Hp -> Int
 getHp = currentHp
@@ -37,3 +37,8 @@ healHp amount Hp { currentHp = c, maxHp = m }
 receiveDamage :: Int -> Hp -> Hp
 receiveDamage damage Hp { currentHp = c, maxHp = m }
     = Hp { currentHp = max 0 $ c - damage, maxHp = m }
+
+hpOrFail :: Int -> Maybe Hp
+hpOrFail h
+    | h > 0 = Just $ Hp h h
+    | otherwise = Nothing
