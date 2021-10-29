@@ -57,6 +57,15 @@ executable roguelike
                       , Talking
                       , TreeZipper
                       , UI.Draw
+                      , UI.Draw.Config
+                      , UI.Draw.Exploring
+                      , UI.Draw.GameOver
+                      , UI.Draw.KeyEvent
+                      , UI.Draw.Scene
+                      , UI.Draw.SelectingLocale
+                      , UI.Draw.SelectingItem
+                      , UI.Draw.Talking
+                      , UI.Draw.Title
                       , UI.Event
                       , UI.Types
 

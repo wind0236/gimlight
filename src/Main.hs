@@ -2,16 +2,17 @@
 
 module Main (main) where
 
-import           Game        (Game (Game, config, status))
-import           Game.Config (getLocale, readConfigOrDefault)
-import           Game.Status (GameStatus (SelectingLocale, Title))
-import           Monomer     (MainWindowState (MainWindowNormal), appFontDef,
-                              appInitEvent, appTheme, appWindowResizable,
-                              appWindowState, appWindowTitle, darkTheme,
-                              startApp)
-import           UI.Draw     (drawUI, windowHeight, windowWidth)
-import qualified UI.Event    as E
-import           UI.Types    (AppEvent (..))
+import           Game           (Game (Game, config, status))
+import           Game.Config    (getLocale, readConfigOrDefault)
+import           Game.Status    (GameStatus (SelectingLocale, Title))
+import           Monomer        (MainWindowState (MainWindowNormal), appFontDef,
+                                 appInitEvent, appTheme, appWindowResizable,
+                                 appWindowState, appWindowTitle, darkTheme,
+                                 startApp)
+import           UI.Draw        (drawUI)
+import           UI.Draw.Config (windowHeight, windowWidth)
+import qualified UI.Event       as E
+import           UI.Types       (AppEvent (..))
 
 main :: IO ()
 main = do
