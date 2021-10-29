@@ -5,7 +5,6 @@ module Dungeon.Actor.Behavior
     ) where
 
 import           Control.Lens                ((&), (.~), (^.))
-import           Data.Bifunctor              (Bifunctor (first))
 import           Data.Maybe                  (fromMaybe)
 import           Dungeon                     (Dungeon, getPlayerActor)
 import           Dungeon.Actor               (Actor, pathToDestination,
@@ -18,9 +17,9 @@ import           Dungeon.PathFinder          (getPathTo)
 import           Linear.V2                   (V2 (V2))
 import           Log                         (MessageLog)
 
-npcAction :: Actor -> Dungeon -> (MessageLog, Dungeon)
-npcAction e d = first fst result
-    where result = action entityAfterUpdatingPath d
+npcAction :: Actor -> Dungeon -> Maybe (MessageLog, Dungeon)
+npcAction e d = if isSuccess then Just (l, updatedDungeon) else Nothing
+    where ((l, isSuccess), updatedDungeon) = action entityAfterUpdatingPath d
           entityAfterUpdatingPath = updatePath e d
           action = selectAction entityAfterUpdatingPath d
 

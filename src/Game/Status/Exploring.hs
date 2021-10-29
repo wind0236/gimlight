@@ -123,12 +123,13 @@ handleNpcTurn c eh@ExploringHandler { dungeons = ds } = newHandler
           theActor = fst . D.popActorAt c $ getFocused ds
           newHandler = case theActor of
                            Just x ->
-                            let (generatedLog, newCurrentDungeon) =
-                                    npcAction x $ getFocused dungeonsWithoutTheActor
-                                newMessageLog = L.addMessages generatedLog (getMessageLog eh)
-                            in eh { dungeons = modify (const newCurrentDungeon) dungeonsWithoutTheActor
-                                  , messageLog = newMessageLog
-                                  }
+                            case npcAction x $ getFocused dungeonsWithoutTheActor of
+                                Just (generatedLog, newCurrentDungeon) ->
+                                    let newMessageLog = L.addMessages generatedLog (getMessageLog eh)
+                                    in eh { dungeons = modify (const newCurrentDungeon) dungeonsWithoutTheActor
+                                          , messageLog = newMessageLog
+                                          }
+                                Nothing -> eh
                            Nothing -> error "No such npc."
 
 getPlayerActor :: ExploringHandler -> Maybe Actor
