@@ -9,8 +9,8 @@ import           Dungeon.Item                   (name)
 import           Game.Config                    (Config)
 import           Game.Status.SelectingItemToUse (SelectingItemToUseHandler,
                                                  getItems, getSelectingIndex)
-import           Localization                   (getLocalizedText,
-                                                 multilingualText)
+import           Localization                   (getLocalizedText)
+import qualified Localization.Texts             as T
 import           Monomer                        (label, vstack)
 import           TextShow                       (TextShow (showt))
 import           UI.Draw.KeyEvent               (withKeyEvents)
@@ -24,4 +24,4 @@ drawSelectingItem sh c = withKeyEvents $ vstack labels
                                                 else showt idx <> " " <> x
                                                ) [0..] $ map (getLocalizedText c) itemNames
           itemNames = map (^. name) $ getItems sh
-          topLabel = getLocalizedText c $ multilingualText "Which Item do you use?" "どのアイテムを使う？"
+          topLabel = getLocalizedText c T.whichItemToUse

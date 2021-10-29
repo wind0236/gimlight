@@ -8,14 +8,12 @@ import           Coord                   (Coord)
 import           Dungeon.Actor           (Actor, monster)
 import           Dungeon.Actor.Status    (status)
 import           Dungeon.Actor.Status.Hp (hp)
-import           Localization            (multilingualText)
+import qualified Localization.Texts      as T
 
 orc :: Coord -> Actor
-orc c = monster c name st "images/orc.png"
+orc c = monster c T.orc st "images/orc.png"
     where st = status (hp 10) 0 3
-          name = multilingualText "Orc" "オーク"
 
 troll :: Coord -> Actor
-troll c = monster c name st "images/troll.png"
+troll c = monster c T.troll st "images/troll.png"
     where st = status (hp 16) 1 4
-          name = multilingualText "Troll" "トロール"

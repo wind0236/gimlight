@@ -14,11 +14,11 @@ import           Dungeon.Actor         (Actor, position)
 import           Dungeon.Actor.Actions (Action)
 import           Dungeon.Map.Tile      (walkable)
 import           Linear.V2             (V2 (V2))
-import           Localization          (multilingualText)
+import qualified Localization.Texts    as T
 
 moveAction :: V2 Int -> Action
 moveAction offset src d = if not (movable d (src ^. position + offset))
-                                then (([multilingualText "That way is blocked." "その方向には進めない．"], False), pushActor src d)
+                                then (([T.youCannotMoveThere], False), pushActor src d)
                                 else (([], True), pushActor (updatePosition d src offset) d)
 
 updatePosition :: Dungeon -> Actor -> V2 Int -> Actor

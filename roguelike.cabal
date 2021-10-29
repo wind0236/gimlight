@@ -51,6 +51,14 @@ executable roguelike
                       , Game.Status.SelectingItemToUse
                       , Game.Status.Talking
                       , Localization
+                      , Localization.Texts
+                      , Localization.Texts.Actions
+                      , Localization.Texts.Actors
+                      , Localization.Texts.Items
+                      , Localization.Texts.Scene
+                      , Localization.Texts.SelectingItem
+                      , Localization.Texts.Status
+                      , Localization.Texts.Title
                       , Log
                       , Save
                       , Scene

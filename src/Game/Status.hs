@@ -22,7 +22,7 @@ import           Game.Status.Scene              (SceneHandler, sceneHandler)
 import           Game.Status.SelectingItemToUse (SelectingItemToUseHandler)
 import           Game.Status.Talking            (TalkingHandler)
 import           Linear.V2                      (V2 (V2))
-import           Localization                   (multilingualText)
+import qualified Localization.Texts             as T
 import qualified Log                            as L
 import           Scene                          (gameStartScene)
 import           System.Random                  (getStdGen)
@@ -69,6 +69,6 @@ newGameStatus = do
         initExploring = exploringHandler
             initZipper $
             foldr (L.addMessage . L.message) L.emptyLog
-                [multilingualText "Welcome to a roguelike game!" "ローグライクゲームへようこそ！"]
+                [T.welcome]
 
     return $ HandlingScene $ sceneHandler gameStartScene initExploring

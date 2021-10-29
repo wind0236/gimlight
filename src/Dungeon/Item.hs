@@ -11,12 +11,13 @@ module Dungeon.Item
     , healAmount
     ) where
 
-import           Control.Lens (makeLenses)
-import           Coord        (Coord)
-import           Data.Binary  (Binary)
-import           Data.Text    (Text)
-import           GHC.Generics (Generic)
-import           Localization (MultilingualText, multilingualText)
+import           Control.Lens       (makeLenses)
+import           Coord              (Coord)
+import           Data.Binary        (Binary)
+import           Data.Text          (Text)
+import           GHC.Generics       (Generic)
+import           Localization       (MultilingualText)
+import qualified Localization.Texts as T
 
 data Item = Item
           { _name          :: MultilingualText
@@ -28,7 +29,7 @@ makeLenses ''Item
 instance Binary Item
 
 item :: Coord -> Text -> Int -> Item
-item p ip h = Item { _name = multilingualText "Herb" "薬草"
+item p ip h = Item { _name = T.herb
                    , _position = p
                    , _iconImagePath = ip
                    , _healAmount = h

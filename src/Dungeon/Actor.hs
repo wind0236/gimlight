@@ -38,7 +38,8 @@ import qualified Dungeon.Actor.Status    as S
 import           Dungeon.Actor.Status.Hp (hp)
 import           Dungeon.Item            (Item)
 import           GHC.Generics            (Generic)
-import           Localization            (MultilingualText, multilingualText)
+import           Localization            (MultilingualText)
+import qualified Localization.Texts      as T
 
 data ActorKind = Player | FriendlyNpc | Monster deriving (Show, Ord, Eq, Generic)
 instance Binary ActorKind
@@ -74,10 +75,8 @@ monster :: Coord -> MultilingualText -> Status -> Text -> Actor
 monster position' name' st walking = actor position' name' st Monster mempty walking "images/sample_standing_picture.png"
 
 player :: Coord -> Actor
-player c = actor c playerName st Player mempty "images/player.png" "images/sample_standing_picture.png"
+player c = actor c T.player st Player mempty "images/player.png" "images/sample_standing_picture.png"
     where st = S.status (hp 30) 2 5
-
-          playerName = multilingualText "Player" "プレイヤー"
 
 isPlayer :: Actor -> Bool
 isPlayer e = (e ^. actorKind) == Player

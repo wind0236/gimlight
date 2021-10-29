@@ -12,11 +12,12 @@ module Scene
     , text
     ) where
 
-import           Control.Lens (makeLenses)
-import           Data.Binary  (Binary)
-import           Data.Text    (Text)
-import           GHC.Generics (Generic)
-import           Localization (MultilingualText, multilingualText)
+import           Control.Lens       (makeLenses)
+import           Data.Binary        (Binary)
+import           Data.Text          (Text)
+import           GHC.Generics       (Generic)
+import           Localization       (MultilingualText)
+import qualified Localization.Texts as T
 
 newtype SceneElement = WithoutSpeaker MultilingualText deriving (Show, Eq, Ord, Generic)
 instance Binary SceneElement
@@ -39,6 +40,6 @@ gameStartScene = Scene
     { _backgroundImage = "images/game_opening.png"
     , _elements = xs
     }
-    where xs = [ withoutSpeaker $ multilingualText "This is the English text 1." "これは日本語テキスト1です．"
-               , withoutSpeaker $ multilingualText "And this is the English text 2." "そしてこれは日本語テキスト2です．"
+    where xs = [ withoutSpeaker T.title1
+               , withoutSpeaker T.title2
                ]
