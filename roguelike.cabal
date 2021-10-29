@@ -25,6 +25,7 @@ executable roguelike
                       , Dungeon.Actor.Inventory
                       , Dungeon.Actor.Monsters
                       , Dungeon.Actor.Status
+                      , Dungeon.Actor.Status.Hp
                       , Dungeon.Generate
                       , Dungeon.Generate.Room
                       , Dungeon.Init

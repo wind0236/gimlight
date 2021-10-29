@@ -11,40 +11,38 @@ module Dungeon.Actor.Status
     , getDefence
     ) where
 
-import           Data.Binary  (Binary)
-import           GHC.Generics (Generic)
+import           Data.Binary             (Binary)
+import           Dungeon.Actor.Status.Hp (Hp)
+import qualified Dungeon.Actor.Status.Hp as HP
+import           GHC.Generics            (Generic)
 
 data Status = Status
-            { hp      :: Int
-            , maxHp   :: Int
+            { hp      :: Hp
             , power   :: Int
             , defence :: Int
             } deriving (Show, Ord, Eq, Generic)
 
 instance Binary Status
 
-status :: Int -> Int -> Int -> Status
-status initHp = Status initHp initHp
+status :: Hp -> Int -> Int -> Status
+status = Status
 
 getHp :: Status -> Int
-getHp = hp
+getHp Status { hp = h }= HP.getHp h
 
 getMaxHp :: Status -> Int
-getMaxHp = maxHp
+getMaxHp Status { hp = h }= HP.getMaxHp h
 
 healHp :: Int -> Status -> Status
-healHp amount a = updateHp (getHp a + amount) a
+healHp amount a@Status { hp = h } =
+    a { hp = HP.healHp amount h }
 
 receiveDamage :: Int -> Status -> Status
-receiveDamage damage a = updateHp (getHp a - damage) a
+receiveDamage damage a@Status { hp = h } =
+    a { hp = HP.receiveDamage damage h }
 
 getPower :: Status -> Int
 getPower = power
 
 getDefence :: Status -> Int
 getDefence = defence
-
-updateHp :: Int -> Status -> Status
-updateHp newHp s
-    = s { hp = newHpInRange }
-    where newHpInRange = max 0 $ min (getMaxHp s) newHp

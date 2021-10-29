@@ -35,6 +35,7 @@ import           Dungeon.Actor.Inventory (Inventory, inventory)
 import qualified Dungeon.Actor.Inventory as I
 import           Dungeon.Actor.Status    (Status)
 import qualified Dungeon.Actor.Status    as S
+import qualified Dungeon.Actor.Status.Hp as HP
 import           Dungeon.Item            (Item)
 import           GHC.Generics            (Generic)
 import           Localization            (MultilingualText, multilingualText)
@@ -56,11 +57,12 @@ data Actor = Actor
 makeLenses ''Actor
 instance Binary Actor
 
-actor :: Coord -> MultilingualText -> Int -> Int -> Int -> ActorKind -> MultilingualText -> Text -> Text -> Actor
+actor :: Coord -> MultilingualText -> Int -> Int -> Int -> ActorKind -> MultilingualText -> Text -> Text -> Maybe Actor
 actor position' name' hp' defence' power' ak talkMessage' walkingImagePath' standingImagePath'=
+    fmap (\st' ->
         Actor { _position = position'
               , _name = name'
-              , _status = S.status hp' power' defence'
+              , _status = st'
               , _pathToDestination = []
               , _talkMessage = talkMessage'
               , _walkingImagePath = walkingImagePath'
@@ -68,13 +70,19 @@ actor position' name' hp' defence' power' ak talkMessage' walkingImagePath' stan
               , _actorKind = ak
               , _inventoryItems = inventory 5
               }
+    ) st
+    where st = (\x -> S.status x power' defence') <$> HP.hp hp'
 
-monster :: Coord -> MultilingualText -> Int -> Int -> Int -> Text -> Actor
+monster :: Coord -> MultilingualText -> Int -> Int -> Int -> Text -> Maybe Actor
 monster position' name' maxHp' defence' power' walking = actor position' name' maxHp' defence' power' Monster mempty walking "images/sample_standing_picture.png"
 
 player :: Coord -> Actor
-player c = actor c playerName 30 2 5 Player mempty "images/player.png" "images/sample_standing_picture.png"
-    where playerName = multilingualText "Player" "プレイヤー"
+player c = case p of
+               Just x  -> x
+               Nothing -> error "Failed to create the player actor."
+
+    where p = actor c playerName 30 2 5 Player mempty "images/player.png" "images/sample_standing_picture.png"
+          playerName = multilingualText "Player" "プレイヤー"
 
 isPlayer :: Actor -> Bool
 isPlayer e = (e ^. actorKind) == Player
