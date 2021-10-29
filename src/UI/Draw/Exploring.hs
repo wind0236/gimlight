@@ -4,92 +4,73 @@ module UI.Draw.Exploring
     ( drawExploring
     ) where
 
-import           Control.Lens                   ((&), (.~), (^.))
-import           Control.Monad                  (guard)
-import           Coord                          (Coord)
-import           Data.Array                     ((!))
-import           Data.Maybe                     (mapMaybe)
-import           Dungeon                        (Dungeon, actors, explored,
-                                                 items, mapWidthAndHeight,
-                                                 playerPosition, tileMap,
-                                                 visible)
-import           Dungeon.Actor                  (getDefence, getHp, getMaxHp,
-                                                 getPower, walkingImagePath)
-import qualified Dungeon.Actor                  as A
-import           Dungeon.Item                   (iconImagePath)
-import qualified Dungeon.Item                   as I
-import qualified Dungeon.Map.Tile               as MT
-import           Game                           (Game (Game, config, status))
-import           Game.Status                    (GameStatus (Exploring, HandlingScene, SelectingItemToUse, Talking))
-import           Game.Status.Exploring          (getCurrentDungeon,
-                                                 getMessageLog, getPlayerActor)
-import qualified Game.Status.Scene              as S
-import           Game.Status.SelectingItemToUse (finishSelecting)
-import qualified Game.Status.Talking            as T
-import           Linear.V2                      (V2 (V2), _x, _y)
-import           Localization                   (getLocalizedText,
-                                                 multilingualText)
-import           Monomer                        (CmbAlignLeft (alignLeft),
-                                                 CmbBgColor (bgColor),
-                                                 CmbHeight (height),
-                                                 CmbMultiline (multiline),
-                                                 CmbPaddingL (paddingL),
-                                                 CmbPaddingT (paddingT),
-                                                 CmbStyleBasic (styleBasic),
-                                                 CmbWidth (width), black, box_,
-                                                 filler, hgrid, hstack, image,
-                                                 label, label_, vgrid, vstack,
-                                                 zstack)
-import qualified Monomer.Lens                   as L
-import           TextShow                       (TextShow (showt))
-import           UI.Draw.Config                 (logRows, tileColumns,
-                                                 tileHeight, tileRows,
-                                                 tileWidth, windowWidth)
-import           UI.Draw.KeyEvent               (withKeyEvents)
-import           UI.Types                       (GameWidgetNode)
+import           Control.Lens          ((&), (.~), (^.))
+import           Control.Monad         (guard)
+import           Coord                 (Coord)
+import           Data.Array            ((!))
+import           Data.Maybe            (mapMaybe)
+import           Dungeon               (Dungeon, actors, explored, items,
+                                        mapWidthAndHeight, playerPosition,
+                                        tileMap, visible)
+import           Dungeon.Actor         (getDefence, getHp, getMaxHp, getPower,
+                                        walkingImagePath)
+import qualified Dungeon.Actor         as A
+import           Dungeon.Item          (iconImagePath)
+import qualified Dungeon.Item          as I
+import qualified Dungeon.Map.Tile      as MT
+import           Game.Config           (Config)
+import           Game.Status.Exploring (ExploringHandler, getCurrentDungeon,
+                                        getMessageLog, getPlayerActor)
+import           Linear.V2             (V2 (V2), _x, _y)
+import           Localization          (getLocalizedText, multilingualText)
+import           Monomer               (CmbAlignLeft (alignLeft),
+                                        CmbBgColor (bgColor),
+                                        CmbHeight (height),
+                                        CmbMultiline (multiline),
+                                        CmbPaddingL (paddingL),
+                                        CmbPaddingT (paddingT),
+                                        CmbStyleBasic (styleBasic),
+                                        CmbWidth (width), black, box_, filler,
+                                        hgrid, hstack, image, label, label_,
+                                        vgrid, vstack, zstack)
+import qualified Monomer.Lens          as L
+import           TextShow              (TextShow (showt))
+import           UI.Draw.Config        (logRows, tileColumns, tileHeight,
+                                        tileRows, tileWidth, windowWidth)
+import           UI.Draw.KeyEvent      (withKeyEvents)
+import           UI.Types              (GameWidgetNode)
 
-drawExploring :: Game -> GameWidgetNode
-drawExploring gs = withKeyEvents $ vstack [ statusAndMapGrid
-                                        , messageLogArea gs
-                                        ]
-    where statusAndMapGrid = hstack [ mapGrid gs
-                                    , statusGrid gs `styleBasic` [width $ fromIntegral $ windowWidth - tileWidth * tileColumns]
+drawExploring :: ExploringHandler -> Config -> GameWidgetNode
+drawExploring eh c = withKeyEvents $ vstack [ statusAndMapGrid
+                                            , messageLogArea eh c
+                                            ]
+    where statusAndMapGrid = hstack [ mapGrid eh
+                                    , statusGrid eh c `styleBasic` [width $ fromIntegral $ windowWidth - tileWidth * tileColumns]
                                     ]
 
-messageLogArea :: Game -> GameWidgetNode
-messageLogArea Game { status = s, config = c } =
-    vstack $ fmap (\x -> label_ (getLocalizedText c x) [multiline] ) $ take logRows $ ls s
-    where ls st = case st of
-                   Exploring eh     -> getMessageLog eh
-                   Talking th       -> getMessageLog $ snd $ T.destructHandler th
-                   HandlingScene sh -> getMessageLog $ snd $ S.destructHandler sh
-                   _                -> error "unable to print logs."
+messageLogArea :: ExploringHandler -> Config -> GameWidgetNode
+messageLogArea eh c =
+    vstack $ fmap (\x -> label_ (getLocalizedText c x) [multiline] ) $ take logRows $ getMessageLog eh
 
-mapGrid :: Game -> GameWidgetNode
-mapGrid gs = zstack (mapTiles gs:(mapItems gs ++ mapActors gs))
+mapGrid :: ExploringHandler -> GameWidgetNode
+mapGrid eh = zstack (mapTiles eh:(mapItems eh ++ mapActors eh))
     `styleBasic` [ width $ fromIntegral mapDrawingWidth
                  , height $ fromIntegral mapDrawingHeight
                  ]
 
-statusGrid :: Game -> GameWidgetNode
-statusGrid Game { status = s, config = c } = vstack $ maybe []
+statusGrid :: ExploringHandler -> Config -> GameWidgetNode
+statusGrid eh c = vstack $ maybe []
     (\x -> [ label "Player"
            , label $ "HP: " <> showt (getHp x) <> " / " <> showt (getMaxHp x)
            , label $ atk <> showt (getPower x)
            , label $ def <> showt (getDefence x)
-           ]) $ player s
+           ]) $ getPlayerActor eh
     where atk = getLocalizedText c $ multilingualText "ATK: " "攻撃: "
           def = getLocalizedText c $ multilingualText "DEF: " "防御: "
-          player st = case st of
-                       Exploring eh -> getPlayerActor eh
-                       Talking th   -> getPlayerActor $ snd $ T.destructHandler th
-                       HandlingScene sh -> getPlayerActor $ snd $ S.destructHandler sh
-                       SelectingItemToUse i -> player $ Exploring $ finishSelecting i
-                       _ -> error "No player entity."
 
-mapTiles :: Game ->  GameWidgetNode
-mapTiles Game { status = s } = box_ [alignLeft] $ vgrid rows `styleBasic` styles
-    where d = getCurrentDungeon $ eh s
+mapTiles :: ExploringHandler -> GameWidgetNode
+mapTiles eh = box_ [alignLeft] $ vgrid rows `styleBasic` styles
+    where d = getCurrentDungeon eh
           V2 bottomLeftX bottomLeftY = bottomLeftCoord d
           rows = [hgrid $ row y | y <- [bottomLeftY + tileRows - 1, bottomLeftY + tileRows - 2 .. bottomLeftY]]
           row y = [cell $ V2 x y | x <- [bottomLeftX .. bottomLeftX + tileColumns - 1]]
@@ -107,34 +88,24 @@ mapTiles Game { status = s } = box_ [alignLeft] $ vgrid rows `styleBasic` styles
 
           styles = [ width $ fromIntegral mapDrawingWidth
                    , height $ fromIntegral mapDrawingHeight]
-          eh st = case st of
-                      Exploring e      -> e
-                      Talking th       -> snd $ T.destructHandler th
-                      HandlingScene sh -> snd $ S.destructHandler sh
-                      _                -> error "unreachable."
 
-mapItems :: Game -> [GameWidgetNode]
-mapItems Game { status = s } = mapMaybe itemToImage $ d ^. items
+mapItems :: ExploringHandler -> [GameWidgetNode]
+mapItems eh = mapMaybe itemToImage $ d ^. items
     where itemToImage item = guard (isItemDrawed item) >> return (image (item ^. iconImagePath) `styleBasic` style item)
           isItemDrawed item = let pos = itemPositionOnDisplay item
                                   isVisible = (d ^. visible) ! (item ^. I.position)
                                 in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
-          d = getCurrentDungeon $ eh s
+          d = getCurrentDungeon eh
           leftPadding item = fromIntegral $ itemPositionOnDisplay item ^. _x * tileWidth
           topPadding item = fromIntegral $ mapDrawingHeight - (itemPositionOnDisplay item ^. _y + 1) * tileHeight
 
           style item = [paddingL $ leftPadding item, paddingT $ topPadding item]
 
           itemPositionOnDisplay item = item ^. I.position - bottomLeftCoord d
-          eh st = case st of
-                      Exploring e      -> e
-                      Talking th       -> snd $ T.destructHandler th
-                      HandlingScene sh -> snd $ S.destructHandler sh
-                      _                -> error "unreachable."
 
-mapActors :: Game -> [GameWidgetNode]
-mapActors Game { status = s } = mapMaybe actorToImage $ d ^. actors
-    where d = getCurrentDungeon $ eh s
+mapActors :: ExploringHandler -> [GameWidgetNode]
+mapActors eh = mapMaybe actorToImage $ d ^. actors
+    where d = getCurrentDungeon eh
           leftPadding actor = fromIntegral $ actorPositionOnDisplay actor ^. _x * tileWidth
           topPadding actor = fromIntegral $ mapDrawingHeight - (actorPositionOnDisplay actor ^. _y + 1) * tileHeight
 
@@ -147,11 +118,6 @@ mapActors Game { status = s } = mapMaybe actorToImage $ d ^. actors
                                 in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
 
           actorToImage actor = guard (isActorDrawed actor) >> return (image (actor ^. walkingImagePath) `styleBasic` style actor)
-          eh st = case st of
-                      Exploring e      -> e
-                      Talking th       -> snd $ T.destructHandler th
-                      HandlingScene sh -> snd $ S.destructHandler sh
-                      _                -> error "unreachable."
 
 bottomLeftCoord :: Dungeon -> Coord
 bottomLeftCoord d = V2 x y

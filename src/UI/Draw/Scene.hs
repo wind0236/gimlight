@@ -3,9 +3,8 @@ module UI.Draw.Scene
     ) where
 
 import           Control.Lens      ((^.))
-import           Game              (Game (Game, config, status))
-import           Game.Status       (GameStatus (HandlingScene))
-import           Game.Status.Scene (destructHandler)
+import           Game.Config       (Config)
+import           Game.Status.Scene (SceneHandler, destructHandler)
 import           Localization      (getLocalizedText)
 import           Monomer           (CmbMultiline (multiline),
                                     CmbStyleBasic (styleBasic),
@@ -15,10 +14,9 @@ import           Scene             (backgroundImage, elements, text)
 import           UI.Draw.KeyEvent  (withKeyEvents)
 import           UI.Types          (GameWidgetNode)
 
-drawScene :: Game -> GameWidgetNode
-drawScene Game { status = HandlingScene sh, config = c } =
+drawScene :: SceneHandler -> Config -> GameWidgetNode
+drawScene sh c =
     withKeyEvents $ zstack [ image (s ^. backgroundImage)
                            , label_  (getLocalizedText c $ text $ head $ s ^. elements) [multiline] `styleBasic` [textColor black]
                            ]
     where (s, _) = destructHandler sh
-drawScene _ = error "We are not handling a scene."
