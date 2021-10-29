@@ -5,6 +5,7 @@ module Dungeon.Actor.Actions.Move
     ) where
 
 import           Control.Lens          ((&), (.~), (^.))
+import           Control.Monad.Writer  (tell)
 import           Coord                 (Coord)
 import           Data.Array            ((!))
 import           Data.Maybe            (isNothing)
@@ -18,8 +19,10 @@ import qualified Localization.Texts    as T
 
 moveAction :: V2 Int -> Action
 moveAction offset src d = if not (movable d (src ^. position + offset))
-                                then (([T.youCannotMoveThere], False), pushActor src d)
-                                else (([], True), pushActor (updatePosition d src offset) d)
+                                then do
+                                    tell [T.youCannotMoveThere]
+                                    return (False, pushActor src d)
+                                else return (True, pushActor (updatePosition d src offset) d)
 
 updatePosition :: Dungeon -> Actor -> V2 Int -> Actor
 updatePosition d src offset

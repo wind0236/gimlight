@@ -3,6 +3,7 @@ module Dungeon.Actor.Actions.PickUp
     ) where
 
 import           Control.Lens            ((&), (.~), (^.))
+import           Control.Monad.Writer    (tell)
 import           Dungeon                 (popItemAt, pushActor, pushItem)
 import           Dungeon.Actor           (inventoryItems, position)
 import           Dungeon.Actor.Actions   (Action)
@@ -15,12 +16,13 @@ pickUpAction e d =
     case item of
         Just x ->
             case addItem x (e ^. inventoryItems) of
-                Just xs ->
-                    (
-                        ([T.youGotItem $ x ^. name], True),
-                        pushActor (e & inventoryItems .~ xs) dungeonAfterPickingUp
-                    )
-                Nothing ->
-                    (([T.bagIsFull], False), pushItem x $ pushActor e dungeonAfterPickingUp)
-        Nothing -> (([T.youGotNohing], False), pushActor e dungeonAfterPickingUp)
+                Just xs -> do
+                    tell [T.youGotItem $ x ^. name]
+                    return (True, pushActor (e & inventoryItems .~ xs) dungeonAfterPickingUp)
+                Nothing -> do
+                    tell [T.bagIsFull]
+                    return (False, pushItem x $ pushActor e dungeonAfterPickingUp)
+        Nothing -> do
+            tell [T.youGotNohing]
+            return (False, pushActor e dungeonAfterPickingUp)
     where (item, dungeonAfterPickingUp) = popItemAt (e ^. position) d

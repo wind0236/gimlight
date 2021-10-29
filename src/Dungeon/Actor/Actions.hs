@@ -1,9 +1,12 @@
 module Dungeon.Actor.Actions
     ( Action
+    , ActionResult
     ) where
 
 import           Dungeon       (Dungeon)
 import           Dungeon.Actor (Actor)
-import           Log           (MessageLog)
+import           Log           (MessageWriter)
 
-type Action = Actor -> Dungeon -> ((MessageLog, Bool), Dungeon)
+type Action = Actor -> Dungeon -> ActionResult
+
+type ActionResult = MessageWriter (Bool, Dungeon)

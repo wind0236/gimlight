@@ -5,16 +5,20 @@ module Log
     , emptyLog
     , Message
     , message
+    , MessageWriter
     , addMessage
     , addMaybeMessage
     , addMessages
     ) where
 
-import           Localization (MultilingualText)
+import           Control.Monad.Trans.Writer (Writer)
+import           Localization               (MultilingualText)
 
 type Message = MultilingualText
 
 type MessageLog = [Message]
+
+type MessageWriter a = Writer MessageLog a
 
 emptyLog :: MessageLog
 emptyLog = []

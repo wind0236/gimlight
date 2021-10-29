@@ -5,6 +5,7 @@ module Dungeon.Actor.Behavior
     ) where
 
 import           Control.Lens                ((&), (.~), (^.))
+import           Control.Monad.Trans.Writer  (runWriter)
 import           Data.Maybe                  (fromMaybe)
 import           Dungeon                     (Dungeon, getPlayerActor)
 import           Dungeon.Actor               (Actor, pathToDestination,
@@ -19,7 +20,7 @@ import           Log                         (MessageLog)
 
 npcAction :: Actor -> Dungeon -> Maybe (MessageLog, Dungeon)
 npcAction e d = if isSuccess then Just (l, updatedDungeon) else Nothing
-    where ((l, isSuccess), updatedDungeon) = action entityAfterUpdatingPath d
+    where ((isSuccess, updatedDungeon), l) = runWriter $ action entityAfterUpdatingPath d
           entityAfterUpdatingPath = updatePath e d
           action = selectAction entityAfterUpdatingPath d
 

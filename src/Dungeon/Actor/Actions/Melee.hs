@@ -5,13 +5,14 @@ module Dungeon.Actor.Actions.Melee
     ) where
 
 import           Control.Lens          ((^.))
+import           Control.Monad.Writer  (tell)
 import           Dungeon               (Dungeon, popActorAt, pushActor)
 import           Dungeon.Actor         (Actor, getDefence, getHp, getPower,
                                         name, position, receiveDamage)
-import           Dungeon.Actor.Actions (Action)
+import           Dungeon.Actor.Actions (Action, ActionResult)
 import           Linear.V2             (V2)
 import qualified Localization.Texts    as T
-import           Log                   (MessageLog, message)
+import           Log                   (message)
 
 meleeAction :: V2 Int -> Action
 meleeAction offset src dungeon =
@@ -21,10 +22,10 @@ meleeAction offset src dungeon =
 
           result =
             case target of
-                Nothing       -> (([], False), pushActor src dungeon)
+                Nothing       -> return (False, pushActor src dungeon)
                 Just defender -> attackFromTo src defender dungeonWithoutTarget
 
-attackFromTo :: Actor -> Actor -> Dungeon -> ((MessageLog, Bool), Dungeon)
+attackFromTo :: Actor -> Actor -> Dungeon -> ActionResult
 attackFromTo attacker defender dungeonWithoutTarget =
   let damage = getPower attacker - getDefence defender
   in if damage > 0
@@ -36,5 +37,9 @@ attackFromTo attacker defender dungeonWithoutTarget =
                                   then pushActor attacker . pushActor newDefender
                                   else pushActor attacker
                  dungeonAfterAttack = actorHandler dungeonWithoutTarget
-             in ((map message messages, True), dungeonAfterAttack)
-          else (([message $ T.noDamageMessage (attacker ^. name) (defender ^. name)], True), pushActor attacker $ pushActor defender dungeonWithoutTarget)
+             in do
+                 tell $ map message messages
+                 return (True, dungeonAfterAttack)
+          else do
+              tell [message $ T.noDamageMessage (attacker ^. name) (defender ^. name)]
+              return (True, pushActor attacker $ pushActor defender dungeonWithoutTarget)

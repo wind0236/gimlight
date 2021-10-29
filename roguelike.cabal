@@ -87,6 +87,7 @@ executable roguelike
                       , lens >= 5.0.1 && < 6
                       , linear >= 1.21.7 && < 2
                       , monomer >= 1.1.1 && < 2
+                      , mtl >= 2.2.2 && < 3
                       , random >= 1.2.1 && < 2
                       , split >= 0.2.3 && < 1
                       , text >= 1.2.4 && < 2
