@@ -35,7 +35,7 @@ import           Dungeon.Actor.Inventory (Inventory, inventory)
 import qualified Dungeon.Actor.Inventory as I
 import           Dungeon.Actor.Status    (Status)
 import qualified Dungeon.Actor.Status    as S
-import qualified Dungeon.Actor.Status.Hp as HP
+import           Dungeon.Actor.Status.Hp (hp)
 import           Dungeon.Item            (Item)
 import           GHC.Generics            (Generic)
 import           Localization            (MultilingualText, multilingualText)
@@ -57,31 +57,30 @@ data Actor = Actor
 makeLenses ''Actor
 instance Binary Actor
 
-actor :: Coord -> MultilingualText -> Int -> Int -> Int -> ActorKind -> MultilingualText -> Text -> Text -> Maybe Actor
-actor position' name' hp' defence' power' ak talkMessage' walkingImagePath' standingImagePath'=
-    fmap (\st' ->
-        Actor { _position = position'
-              , _name = name'
-              , _status = st'
-              , _pathToDestination = []
-              , _talkMessage = talkMessage'
-              , _walkingImagePath = walkingImagePath'
-              , _standingImagePath = standingImagePath'
-              , _actorKind = ak
-              , _inventoryItems = inventory 5
-              }
-    ) st
-    where st = (\x -> S.status x power' defence') <$> HP.hp hp'
+actor :: Coord -> MultilingualText -> Status -> ActorKind -> MultilingualText -> Text -> Text -> Actor
+actor position' name' st ak talkMessage' walkingImagePath' standingImagePath'=
+    Actor { _position = position'
+          , _name = name'
+          , _status = st
+          , _pathToDestination = []
+          , _talkMessage = talkMessage'
+          , _walkingImagePath = walkingImagePath'
+          , _standingImagePath = standingImagePath'
+          , _actorKind = ak
+          , _inventoryItems = inventory 5
+          }
 
-monster :: Coord -> MultilingualText -> Int -> Int -> Int -> Text -> Maybe Actor
-monster position' name' maxHp' defence' power' walking = actor position' name' maxHp' defence' power' Monster mempty walking "images/sample_standing_picture.png"
+monster :: Coord -> MultilingualText -> Status -> Text -> Actor
+monster position' name' st walking = actor position' name' st Monster mempty walking "images/sample_standing_picture.png"
 
 player :: Coord -> Actor
-player c = case p of
-               Just x  -> x
-               Nothing -> error "Failed to create the player actor."
+player c = actor c playerName st Player mempty "images/player.png" "images/sample_standing_picture.png"
+    where st = S.status h 2 5
 
-    where p = actor c playerName 30 2 5 Player mempty "images/player.png" "images/sample_standing_picture.png"
+          h = case hp 30 of
+                  Just x  -> x
+                  Nothing -> error "Unreachable as the value is positive."
+
           playerName = multilingualText "Player" "プレイヤー"
 
 isPlayer :: Actor -> Bool

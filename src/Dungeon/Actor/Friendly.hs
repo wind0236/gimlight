@@ -4,19 +4,21 @@ module Dungeon.Actor.Friendly
     ( electria
     ) where
 
-import           Coord         (Coord)
-import           Data.Text     (Text)
-import           Dungeon.Actor (Actor, ActorKind (FriendlyNpc), actor)
-import           Localization  (MultilingualText, multilingualText)
+import           Coord                   (Coord)
+import           Data.Text               (Text)
+import           Dungeon.Actor           (Actor, ActorKind (FriendlyNpc), actor)
+import           Dungeon.Actor.Status    (Status, status)
+import           Dungeon.Actor.Status.Hp (hp)
+import           Localization            (MultilingualText, multilingualText)
 
 electria :: Coord -> Actor
-electria position = case f of
-                        Just x  -> x
-                        Nothing -> error "Failed to create the Electria actor."
-
-    where f = friendly position name 1 1 1 talking "images/electria.png" "images/sample_standing_picture.png"
+electria position = friendly position name st talking "images/electria.png" "images/sample_standing_picture.png"
+    where st = status h 1 1
+          h = case hp 1 of
+                  Just x  -> x
+                  Nothing -> error "Unreachable as the value is positive."
           name = multilingualText "Electria" "エレクトリア"
           talking = multilingualText "Talking test." "会話テスト"
 
-friendly :: Coord -> MultilingualText -> Int -> Int -> Int -> MultilingualText -> Text -> Text -> Maybe Actor
-friendly position name maxHp defence power = actor position name maxHp defence power FriendlyNpc
+friendly :: Coord -> MultilingualText -> Status -> MultilingualText -> Text -> Text -> Actor
+friendly position name st = actor position name st FriendlyNpc
