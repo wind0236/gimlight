@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Game.Status.SelectingItemToUse
+module GameModel.Status.SelectingItemToUse
     ( SelectingItemToUseHandler
     , selectingItemToUseHandler
     , getItems
@@ -10,10 +10,10 @@ module Game.Status.SelectingItemToUse
     , finishSelecting
     ) where
 
-import           Data.Binary           (Binary)
-import           Dungeon.Item          (Item)
-import           GHC.Generics          (Generic)
-import           Game.Status.Exploring (ExploringHandler)
+import           Data.Binary                (Binary)
+import           Dungeon.Item               (Item)
+import           GHC.Generics               (Generic)
+import           GameModel.Status.Exploring (ExploringHandler)
 
 data SelectingItemToUseHandler = SelectingItemToUseHandler
                                { items          :: [Item]

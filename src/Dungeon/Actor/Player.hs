@@ -6,31 +6,32 @@ module Dungeon.Actor.Player
     , handlePlayerConsumeItem
     ) where
 
-import           Control.Lens                   ((^.))
-import           Data.Bifunctor                 (Bifunctor (second))
-import           Dungeon                        (isTown)
-import           Dungeon.Actor                  (Actor, isMonster, talkMessage)
-import qualified Dungeon.Actor                  as A
-import           Dungeon.Actor.Actions.Consume  (consumeAction)
-import           Dungeon.Actor.Actions.Melee    (meleeAction)
-import           Dungeon.Actor.Actions.Move     (moveAction)
-import           Dungeon.Actor.Actions.PickUp   (pickUpAction)
-import           Game.Status                    (GameStatus (Exploring, GameOver, SelectingItemToUse, Talking))
-import           Game.Status.Exploring          (ExploringHandler, actorAt,
-                                                 completeThisTurn,
-                                                 doPlayerAction,
-                                                 getCurrentDungeon,
-                                                 getPlayerActor,
-                                                 getPlayerPosition,
-                                                 isPositionInDungeon)
-import qualified Game.Status.Exploring          as GSE
-import           Game.Status.SelectingItemToUse (SelectingItemToUseHandler,
-                                                 finishSelecting,
-                                                 getSelectingIndex,
-                                                 selectingItemToUseHandler)
-import           Game.Status.Talking            (talkingHandler)
-import           Linear.V2                      (V2)
-import           Talking                        (talkWith)
+import           Control.Lens                        ((^.))
+import           Data.Bifunctor                      (Bifunctor (second))
+import           Dungeon                             (isTown)
+import           Dungeon.Actor                       (Actor, isMonster,
+                                                      talkMessage)
+import qualified Dungeon.Actor                       as A
+import           Dungeon.Actor.Actions.Consume       (consumeAction)
+import           Dungeon.Actor.Actions.Melee         (meleeAction)
+import           Dungeon.Actor.Actions.Move          (moveAction)
+import           Dungeon.Actor.Actions.PickUp        (pickUpAction)
+import           GameModel.Status                    (GameStatus (Exploring, GameOver, SelectingItemToUse, Talking))
+import           GameModel.Status.Exploring          (ExploringHandler, actorAt,
+                                                      completeThisTurn,
+                                                      doPlayerAction,
+                                                      getCurrentDungeon,
+                                                      getPlayerActor,
+                                                      getPlayerPosition,
+                                                      isPositionInDungeon)
+import qualified GameModel.Status.Exploring          as GSE
+import           GameModel.Status.SelectingItemToUse (SelectingItemToUseHandler,
+                                                      finishSelecting,
+                                                      getSelectingIndex,
+                                                      selectingItemToUseHandler)
+import           GameModel.Status.Talking            (talkingHandler)
+import           Linear.V2                           (V2)
+import           Talking                             (talkWith)
 
 playerBumpAction :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 playerBumpAction offset eh =

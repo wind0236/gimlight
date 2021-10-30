@@ -4,22 +4,23 @@ module UI.Draw.Talking
     ( drawTalking
     ) where
 
-import           Control.Lens        ((&), (.~), (^.))
-import           Dungeon.Actor       (standingImagePath)
-import           Game.Config         (Config)
-import           Game.Status.Talking (TalkingHandler, destructHandler)
-import           Localization        (getLocalizedText)
-import           Monomer             (CmbBgColor (bgColor),
-                                      CmbPaddingL (paddingL),
-                                      CmbStyleBasic (styleBasic),
-                                      CmbTextColor (textColor),
-                                      CmbTextSize (textSize), black, filler,
-                                      gray, hstack, image, label, red, zstack)
-import qualified Monomer.Lens        as L
-import           Talking             (TalkWith, message, person)
-import           UI.Draw.Exploring   (drawExploring)
-import           UI.Draw.KeyEvent    (withKeyEvents)
-import           UI.Types            (GameWidgetNode)
+import           Control.Lens             ((&), (.~), (^.))
+import           Dungeon.Actor            (standingImagePath)
+import           GameModel.Config         (Config)
+import           GameModel.Status.Talking (TalkingHandler, destructHandler)
+import           Localization             (getLocalizedText)
+import           Monomer                  (CmbBgColor (bgColor),
+                                           CmbPaddingL (paddingL),
+                                           CmbStyleBasic (styleBasic),
+                                           CmbTextColor (textColor),
+                                           CmbTextSize (textSize), black,
+                                           filler, gray, hstack, image, label,
+                                           red, zstack)
+import qualified Monomer.Lens             as L
+import           Talking                  (TalkWith, message, person)
+import           UI.Draw.Exploring        (drawExploring)
+import           UI.Draw.KeyEvent         (withKeyEvents)
+import           UI.Types                 (GameWidgetNode)
 
 drawTalking :: TalkingHandler -> Config -> GameWidgetNode
 drawTalking th c =

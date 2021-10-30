@@ -6,10 +6,11 @@ module Localization
     , multilingualText
     , getLocalizedText
     ) where
-import           Data.Binary  (Binary)
-import           Data.Text    (Text, append)
-import           GHC.Generics (Generic)
-import           Game.Config  (Config, Language (English, Japanese), getLocale)
+import           Data.Binary      (Binary)
+import           Data.Text        (Text, append)
+import           GHC.Generics     (Generic)
+import           GameModel.Config (Config, Language (English, Japanese),
+                                   getLocale)
 
 data MultilingualText = MultilingualText
                       { en :: Text

@@ -2,17 +2,17 @@ module UI.Draw.Scene
     ( drawScene
     ) where
 
-import           Control.Lens      ((^.))
-import           Game.Config       (Config)
-import           Game.Status.Scene (SceneHandler, destructHandler)
-import           Localization      (getLocalizedText)
-import           Monomer           (CmbMultiline (multiline),
-                                    CmbStyleBasic (styleBasic),
-                                    CmbTextColor (textColor), black, image,
-                                    label_, zstack)
-import           Scene             (backgroundImage, elements, text)
-import           UI.Draw.KeyEvent  (withKeyEvents)
-import           UI.Types          (GameWidgetNode)
+import           Control.Lens           ((^.))
+import           GameModel.Config       (Config)
+import           GameModel.Status.Scene (SceneHandler, destructHandler)
+import           Localization           (getLocalizedText)
+import           Monomer                (CmbMultiline (multiline),
+                                         CmbStyleBasic (styleBasic),
+                                         CmbTextColor (textColor), black, image,
+                                         label_, zstack)
+import           Scene                  (backgroundImage, elements, text)
+import           UI.Draw.KeyEvent       (withKeyEvents)
+import           UI.Types               (GameWidgetNode)
 
 drawScene :: SceneHandler -> Config -> GameWidgetNode
 drawScene sh c =

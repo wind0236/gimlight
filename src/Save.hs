@@ -3,8 +3,8 @@ module Save
     , load
     ) where
 
-import           Data.Binary (decodeFile, encodeFile)
-import           Game.Status (GameStatus)
+import           Data.Binary      (decodeFile, encodeFile)
+import           GameModel.Status (GameStatus)
 
 save :: GameStatus -> IO ()
 save = encodeFile saveFile

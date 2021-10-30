@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Game.Status.Exploring
+module GameModel.Status.Exploring
     ( ExploringHandler
     , exploringHandler
     , ascendStairsAtPlayerPosition
@@ -17,22 +17,23 @@ module Game.Status.Exploring
     , getMessageLog
     ) where
 
-import           Control.Lens                   ((^.))
-import           Control.Monad.Trans.Maybe      (MaybeT (runMaybeT))
-import           Control.Monad.Trans.Writer     (runWriter)
-import           Coord                          (Coord)
-import           Data.Binary                    (Binary)
-import           Dungeon                        (Dungeon, npcs)
-import qualified Dungeon                        as D
-import           Dungeon.Actor                  (Actor, position)
-import           Dungeon.Actor.Actions          (Action)
-import           Dungeon.Turn                   (Status (PlayerKilled))
-import           GHC.Generics                   (Generic)
-import           Game.Status.Exploring.Dungeons (Dungeons)
-import qualified Game.Status.Exploring.Dungeons as DS
-import           Log                            (Message, MessageLog)
-import qualified Log                            as L
-import           TreeZipper                     (TreeZipper, getFocused, modify)
+import           Control.Lens                        ((^.))
+import           Control.Monad.Trans.Maybe           (MaybeT (runMaybeT))
+import           Control.Monad.Trans.Writer          (runWriter)
+import           Coord                               (Coord)
+import           Data.Binary                         (Binary)
+import           Dungeon                             (Dungeon, npcs)
+import qualified Dungeon                             as D
+import           Dungeon.Actor                       (Actor, position)
+import           Dungeon.Actor.Actions               (Action)
+import           Dungeon.Turn                        (Status (PlayerKilled))
+import           GHC.Generics                        (Generic)
+import           GameModel.Status.Exploring.Dungeons (Dungeons)
+import qualified GameModel.Status.Exploring.Dungeons as DS
+import           Log                                 (Message, MessageLog)
+import qualified Log                                 as L
+import           TreeZipper                          (TreeZipper, getFocused,
+                                                      modify)
 
 data ExploringHandler = ExploringHandler
                       { dungeons   :: Dungeons

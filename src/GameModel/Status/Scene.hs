@@ -1,15 +1,15 @@
 {-# LANGUAGE DeriveGeneric #-}
-module Game.Status.Scene
+module GameModel.Status.Scene
     ( SceneHandler
     , sceneHandler
     , destructHandler
     , nextSceneOrFinish
     ) where
-import           Control.Lens          ((%~), (&), (^.))
-import           Data.Binary           (Binary)
-import           GHC.Generics          (Generic)
-import           Game.Status.Exploring (ExploringHandler)
-import           Scene                 (Scene, elements)
+import           Control.Lens               ((%~), (&), (^.))
+import           Data.Binary                (Binary)
+import           GHC.Generics               (Generic)
+import           GameModel.Status.Exploring (ExploringHandler)
+import           Scene                      (Scene, elements)
 
 data SceneHandler = SceneHandler
                   { scene      :: Scene

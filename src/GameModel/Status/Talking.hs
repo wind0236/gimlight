@@ -1,16 +1,16 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Game.Status.Talking
+module GameModel.Status.Talking
     ( TalkingHandler
     , talkingHandler
     , destructHandler
     , finishTalking
     ) where
 
-import           Data.Binary           (Binary)
-import           GHC.Generics          (Generic)
-import           Game.Status.Exploring (ExploringHandler)
-import           Talking               (TalkWith)
+import           Data.Binary                (Binary)
+import           GHC.Generics               (Generic)
+import           GameModel.Status.Exploring (ExploringHandler)
+import           Talking                    (TalkWith)
 
 data TalkingHandler = TalkingHandler
                     { talk         :: TalkWith

@@ -43,14 +43,14 @@ executable roguelike
                       , Dungeon.Size
                       , Dungeon.Stairs
                       , Dungeon.Turn
-                      , Game
-                      , Game.Config
-                      , Game.Status
-                      , Game.Status.Exploring
-                      , Game.Status.Exploring.Dungeons
-                      , Game.Status.Scene
-                      , Game.Status.SelectingItemToUse
-                      , Game.Status.Talking
+                      , GameModel
+                      , GameModel.Config
+                      , GameModel.Status
+                      , GameModel.Status.Exploring
+                      , GameModel.Status.Exploring.Dungeons
+                      , GameModel.Status.Scene
+                      , GameModel.Status.SelectingItemToUse
+                      , GameModel.Status.Talking
                       , Localization
                       , Localization.Texts
                       , Localization.Texts.Actions

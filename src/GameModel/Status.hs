@@ -2,32 +2,33 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Game.Status
+module GameModel.Status
     ( GameStatus(..)
     , newGameStatus
     ) where
 
-import           Data.Binary                    (Binary)
-import           Data.Tree                      (Tree (Node, rootLabel, subForest))
-import           Dungeon                        (addAscendingAndDescendingStiars,
-                                                 addDescendingStairs)
-import           Dungeon.Init                   (initDungeon)
-import           Dungeon.Predefined.BatsCave    (batsDungeon)
-import           Dungeon.Predefined.GlobalMap   (globalMap)
-import           Dungeon.Stairs                 (StairsPair (StairsPair))
-import           GHC.Generics                   (Generic)
-import           Game.Status.Exploring          (ExploringHandler,
-                                                 exploringHandler)
-import           Game.Status.Scene              (SceneHandler, sceneHandler)
-import           Game.Status.SelectingItemToUse (SelectingItemToUseHandler)
-import           Game.Status.Talking            (TalkingHandler)
-import           Linear.V2                      (V2 (V2))
-import qualified Localization.Texts             as T
-import qualified Log                            as L
-import           Scene                          (gameStartScene)
-import           System.Random                  (getStdGen)
-import           TreeZipper                     (appendTree, goDownBy,
-                                                 treeZipper)
+import           Data.Binary                         (Binary)
+import           Data.Tree                           (Tree (Node, rootLabel, subForest))
+import           Dungeon                             (addAscendingAndDescendingStiars,
+                                                      addDescendingStairs)
+import           Dungeon.Init                        (initDungeon)
+import           Dungeon.Predefined.BatsCave         (batsDungeon)
+import           Dungeon.Predefined.GlobalMap        (globalMap)
+import           Dungeon.Stairs                      (StairsPair (StairsPair))
+import           GHC.Generics                        (Generic)
+import           GameModel.Status.Exploring          (ExploringHandler,
+                                                      exploringHandler)
+import           GameModel.Status.Scene              (SceneHandler,
+                                                      sceneHandler)
+import           GameModel.Status.SelectingItemToUse (SelectingItemToUseHandler)
+import           GameModel.Status.Talking            (TalkingHandler)
+import           Linear.V2                           (V2 (V2))
+import qualified Localization.Texts                  as T
+import qualified Log                                 as L
+import           Scene                               (gameStartScene)
+import           System.Random                       (getStdGen)
+import           TreeZipper                          (appendTree, goDownBy,
+                                                      treeZipper)
 
 data GameStatus = Exploring ExploringHandler
                 | Talking TalkingHandler

@@ -4,17 +4,18 @@ module UI.Draw.SelectingItem
     ( drawSelectingItem
     ) where
 
-import           Control.Lens                   ((^.))
-import           Dungeon.Item                   (name)
-import           Game.Config                    (Config)
-import           Game.Status.SelectingItemToUse (SelectingItemToUseHandler,
-                                                 getItems, getSelectingIndex)
-import           Localization                   (getLocalizedText)
-import qualified Localization.Texts             as T
-import           Monomer                        (label, vstack)
-import           TextShow                       (TextShow (showt))
-import           UI.Draw.KeyEvent               (withKeyEvents)
-import           UI.Types                       (GameWidgetNode)
+import           Control.Lens                        ((^.))
+import           Dungeon.Item                        (name)
+import           GameModel.Config                    (Config)
+import           GameModel.Status.SelectingItemToUse (SelectingItemToUseHandler,
+                                                      getItems,
+                                                      getSelectingIndex)
+import           Localization                        (getLocalizedText)
+import qualified Localization.Texts                  as T
+import           Monomer                             (label, vstack)
+import           TextShow                            (TextShow (showt))
+import           UI.Draw.KeyEvent                    (withKeyEvents)
+import           UI.Types                            (GameWidgetNode)
 
 drawSelectingItem :: SelectingItemToUseHandler -> Config -> GameWidgetNode
 drawSelectingItem sh c = withKeyEvents $ vstack labels

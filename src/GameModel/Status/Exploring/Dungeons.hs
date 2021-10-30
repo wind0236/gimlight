@@ -1,4 +1,4 @@
-module Game.Status.Exploring.Dungeons
+module GameModel.Status.Exploring.Dungeons
     ( Dungeons
     , ascendStairsAtPlayerPosition
     , descendStairsAtPlayerPosition

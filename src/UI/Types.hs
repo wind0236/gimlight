@@ -5,13 +5,13 @@ module UI.Types
     ) where
 
 import           Data.Text (Text)
-import           Game      (Game)
+import           GameModel (GameModel)
 import           Monomer   (WidgetEnv, WidgetNode)
 
 data AppEvent = AppInit
               | AppSaveFinished
-              | AppLoadFinished Game
+              | AppLoadFinished GameModel
               | AppKeyboardInput Text deriving (Eq, Show)
 
-type GameWidgetEnv = WidgetEnv Game AppEvent
-type GameWidgetNode = WidgetNode Game AppEvent
+type GameWidgetEnv = WidgetEnv GameModel AppEvent
+type GameWidgetNode = WidgetNode GameModel AppEvent
