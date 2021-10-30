@@ -5,7 +5,7 @@ module Dungeon.Actor.Actions.Melee
     ) where
 
 import           Control.Lens          ((^.))
-import           Control.Monad.Writer  (tell)
+import           Control.Monad.Writer  (MonadPlus (mzero), tell)
 import           Dungeon               (Dungeon, popActorAt, pushActor)
 import           Dungeon.Actor         (Actor, getDefence, getHp, getPower,
                                         name, position, receiveDamage)
@@ -22,7 +22,7 @@ meleeAction offset src dungeon =
 
           result =
             case target of
-                Nothing       -> return (False, pushActor src dungeon)
+                Nothing       -> mzero
                 Just defender -> attackFromTo src defender dungeonWithoutTarget
 
 attackFromTo :: Actor -> Actor -> Dungeon -> ActionResult
@@ -39,7 +39,7 @@ attackFromTo attacker defender dungeonWithoutTarget =
                  dungeonAfterAttack = actorHandler dungeonWithoutTarget
              in do
                  tell $ map message messages
-                 return (True, dungeonAfterAttack)
+                 return dungeonAfterAttack
           else do
               tell [message $ T.noDamageMessage (attacker ^. name) (defender ^. name)]
-              return (True, pushActor attacker $ pushActor defender dungeonWithoutTarget)
+              return $ pushActor attacker $ pushActor defender dungeonWithoutTarget

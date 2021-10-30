@@ -6,4 +6,4 @@ import           Dungeon               (pushActor)
 import           Dungeon.Actor.Actions (Action)
 
 waitAction :: Action
-waitAction e d = return (True, pushActor e d)
+waitAction e d = return $ pushActor e d

@@ -3,7 +3,7 @@ module Dungeon.Actor.Actions.Consume
     ) where
 
 import           Control.Lens          ((^.))
-import           Control.Monad.Writer  (tell)
+import           Control.Monad.Writer  (MonadPlus (mzero), tell)
 import           Dungeon               (pushActor)
 import           Dungeon.Actor         (healHp, name, removeNthItem)
 import           Dungeon.Actor.Actions (Action)
@@ -15,9 +15,9 @@ consumeAction n e d =
     case item of
         Just x -> do
             tell [T.healed (e ^. name) (x ^. healAmount)]
-            return (True, pushActor (healHp (x ^. healAmount) newActor) d)
+            return $ pushActor (healHp (x ^. healAmount) newActor) d
         Nothing -> do
             tell [T.whatToUse]
-            return (False, pushActor e d)
+            mzero
 
     where (item, newActor) = removeNthItem n e

@@ -18,6 +18,7 @@ module Game.Status.Exploring
     ) where
 
 import           Control.Lens               ((%~), (&), (.~), (^.))
+import           Control.Monad.Trans.Maybe  (MaybeT (runMaybeT))
 import           Control.Monad.Trans.Writer (runWriter)
 import           Coord                      (Coord)
 import           Data.Binary                (Binary)
@@ -98,13 +99,13 @@ doPlayerAction action eh@ExploringHandler { dungeons = ds } = result
     where currentDungeon = getFocused ds
           (player, dungeonWithoutPlayer) = popPlayer currentDungeon
           result = case player of
-                    Just p -> let ((isSuccess, newCurrentDungeon), newLogs) =
-                                    runWriter $ action p dungeonWithoutPlayer
+                    Just p -> let (newCurrentDungeon, newLogs) =
+                                    runWriter $ runMaybeT $ action p dungeonWithoutPlayer
                                   handlerWithNewLog =
                                     addMessages newLogs eh
-                                  newHandler =
-                                    handlerWithNewLog { dungeons = modify (const newCurrentDungeon) ds }
-                              in (isSuccess, newHandler)
+                              in case newCurrentDungeon of
+                                     Just x -> (True, handlerWithNewLog { dungeons = modify (const x) ds })
+                                     Nothing -> (False, handlerWithNewLog)
                     Nothing -> (False, eh)
 
 completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
@@ -124,13 +125,13 @@ handleNpcTurn c eh@ExploringHandler { dungeons = ds } = newHandler
           theActor = fst . D.popActorAt c $ getFocused ds
           newHandler = case theActor of
                            Just x ->
-                            case npcAction x $ getFocused dungeonsWithoutTheActor of
-                                Just (generatedLog, newCurrentDungeon) ->
-                                    let newMessageLog = L.addMessages generatedLog (getMessageLog eh)
-                                    in eh { dungeons = modify (const newCurrentDungeon) dungeonsWithoutTheActor
-                                          , messageLog = newMessageLog
-                                          }
-                                Nothing -> eh
+                            let (newCurrentDungeon, generatedLog) =
+                                    runWriter $ runMaybeT $ npcAction x $ getFocused dungeonsWithoutTheActor
+                            in case newCurrentDungeon of
+                                   Just d -> eh { dungeons = modify (const d) dungeonsWithoutTheActor
+                                                , messageLog = L.addMessages generatedLog $ getMessageLog eh
+                                                }
+                                   Nothing -> eh
                            Nothing -> error "No such npc."
 
 getPlayerActor :: ExploringHandler -> Maybe Actor
