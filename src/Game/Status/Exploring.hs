@@ -6,7 +6,7 @@ module Game.Status.Exploring
     , ascendStairsAtPlayerPosition
     , descendStairsAtPlayerPosition
     , exitDungeon
-    , doAction
+    , doPlayerAction
     , completeThisTurn
     , getPlayerActor
     , getPlayerPosition
@@ -93,8 +93,8 @@ exitDungeon eh@ExploringHandler { dungeons = ds } =
                           (Just g, Just p) -> Just $ modify (\d -> d & actors %~ (:) p) g
                           _                -> Nothing
 
-doAction :: Action -> ExploringHandler -> (Bool, ExploringHandler)
-doAction action eh@ExploringHandler { dungeons = ds } = result
+doPlayerAction :: Action -> ExploringHandler -> (Bool, ExploringHandler)
+doPlayerAction action eh@ExploringHandler { dungeons = ds } = result
     where currentDungeon = getFocused ds
           (player, dungeonWithoutPlayer) = popPlayer currentDungeon
           result = case player of

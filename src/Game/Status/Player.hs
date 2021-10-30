@@ -17,7 +17,8 @@ import           Dungeon.Actor.Actions.Move     (moveAction)
 import           Dungeon.Actor.Actions.PickUp   (pickUpAction)
 import           Game.Status                    (GameStatus (Exploring, GameOver, SelectingItemToUse, Talking))
 import           Game.Status.Exploring          (ExploringHandler, actorAt,
-                                                 completeThisTurn, doAction,
+                                                 completeThisTurn,
+                                                 doPlayerAction,
                                                  getCurrentDungeon,
                                                  getPlayerActor,
                                                  getPlayerPosition,
@@ -44,7 +45,7 @@ playerBumpAction offset eh =
 meleeOrTalk :: V2 Int -> Actor -> ExploringHandler -> (Bool, GameStatus)
 meleeOrTalk offset target eh =
     if isMonster target
-        then second Exploring $ doAction (meleeAction offset) eh
+        then second Exploring $ doPlayerAction (meleeAction offset) eh
         else (True, Talking $ talkingHandler (talkWith target $ target ^. talkMessage) eh)
 
 moveOrExitMap :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
@@ -53,7 +54,7 @@ moveOrExitMap offset eh =
                           Just p  -> p + offset
                           Nothing -> error "The player is dead."
     in if isPositionInDungeon destination eh || not (isTown (getCurrentDungeon eh))
-        then second Exploring $ doAction (moveAction offset) eh
+        then second Exploring $ doPlayerAction (moveAction offset) eh
         else (True, exitDungeon eh)
 
 exitDungeon :: ExploringHandler -> GameStatus
@@ -73,7 +74,7 @@ handlePlayerMoving offset gs =
 
 handlePlayerPickingUp :: ExploringHandler -> GameStatus
 handlePlayerPickingUp eh =
-    let (isSuccess, newHandler) = doAction pickUpAction eh
+    let (isSuccess, newHandler) = doPlayerAction pickUpAction eh
     in if isSuccess
         then maybe GameOver Exploring $ completeThisTurn newHandler
         else Exploring newHandler
@@ -90,7 +91,7 @@ handlePlayerConsumeItem :: SelectingItemToUseHandler -> GameStatus
 handlePlayerConsumeItem sh =
     case getSelectingIndex sh of
         Just n ->
-            let (isSuccess, newHandler) = doAction (consumeAction n) $ finishSelecting sh
+            let (isSuccess, newHandler) = doPlayerAction (consumeAction n) $ finishSelecting sh
             in if isSuccess
                 then maybe GameOver Exploring (completeThisTurn newHandler)
                 else Exploring newHandler
