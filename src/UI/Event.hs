@@ -23,14 +23,15 @@ import           GameModel.Status.SelectingItemToUse (finishSelecting,
                                                       selectPrevItem)
 import           GameModel.Status.Talking            (finishTalking)
 import           Linear.V2                           (V2 (V2))
-import           Monomer                             (AppEventResponse,
-                                                      EventResponse (Model, Task),
-                                                      WidgetEnv, WidgetNode,
+import           Monomer                             (EventResponse (Model, Task),
                                                       exitApplication)
 import           Save                                (load, save)
-import           UI.Types                            (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished))
+import           UI.Types                            (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished),
+                                                      GameEventResponse,
+                                                      GameWidgetEnv,
+                                                      GameWidgetNode)
 
-handleEvent :: WidgetEnv GameModel AppEvent -> WidgetNode GameModel AppEvent -> GameModel -> AppEvent -> [AppEventResponse GameModel AppEvent]
+handleEvent :: GameWidgetEnv -> GameWidgetNode -> GameModel -> AppEvent -> [GameEventResponse]
 handleEvent _ _ gameStatus evt =
     case evt of
         AppInit             -> []
@@ -38,7 +39,7 @@ handleEvent _ _ gameStatus evt =
         AppLoadFinished ngs -> [Model ngs]
         AppKeyboardInput k  -> handleKeyInput gameStatus k
 
-handleKeyInput :: GameModel -> Text -> [AppEventResponse GameModel AppEvent]
+handleKeyInput :: GameModel -> Text -> [GameEventResponse]
 handleKeyInput e@GameModel { status = s } k =
     case s of
         Exploring _          -> handleKeyInputDuringExploring e k
@@ -49,8 +50,7 @@ handleKeyInput e@GameModel { status = s } k =
         SelectingLocale      -> handleKeyInputDuringSelectingLanguage e k
         GameOver             -> []
 
-
-handleKeyInputDuringExploring :: GameModel -> Text -> [AppEventResponse GameModel AppEvent]
+handleKeyInputDuringExploring :: GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringExploring e@GameModel { status = st@(Exploring eh) } k
     | k == "Right" = [Model $ e { status = handlePlayerMoving (V2 1 0) eh }]
     | k == "Left"  = [Model $ e { status = handlePlayerMoving (V2 (-1) 0) eh }]
@@ -67,13 +67,13 @@ handleKeyInputDuringExploring e@GameModel { status = st@(Exploring eh) } k
     | otherwise = []
 handleKeyInputDuringExploring _ _ = error "We are not exploring."
 
-handleKeyInputDuringTalking :: GameModel -> Text -> [AppEventResponse GameModel AppEvent]
+handleKeyInputDuringTalking :: GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringTalking e@GameModel { status = Talking th } k
     | k == "Enter" = [Model $ e { status = Exploring $ finishTalking th }]
     | otherwise = []
 handleKeyInputDuringTalking _ _ = error "We are not talking."
 
-handleKeyInputDuringHandlingScene :: GameModel -> Text -> [AppEventResponse GameModel AppEvent]
+handleKeyInputDuringHandlingScene :: GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringHandlingScene e@GameModel { status = HandlingScene sh } k
     | k == "Enter" = [Model $ e { status = nextStatus }]
     | otherwise = []
@@ -82,7 +82,7 @@ handleKeyInputDuringHandlingScene e@GameModel { status = HandlingScene sh } k
                            Left l  -> Exploring l
 handleKeyInputDuringHandlingScene _ _ = error "We are not handling a scene."
 
-handleKeyInputDuringSelectingItemToUse :: GameModel -> Text -> [AppEventResponse GameModel AppEvent]
+handleKeyInputDuringSelectingItemToUse :: GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringSelectingItemToUse e@GameModel { status = SelectingItemToUse sh } k
     | k == "Up" = [Model $ e { status = SelectingItemToUse $ selectPrevItem sh }]
     | k == "Down" = [Model $ e { status = SelectingItemToUse $ selectNextItem sh }]
@@ -91,7 +91,7 @@ handleKeyInputDuringSelectingItemToUse e@GameModel { status = SelectingItemToUse
     | otherwise = []
 handleKeyInputDuringSelectingItemToUse _ _ = error "We are not selecting an item."
 
-handleKeyInputDuringTitle :: GameModel -> Text -> [AppEventResponse GameModel AppEvent]
+handleKeyInputDuringTitle :: GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringTitle g k
     | k == "n" = [Task $ AppLoadFinished <$> startNewGame g]
     | k == "l" = [Task $ do
@@ -106,7 +106,7 @@ handleKeyInputDuringTitle g k
                                  , config = c
                                  }
 
-handleKeyInputDuringSelectingLanguage :: GameModel -> Text -> [AppEventResponse GameModel AppEvent]
+handleKeyInputDuringSelectingLanguage :: GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringSelectingLanguage g@GameModel { config = c } k
     | k == "e" = [Task $ AppLoadFinished <$> updateConfig English]
     | k == "j" = [Task $ AppLoadFinished <$> updateConfig Japanese]
