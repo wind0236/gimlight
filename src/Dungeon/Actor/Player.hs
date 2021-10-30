@@ -1,4 +1,4 @@
-module Game.Status.Player
+module Dungeon.Actor.Player
     ( playerBumpAction
     , handlePlayerMoving
     , handlePlayerPickingUp

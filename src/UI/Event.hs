@@ -6,6 +6,10 @@ module UI.Event
 
 import           Data.Maybe                     (fromMaybe)
 import           Data.Text                      (Text)
+import           Dungeon.Actor.Player           (handlePlayerConsumeItem,
+                                                 handlePlayerMoving,
+                                                 handlePlayerPickingUp,
+                                                 handlePlayerSelectingItemToUse)
 import           Game                           (Game (Game, config, status))
 import           Game.Config                    (Language (English, Japanese),
                                                  setLocale, writeConfig)
@@ -13,10 +17,6 @@ import           Game.Status                    (GameStatus (Exploring, GameOver
                                                  newGameStatus)
 import           Game.Status.Exploring          (ascendStairsAtPlayerPosition,
                                                  descendStairsAtPlayerPosition)
-import           Game.Status.Player             (handlePlayerConsumeItem,
-                                                 handlePlayerMoving,
-                                                 handlePlayerPickingUp,
-                                                 handlePlayerSelectingItemToUse)
 import           Game.Status.Scene              (nextSceneOrFinish)
 import           Game.Status.SelectingItemToUse (finishSelecting,
                                                  selectNextItem, selectPrevItem)

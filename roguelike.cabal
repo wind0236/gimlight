@@ -23,6 +23,7 @@ executable roguelike
                       , Dungeon.Actor.Behavior
                       , Dungeon.Actor.Friendly
                       , Dungeon.Actor.Inventory
+                      , Dungeon.Actor.Player
                       , Dungeon.Actor.Monsters
                       , Dungeon.Actor.Status
                       , Dungeon.Actor.Status.Hp
@@ -46,7 +47,6 @@ executable roguelike
                       , Game.Config
                       , Game.Status
                       , Game.Status.Exploring
-                      , Game.Status.Player
                       , Game.Status.Scene
                       , Game.Status.SelectingItemToUse
                       , Game.Status.Talking
