@@ -17,29 +17,25 @@ module Game.Status.Exploring
     , getMessageLog
     ) where
 
-import           Control.Lens               ((%~), (&), (.~), (^.))
-import           Control.Monad.Trans.Maybe  (MaybeT (runMaybeT))
-import           Control.Monad.Trans.Writer (runWriter)
-import           Coord                      (Coord)
-import           Data.Binary                (Binary)
-import           Data.Foldable              (find)
-import           Dungeon                    (Dungeon, actors, ascendingStairs,
-                                             descendingStairs, npcs, popPlayer,
-                                             positionOnParentMap, updateMap)
-import qualified Dungeon                    as D
-import           Dungeon.Actor              (Actor, position)
-import           Dungeon.Actor.Actions      (Action)
-import           Dungeon.Actor.Behavior     (npcAction)
-import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
-import           Dungeon.Turn               (Status (PlayerKilled))
-import           GHC.Generics               (Generic)
-import           Log                        (Message, MessageLog)
-import qualified Log                        as L
-import           TreeZipper                 (TreeZipper, getFocused, goDownBy,
-                                             goUp, modify)
+import           Control.Lens                   ((^.))
+import           Control.Monad.Trans.Maybe      (MaybeT (runMaybeT))
+import           Control.Monad.Trans.Writer     (runWriter)
+import           Coord                          (Coord)
+import           Data.Binary                    (Binary)
+import           Dungeon                        (Dungeon, npcs)
+import qualified Dungeon                        as D
+import           Dungeon.Actor                  (Actor, position)
+import           Dungeon.Actor.Actions          (Action)
+import           Dungeon.Turn                   (Status (PlayerKilled))
+import           GHC.Generics                   (Generic)
+import           Game.Status.Exploring.Dungeons (Dungeons)
+import qualified Game.Status.Exploring.Dungeons as DS
+import           Log                            (Message, MessageLog)
+import qualified Log                            as L
+import           TreeZipper                     (TreeZipper, getFocused, modify)
 
 data ExploringHandler = ExploringHandler
-                      { dungeons   :: TreeZipper Dungeon
+                      { dungeons   :: Dungeons
                       , messageLog :: MessageLog
                       } deriving (Show, Ord, Eq, Generic)
 
@@ -50,63 +46,25 @@ exploringHandler = ExploringHandler
 
 ascendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 ascendStairsAtPlayerPosition eh@ExploringHandler { dungeons = ds } =
-        fmap (\x -> eh { dungeons = x }) newZipper
-    where (player, zipperWithoutPlayer) = popPlayerFromZipper ds
-          newPlayer = case (player, newPosition) of
-                          (Just p, Just pos) -> Just $ p & position .~ pos
-                          _                  -> Nothing
-          ascendable = (downStairs <$> getFocused ds ^. ascendingStairs) == fmap (^. position) player
-          zipperFocusingNextDungeon = goUp zipperWithoutPlayer
-          newPosition = upStairs <$> getFocused ds ^. ascendingStairs
-          newZipper = case (zipperFocusingNextDungeon, newPlayer, ascendable) of
-                          (Just g, Just p, True) ->
-                                Just $ modify (\d -> updateMap $ d & actors %~ (:) p) g
-                          _ -> Nothing
+    (\x -> eh { dungeons = x }) <$> DS.ascendStairsAtPlayerPosition ds
 
 descendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
-descendStairsAtPlayerPosition eh@ExploringHandler{ dungeons = ds } =
-    fmap (\x -> eh { dungeons = x }) newZipper
-    where (player, zipperWithoutPlayer) = popPlayerFromZipper ds
-          newPlayer = case (player, newPosition) of
-                          (Just p, Just pos) -> Just $ p & position .~ pos
-                          _                  -> Nothing
-          zipperFocusingNextDungeon = goDownBy (\x -> x ^. positionOnParentMap == fmap (^. position) player) zipperWithoutPlayer
-          newPosition = downStairs <$> find (\(StairsPair from _) -> Just from == fmap (^. position) player) (getFocused ds ^. descendingStairs)
-          newZipper = case (zipperFocusingNextDungeon, newPlayer) of
-                          (Just g, Just p) -> Just $ modify (\d -> updateMap $ d & actors %~ (:) p) g
-                          _ -> Nothing
-
-popPlayerFromZipper :: TreeZipper Dungeon -> (Maybe Actor, TreeZipper Dungeon)
-popPlayerFromZipper z = (fst $ popPlayer $ getFocused z, modify (snd . popPlayer) z)
+descendStairsAtPlayerPosition eh@ExploringHandler { dungeons = ds } =
+    (\x -> eh { dungeons = x }) <$> DS.descendStairsAtPlayerPosition ds
 
 exitDungeon :: ExploringHandler -> Maybe ExploringHandler
 exitDungeon eh@ExploringHandler { dungeons = ds } =
-    fmap (\ds' -> eh { dungeons = ds' }) newZipper
-    where zipperWithoutPlayer = modify (snd . popPlayer) ds
-          currentDungeon = getFocused ds
-          player = fst $ popPlayer currentDungeon
-          newPosition = currentDungeon ^. positionOnParentMap
-          newPlayer = case (player, newPosition) of
-                          (Just p, Just pos) -> Just $ p & position .~ pos
-                          _                  -> Nothing
-          zipperFocusingGlobalMap = goUp zipperWithoutPlayer
-          newZipper = case (zipperFocusingGlobalMap, newPlayer) of
-                          (Just g, Just p) -> Just $ modify (\d -> d & actors %~ (:) p) g
-                          _                -> Nothing
+    (\x -> eh { dungeons = x }) <$> DS.exitDungeon ds
 
 doPlayerAction :: Action -> ExploringHandler -> (Bool, ExploringHandler)
-doPlayerAction action eh@ExploringHandler { dungeons = ds } = result
-    where currentDungeon = getFocused ds
-          (player, dungeonWithoutPlayer) = popPlayer currentDungeon
-          result = case player of
-                    Just p -> let (newCurrentDungeon, newLogs) =
-                                    runWriter $ runMaybeT $ action p dungeonWithoutPlayer
-                                  handlerWithNewLog =
-                                    addMessages newLogs eh
-                              in case newCurrentDungeon of
-                                     Just x -> (True, handlerWithNewLog { dungeons = modify (const x) ds })
-                                     Nothing -> (False, handlerWithNewLog)
-                    Nothing -> (False, eh)
+doPlayerAction action ExploringHandler { dungeons = ds, messageLog = l } =
+    result
+    where (dungeonsAfterAction, newLog) = runWriter $ runMaybeT $ DS.doPlayerAction action ds
+          handlerWithNewLog = ExploringHandler { dungeons = ds, messageLog = L.addMessages newLog l }
+
+          result = case dungeonsAfterAction of
+                       Just x  -> (True, handlerWithNewLog { dungeons = x })
+                       Nothing -> (False, handlerWithNewLog)
 
 completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
 completeThisTurn eh =
@@ -120,24 +78,11 @@ handleNpcTurns :: ExploringHandler -> ExploringHandler
 handleNpcTurns eh = foldl (\acc x -> handleNpcTurn (x ^. position) acc) eh $ npcs $ getCurrentDungeon eh
 
 handleNpcTurn :: Coord -> ExploringHandler -> ExploringHandler
-handleNpcTurn c eh@ExploringHandler { dungeons = ds } = newHandler
-    where newHandler = case theActor of
-                           Just x  -> doAction x
-                           Nothing -> error "No such npc."
-
-          theActor = fst . D.popActorAt c $ getFocused ds
-
-          doAction actor = let (newCurrentDungeon, generatedLog) =
-                                    runWriter $ runMaybeT $ npcAction actor $ getFocused dungeonsWithoutTheActor
-                           in case newCurrentDungeon of
-                                   Just d  -> updateDungeonAndLog d generatedLog
-                                   Nothing -> eh
-
-          dungeonsWithoutTheActor = modify (snd . D.popActorAt c) ds
-
-          updateDungeonAndLog d l = eh { dungeons = modify (const d) dungeonsWithoutTheActor
-                                       , messageLog = L.addMessages l $ getMessageLog eh
-                                       }
+handleNpcTurn c ExploringHandler { dungeons = ds, messageLog = l } = result
+    where (dungeonsAfterTurn, newLog) = runWriter $ runMaybeT $ DS.handleNpcTurn c ds
+          result = case dungeonsAfterTurn of
+                    Just x -> ExploringHandler { dungeons = x, messageLog = L.addMessages newLog l }
+                    Nothing -> ExploringHandler { dungeons = ds, messageLog = l }
 
 getPlayerActor :: ExploringHandler -> Maybe Actor
 getPlayerActor = D.getPlayerActor . getCurrentDungeon

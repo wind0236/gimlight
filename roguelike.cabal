@@ -47,6 +47,7 @@ executable roguelike
                       , Game.Config
                       , Game.Status
                       , Game.Status.Exploring
+                      , Game.Status.Exploring.Dungeons
                       , Game.Status.Scene
                       , Game.Status.SelectingItemToUse
                       , Game.Status.Talking

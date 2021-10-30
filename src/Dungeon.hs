@@ -14,6 +14,7 @@ module Dungeon
     , completeThisTurn
     , popPlayer
     , popActorAt
+    , popActorIf
     , monsters
     , pushActor
     , walkableFloor
