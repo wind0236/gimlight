@@ -81,7 +81,7 @@ monster position' name' st walking = actor position' name' st Monster mempty wal
 
 player :: Coord -> Actor
 player c = actor c T.player st Player mempty "images/player.png" "images/sample_standing_picture.png"
-    where st = S.status (hp 30) 2 5
+    where st = S.status (hp 30) 5 2
 
 isPlayer :: Actor -> Bool
 isPlayer e = (e ^. actorKind) == Player
