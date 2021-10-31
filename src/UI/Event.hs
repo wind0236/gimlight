@@ -13,7 +13,7 @@ import           Dungeon.Actor.Player                (handlePlayerConsumeItem,
 import           GameModel                           (GameModel (GameModel, config, status))
 import           GameModel.Config                    (Language (English, Japanese),
                                                       setLocale, writeConfig)
-import           GameModel.Status                    (GameStatus (Exploring, GameOver, HandlingScene, SelectingItemToUse, SelectingLocale, Talking, Title),
+import           GameModel.Status                    (GameStatus (Exploring, GameOver, Scene, SelectingItemToUse, SelectingLocale, Talking, Title),
                                                       newGameStatus)
 import           GameModel.Status.Exploring          (ascendStairsAtPlayerPosition,
                                                       descendStairsAtPlayerPosition)
@@ -44,7 +44,7 @@ handleKeyInput e@GameModel { status = s } k =
     case s of
         Exploring _          -> handleKeyInputDuringExploring e k
         Talking _            -> handleKeyInputDuringTalking e k
-        HandlingScene _      -> handleKeyInputDuringHandlingScene e k
+        Scene _              -> handleKeyInputDuringScene e k
         SelectingItemToUse _ -> handleKeyInputDuringSelectingItemToUse e k
         Title                -> handleKeyInputDuringTitle e k
         SelectingLocale      -> handleKeyInputDuringSelectingLanguage e k
@@ -73,14 +73,14 @@ handleKeyInputDuringTalking e@GameModel { status = Talking th } k
     | otherwise = []
 handleKeyInputDuringTalking _ _ = error "We are not talking."
 
-handleKeyInputDuringHandlingScene :: GameModel -> Text -> [GameEventResponse]
-handleKeyInputDuringHandlingScene e@GameModel { status = HandlingScene sh } k
+handleKeyInputDuringScene :: GameModel -> Text -> [GameEventResponse]
+handleKeyInputDuringScene e@GameModel { status = Scene sh } k
     | k == "Enter" = [Model $ e { status = nextStatus }]
     | otherwise = []
     where nextStatus = case nextSceneOrFinish sh of
-                           Right r -> HandlingScene r
+                           Right r -> Scene r
                            Left l  -> Exploring l
-handleKeyInputDuringHandlingScene _ _ = error "We are not handling a scene."
+handleKeyInputDuringScene _ _ = error "We are not handling a scene."
 
 handleKeyInputDuringSelectingItemToUse :: GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringSelectingItemToUse e@GameModel { status = SelectingItemToUse sh } k

@@ -3,7 +3,7 @@ module UI.Draw
     ) where
 
 import           GameModel               (GameModel (GameModel, config, status))
-import           GameModel.Status        (GameStatus (Exploring, GameOver, HandlingScene, SelectingItemToUse, SelectingLocale, Talking, Title))
+import           GameModel.Status        (GameStatus (Exploring, GameOver, Scene, SelectingItemToUse, SelectingLocale, Talking, Title))
 import           UI.Draw.Exploring       (drawExploring)
 import           UI.Draw.GameOver        (drawGameOver)
 import           UI.Draw.Scene           (drawScene)
@@ -18,7 +18,7 @@ drawUI _ GameModel { status = s, config = c } =
     case s of
         Exploring eh          -> drawExploring eh c
         Talking th            -> drawTalking th c
-        HandlingScene hs      -> drawScene hs c
+        Scene hs              -> drawScene hs c
         SelectingItemToUse sh -> drawSelectingItem sh c
         Title                 -> drawTitle c
         GameOver              -> drawGameOver

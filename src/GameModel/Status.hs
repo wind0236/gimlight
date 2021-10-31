@@ -32,7 +32,7 @@ import           TreeZipper                          (appendTree, goDownBy,
 
 data GameStatus = Exploring ExploringHandler
                 | Talking TalkingHandler
-                | HandlingScene SceneHandler
+                | Scene SceneHandler
                 | SelectingItemToUse SelectingItemToUseHandler
                 | Title
                 | GameOver
@@ -72,4 +72,4 @@ newGameStatus = do
             foldr (L.addMessage . L.message) L.emptyLog
                 [T.welcome]
 
-    return $ HandlingScene $ sceneHandler gameStartScene initExploring
+    return $ Scene $ sceneHandler gameStartScene initExploring
