@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module GameModel.Status.Exploring
     ( ExploringHandler
@@ -17,7 +18,8 @@ module GameModel.Status.Exploring
     , getMessageLog
     ) where
 
-import           Control.Lens                        ((^.))
+import           Control.Lens                        (makeLenses, (%~), (&),
+                                                      (.~), (^.))
 import           Control.Monad.Trans.Maybe           (MaybeT (runMaybeT))
 import           Control.Monad.Trans.Writer          (runWriter)
 import           Coord                               (Coord)
@@ -36,9 +38,11 @@ import           TreeZipper                          (TreeZipper, getFocused,
                                                       modify)
 
 data ExploringHandler = ExploringHandler
-                      { dungeons   :: Dungeons
-                      , messageLog :: MessageLog
+                      { _dungeons   :: Dungeons
+                      , _messageLog :: MessageLog
                       } deriving (Show, Ord, Eq, Generic)
+
+makeLenses ''ExploringHandler
 
 instance Binary ExploringHandler
 
@@ -46,44 +50,41 @@ exploringHandler :: TreeZipper Dungeon -> MessageLog -> ExploringHandler
 exploringHandler = ExploringHandler
 
 ascendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
-ascendStairsAtPlayerPosition eh@ExploringHandler { dungeons = ds } =
-    (\x -> eh { dungeons = x }) <$> DS.ascendStairsAtPlayerPosition ds
+ascendStairsAtPlayerPosition eh = (\x -> eh & dungeons .~ x) <$> DS.ascendStairsAtPlayerPosition (eh ^. dungeons)
 
 descendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
-descendStairsAtPlayerPosition eh@ExploringHandler { dungeons = ds } =
-    (\x -> eh { dungeons = x }) <$> DS.descendStairsAtPlayerPosition ds
+descendStairsAtPlayerPosition eh = (\x -> eh & dungeons .~ x) <$> DS.descendStairsAtPlayerPosition (eh ^. dungeons)
 
 exitDungeon :: ExploringHandler -> Maybe ExploringHandler
-exitDungeon eh@ExploringHandler { dungeons = ds } =
-    (\x -> eh { dungeons = x }) <$> DS.exitDungeon ds
+exitDungeon eh = (\x -> eh & dungeons .~ x) <$> DS.exitDungeon (eh ^. dungeons)
 
 doPlayerAction :: Action -> ExploringHandler -> (Bool, ExploringHandler)
-doPlayerAction action ExploringHandler { dungeons = ds, messageLog = l } =
+doPlayerAction action eh =
     result
-    where (dungeonsAfterAction, newLog) = runWriter $ runMaybeT $ DS.doPlayerAction action ds
-          handlerWithNewLog = ExploringHandler { dungeons = ds, messageLog = L.addMessages newLog l }
+    where (dungeonsAfterAction, newLog) = runWriter $ runMaybeT $ DS.doPlayerAction action $ eh ^. dungeons
+          handlerWithNewLog = eh & messageLog %~ L.addMessages newLog
 
           result = case dungeonsAfterAction of
-                       Just x  -> (True, handlerWithNewLog { dungeons = x })
+                       Just x  -> (True, handlerWithNewLog & dungeons .~ x)
                        Nothing -> (False, handlerWithNewLog)
 
 completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
 completeThisTurn eh =
     if status == PlayerKilled
         then Nothing
-        else Just handlerAfterNpcTurns { dungeons = modify (const newCurrentDungeon) $ dungeons handlerAfterNpcTurns }
+        else Just $ handlerAfterNpcTurns & dungeons %~ modify (const newCurrentDungeon)
     where handlerAfterNpcTurns = handleNpcTurns eh
-          (status, newCurrentDungeon) = D.completeThisTurn $ getFocused $ dungeons handlerAfterNpcTurns
+          (status, newCurrentDungeon) = D.completeThisTurn $ getFocused $ handlerAfterNpcTurns ^. dungeons
 
 handleNpcTurns :: ExploringHandler -> ExploringHandler
 handleNpcTurns eh = foldl (\acc x -> handleNpcTurn (x ^. position) acc) eh $ npcs $ getCurrentDungeon eh
 
 handleNpcTurn :: Coord -> ExploringHandler -> ExploringHandler
-handleNpcTurn c ExploringHandler { dungeons = ds, messageLog = l } = result
-    where (dungeonsAfterTurn, newLog) = runWriter $ runMaybeT $ DS.handleNpcTurn c ds
+handleNpcTurn c eh = result
+    where (dungeonsAfterTurn, newLog) = runWriter $ runMaybeT $ DS.handleNpcTurn c $ eh ^. dungeons
           result = case dungeonsAfterTurn of
-                    Just x -> ExploringHandler { dungeons = x, messageLog = L.addMessages newLog l }
-                    Nothing -> ExploringHandler { dungeons = ds, messageLog = l }
+                    Just x -> eh & dungeons .~ x & messageLog %~ L.addMessages newLog
+                    Nothing -> eh
 
 getPlayerActor :: ExploringHandler -> Maybe Actor
 getPlayerActor = D.getPlayerActor . getCurrentDungeon
@@ -98,10 +99,10 @@ isPositionInDungeon :: Coord -> ExploringHandler -> Bool
 isPositionInDungeon c = D.isPositionInDungeon c . getCurrentDungeon
 
 addMessages :: [Message] -> ExploringHandler -> ExploringHandler
-addMessages newMessages eh = eh { messageLog = L.addMessages newMessages $ getMessageLog eh }
+addMessages newMessages eh = eh & messageLog %~ L.addMessages newMessages
 
 getCurrentDungeon :: ExploringHandler -> Dungeon
-getCurrentDungeon ExploringHandler { dungeons = ds } = getFocused ds
+getCurrentDungeon eh = getFocused $ eh ^. dungeons
 
 getMessageLog :: ExploringHandler -> MessageLog
-getMessageLog ExploringHandler { messageLog = l } = l
+getMessageLog eh = eh ^. messageLog
