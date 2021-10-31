@@ -5,8 +5,8 @@ module Dungeon.Actor.Status
     , status
     , getHp
     , getMaxHp
+    , attackFromTo
     , healHp
-    , receiveDamage
     , getPower
     , getDefence
     ) where
@@ -15,6 +15,8 @@ import           Data.Binary             (Binary)
 import           Dungeon.Actor.Status.Hp (Hp)
 import qualified Dungeon.Actor.Status.Hp as HP
 import           GHC.Generics            (Generic)
+import           Localization            (MultilingualText)
+import qualified Localization.Texts      as T
 
 data Status = Status
             { hp      :: Hp
@@ -32,6 +34,17 @@ getHp Status { hp = h }= HP.getHp h
 
 getMaxHp :: Status -> Int
 getMaxHp Status { hp = h }= HP.getMaxHp h
+
+attackFromTo :: Status -> Status -> (Maybe Status, MultilingualText -> MultilingualText -> MultilingualText)
+attackFromTo attacker defender =
+    (newDefender, message)
+    where damage = max 0 $ getPower attacker - getDefence defender
+          newDefender = receiveDamage damage defender
+          message = case newDefender of
+                        Just _ -> if damage > 0
+                                      then T.damagedMessage damage
+                                      else T.noDamageMessage
+                        Nothing -> (\a d -> T.attackMessage a d <> T.deathMessage d)
 
 healHp :: Int -> Status -> Status
 healHp amount a@Status { hp = h } =

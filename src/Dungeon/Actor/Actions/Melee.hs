@@ -4,16 +4,15 @@ module Dungeon.Actor.Actions.Melee
     ( meleeAction
     ) where
 
-import           Control.Lens          ((^.))
-import           Control.Monad.Writer  (MonadPlus (mzero), tell)
-import           Data.Maybe            (isNothing)
-import           Dungeon               (Dungeon, popActorAt, pushActor)
-import           Dungeon.Actor         (Actor, getDefence, getPower, name,
-                                        position, receiveDamage)
-import           Dungeon.Actor.Actions (Action, ActionResult)
-import           Linear.V2             (V2)
-import qualified Localization.Texts    as T
-import           Log                   (message)
+import           Control.Lens              ((^.))
+import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
+import           Control.Monad.Writer      (MonadPlus (mzero), Writer)
+import           Dungeon                   (Dungeon, popActorAt, pushActor)
+import           Dungeon.Actor             (Actor, position)
+import qualified Dungeon.Actor             as A
+import           Dungeon.Actor.Actions     (Action)
+import           Linear.V2                 (V2)
+import           Log                       (MessageLog)
 
 meleeAction :: V2 Int -> Action
 meleeAction offset src dungeon =
@@ -24,23 +23,10 @@ meleeAction offset src dungeon =
           result =
             case target of
                 Nothing       -> mzero
-                Just defender -> attackFromTo src defender dungeonWithoutTarget
+                Just defender -> MaybeT $ Just <$> attackFromTo src defender dungeonWithoutTarget
 
-attackFromTo :: Actor -> Actor -> Dungeon -> ActionResult
-attackFromTo attacker defender dungeonWithoutTarget =
-  let damage = getPower attacker - getDefence defender
-  in if damage > 0
-        then let newDefender = receiveDamage damage defender
-                 messages = if isNothing newDefender
-                                then [message $ T.damagedMessage (attacker ^. name) (defender ^. name) damage, message $ T.deathMessage (defender ^. name)]
-                                else [message $ T.damagedMessage (attacker ^. name) (defender ^. name) damage]
-                 actorHandler = case newDefender of
-                                  Just x  -> pushActor attacker . pushActor x
-                                  Nothing ->  pushActor attacker
-                 dungeonAfterAttack = actorHandler dungeonWithoutTarget
-             in do
-                 tell $ map message messages
-                 return dungeonAfterAttack
-          else do
-              tell [message $ T.noDamageMessage (attacker ^. name) (defender ^. name)]
-              return $ pushActor attacker $ pushActor defender dungeonWithoutTarget
+attackFromTo :: Actor -> Actor -> Dungeon -> Writer MessageLog Dungeon
+attackFromTo attacker defender dungeonWithoutAttackerAndDefender = do
+    newDefender <- runMaybeT $ A.attackFromTo attacker defender
+
+    return $ pushActor attacker $ maybe dungeonWithoutAttackerAndDefender (`pushActor` dungeonWithoutAttackerAndDefender) newDefender

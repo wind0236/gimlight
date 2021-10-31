@@ -43,8 +43,8 @@ healed who amount =
 whatToUse :: MultilingualText
 whatToUse = multilingualText "What do you consume" "何を使う？"
 
-damagedMessage :: MultilingualText -> MultilingualText -> Int -> MultilingualText
-damagedMessage from to damage =
+damagedMessage :: Int -> MultilingualText -> MultilingualText -> MultilingualText
+damagedMessage damage from to =
     attackMessage from to <>
         multilingualText (" for " <> showt damage <> " hit points.")
                          ("して" <> showt damage <> "ポイントのダメージを与えた．")
