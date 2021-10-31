@@ -90,8 +90,8 @@ getHp e = S.getHp $ e ^. status
 getMaxHp :: Actor -> Int
 getMaxHp e = S.getMaxHp $ e ^. status
 
-receiveDamage :: Int -> Actor -> Actor
-receiveDamage damage a = a & status %~ S.receiveDamage damage
+receiveDamage :: Int -> Actor -> Maybe Actor
+receiveDamage damage a = (\x -> a & status .~ x) <$> S.receiveDamage damage (a ^. status)
 
 healHp :: Int -> Actor -> Actor
 healHp amount a = a & status %~ S.healHp amount

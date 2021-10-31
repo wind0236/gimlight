@@ -37,9 +37,9 @@ healHp :: Int -> Status -> Status
 healHp amount a@Status { hp = h } =
     a { hp = HP.healHp amount h }
 
-receiveDamage :: Int -> Status -> Status
+receiveDamage :: Int -> Status -> Maybe Status
 receiveDamage damage a@Status { hp = h } =
-    a { hp = HP.receiveDamage damage h }
+    (\x -> a { hp = x }) <$> HP.receiveDamage damage h
 
 getPower :: Status -> Int
 getPower = power

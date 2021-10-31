@@ -34,9 +34,10 @@ healHp :: Int -> Hp -> Hp
 healHp amount Hp { currentHp = c, maxHp = m }
     = Hp { currentHp = min m $ c + amount, maxHp = m }
 
-receiveDamage :: Int -> Hp -> Hp
+receiveDamage :: Int -> Hp -> Maybe Hp
 receiveDamage damage Hp { currentHp = c, maxHp = m }
-    = Hp { currentHp = max 0 $ c - damage, maxHp = m }
+    = if newHp > 0 then Just $ Hp { currentHp = newHp, maxHp = m } else Nothing
+    where newHp = c - damage
 
 hpOrFail :: Int -> Maybe Hp
 hpOrFail h
