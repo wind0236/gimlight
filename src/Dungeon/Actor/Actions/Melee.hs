@@ -5,7 +5,7 @@ module Dungeon.Actor.Actions.Melee
     ) where
 
 import           Control.Lens              ((^.))
-import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
+import           Control.Monad.Trans.Maybe (MaybeT (MaybeT))
 import           Control.Monad.Writer      (MonadPlus (mzero), Writer)
 import           Dungeon                   (Dungeon, popActorAt, pushActor)
 import           Dungeon.Actor             (Actor, position)
@@ -27,6 +27,6 @@ meleeAction offset src dungeon =
 
 attackFromTo :: Actor -> Actor -> Dungeon -> Writer MessageLog Dungeon
 attackFromTo attacker defender dungeonWithoutAttackerAndDefender = do
-    newDefender <- runMaybeT $ A.attackFromTo attacker defender
+    (newAttacker, newDefender) <- A.attackFromTo attacker defender
 
-    return $ pushActor attacker $ maybe dungeonWithoutAttackerAndDefender (`pushActor` dungeonWithoutAttackerAndDefender) newDefender
+    return $ pushActor newAttacker $ maybe dungeonWithoutAttackerAndDefender (`pushActor` dungeonWithoutAttackerAndDefender) newDefender

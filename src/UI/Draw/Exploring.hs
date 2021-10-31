@@ -12,7 +12,10 @@ import           Data.Maybe                 (mapMaybe)
 import           Dungeon                    (Dungeon, actors, explored, items,
                                              mapWidthAndHeight, playerPosition,
                                              tileMap, visible)
-import           Dungeon.Actor              (getDefence, getHp, getMaxHp,
+import           Dungeon.Actor              (getCurrentExperiencePoint,
+                                             getDefence,
+                                             getExperiencePointForNextLevel,
+                                             getHp, getLevel, getMaxHp,
                                              getPower, walkingImagePath)
 import qualified Dungeon.Actor              as A
 import           Dungeon.Item               (iconImagePath)
@@ -64,11 +67,15 @@ mapGrid eh = zstack (mapTiles eh:(mapItems eh ++ mapActors eh))
 statusGrid :: ExploringHandler -> Config -> GameWidgetNode
 statusGrid eh c = vstack $ maybe []
     (\x -> [ label "Player"
+           , label $ lvl <> ": " <> showt (getLevel x)
+           , label $ experience <> ": " <> showt (getCurrentExperiencePoint x) <> " / " <> showt (getExperiencePointForNextLevel x)
            , label $ "HP: " <> showt (getHp x) <> " / " <> showt (getMaxHp x)
            , label $ atk <> ": " <> showt (getPower x)
            , label $ def <> ": " <> showt (getDefence x)
            ]) $ getPlayerActor eh
-    where atk = getLocalizedText c T.attack
+    where lvl = getLocalizedText c T.level
+          experience = getLocalizedText c T.experience
+          atk = getLocalizedText c T.attack
           def = getLocalizedText c T.defence
 
 mapTiles :: ExploringHandler -> GameWidgetNode
