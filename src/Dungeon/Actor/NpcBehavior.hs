@@ -1,14 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Dungeon.Actor.NpcBehavior
-    ( npcAction
+    ( handleNpcTurns
     ) where
 
 import           Control.Lens                ((&), (.~), (^.))
-import           Control.Monad.Trans.Maybe   (MaybeT)
-import           Control.Monad.Writer        (Writer)
+import           Control.Monad.Trans.Maybe   (MaybeT (runMaybeT))
+import           Control.Monad.Writer        (MonadPlus (mzero),
+                                              MonadWriter (writer), Writer)
+import           Coord                       (Coord)
 import           Data.Maybe                  (fromMaybe)
-import           Dungeon                     (Dungeon, getPlayerActor)
+import           Dungeon                     (Dungeon, getPlayerActor, npcs,
+                                              popActorAt)
 import           Dungeon.Actor               (Actor, pathToDestination,
                                               position)
 import           Dungeon.Actor.Actions       (Action)
@@ -18,6 +21,17 @@ import           Dungeon.Actor.Actions.Wait  (waitAction)
 import           Dungeon.PathFinder          (getPathTo)
 import           Linear.V2                   (V2 (V2))
 import           Log                         (MessageLog)
+
+handleNpcTurns :: Dungeon -> Writer MessageLog Dungeon
+handleNpcTurns d = foldl foldStep (writer (d, [])) $ npcs d
+    where foldStep acc x = acc >>= (runMaybeT . handleNpcTurn (x ^. position)) >>= maybe acc return
+
+handleNpcTurn :: Coord -> Dungeon -> MaybeT (Writer MessageLog) Dungeon
+handleNpcTurn c d = maybe mzero doAction theActor
+    where (theActor, dungeonWithoutTheActor) = popActorAt c d
+
+          doAction actor = npcAction actor dungeonWithoutTheActor
+
 
 npcAction :: Actor -> Dungeon -> MaybeT (Writer MessageLog) Dungeon
 npcAction e d = action entityAfterUpdatingPath d

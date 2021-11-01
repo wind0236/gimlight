@@ -9,17 +9,16 @@ module GameModel.Status.Exploring.Dungeons
 
 import           Control.Lens               ((%~), (&), (.~), (^.))
 import           Control.Monad              (MonadPlus (mzero))
-import           Control.Monad.Trans.Maybe  (MaybeT (runMaybeT), mapMaybeT)
-import           Control.Monad.Trans.Writer (Writer, writer)
-import           Coord                      (Coord)
+import           Control.Monad.Trans.Maybe  (MaybeT, mapMaybeT)
+import           Control.Monad.Trans.Writer (Writer)
 import           Data.Foldable              (find)
 import           Dungeon                    (Dungeon, actors, ascendingStairs,
-                                             descendingStairs, npcs,
+                                             descendingStairs,
                                              positionOnParentMap, updateMap)
 import qualified Dungeon                    as D
 import           Dungeon.Actor              (Actor, isPlayer, position)
 import           Dungeon.Actor.Actions      (Action)
-import           Dungeon.Actor.NpcBehavior  (npcAction)
+import qualified Dungeon.Actor.NpcBehavior  as NPC
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
 import           TreeZipper                 (TreeZipper, getFocused, goDownBy,
@@ -76,24 +75,10 @@ doPlayerAction action ds = result
                        Nothing -> mzero
 
 handleNpcTurns :: Dungeons -> Writer MessageLog Dungeons
-handleNpcTurns ds = foldl foldStep (writer (ds, [])) $ npcs $ getFocused ds
-    where foldStep acc x = acc >>= (runMaybeT . handleNpcTurn (x ^. position)) >>= maybe acc return
-
-handleNpcTurn :: Coord -> Dungeons -> MaybeT (Writer MessageLog) Dungeons
-handleNpcTurn c ds = newDungeons
-    where (theActor, dungeonsWithoutTheActor) = popActorAt c ds
-
-          doAction actor = npcAction actor $ getFocused dungeonsWithoutTheActor
-
-          newDungeon = maybe mzero doAction theActor
-
-          newDungeons = mapMaybeT (fmap (fmap (\d -> modify (const d) dungeonsWithoutTheActor))) newDungeon
+handleNpcTurns ds = (\x -> modify (const x) ds) <$> NPC.handleNpcTurns (getFocused ds)
 
 popPlayer :: Dungeons -> (Maybe Actor, Dungeons)
 popPlayer = popActorIf isPlayer
-
-popActorAt :: Coord -> Dungeons -> (Maybe Actor, Dungeons)
-popActorAt c = popActorIf (\x -> x ^. position == c)
 
 popActorIf :: (Actor -> Bool) -> Dungeons -> (Maybe Actor, Dungeons)
 popActorIf f z = (fst $ D.popActorIf f $ getFocused z, modify (snd . D.popActorIf f) z)
