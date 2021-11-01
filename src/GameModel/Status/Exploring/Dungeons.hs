@@ -4,17 +4,17 @@ module GameModel.Status.Exploring.Dungeons
     , descendStairsAtPlayerPosition
     , exitDungeon
     , doPlayerAction
-    , handleNpcTurn
+    , handleNpcTurns
     ) where
 
 import           Control.Lens               ((%~), (&), (.~), (^.))
 import           Control.Monad              (MonadPlus (mzero))
-import           Control.Monad.Trans.Maybe  (MaybeT, mapMaybeT)
-import           Control.Monad.Trans.Writer (Writer)
+import           Control.Monad.Trans.Maybe  (MaybeT (runMaybeT), mapMaybeT)
+import           Control.Monad.Trans.Writer (Writer, writer)
 import           Coord                      (Coord)
 import           Data.Foldable              (find)
 import           Dungeon                    (Dungeon, actors, ascendingStairs,
-                                             descendingStairs,
+                                             descendingStairs, npcs,
                                              positionOnParentMap, updateMap)
 import qualified Dungeon                    as D
 import           Dungeon.Actor              (Actor, isPlayer, position)
@@ -74,6 +74,10 @@ doPlayerAction action ds = result
                        Just p  -> let dungeonAfterAction = action p currentDungeonWithoutPlayer
                                   in mapMaybeT (fmap (fmap (\d -> modify (const d) zipperWithoutPlayer))) dungeonAfterAction
                        Nothing -> mzero
+
+handleNpcTurns :: Dungeons -> Writer MessageLog Dungeons
+handleNpcTurns ds = foldl foldStep (writer (ds, [])) $ npcs $ getFocused ds
+    where foldStep acc x = acc >>= (runMaybeT . handleNpcTurn (x ^. position)) >>= maybe acc return
 
 handleNpcTurn :: Coord -> Dungeons -> MaybeT (Writer MessageLog) Dungeons
 handleNpcTurn c ds = newDungeons

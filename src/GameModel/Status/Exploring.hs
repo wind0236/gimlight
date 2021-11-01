@@ -24,9 +24,9 @@ import           Control.Monad.Trans.Maybe           (MaybeT (runMaybeT))
 import           Control.Monad.Trans.Writer          (runWriter)
 import           Coord                               (Coord)
 import           Data.Binary                         (Binary)
-import           Dungeon                             (Dungeon, npcs)
+import           Dungeon                             (Dungeon)
 import qualified Dungeon                             as D
-import           Dungeon.Actor                       (Actor, position)
+import           Dungeon.Actor                       (Actor)
 import           Dungeon.Actor.Actions               (Action)
 import           Dungeon.Turn                        (Status (PlayerKilled))
 import           GHC.Generics                        (Generic)
@@ -77,14 +77,9 @@ completeThisTurn eh =
           (status, newCurrentDungeon) = D.completeThisTurn $ getFocused $ handlerAfterNpcTurns ^. dungeons
 
 handleNpcTurns :: ExploringHandler -> ExploringHandler
-handleNpcTurns eh = foldl (\acc x -> handleNpcTurn (x ^. position) acc) eh $ npcs $ getCurrentDungeon eh
-
-handleNpcTurn :: Coord -> ExploringHandler -> ExploringHandler
-handleNpcTurn c eh = result
-    where (dungeonsAfterTurn, newLog) = runWriter $ runMaybeT $ DS.handleNpcTurn c $ eh ^. dungeons
-          result = case dungeonsAfterTurn of
-                    Just x -> eh & dungeons .~ x & messageLog %~ L.addMessages newLog
-                    Nothing -> eh
+handleNpcTurns eh =
+    eh & dungeons .~ dungeonsAfterNpcTurns & messageLog %~ L.addMessages newLog
+    where (dungeonsAfterNpcTurns, newLog) = runWriter $ DS.handleNpcTurns $ eh ^. dungeons
 
 getPlayerActor :: ExploringHandler -> Maybe Actor
 getPlayerActor = D.getPlayerActor . getCurrentDungeon
