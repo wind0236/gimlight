@@ -13,7 +13,6 @@ module GameModel.Status.Exploring
     , getPlayerPosition
     , actorAt
     , isPositionInDungeon
-    , addMessages
     , getCurrentDungeon
     , getMessageLog
     ) where
@@ -32,7 +31,7 @@ import           Dungeon.Turn                        (Status (PlayerKilled))
 import           GHC.Generics                        (Generic)
 import           GameModel.Status.Exploring.Dungeons (Dungeons)
 import qualified GameModel.Status.Exploring.Dungeons as DS
-import           Log                                 (Message, MessageLog)
+import           Log                                 (MessageLog)
 import qualified Log                                 as L
 import           TreeZipper                          (TreeZipper, getFocused,
                                                       modify)
@@ -92,9 +91,6 @@ actorAt c = D.actorAt c . getCurrentDungeon
 
 isPositionInDungeon :: Coord -> ExploringHandler -> Bool
 isPositionInDungeon c = D.isPositionInDungeon c . getCurrentDungeon
-
-addMessages :: [Message] -> ExploringHandler -> ExploringHandler
-addMessages newMessages eh = eh & messageLog %~ L.addMessages newMessages
 
 getCurrentDungeon :: ExploringHandler -> Dungeon
 getCurrentDungeon eh = getFocused $ eh ^. dungeons

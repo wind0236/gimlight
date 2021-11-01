@@ -12,19 +12,15 @@ module Dungeon
     , dungeon
     , changeTile
     , completeThisTurn
-    , popPlayer
     , popActorAt
     , popActorIf
-    , monsters
     , pushActor
     , walkableFloor
     , getPlayerActor
-    , enemyCoords
     , mapWidthAndHeight
     , playerPosition
     , stairsPositionCandidates
     , updateMap
-    , isGlobalMap
     , isTown
     , actorAt
     , isPositionInDungeon
@@ -37,7 +33,6 @@ module Dungeon
     , explored
     , items
     , popItemAt
-    , pushItem
     , descendingStairs
     , addAscendingAndDescendingStiars
     , addDescendingStairs
@@ -51,7 +46,7 @@ import           Data.Binary          (Binary)
 import           Data.Foldable        (find)
 import           Data.List            (findIndex)
 import           Data.Maybe           (isJust)
-import           Dungeon.Actor        (Actor, isMonster, isPlayer)
+import           Dungeon.Actor        (Actor, isPlayer)
 import qualified Dungeon.Actor        as A
 import           Dungeon.Item         (Item)
 import qualified Dungeon.Item         as I
@@ -145,9 +140,6 @@ actorAt c d = find (\x -> x ^. A.position == c) $ d ^. actors
 pushActor :: Actor -> Dungeon -> Dungeon
 pushActor e d = d & actors %~ (e :)
 
-popPlayer :: Dungeon -> (Maybe Actor, Dungeon)
-popPlayer = popActorIf isPlayer
-
 popActorAt :: Coord -> Dungeon -> (Maybe Actor, Dungeon)
 popActorAt c = popActorIf (\x -> x ^. A.position == c)
 
@@ -159,9 +151,6 @@ popActorIf f d =
                       newEntities = take x xs ++ drop (x + 1) xs
                   in (Just actor, d & actors .~ newEntities)
         Nothing -> (Nothing, d)
-
-pushItem :: Item -> Dungeon -> Dungeon
-pushItem i d = d & items %~ (i :)
 
 popItemAt :: Coord -> Dungeon -> (Maybe Item, Dungeon)
 popItemAt c = popItemIf (\x -> x ^. I.position == c)
@@ -188,23 +177,14 @@ walkableFloor d = fmap (^. walkable) (d ^. tileMap)
 transparentMap :: Dungeon -> BoolMap
 transparentMap d = fmap (^. transparent) (d ^. tileMap)
 
-enemyCoords :: Dungeon -> [Coord]
-enemyCoords d = map (^. A.position) $ filter (not . isPlayer) $ d ^. actors
-
 isPlayerAlive :: Dungeon -> Bool
 isPlayerAlive d = isJust $ getPlayerActor d
 
 npcs :: Dungeon -> [Actor]
 npcs d = filter (not . isPlayer) $ d ^. actors
 
-monsters :: Dungeon -> [Actor]
-monsters d = filter isMonster $ d ^. actors
-
 mapWidthAndHeight :: Dungeon -> V2 Int
 mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1
-
-isGlobalMap :: Dungeon -> Bool
-isGlobalMap d = (d ^. dungeonKind) == GlobalMap
 
 isTown :: Dungeon -> Bool
 isTown d = (d ^. dungeonKind) ==  Town
