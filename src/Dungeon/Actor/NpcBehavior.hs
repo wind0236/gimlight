@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Dungeon.Actor.Behavior
+module Dungeon.Actor.NpcBehavior
     ( npcAction
     ) where
 

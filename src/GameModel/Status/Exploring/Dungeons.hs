@@ -19,7 +19,7 @@ import           Dungeon                    (Dungeon, actors, ascendingStairs,
 import qualified Dungeon                    as D
 import           Dungeon.Actor              (Actor, isPlayer, position)
 import           Dungeon.Actor.Actions      (Action)
-import           Dungeon.Actor.Behavior     (npcAction)
+import           Dungeon.Actor.NpcBehavior  (npcAction)
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
 import           TreeZipper                 (TreeZipper, getFocused, goDownBy,

@@ -20,7 +20,7 @@ executable roguelike
                       , Dungeon.Actor.Actions.Move
                       , Dungeon.Actor.Actions.PickUp
                       , Dungeon.Actor.Actions.Wait
-                      , Dungeon.Actor.Behavior
+                      , Dungeon.Actor.NpcBehavior
                       , Dungeon.Actor.Friendly
                       , Dungeon.Actor.Inventory
                       , Dungeon.Actor.Player
