@@ -32,7 +32,6 @@ handleNpcTurn c d = maybe mzero doAction theActor
 
           doAction actor = npcAction actor dungeonWithoutTheActor
 
-
 npcAction :: Actor -> Dungeon -> MaybeT (Writer MessageLog) Dungeon
 npcAction e d = action entityAfterUpdatingPath d
     where entityAfterUpdatingPath = updatePath e d
