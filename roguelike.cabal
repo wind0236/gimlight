@@ -43,7 +43,6 @@ executable roguelike
                       , Dungeon.Predefined.GlobalMap
                       , Dungeon.Size
                       , Dungeon.Stairs
-                      , Dungeon.Turn
                       , GameModel
                       , GameModel.Config
                       , GameModel.Status
