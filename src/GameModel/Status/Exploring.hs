@@ -27,7 +27,6 @@ import           Dungeon                             (Dungeon)
 import qualified Dungeon                             as D
 import           Dungeon.Actor                       (Actor)
 import           Dungeon.Actor.Actions               (Action)
-import           Dungeon.Turn                        (Status (PlayerKilled))
 import           GHC.Generics                        (Generic)
 import           GameModel.Status.Exploring.Dungeons (Dungeons)
 import qualified GameModel.Status.Exploring.Dungeons as DS
@@ -69,11 +68,10 @@ doPlayerAction action eh =
 
 completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
 completeThisTurn eh =
-    if status == PlayerKilled
-        then Nothing
-        else Just $ handlerAfterNpcTurns & dungeons %~ modify (const newCurrentDungeon)
+    (\x -> handlerAfterNpcTurns & dungeons %~ modify (const x)) <$> newCurrentDungeon
     where handlerAfterNpcTurns = handleNpcTurns eh
-          (status, newCurrentDungeon) = D.completeThisTurn $ getFocused $ handlerAfterNpcTurns ^. dungeons
+
+          newCurrentDungeon = D.updateMap $ getFocused $ handlerAfterNpcTurns ^. dungeons
 
 handleNpcTurns :: ExploringHandler -> ExploringHandler
 handleNpcTurns eh =

@@ -11,7 +11,6 @@ module Dungeon
     ( Dungeon
     , dungeon
     , changeTile
-    , completeThisTurn
     , popActorAt
     , popActorIf
     , pushActor
@@ -45,7 +44,6 @@ import           Data.Array.Base      (IArray (bounds), assocs, (//))
 import           Data.Binary          (Binary)
 import           Data.Foldable        (find)
 import           Data.List            (findIndex)
-import           Data.Maybe           (isJust)
 import           Dungeon.Actor        (Actor, isPlayer)
 import qualified Dungeon.Actor        as A
 import           Dungeon.Item         (Item)
@@ -56,7 +54,6 @@ import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
 import           Dungeon.Map.Fov      (Fov, calculateFov, initFov)
 import           Dungeon.Map.Tile     (Tile, TileMap, transparent, walkable)
 import           Dungeon.Stairs       (StairsPair (StairsPair, downStairs, upStairs))
-import qualified Dungeon.Turn         as DT
 import           GHC.Generics         (Generic)
 import           Linear.V2            (V2 (..))
 
@@ -111,22 +108,15 @@ addDescendingStairs sp@(StairsPair upper _) (parent@Dungeon { _descendingStairs 
     (parent { _descendingStairs = sp:ss }, child { _positionOnParentMap = Just upper })
 addDescendingStairs _ _ = error "The child's position in the parent map is already set."
 
-completeThisTurn :: Dungeon -> (DT.Status, Dungeon)
-completeThisTurn d = (result, updatedMap)
-    where result = if isPlayerAlive updatedMap then DT.Success else DT.PlayerKilled
-          updatedMap = updateMap d
-
-updateMap :: Dungeon -> Dungeon
+updateMap :: Dungeon -> Maybe Dungeon
 updateMap = updateFov . updateExplored
 
 updateExplored :: Dungeon -> Dungeon
 updateExplored d = d & explored .~ updateExploredMap (d ^. visible) (d ^. explored)
 
-updateFov :: Dungeon -> Dungeon
+updateFov :: Dungeon -> Maybe Dungeon
 updateFov d =
-    case getPlayerActor d of
-        Just p  -> d & visible .~ calculateFov (p ^. A.position) (transparentMap d)
-        Nothing -> d
+    (\pos -> d & visible .~ calculateFov pos (transparentMap d)) <$> playerPosition d
 
 playerPosition :: Dungeon -> Maybe Coord
 playerPosition d = (^. A.position) <$> getPlayerActor d
@@ -176,9 +166,6 @@ walkableFloor d = fmap (^. walkable) (d ^. tileMap)
 
 transparentMap :: Dungeon -> BoolMap
 transparentMap d = fmap (^. transparent) (d ^. tileMap)
-
-isPlayerAlive :: Dungeon -> Bool
-isPlayerAlive d = isJust $ getPlayerActor d
 
 npcs :: Dungeon -> [Actor]
 npcs d = filter (not . isPlayer) $ d ^. actors

@@ -36,9 +36,11 @@ ascendStairsAtPlayerPosition ds = newZipper
           zipperFocusingNextDungeon = goUp zipperWithoutPlayer
           newPosition = upStairs <$> getFocused ds ^. ascendingStairs
           newZipper = case (zipperFocusingNextDungeon, newPlayer, ascendable) of
-                          (Just g, Just p, True) ->
-                                Just $ modify (\d -> updateMap $ d & actors %~ (:) p) g
-                          _ -> Nothing
+                          (Just g, Just p, True) -> updateMapOrError g p
+                          _                      -> Nothing
+          updateMapOrError g p = Just $ modify (\d -> case updateMap $ d & actors %~ (:) p of
+                                                          Just x -> x
+                                                          Nothing -> error "Failed to update the map.") g
 
 descendStairsAtPlayerPosition :: Dungeons -> Maybe Dungeons
 descendStairsAtPlayerPosition ds = newZipper
@@ -49,8 +51,11 @@ descendStairsAtPlayerPosition ds = newZipper
           zipperFocusingNextDungeon = goDownBy (\x -> x ^. positionOnParentMap == fmap (^. position) player) zipperWithoutPlayer
           newPosition = downStairs <$> find (\(StairsPair from _) -> Just from == fmap (^. position) player) (getFocused ds ^. descendingStairs)
           newZipper = case (zipperFocusingNextDungeon, newPlayer) of
-                          (Just g, Just p) -> Just $ modify (\d -> updateMap $ d & actors %~ (:) p) g
-                          _ -> Nothing
+                          (Just g, Just p) -> updateMapOrError g p
+                          _                -> Nothing
+          updateMapOrError g p = Just $ modify (\d -> case updateMap $ d & actors %~ (:) p of
+                                                          Just x -> x
+                                                          Nothing -> error "Failed to update the map.") g
 
 exitDungeon :: Dungeons -> Maybe Dungeons
 exitDungeon ds = newZipper
