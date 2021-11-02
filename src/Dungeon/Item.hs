@@ -3,34 +3,40 @@
 
 module Dungeon.Item
     ( Item
+    , Effect(..)
     , herb
     , getName
     , getPosition
     , getIconImagePath
-    , getHealAmount
+    , getEffect
     ) where
 
 import           Coord              (Coord)
 import           Data.Binary        (Binary)
 import           Data.Text          (Text)
+import           Dungeon.Item.Heal  (HealHandler, healHandler)
 import           GHC.Generics       (Generic)
 import           Localization       (MultilingualText)
 import qualified Localization.Texts as T
+
+newtype Effect = Heal HealHandler deriving (Show, Ord, Eq, Generic)
+
+instance Binary Effect
 
 data Item = Item
           { name          :: MultilingualText
           , position      :: Coord
           , iconImagePath :: Text
-          , healAmount    :: Int
+          , effect        :: Effect
           } deriving (Show, Ord, Eq, Generic)
 
 instance Binary Item
 
-item :: Coord -> Text -> Int -> Item
-item p ip h = Item { name = T.herb
+item :: Coord -> Text -> Effect -> Item
+item p ip e = Item { name = T.herb
                    , position = p
                    , iconImagePath = ip
-                   , healAmount = h
+                   , effect = e
                    }
 
 getName :: Item -> MultilingualText
@@ -42,8 +48,8 @@ getPosition Item { position = p } = p
 getIconImagePath :: Item -> Text
 getIconImagePath Item { iconImagePath = ip } = ip
 
-getHealAmount :: Item -> Int
-getHealAmount Item { healAmount = h } = h
+getEffect :: Item -> Effect
+getEffect Item { effect = e } = e
 
 herb :: Coord -> Item
-herb p = item p "images/herb.png" 4
+herb p = item p "images/herb.png" (Heal $ healHandler 4)

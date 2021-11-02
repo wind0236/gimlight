@@ -32,6 +32,7 @@ executable roguelike
                       , Dungeon.Generate.Room
                       , Dungeon.Init
                       , Dungeon.Item
+                      , Dungeon.Item.Heal
                       , Dungeon.Map
                       , Dungeon.Map.Bool
                       , Dungeon.Map.Explored
