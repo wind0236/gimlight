@@ -35,7 +35,8 @@ jobs:
         sudo apt update
         sudo apt install libsdl2-dev libglew-dev
 
-        cabal update
+    - name: Update cabal
+      run: cabal update
 
     - name: Generate `cabal.project.local`
       run: "echo \"package * \n  ghc-options: -fwrite-ide-info\" > cabal.project.local"
