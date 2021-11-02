@@ -18,7 +18,6 @@ import           Dungeon.Actor              (getCurrentExperiencePoint,
                                              getHp, getLevel, getMaxHp,
                                              getPower, walkingImagePath)
 import qualified Dungeon.Actor              as A
-import           Dungeon.Item               (iconImagePath)
 import qualified Dungeon.Item               as I
 import qualified Dungeon.Map.Tile           as MT
 import           GameModel.Config           (Config)
@@ -101,9 +100,9 @@ mapTiles eh = box_ [alignLeft] $ vgrid rows `styleBasic` styles
 
 mapItems :: ExploringHandler -> [GameWidgetNode]
 mapItems eh = mapMaybe itemToImage $ d ^. items
-    where itemToImage item = guard (isItemDrawed item) >> return (image (item ^. iconImagePath) `styleBasic` style item)
+    where itemToImage item = guard (isItemDrawed item) >> return (image (I.getIconImagePath item) `styleBasic` style item)
           isItemDrawed item = let pos = itemPositionOnDisplay item
-                                  isVisible = (d ^. visible) ! (item ^. I.position)
+                                  isVisible = (d ^. visible) ! I.getPosition item
                                 in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
           d = getCurrentDungeon eh
           leftPadding item = fromIntegral $ itemPositionOnDisplay item ^. _x * tileWidth
@@ -111,7 +110,7 @@ mapItems eh = mapMaybe itemToImage $ d ^. items
 
           style item = [paddingL $ leftPadding item, paddingT $ topPadding item]
 
-          itemPositionOnDisplay item = item ^. I.position - bottomLeftCoord d
+          itemPositionOnDisplay item = I.getPosition item - bottomLeftCoord d
 
 mapActors :: ExploringHandler -> [GameWidgetNode]
 mapActors eh = mapMaybe actorToImage $ d ^. actors

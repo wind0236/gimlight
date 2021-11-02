@@ -1,17 +1,15 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
 
 module Dungeon.Item
     ( Item
     , herb
-    , name
-    , position
-    , iconImagePath
-    , healAmount
+    , getName
+    , getPosition
+    , getIconImagePath
+    , getHealAmount
     ) where
 
-import           Control.Lens       (makeLenses)
 import           Coord              (Coord)
 import           Data.Binary        (Binary)
 import           Data.Text          (Text)
@@ -20,20 +18,32 @@ import           Localization       (MultilingualText)
 import qualified Localization.Texts as T
 
 data Item = Item
-          { _name          :: MultilingualText
-          , _position      :: Coord
-          , _iconImagePath :: Text
-          , _healAmount    :: Int
+          { name          :: MultilingualText
+          , position      :: Coord
+          , iconImagePath :: Text
+          , healAmount    :: Int
           } deriving (Show, Ord, Eq, Generic)
-makeLenses ''Item
+
 instance Binary Item
 
 item :: Coord -> Text -> Int -> Item
-item p ip h = Item { _name = T.herb
-                   , _position = p
-                   , _iconImagePath = ip
-                   , _healAmount = h
+item p ip h = Item { name = T.herb
+                   , position = p
+                   , iconImagePath = ip
+                   , healAmount = h
                    }
+
+getName :: Item -> MultilingualText
+getName Item { name = n } = n
+
+getPosition :: Item -> Coord
+getPosition Item { position = p } = p
+
+getIconImagePath :: Item -> Text
+getIconImagePath Item { iconImagePath = ip } = ip
+
+getHealAmount :: Item -> Int
+getHealAmount Item { healAmount = h } = h
 
 herb :: Coord -> Item
 herb p = item p "images/herb.png" 4

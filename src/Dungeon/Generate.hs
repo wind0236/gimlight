@@ -120,7 +120,7 @@ placeItemsAccum items g r n =
     placeItemsAccum newItems g'' r (n - 1)
     where (x, g') = randomR (x1 r, x2 r - 1) g
           (y, g'') = randomR (y1 r, y2 r - 1) g'
-          newItems = if V2 x y `notElem` map (^. I.position) items
+          newItems = if V2 x y `notElem` map I.getPosition items
                         then herb (V2 x y):items
                         else items
 

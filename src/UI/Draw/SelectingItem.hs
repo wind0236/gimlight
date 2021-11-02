@@ -4,8 +4,7 @@ module UI.Draw.SelectingItem
     ( drawSelectingItem
     ) where
 
-import           Control.Lens                        ((^.))
-import           Dungeon.Item                        (name)
+import           Dungeon.Item                        (getName)
 import           GameModel.Config                    (Config)
 import           GameModel.Status.SelectingItemToUse (SelectingItemToUseHandler,
                                                       getItems,
@@ -24,5 +23,5 @@ drawSelectingItem sh c = withKeyEvents $ vstack labels
                                                 then "* " <> showt idx <> " " <> x
                                                 else showt idx <> " " <> x
                                                ) [0..] $ map (getLocalizedText c) itemNames
-          itemNames = map (^. name) $ getItems sh
+          itemNames = map getName $ getItems sh
           topLabel = getLocalizedText c T.whichItemToUse

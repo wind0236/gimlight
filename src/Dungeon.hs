@@ -143,7 +143,7 @@ popActorIf f d =
         Nothing -> (Nothing, d)
 
 popItemAt :: Coord -> Dungeon -> (Maybe Item, Dungeon)
-popItemAt c = popItemIf (\x -> x ^. I.position == c)
+popItemAt c = popItemIf (\x -> I.getPosition x == c)
 
 popItemIf :: (Item -> Bool) -> Dungeon -> (Maybe Item, Dungeon)
 popItemIf f d =
