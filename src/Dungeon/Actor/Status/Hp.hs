@@ -10,6 +10,7 @@ module Dungeon.Actor.Status.Hp
     ) where
 
 import           Data.Binary  (Binary)
+import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
 
 data Hp =
@@ -22,10 +23,7 @@ data Hp =
 instance Binary Hp
 
 hp :: Int -> Hp
-hp h =
-    case hpOrFail h of
-        Just x  -> x
-        Nothing -> error "The initial HP value must be positive."
+hp h = fromMaybe (error "The initial HP value must be positive.") (hpOrFail h)
 
 getHp :: Hp -> Int
 getHp = currentHp

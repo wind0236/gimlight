@@ -7,6 +7,7 @@ module Dungeon.Actor.Player
     ) where
 
 import           Control.Lens                        ((^.))
+import           Data.Maybe                          (fromMaybe)
 import           Dungeon                             (isTown)
 import           Dungeon.Actor                       (Actor, isMonster,
                                                       talkMessage)
@@ -103,10 +104,7 @@ handlePlayerSelectingItemToUse eh =
     SelectingItemToUse $ selectingItemToUseHandler xs eh
   where
     xs = A.getItems p
-    p =
-        case getPlayerActor eh of
-            Just x  -> x
-            Nothing -> error "Player is dead."
+    p = fromMaybe (error "Player is dead.") (getPlayerActor eh)
 
 handlePlayerConsumeItem :: SelectingItemToUseHandler -> GameStatus
 handlePlayerConsumeItem sh =

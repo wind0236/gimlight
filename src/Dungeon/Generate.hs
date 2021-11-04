@@ -5,6 +5,7 @@ module Dungeon.Generate
 import           Control.Lens           ((^.))
 import           Coord                  (Coord)
 import           Data.Array             (bounds, (//))
+import           Data.Maybe             (fromMaybe)
 import           Data.Tree              (Tree (Node, rootLabel, subForest))
 import           Dungeon                (Dungeon, DungeonKind (DungeonType),
                                          addAscendingAndDescendingStiars,
@@ -79,9 +80,9 @@ generateDungeonAndAppend zipper g maxRooms roomMinSize roomMaxSize mapSize =
         modify (changeTile upperStairsPosition downStairs) $
         modify (const newUpperDungeon) zipper
     zipperFocusingNext =
-        case goDownBy (== newLowerDungeon) newZipper of
-            Just x  -> x
-            Nothing -> error "unreachable."
+        fromMaybe
+            (error "unreachable.")
+            (goDownBy (== newLowerDungeon) newZipper)
 
 newStairsPosition :: StdGen -> Dungeon -> (Coord, StdGen)
 newStairsPosition g d = (candidates !! index, g')

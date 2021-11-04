@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Dungeon.Actor.NpcBehavior
     ( handleNpcTurns
     ) where

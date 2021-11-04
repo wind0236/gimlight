@@ -10,6 +10,7 @@ module GameModel.Status.Exploring.Dungeons
 import           Control.Lens               ((%~), (&), (.~), (^.))
 import           Control.Monad.Trans.Writer (Writer)
 import           Data.Foldable              (find)
+import           Data.Maybe                 (fromMaybe)
 import           Dungeon                    (Dungeon, actors, ascendingStairs,
                                              descendingStairs,
                                              positionOnParentMap, updateMap)
@@ -45,9 +46,9 @@ ascendStairsAtPlayerPosition ds = newZipper
         Just $
         modify
             (\d ->
-                 case updateMap $ d & actors %~ (:) p of
-                     Just x  -> x
-                     Nothing -> error "Failed to update the map.")
+                 fromMaybe
+                     (error "Failed to update the map.")
+                     (updateMap $ d & actors %~ (:) p))
             g
 
 descendStairsAtPlayerPosition :: Dungeons -> Maybe Dungeons
@@ -75,9 +76,9 @@ descendStairsAtPlayerPosition ds = newZipper
         Just $
         modify
             (\d ->
-                 case updateMap $ d & actors %~ (:) p of
-                     Just x  -> x
-                     Nothing -> error "Failed to update the map.")
+                 fromMaybe
+                     (error "Failed to update the map.")
+                     (updateMap $ d & actors %~ (:) p))
             g
 
 exitDungeon :: Dungeons -> Maybe Dungeons

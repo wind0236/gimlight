@@ -8,6 +8,7 @@ module GameModel.Status
     ) where
 
 import           Data.Binary                         (Binary)
+import           Data.Maybe                          (fromMaybe)
 import           Data.Tree                           (Tree (Node, rootLabel, subForest))
 import           Dungeon                             (addAscendingAndDescendingStiars,
                                                       addDescendingStairs)
@@ -67,9 +68,9 @@ newGameStatus = do
                 }
         zipper = appendTree batsTreeWithParentMap $ treeZipper dungeonTree
         initZipper =
-            case goDownBy (== beaeveWithParentMap) zipper of
-                Just x  -> x
-                Nothing -> error "Unreachable."
+            fromMaybe
+                (error "Unreachable.")
+                (goDownBy (== beaeveWithParentMap) zipper)
         initExploring =
             exploringHandler initZipper $
             foldr (L.addMessage . L.message) L.emptyLog [T.welcome]

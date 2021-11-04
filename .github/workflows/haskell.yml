@@ -52,9 +52,7 @@ jobs:
     - name: Run tests
       run: cabal test all
 
-    - uses: rwe/actions-hlint-setup@v1
-
-    - uses: rwe/actions-hlint-run@v2
-      with:
-        path: src/
-        fail-on: suggestion
+    - name: Run hlint
+      run: |
+        cabal install hlint
+        ~/.cabal/bin/hlint .
