@@ -16,4 +16,4 @@ initExploredMap = emptyBoolMap
 
 updateExploredMap :: ExploredMap -> Fov -> ExploredMap
 updateExploredMap e f =
-    e // [(pos, (e ! pos) || value) | (pos, value) <- assocs f]
+    e // [(pos, e ! pos || value) | (pos, value) <- assocs f]

@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Dungeon.Actor.Actions.Melee
     ( meleeAction
     ) where
@@ -16,7 +14,7 @@ import           Log                   (MessageLog)
 meleeAction :: V2 Int -> Action
 meleeAction offset src dungeon = result
   where
-    dstPosition = (src ^. position) + offset
+    dstPosition = src ^. position + offset
     (target, dungeonWithoutTarget) = popActorAt dstPosition dungeon
     result =
         case target of

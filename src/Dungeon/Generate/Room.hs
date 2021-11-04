@@ -30,7 +30,7 @@ roomOverlaps Room {x1 = aX1, x2 = aX2, y1 = aY1, y2 = aY2} Room { x1 = bX1
                                                                 , y1 = bY1
                                                                 , y2 = bY2
                                                                 } =
-    (aX1 <= bX2) && (aX2 >= bX1) && (aY1 <= bY2) && (aY2 >= bY1)
+    aX1 <= bX2 && aX2 >= bX1 && aY1 <= bY2 && aY2 >= bY1
 
 roomFromWidthHeight :: Coord -> V2 Int -> Room
 roomFromWidthHeight tl wh =

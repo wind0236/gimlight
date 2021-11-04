@@ -119,10 +119,10 @@ player c =
     st = S.status (hp 30) 5 2
 
 isPlayer :: Actor -> Bool
-isPlayer e = (e ^. actorKind) == Player
+isPlayer e = e ^. actorKind == Player
 
 isMonster :: Actor -> Bool
-isMonster e = (e ^. actorKind) == Monster
+isMonster e = e ^. actorKind == Monster
 
 getHp :: Actor -> Int
 getHp e = S.getHp $ e ^. status

@@ -178,7 +178,7 @@ stairsPositionCandidates d =
   where
     walkableCoords = map fst . filter snd . assocs . walkableFloor
     isStairsOnPosition c = isUpStairsPosition c || isDownStairsPosition c
-    isUpStairsPosition c = (downStairs <$> (d ^. ascendingStairs)) == Just c
+    isUpStairsPosition c = (downStairs <$> d ^. ascendingStairs) == Just c
     isDownStairsPosition c = c `elem` map upStairs (d ^. descendingStairs)
 
 walkableFloor :: Dungeon -> BoolMap
@@ -194,7 +194,7 @@ mapWidthAndHeight :: Dungeon -> V2 Int
 mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1
 
 isTown :: Dungeon -> Bool
-isTown d = (d ^. dungeonKind) == Town
+isTown d = d ^. dungeonKind == Town
 
 isPositionInDungeon :: Coord -> Dungeon -> Bool
 isPositionInDungeon c d = x >= 0 && x < width && y >= 0 && y < height

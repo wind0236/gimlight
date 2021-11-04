@@ -71,15 +71,13 @@ attackFromTo attacker defender = (newAttacker, newDefender, message)
         case newDefender of
             Just _  -> notKilledMessage
             Nothing -> killedMessage
-    notKilledMessage =
-        \a d ->
-            if damage > 0
-                then [M.message $ T.damagedMessage damage a d]
-                else [M.message $ T.noDamageMessage a d]
-    killedMessage =
-        \a d ->
-            map M.message [T.damagedMessage damage a d, T.deathMessage d] ++
-            [M.message $ T.levelUp a (getLevel newAttacker) | levelUp > 0]
+    notKilledMessage a d =
+        if damage > 0
+            then [M.message $ T.damagedMessage damage a d]
+            else [M.message $ T.noDamageMessage a d]
+    killedMessage a d =
+        map M.message [T.damagedMessage damage a d, T.deathMessage d] ++
+        [M.message $ T.levelUp a (getLevel newAttacker) | levelUp > 0]
 
 healHp :: Int -> Status -> Status
 healHp amount a@Status {hp = h} = a {hp = HP.healHp amount h}

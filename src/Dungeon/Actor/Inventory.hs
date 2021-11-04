@@ -39,7 +39,7 @@ getItems inv = inv ^. items
 
 removeNthItem :: Int -> Inventory -> (Maybe Item, Inventory)
 removeNthItem n e =
-    if n < (e ^. maxItems)
+    if n < e ^. maxItems
         then (Just removedItem, e & items .~ newItems)
         else (Nothing, e)
   where
