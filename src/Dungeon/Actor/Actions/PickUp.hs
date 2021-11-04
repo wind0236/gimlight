@@ -18,11 +18,16 @@ pickUpAction e d =
             case addItem x (e ^. inventoryItems) of
                 Just xs -> do
                     tell [T.youGotItem $ getName x]
-                    return (Ok, pushActor (e & inventoryItems .~ xs) dungeonAfterPickingUp)
+                    return
+                        ( Ok
+                        , pushActor
+                              (e & inventoryItems .~ xs)
+                              dungeonAfterPickingUp)
                 Nothing -> do
                     tell [T.bagIsFull]
                     return (Failed, pushActor e d)
         Nothing -> do
             tell [T.youGotNohing]
             return (Failed, pushActor e d)
-    where (item, dungeonAfterPickingUp) = popItemAt (e ^. position) d
+  where
+    (item, dungeonAfterPickingUp) = popItemAt (e ^. position) d

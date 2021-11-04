@@ -15,7 +15,7 @@ import           UI.Draw.Title           (drawTitle)
 import           UI.Types                (GameWidgetEnv, GameWidgetNode)
 
 drawUI :: GameWidgetEnv -> GameModel -> GameWidgetNode
-drawUI _ GameModel { status = s, config = c } =
+drawUI _ GameModel {status = s, config = c} =
     case s of
         Exploring eh          -> drawExploring eh c
         Talking th            -> drawTalking th c

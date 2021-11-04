@@ -22,7 +22,7 @@ addMessages :: [Message] -> MessageLog -> MessageLog
 addMessages xs l = foldl (flip addMessage) l xs
 
 addMessage :: Message -> MessageLog -> MessageLog
-addMessage m l = take maxLog (m:l)
+addMessage m l = take maxLog (m : l)
 
 message :: MultilingualText -> Message
 message text = text

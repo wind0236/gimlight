@@ -24,16 +24,22 @@ import           UI.Types                 (GameWidgetNode)
 
 drawTalking :: TalkingHandler -> Config -> GameWidgetNode
 drawTalking th c =
-    withKeyEvents $ zstack [ drawExploring afterGameStatus c `styleBasic` [bgColor $ gray & L.a .~ 0.5]
-                           , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
-                           , talkingWindow c with
-                           ]
-    where (with, afterGameStatus) = destructHandler th
+    withKeyEvents $
+    zstack
+        [ drawExploring afterGameStatus c `styleBasic`
+          [bgColor $ gray & L.a .~ 0.5]
+        , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
+        , talkingWindow c with
+        ]
+  where
+    (with, afterGameStatus) = destructHandler th
 
 talkingWindow :: Config -> TalkWith -> GameWidgetNode
-talkingWindow c tw = hstack [ image (tw ^. person . standingImagePath)
-                            , window
-                            ]
-    where window = zstack [ image "images/talking_window.png"
-                          , label (getLocalizedText c (tw ^. message)) `styleBasic` [textColor red, textSize 16, paddingL 50]
-                          ]
+talkingWindow c tw = hstack [image (tw ^. person . standingImagePath), window]
+  where
+    window =
+        zstack
+            [ image "images/talking_window.png"
+            , label (getLocalizedText c (tw ^. message)) `styleBasic`
+              [textColor red, textSize 16, paddingL 50]
+            ]

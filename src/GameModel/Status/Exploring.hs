@@ -34,10 +34,12 @@ import qualified Log                                 as L
 import           TreeZipper                          (TreeZipper, getFocused,
                                                       modify)
 
-data ExploringHandler = ExploringHandler
-                      { _dungeons   :: Dungeons
-                      , _messageLog :: MessageLog
-                      } deriving (Show, Ord, Eq, Generic)
+data ExploringHandler =
+    ExploringHandler
+        { _dungeons   :: Dungeons
+        , _messageLog :: MessageLog
+        }
+    deriving (Show, Ord, Eq, Generic)
 
 makeLenses ''ExploringHandler
 
@@ -47,31 +49,42 @@ exploringHandler :: TreeZipper Dungeon -> MessageLog -> ExploringHandler
 exploringHandler = ExploringHandler
 
 ascendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
-ascendStairsAtPlayerPosition eh = (\x -> eh & dungeons .~ x) <$> DS.ascendStairsAtPlayerPosition (eh ^. dungeons)
+ascendStairsAtPlayerPosition eh =
+    (\x -> eh & dungeons .~ x) <$>
+    DS.ascendStairsAtPlayerPosition (eh ^. dungeons)
 
 descendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
-descendStairsAtPlayerPosition eh = (\x -> eh & dungeons .~ x) <$> DS.descendStairsAtPlayerPosition (eh ^. dungeons)
+descendStairsAtPlayerPosition eh =
+    (\x -> eh & dungeons .~ x) <$>
+    DS.descendStairsAtPlayerPosition (eh ^. dungeons)
 
 exitDungeon :: ExploringHandler -> Maybe ExploringHandler
 exitDungeon eh = (\x -> eh & dungeons .~ x) <$> DS.exitDungeon (eh ^. dungeons)
 
 doPlayerAction :: Action -> ExploringHandler -> (ActionStatus, ExploringHandler)
 doPlayerAction action eh = (status, newHandler)
-    where ((status, dungeonsAfterAction), newLog) = runWriter $ DS.doPlayerAction action $ eh ^. dungeons
-
-          newHandler = eh & messageLog %~ L.addMessages newLog & dungeons .~ dungeonsAfterAction
+  where
+    ((status, dungeonsAfterAction), newLog) =
+        runWriter $ DS.doPlayerAction action $ eh ^. dungeons
+    newHandler =
+        eh & messageLog %~ L.addMessages newLog &
+        dungeons .~ dungeonsAfterAction
 
 completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
 completeThisTurn eh =
-    (\x -> handlerAfterNpcTurns & dungeons %~ modify (const x)) <$> newCurrentDungeon
-    where handlerAfterNpcTurns = handleNpcTurns eh
-
-          newCurrentDungeon = D.updateMap $ getFocused $ handlerAfterNpcTurns ^. dungeons
+    (\x -> handlerAfterNpcTurns & dungeons %~ modify (const x)) <$>
+    newCurrentDungeon
+  where
+    handlerAfterNpcTurns = handleNpcTurns eh
+    newCurrentDungeon =
+        D.updateMap $ getFocused $ handlerAfterNpcTurns ^. dungeons
 
 handleNpcTurns :: ExploringHandler -> ExploringHandler
 handleNpcTurns eh =
     eh & dungeons .~ dungeonsAfterNpcTurns & messageLog %~ L.addMessages newLog
-    where (dungeonsAfterNpcTurns, newLog) = runWriter $ DS.handleNpcTurns $ eh ^. dungeons
+  where
+    (dungeonsAfterNpcTurns, newLog) =
+        runWriter $ DS.handleNpcTurns $ eh ^. dungeons
 
 getPlayerActor :: ExploringHandler -> Maybe Actor
 getPlayerActor = D.getPlayerActor . getCurrentDungeon

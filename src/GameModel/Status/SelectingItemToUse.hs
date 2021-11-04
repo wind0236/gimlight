@@ -15,33 +15,38 @@ import           Dungeon.Item               (Item)
 import           GHC.Generics               (Generic)
 import           GameModel.Status.Exploring (ExploringHandler)
 
-data SelectingItemToUseHandler = SelectingItemToUseHandler
-                               { items          :: [Item]
-                               , selecting      :: Int
-                               , afterSelecting :: ExploringHandler
-                               } deriving (Show, Ord, Eq, Generic)
+data SelectingItemToUseHandler =
+    SelectingItemToUseHandler
+        { items          :: [Item]
+        , selecting      :: Int
+        , afterSelecting :: ExploringHandler
+        }
+    deriving (Show, Ord, Eq, Generic)
 
 instance Binary SelectingItemToUseHandler
 
-selectingItemToUseHandler :: [Item] -> ExploringHandler -> SelectingItemToUseHandler
+selectingItemToUseHandler ::
+       [Item] -> ExploringHandler -> SelectingItemToUseHandler
 selectingItemToUseHandler is = SelectingItemToUseHandler is 0
 
 getItems :: SelectingItemToUseHandler -> [Item]
-getItems SelectingItemToUseHandler { items = is } = is
+getItems SelectingItemToUseHandler {items = is} = is
 
 getSelectingIndex :: SelectingItemToUseHandler -> Maybe Int
-getSelectingIndex SelectingItemToUseHandler { items = is, selecting = n } =
-    if null is then Nothing else Just n
+getSelectingIndex SelectingItemToUseHandler {items = is, selecting = n} =
+    if null is
+        then Nothing
+        else Just n
 
 selectPrevItem :: SelectingItemToUseHandler -> SelectingItemToUseHandler
-selectPrevItem sh@SelectingItemToUseHandler { items = is, selecting = n }
+selectPrevItem sh@SelectingItemToUseHandler {items = is, selecting = n}
     | null is = sh
-    | otherwise = sh { selecting = (n - 1) `mod` length is }
+    | otherwise = sh {selecting = (n - 1) `mod` length is}
 
 selectNextItem :: SelectingItemToUseHandler -> SelectingItemToUseHandler
-selectNextItem sh@SelectingItemToUseHandler { items = is, selecting = n }
+selectNextItem sh@SelectingItemToUseHandler {items = is, selecting = n}
     | null is = sh
-    | otherwise = sh { selecting = (n + 1) `mod` length is }
+    | otherwise = sh {selecting = (n + 1) `mod` length is}
 
 finishSelecting :: SelectingItemToUseHandler -> ExploringHandler
-finishSelecting SelectingItemToUseHandler { afterSelecting = a } = a
+finishSelecting SelectingItemToUseHandler {afterSelecting = a} = a

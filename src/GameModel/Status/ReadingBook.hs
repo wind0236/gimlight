@@ -12,10 +12,12 @@ import           GHC.Generics               (Generic)
 import           GameModel.Status.Exploring (ExploringHandler, completeThisTurn)
 import           Localization               (MultilingualText)
 
-data ReadingBookHandler = ReadingBookHandler
-                        { content      :: MultilingualText
-                        , afterReading :: ExploringHandler
-                        } deriving (Show, Ord, Eq, Generic)
+data ReadingBookHandler =
+    ReadingBookHandler
+        { content      :: MultilingualText
+        , afterReading :: ExploringHandler
+        }
+    deriving (Show, Ord, Eq, Generic)
 
 instance Binary ReadingBookHandler
 

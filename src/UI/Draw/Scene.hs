@@ -16,7 +16,11 @@ import           UI.Types               (GameWidgetNode)
 
 drawScene :: SceneHandler -> Config -> GameWidgetNode
 drawScene sh c =
-    withKeyEvents $ zstack [ image (s ^. backgroundImage)
-                           , label_  (getLocalizedText c $ text $ head $ s ^. elements) [multiline] `styleBasic` [textColor black]
-                           ]
-    where (s, _) = destructHandler sh
+    withKeyEvents $
+    zstack
+        [ image (s ^. backgroundImage)
+        , label_ (getLocalizedText c $ text $ head $ s ^. elements) [multiline] `styleBasic`
+          [textColor black]
+        ]
+  where
+    (s, _) = destructHandler sh

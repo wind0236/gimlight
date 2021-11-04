@@ -9,22 +9,23 @@ import           UI.Types (AppEvent (AppKeyboardInput))
 
 withKeyEvents :: WidgetNode s AppEvent -> WidgetNode s AppEvent
 withKeyEvents =
-    keystroke $ map (\x -> (x, AppKeyboardInput x))
-    [ "Up"
-    , "Down"
-    , "Right"
-    , "Left"
-    , "Enter"
-    , "Shift-."
-    , "Shift-,"
-    , "n"
-    , "l"
-    , "q"
-    , "g"
-    , "u"
-    , "e"
-    , "j"
-    , "Ctrl-s"
-    , "Ctrl-l"
-    , "Esc"
-    ]
+    keystroke $
+    map (\x -> (x, AppKeyboardInput x))
+        [ "Up"
+        , "Down"
+        , "Right"
+        , "Left"
+        , "Enter"
+        , "Shift-."
+        , "Shift-,"
+        , "n"
+        , "l"
+        , "q"
+        , "g"
+        , "u"
+        , "e"
+        , "j"
+        , "Ctrl-s"
+        , "Ctrl-l"
+        , "Esc"
+        ]

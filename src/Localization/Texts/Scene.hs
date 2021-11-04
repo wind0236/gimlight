@@ -15,4 +15,5 @@ title2 :: MultilingualText
 title2 = multilingualText "And this is the English text 2." "そしてこれは日本語テキスト2です．"
 
 welcome :: MultilingualText
-welcome = multilingualText "Welcome to the world of Gimlight!" "Gimlightの世界へようこそ！"
+welcome =
+    multilingualText "Welcome to the world of Gimlight!" "Gimlightの世界へようこそ！"

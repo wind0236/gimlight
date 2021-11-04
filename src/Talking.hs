@@ -14,11 +14,15 @@ import           Dungeon.Actor (Actor)
 import           GHC.Generics  (Generic)
 import           Localization  (MultilingualText)
 
-data TalkWith = TalkWith
-              { _person  :: Actor
-              , _message :: MultilingualText
-              } deriving (Show, Ord, Eq, Generic)
+data TalkWith =
+    TalkWith
+        { _person  :: Actor
+        , _message :: MultilingualText
+        }
+    deriving (Show, Ord, Eq, Generic)
+
 makeLenses ''TalkWith
+
 instance Binary TalkWith
 
 talkWith :: Actor -> MultilingualText -> TalkWith

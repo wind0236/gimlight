@@ -8,9 +8,11 @@ import           Coord        (Coord)
 import           Data.Binary  (Binary)
 import           GHC.Generics (Generic)
 
-data StairsPair = StairsPair
-                { upStairs   :: Coord
-                , downStairs :: Coord
-                } deriving (Show, Ord, Eq, Generic)
+data StairsPair =
+    StairsPair
+        { upStairs   :: Coord
+        , downStairs :: Coord
+        }
+    deriving (Show, Ord, Eq, Generic)
 
 instance Binary StairsPair

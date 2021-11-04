@@ -18,10 +18,15 @@ import           UI.Types                            (GameWidgetNode)
 
 drawSelectingItem :: SelectingItemToUseHandler -> Config -> GameWidgetNode
 drawSelectingItem sh c = withKeyEvents $ vstack labels
-    where labels = label topLabel:map label addAsterlist
-          addAsterlist = zipWith (\idx x -> if Just idx == getSelectingIndex sh
-                                                then "* " <> showt idx <> " " <> x
-                                                else showt idx <> " " <> x
-                                               ) [0..] $ map (getLocalizedText c) itemNames
-          itemNames = map getName $ getItems sh
-          topLabel = getLocalizedText c T.whichItemToUse
+  where
+    labels = label topLabel : map label addAsterlist
+    addAsterlist =
+        zipWith
+            (\idx x ->
+                 if Just idx == getSelectingIndex sh
+                     then "* " <> showt idx <> " " <> x
+                     else showt idx <> " " <> x)
+            [0 ..] $
+        map (getLocalizedText c) itemNames
+    itemNames = map getName $ getItems sh
+    topLabel = getLocalizedText c T.whichItemToUse

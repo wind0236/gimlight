@@ -7,6 +7,4 @@ module Localization.Texts.Books
 import           Localization (MultilingualText, multilingualText)
 
 sampleBookContent :: MultilingualText
-sampleBookContent = multilingualText
-    "This is a sample book."
-    "本の実装テスト．"
+sampleBookContent = multilingualText "This is a sample book." "本の実装テスト．"

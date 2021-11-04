@@ -9,9 +9,11 @@ module Dungeon.Item.Heal
 import           Data.Binary  (Binary)
 import           GHC.Generics (Generic)
 
-newtype HealHandler = HealHandler
-                 { amount :: Int
-                 } deriving (Show, Ord, Eq, Generic)
+newtype HealHandler =
+    HealHandler
+        { amount :: Int
+        }
+    deriving (Show, Ord, Eq, Generic)
 
 instance Binary HealHandler
 

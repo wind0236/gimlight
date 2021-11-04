@@ -11,4 +11,5 @@ import           System.Random    (StdGen)
 
 batsDungeon :: StdGen -> (Coord, Tree Dungeon)
 batsDungeon g = (pos, d)
-    where (d, pos, _) = generateMultipleFloorsDungeon g 3 10 5 8 (V2 50 50)
+  where
+    (d, pos, _) = generateMultipleFloorsDungeon g 3 10 5 8 (V2 50 50)

@@ -8,4 +8,5 @@ module Dungeon.Size
 -- TODO: Calculate it.
 minSize, maxSize :: Int
 minSize = 25
+
 maxSize = 100

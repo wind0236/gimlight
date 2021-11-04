@@ -36,36 +36,43 @@ import           Talking                             (talkWith)
 
 playerBumpAction :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 playerBumpAction offset eh =
-    let destination = case getPlayerPosition eh of
-                          Just p  -> p + offset
-                          Nothing -> error "The player is dead."
-        action = case actorAt destination eh of
-                     Just actorAtDestination -> meleeOrTalk offset actorAtDestination
-                     Nothing -> moveOrExitMap offset
-    in action eh
+    let destination =
+            case getPlayerPosition eh of
+                Just p  -> p + offset
+                Nothing -> error "The player is dead."
+        action =
+            case actorAt destination eh of
+                Just actorAtDestination -> meleeOrTalk offset actorAtDestination
+                Nothing                 -> moveOrExitMap offset
+     in action eh
 
 meleeOrTalk :: V2 Int -> Actor -> ExploringHandler -> (Bool, GameStatus)
 meleeOrTalk offset target eh =
     if isMonster target
         then let (status, newHandler) = doPlayerAction (meleeAction offset) eh
-             in case status of
-                    Ok               -> (True, Exploring newHandler)
-                    ReadingStarted _ -> error "Unreachable."
-                    Failed           -> (False, Exploring newHandler)
-        else (True, Talking $ talkingHandler (talkWith target $ target ^. talkMessage) eh)
+              in case status of
+                     Ok               -> (True, Exploring newHandler)
+                     ReadingStarted _ -> error "Unreachable."
+                     Failed           -> (False, Exploring newHandler)
+        else ( True
+             , Talking $
+               talkingHandler (talkWith target $ target ^. talkMessage) eh)
 
 moveOrExitMap :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 moveOrExitMap offset eh =
-    let destination = case getPlayerPosition eh of
-                          Just p  -> p + offset
-                          Nothing -> error "The player is dead."
-    in if isPositionInDungeon destination eh || not (isTown (getCurrentDungeon eh))
-        then let (status, newHandler) = doPlayerAction (moveAction offset) eh
-             in case status of
-                    Ok               -> (True, Exploring newHandler)
-                    ReadingStarted _ -> error "Unreachable."
-                    Failed           -> (False, Exploring newHandler)
-        else (True, exitDungeon eh)
+    let destination =
+            case getPlayerPosition eh of
+                Just p  -> p + offset
+                Nothing -> error "The player is dead."
+     in if isPositionInDungeon destination eh ||
+           not (isTown (getCurrentDungeon eh))
+            then let (status, newHandler) =
+                         doPlayerAction (moveAction offset) eh
+                  in case status of
+                         Ok               -> (True, Exploring newHandler)
+                         ReadingStarted _ -> error "Unreachable."
+                         Failed           -> (False, Exploring newHandler)
+            else (True, exitDungeon eh)
 
 exitDungeon :: ExploringHandler -> GameStatus
 exitDungeon eh =
@@ -76,16 +83,17 @@ exitDungeon eh =
 handlePlayerMoving :: V2 Int -> ExploringHandler -> GameStatus
 handlePlayerMoving offset gs =
     let (isSuccess, newState) = playerBumpAction offset gs
-    in if isSuccess
-        then case newState of
-                 Exploring eh -> maybe GameOver Exploring (completeThisTurn eh)
-                 _            -> newState
-        else newState
+     in if isSuccess
+            then case newState of
+                     Exploring eh ->
+                         maybe GameOver Exploring (completeThisTurn eh)
+                     _ -> newState
+            else newState
 
 handlePlayerPickingUp :: ExploringHandler -> GameStatus
 handlePlayerPickingUp eh =
     let (status, newHandler) = doPlayerAction pickUpAction eh
-    in case status of
+     in case status of
             Ok -> maybe GameOver Exploring $ completeThisTurn newHandler
             ReadingStarted _ -> error "Unreachable."
             Failed -> Exploring newHandler
@@ -93,18 +101,22 @@ handlePlayerPickingUp eh =
 handlePlayerSelectingItemToUse :: ExploringHandler -> GameStatus
 handlePlayerSelectingItemToUse eh =
     SelectingItemToUse $ selectingItemToUseHandler xs eh
-    where xs = A.getItems p
-          p = case getPlayerActor eh of
-                Just x  -> x
-                Nothing -> error "Player is dead."
+  where
+    xs = A.getItems p
+    p =
+        case getPlayerActor eh of
+            Just x  -> x
+            Nothing -> error "Player is dead."
 
 handlePlayerConsumeItem :: SelectingItemToUseHandler -> GameStatus
 handlePlayerConsumeItem sh =
     case getSelectingIndex sh of
         Just n ->
-            let (status, newHandler) = doPlayerAction (consumeAction n) $ finishSelecting sh
-            in case status of
+            let (status, newHandler) =
+                    doPlayerAction (consumeAction n) $ finishSelecting sh
+             in case status of
                     Ok -> maybe GameOver Exploring $ completeThisTurn newHandler
-                    ReadingStarted book -> ReadingBook $ readingBookHandler book newHandler
+                    ReadingStarted book ->
+                        ReadingBook $ readingBookHandler book newHandler
                     Failed -> Exploring newHandler
         Nothing -> SelectingItemToUse sh

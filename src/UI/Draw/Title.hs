@@ -13,8 +13,11 @@ import           UI.Draw.KeyEvent   (withKeyEvents)
 import           UI.Types           (GameWidgetNode)
 
 drawTitle :: Config -> GameWidgetNode
-drawTitle c = withKeyEvents $ vstack [ label "Gimlight" `styleBasic` [textSize 36]
-                                     , label $ "[n] " <> getLocalizedText c T.newGame
-                                     , label $ "[l] " <> getLocalizedText c T.loadGame
-                                     , label $ "[q] " <> getLocalizedText c T.quitGame
-                                     ]
+drawTitle c =
+    withKeyEvents $
+    vstack
+        [ label "Gimlight" `styleBasic` [textSize 36]
+        , label $ "[n] " <> getLocalizedText c T.newGame
+        , label $ "[l] " <> getLocalizedText c T.loadGame
+        , label $ "[q] " <> getLocalizedText c T.quitGame
+        ]

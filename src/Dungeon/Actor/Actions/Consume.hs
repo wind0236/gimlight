@@ -20,20 +20,20 @@ consumeAction n e d =
         Nothing -> do
             tell [T.whatToUse]
             return (Failed, pushActor e d)
-    where
-        useItem x =
-            let actor = if isUsableManyTimes x
-                            then e
-                            else newActor
-            in doItemEffect (getEffect x) actor d
-        (item, newActor) = removeNthItem n e
+  where
+    useItem x =
+        let actor =
+                if isUsableManyTimes x
+                    then e
+                    else newActor
+         in doItemEffect (getEffect x) actor d
+    (item, newActor) = removeNthItem n e
 
 doItemEffect :: Effect -> Action
 doItemEffect (Heal handler) actor dungeon = do
     tell [T.healed (actor ^. name) amount]
-
     return (Ok, pushActor (healHp amount actor) dungeon)
-
-    where amount = getHealAmount handler
+  where
+    amount = getHealAmount handler
 doItemEffect (Book handler) actor dungeon =
     return (ReadingStarted handler, pushActor actor dungeon)

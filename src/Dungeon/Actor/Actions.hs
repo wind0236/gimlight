@@ -10,9 +10,10 @@ import           Dungeon.Actor              (Actor)
 import           Dungeon.Item.Book          (Book)
 import           Log                        (MessageLog)
 
-data ActionStatus = Ok
-                  | ReadingStarted Book
-                  | Failed
+data ActionStatus
+    = Ok
+    | ReadingStarted Book
+    | Failed
 
 type Action = Actor -> Dungeon -> ActionResult
 
