@@ -61,7 +61,6 @@ doPlayerAction action eh = (status, newHandler)
 
           newHandler = eh & messageLog %~ L.addMessages newLog & dungeons .~ dungeonsAfterAction
 
-
 completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
 completeThisTurn eh =
     (\x -> handlerAfterNpcTurns & dungeons %~ modify (const x)) <$> newCurrentDungeon
