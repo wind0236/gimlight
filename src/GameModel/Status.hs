@@ -18,6 +18,7 @@ import           Dungeon.Stairs                      (StairsPair (StairsPair))
 import           GHC.Generics                        (Generic)
 import           GameModel.Status.Exploring          (ExploringHandler,
                                                       exploringHandler)
+import           GameModel.Status.ReadingBook        (ReadingBookHandler)
 import           GameModel.Status.Scene              (SceneHandler,
                                                       sceneHandler)
 import           GameModel.Status.SelectingItemToUse (SelectingItemToUseHandler)
@@ -34,6 +35,7 @@ data GameStatus = Exploring ExploringHandler
                 | Talking TalkingHandler
                 | Scene SceneHandler
                 | SelectingItemToUse SelectingItemToUseHandler
+                | ReadingBook ReadingBookHandler
                 | Title
                 | GameOver
                 | SelectingLocale

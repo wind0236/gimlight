@@ -8,8 +8,6 @@ module GameModel.Status.Exploring.Dungeons
     ) where
 
 import           Control.Lens               ((%~), (&), (.~), (^.))
-import           Control.Monad              (MonadPlus (mzero))
-import           Control.Monad.Trans.Maybe  (MaybeT, mapMaybeT)
 import           Control.Monad.Trans.Writer (Writer)
 import           Data.Foldable              (find)
 import           Dungeon                    (Dungeon, actors, ascendingStairs,
@@ -17,7 +15,7 @@ import           Dungeon                    (Dungeon, actors, ascendingStairs,
                                              positionOnParentMap, updateMap)
 import qualified Dungeon                    as D
 import           Dungeon.Actor              (Actor, isPlayer, position)
-import           Dungeon.Actor.Actions      (Action)
+import           Dungeon.Actor.Actions      (Action, ActionStatus (Failed))
 import qualified Dungeon.Actor.NpcBehavior  as NPC
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
@@ -70,14 +68,14 @@ exitDungeon ds = newZipper
                           (Just g, Just p) -> Just $ modify (\d -> d & actors %~ (:) p) g
                           _                -> Nothing
 
-doPlayerAction :: Action -> Dungeons -> MaybeT (Writer MessageLog) Dungeons
+doPlayerAction :: Action -> Dungeons -> Writer MessageLog (ActionStatus, Dungeons)
 doPlayerAction action ds = result
     where (player, zipperWithoutPlayer) = popPlayer ds
           currentDungeonWithoutPlayer = getFocused zipperWithoutPlayer
           result = case player of
                        Just p  -> let dungeonAfterAction = action p currentDungeonWithoutPlayer
-                                  in mapMaybeT (fmap (fmap (\d -> modify (const d) zipperWithoutPlayer))) dungeonAfterAction
-                       Nothing -> mzero
+                                  in (\(a, d) -> (a, modify (const d) zipperWithoutPlayer)) <$> dungeonAfterAction
+                       Nothing -> return (Failed, ds)
 
 handleNpcTurns :: Dungeons -> Writer MessageLog Dungeons
 handleNpcTurns ds = (\x -> modify (const x) ds) <$> NPC.handleNpcTurns (getFocused ds)

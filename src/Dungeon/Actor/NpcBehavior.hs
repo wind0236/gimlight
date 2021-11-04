@@ -5,9 +5,7 @@ module Dungeon.Actor.NpcBehavior
     ) where
 
 import           Control.Lens                ((&), (.~), (^.))
-import           Control.Monad.Trans.Maybe   (MaybeT (runMaybeT))
-import           Control.Monad.Writer        (MonadPlus (mzero),
-                                              MonadWriter (writer), Writer)
+import           Control.Monad.Writer        (MonadWriter (writer), Writer)
 import           Coord                       (Coord)
 import           Data.Maybe                  (fromMaybe)
 import           Dungeon                     (Dungeon, getPlayerActor, npcs,
@@ -24,16 +22,16 @@ import           Log                         (MessageLog)
 
 handleNpcTurns :: Dungeon -> Writer MessageLog Dungeon
 handleNpcTurns d = foldl foldStep (writer (d, [])) $ npcs d
-    where foldStep acc x = acc >>= (runMaybeT . handleNpcTurn (x ^. position)) >>= maybe acc return
+    where foldStep acc x = acc >>= handleNpcTurn (x ^. position)
 
-handleNpcTurn :: Coord -> Dungeon -> MaybeT (Writer MessageLog) Dungeon
-handleNpcTurn c d = maybe mzero doAction theActor
+handleNpcTurn :: Coord -> Dungeon -> Writer MessageLog Dungeon
+handleNpcTurn c d = maybe (return d) doAction theActor
     where (theActor, dungeonWithoutTheActor) = popActorAt c d
 
           doAction actor = npcAction actor dungeonWithoutTheActor
 
-npcAction :: Actor -> Dungeon -> MaybeT (Writer MessageLog) Dungeon
-npcAction e d = action entityAfterUpdatingPath d
+npcAction :: Actor -> Dungeon -> Writer MessageLog Dungeon
+npcAction e d = snd <$> action entityAfterUpdatingPath d
     where entityAfterUpdatingPath = updatePath e d
           action = selectAction entityAfterUpdatingPath d
 

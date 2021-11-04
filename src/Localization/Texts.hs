@@ -1,6 +1,7 @@
 module Localization.Texts
     ( module Localization.Texts.Actions
     , module Localization.Texts.Actors
+    , module Localization.Texts.Books
     , module Localization.Texts.Items
     , module Localization.Texts.Scene
     , module Localization.Texts.SelectingItem
@@ -10,6 +11,7 @@ module Localization.Texts
 
 import           Localization.Texts.Actions
 import           Localization.Texts.Actors
+import           Localization.Texts.Books
 import           Localization.Texts.Items
 import           Localization.Texts.Scene
 import           Localization.Texts.SelectingItem

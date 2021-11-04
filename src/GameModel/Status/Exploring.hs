@@ -19,14 +19,13 @@ module GameModel.Status.Exploring
 
 import           Control.Lens                        (makeLenses, (%~), (&),
                                                       (.~), (^.))
-import           Control.Monad.Trans.Maybe           (MaybeT (runMaybeT))
 import           Control.Monad.Trans.Writer          (runWriter)
 import           Coord                               (Coord)
 import           Data.Binary                         (Binary)
 import           Dungeon                             (Dungeon)
 import qualified Dungeon                             as D
 import           Dungeon.Actor                       (Actor)
-import           Dungeon.Actor.Actions               (Action)
+import           Dungeon.Actor.Actions               (Action, ActionStatus)
 import           GHC.Generics                        (Generic)
 import           GameModel.Status.Exploring.Dungeons (Dungeons)
 import qualified GameModel.Status.Exploring.Dungeons as DS
@@ -56,15 +55,12 @@ descendStairsAtPlayerPosition eh = (\x -> eh & dungeons .~ x) <$> DS.descendStai
 exitDungeon :: ExploringHandler -> Maybe ExploringHandler
 exitDungeon eh = (\x -> eh & dungeons .~ x) <$> DS.exitDungeon (eh ^. dungeons)
 
-doPlayerAction :: Action -> ExploringHandler -> (Bool, ExploringHandler)
-doPlayerAction action eh =
-    result
-    where (dungeonsAfterAction, newLog) = runWriter $ runMaybeT $ DS.doPlayerAction action $ eh ^. dungeons
-          handlerWithNewLog = eh & messageLog %~ L.addMessages newLog
+doPlayerAction :: Action -> ExploringHandler -> (ActionStatus, ExploringHandler)
+doPlayerAction action eh = (status, newHandler)
+    where ((status, dungeonsAfterAction), newLog) = runWriter $ DS.doPlayerAction action $ eh ^. dungeons
 
-          result = case dungeonsAfterAction of
-                       Just x  -> (True, handlerWithNewLog & dungeons .~ x)
-                       Nothing -> (False, handlerWithNewLog)
+          newHandler = eh & messageLog %~ L.addMessages newLog & dungeons .~ dungeonsAfterAction
+
 
 completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
 completeThisTurn eh =

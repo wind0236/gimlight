@@ -3,7 +3,7 @@ module Dungeon.Actor.Actions.Wait
     ) where
 
 import           Dungeon               (pushActor)
-import           Dungeon.Actor.Actions (Action)
+import           Dungeon.Actor.Actions (Action, ActionStatus (Ok))
 
 waitAction :: Action
-waitAction e d = return $ pushActor e d
+waitAction e d = return (Ok, pushActor e d)

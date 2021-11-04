@@ -13,10 +13,11 @@ import           Dungeon.Actor.Player                (handlePlayerConsumeItem,
 import           GameModel                           (GameModel (GameModel, config, status))
 import           GameModel.Config                    (Language (English, Japanese),
                                                       setLocale, writeConfig)
-import           GameModel.Status                    (GameStatus (Exploring, GameOver, Scene, SelectingItemToUse, SelectingLocale, Talking, Title),
+import           GameModel.Status                    (GameStatus (Exploring, GameOver, ReadingBook, Scene, SelectingItemToUse, SelectingLocale, Talking, Title),
                                                       newGameStatus)
 import           GameModel.Status.Exploring          (ascendStairsAtPlayerPosition,
                                                       descendStairsAtPlayerPosition)
+import           GameModel.Status.ReadingBook        (finishReading)
 import           GameModel.Status.Scene              (nextSceneOrFinish)
 import           GameModel.Status.SelectingItemToUse (finishSelecting,
                                                       selectNextItem,
@@ -46,6 +47,7 @@ handleKeyInput e@GameModel { status = s } k =
         Talking _            -> handleKeyInputDuringTalking e k
         Scene _              -> handleKeyInputDuringScene e k
         SelectingItemToUse _ -> handleKeyInputDuringSelectingItemToUse e k
+        ReadingBook _        -> handleKeyInputDuringReadingBook e k
         Title                -> handleKeyInputDuringTitle e k
         SelectingLocale      -> handleKeyInputDuringSelectingLanguage e k
         GameOver             -> []
@@ -90,6 +92,12 @@ handleKeyInputDuringSelectingItemToUse e@GameModel { status = SelectingItemToUse
     | k == "Esc" = [Model $ e { status = Exploring $ finishSelecting sh }]
     | otherwise = []
 handleKeyInputDuringSelectingItemToUse _ _ = error "We are not selecting an item."
+
+handleKeyInputDuringReadingBook :: GameModel -> Text -> [GameEventResponse]
+handleKeyInputDuringReadingBook e@GameModel { status = ReadingBook h } k
+    | k == "Enter" = [Model $ e { status = maybe GameOver Exploring $ finishReading h }]
+    | otherwise = []
+handleKeyInputDuringReadingBook _ _ = error "We are not reading a book."
 
 handleKeyInputDuringTitle :: GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringTitle g k

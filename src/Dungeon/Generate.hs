@@ -16,7 +16,7 @@ import           Dungeon.Actor.Monsters (orc, troll)
 import           Dungeon.Generate.Room  (Room (..), center,
                                          roomFromTwoPositionInclusive,
                                          roomFromWidthHeight, roomOverlaps)
-import           Dungeon.Item           (Item, herb)
+import           Dungeon.Item           (Item, herb, sampleBook)
 import qualified Dungeon.Item           as I
 import           Dungeon.Map.Tile       (TileMap, allWallTiles, downStairs,
                                          floorTile, upStairs)
@@ -117,11 +117,14 @@ placeItems = placeItemsAccum []
 placeItemsAccum :: [Item] -> StdGen -> Room -> Int -> ([Item], StdGen)
 placeItemsAccum items g _ 0 = (items, g)
 placeItemsAccum items g r n =
-    placeItemsAccum newItems g'' r (n - 1)
+    placeItemsAccum newItems g''' r (n - 1)
     where (x, g') = randomR (x1 r, x2 r - 1) g
           (y, g'') = randomR (y1 r, y2 r - 1) g'
+          (prob, g''') = random g'' :: (Float, StdGen)
           newItems = if V2 x y `notElem` map I.getPosition items
-                        then herb (V2 x y):items
+                        then if prob < 0.8
+                                 then herb (V2 x y):items
+                                 else sampleBook (V2 x y):items
                         else items
 
 newMonster :: StdGen -> Coord -> (Actor, StdGen)

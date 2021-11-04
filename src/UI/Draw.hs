@@ -3,9 +3,10 @@ module UI.Draw
     ) where
 
 import           GameModel               (GameModel (GameModel, config, status))
-import           GameModel.Status        (GameStatus (Exploring, GameOver, Scene, SelectingItemToUse, SelectingLocale, Talking, Title))
+import           GameModel.Status        (GameStatus (Exploring, GameOver, ReadingBook, Scene, SelectingItemToUse, SelectingLocale, Talking, Title))
 import           UI.Draw.Exploring       (drawExploring)
 import           UI.Draw.GameOver        (drawGameOver)
+import           UI.Draw.ReadingBook     (drawReadingBook)
 import           UI.Draw.Scene           (drawScene)
 import           UI.Draw.SelectingItem   (drawSelectingItem)
 import           UI.Draw.SelectingLocale (drawSelectingLocale)
@@ -20,6 +21,7 @@ drawUI _ GameModel { status = s, config = c } =
         Talking th            -> drawTalking th c
         Scene hs              -> drawScene hs c
         SelectingItemToUse sh -> drawSelectingItem sh c
+        ReadingBook h         -> drawReadingBook h c
         Title                 -> drawTitle c
         GameOver              -> drawGameOver
         SelectingLocale       -> drawSelectingLocale
