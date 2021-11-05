@@ -4,14 +4,14 @@ module UI.Event
     ( handleEvent
     ) where
 
-import           Data.Maybe                           (fromMaybe)
-import           Data.Text                            (Text)
-import           Dungeon.Actor.Player                 (handlePlayerConsumeItem,
+import           Actor.Player                         (handlePlayerConsumeItem,
                                                        handlePlayerDropItem,
                                                        handlePlayerMoving,
                                                        handlePlayerPickingUp,
                                                        handlePlayerSelectingItemToDrop,
                                                        handlePlayerSelectingItemToUse)
+import           Data.Maybe                           (fromMaybe)
+import           Data.Text                            (Text)
 import           GameModel                            (GameModel (GameModel, config, status))
 import           GameModel.Config                     (Language (English, Japanese),
                                                        setLocale, writeConfig)

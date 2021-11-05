@@ -1,17 +1,17 @@
-module Dungeon.Actor.Actions.Consume
+module Actor.Actions.Consume
     ( consumeAction
     ) where
 
-import           Control.Lens          ((^.))
-import           Control.Monad.Writer  (tell)
-import           Dungeon               (pushActor)
-import           Dungeon.Actor         (healHp, name, removeNthItem)
-import           Dungeon.Actor.Actions (Action,
-                                        ActionStatus (Failed, Ok, ReadingStarted))
-import           Dungeon.Item          (Effect (Book, Heal), getEffect,
-                                        isUsableManyTimes)
-import           Dungeon.Item.Heal     (getHealAmount)
-import qualified Localization.Texts    as T
+import           Actor                (healHp, name, removeNthItem)
+import           Actor.Actions        (Action,
+                                       ActionStatus (Failed, Ok, ReadingStarted))
+import           Control.Lens         ((^.))
+import           Control.Monad.Writer (tell)
+import           Dungeon              (pushActor)
+import           Dungeon.Item         (Effect (Book, Heal), getEffect,
+                                       isUsableManyTimes)
+import           Dungeon.Item.Heal    (getHealAmount)
+import qualified Localization.Texts   as T
 
 consumeAction :: Int -> Action
 consumeAction n e d =

@@ -1,4 +1,4 @@
-module Dungeon.Actor.Player
+module Actor.Player
     ( playerBumpAction
     , handlePlayerMoving
     , handlePlayerPickingUp
@@ -8,18 +8,18 @@ module Dungeon.Actor.Player
     , handlePlayerDropItem
     ) where
 
+import           Actor                                (Actor, isMonster,
+                                                       talkMessage)
+import qualified Actor                                as A
+import           Actor.Actions                        (ActionStatus (Failed, Ok, ReadingStarted))
+import           Actor.Actions.Consume                (consumeAction)
+import           Actor.Actions.Drop                   (dropAction)
+import           Actor.Actions.Melee                  (meleeAction)
+import           Actor.Actions.Move                   (moveAction)
+import           Actor.Actions.PickUp                 (pickUpAction)
 import           Control.Lens                         ((^.))
 import           Data.Maybe                           (fromMaybe)
 import           Dungeon                              (isTown)
-import           Dungeon.Actor                        (Actor, isMonster,
-                                                       talkMessage)
-import qualified Dungeon.Actor                        as A
-import           Dungeon.Actor.Actions                (ActionStatus (Failed, Ok, ReadingStarted))
-import           Dungeon.Actor.Actions.Consume        (consumeAction)
-import           Dungeon.Actor.Actions.Drop           (dropAction)
-import           Dungeon.Actor.Actions.Melee          (meleeAction)
-import           Dungeon.Actor.Actions.Move           (moveAction)
-import           Dungeon.Actor.Actions.PickUp         (pickUpAction)
 import           GameModel.Status                     (GameStatus (Exploring, GameOver, ReadingBook, SelectingItemToDrop, SelectingItemToUse, Talking))
 import           GameModel.Status.Exploring           (ExploringHandler,
                                                        actorAt,

@@ -17,6 +17,8 @@ module GameModel.Status.Exploring
     , getMessageLog
     ) where
 
+import           Actor                               (Actor)
+import           Actor.Actions                       (Action, ActionStatus)
 import           Control.Lens                        (makeLenses, (%~), (&),
                                                       (.~), (^.))
 import           Control.Monad.Trans.Writer          (runWriter)
@@ -24,8 +26,6 @@ import           Coord                               (Coord)
 import           Data.Binary                         (Binary)
 import           Dungeon                             (Dungeon)
 import qualified Dungeon                             as D
-import           Dungeon.Actor                       (Actor)
-import           Dungeon.Actor.Actions               (Action, ActionStatus)
 import           GHC.Generics                        (Generic)
 import           GameModel.Status.Exploring.Dungeons (Dungeons)
 import qualified GameModel.Status.Exploring.Dungeons as DS

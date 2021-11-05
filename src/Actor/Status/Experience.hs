@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Dungeon.Actor.Status.Experience
+module Actor.Status.Experience
     ( Experience
     , experience
     , getCurrentExperiencePoint

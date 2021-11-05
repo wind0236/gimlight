@@ -7,6 +7,9 @@ module GameModel.Status.Exploring.Dungeons
     , handleNpcTurns
     ) where
 
+import           Actor                      (Actor, isPlayer, position)
+import           Actor.Actions              (Action, ActionStatus (Failed))
+import qualified Actor.NpcBehavior          as NPC
 import           Control.Lens               ((%~), (&), (.~), (^.))
 import           Control.Monad.Trans.Writer (Writer)
 import           Data.Foldable              (find)
@@ -15,9 +18,6 @@ import           Dungeon                    (Dungeon, actors, ascendingStairs,
                                              descendingStairs,
                                              positionOnParentMap, updateMap)
 import qualified Dungeon                    as D
-import           Dungeon.Actor              (Actor, isPlayer, position)
-import           Dungeon.Actor.Actions      (Action, ActionStatus (Failed))
-import qualified Dungeon.Actor.NpcBehavior  as NPC
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
 import           TreeZipper                 (TreeZipper, getFocused, goDownBy,

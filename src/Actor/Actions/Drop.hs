@@ -1,14 +1,14 @@
-module Dungeon.Actor.Actions.Drop
+module Actor.Actions.Drop
     ( dropAction
     ) where
 
-import           Control.Lens          ((^.))
-import           Control.Monad.Writer  (tell)
-import           Dungeon               (pushActor, pushItem)
-import           Dungeon.Actor         (position, removeNthItem)
-import           Dungeon.Actor.Actions (Action, ActionStatus (Failed, Ok))
-import           Dungeon.Item          (Item, getName, setPosition)
-import qualified Localization.Texts    as T
+import           Actor                (position, removeNthItem)
+import           Actor.Actions        (Action, ActionStatus (Failed, Ok))
+import           Control.Lens         ((^.))
+import           Control.Monad.Writer (tell)
+import           Dungeon              (pushActor, pushItem)
+import           Dungeon.Item         (Item, getName, setPosition)
+import qualified Localization.Texts   as T
 
 dropAction :: Int -> Action
 dropAction n e d =

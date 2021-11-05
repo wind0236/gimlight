@@ -1,15 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Dungeon.Actor.Monsters
+module Actor.Monsters
     ( orc
     , troll
     ) where
 
-import           Coord                   (Coord)
-import           Dungeon.Actor           (Actor, monster)
-import           Dungeon.Actor.Status    (status)
-import           Dungeon.Actor.Status.Hp (hp)
-import qualified Localization.Texts      as T
+import           Actor              (Actor, monster)
+import           Actor.Status       (status)
+import           Actor.Status.Hp    (hp)
+import           Coord              (Coord)
+import qualified Localization.Texts as T
 
 orc :: Coord -> Actor
 orc c = monster c T.orc st "images/orc.png"

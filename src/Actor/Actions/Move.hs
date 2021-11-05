@@ -1,19 +1,19 @@
-module Dungeon.Actor.Actions.Move
+module Actor.Actions.Move
     ( moveAction
     ) where
 
-import           Control.Lens          ((&), (.~), (^.))
-import           Control.Monad.Writer  (tell)
-import           Coord                 (Coord)
-import           Data.Array            ((!))
-import           Data.Maybe            (isNothing)
-import           Dungeon               (Dungeon, actorAt, mapWidthAndHeight,
-                                        pushActor, tileMap)
-import           Dungeon.Actor         (Actor, position)
-import           Dungeon.Actor.Actions (Action, ActionStatus (Failed, Ok))
-import           Dungeon.Map.Tile      (walkable)
-import           Linear.V2             (V2 (V2))
-import qualified Localization.Texts    as T
+import           Actor                (Actor, position)
+import           Actor.Actions        (Action, ActionStatus (Failed, Ok))
+import           Control.Lens         ((&), (.~), (^.))
+import           Control.Monad.Writer (tell)
+import           Coord                (Coord)
+import           Data.Array           ((!))
+import           Data.Maybe           (isNothing)
+import           Dungeon              (Dungeon, actorAt, mapWidthAndHeight,
+                                       pushActor, tileMap)
+import           Dungeon.Map.Tile     (walkable)
+import           Linear.V2            (V2 (V2))
+import qualified Localization.Texts   as T
 
 moveAction :: V2 Int -> Action
 moveAction offset src d =

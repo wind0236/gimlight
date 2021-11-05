@@ -11,24 +11,24 @@ executable roguelike
     main-is:          Main.hs
     ghc-options:      -threaded -Wall -Werror
 
-    other-modules:      Coord
+    other-modules:      Actor
+                      , Actor.Actions
+                      , Actor.Actions.Consume
+                      , Actor.Actions.Drop
+                      , Actor.Actions.Melee
+                      , Actor.Actions.Move
+                      , Actor.Actions.PickUp
+                      , Actor.Actions.Wait
+                      , Actor.NpcBehavior
+                      , Actor.Friendly
+                      , Actor.Inventory
+                      , Actor.Player
+                      , Actor.Monsters
+                      , Actor.Status
+                      , Actor.Status.Hp
+                      , Actor.Status.Experience
+                      , Coord
                       , Dungeon
-                      , Dungeon.Actor
-                      , Dungeon.Actor.Actions
-                      , Dungeon.Actor.Actions.Consume
-                      , Dungeon.Actor.Actions.Drop
-                      , Dungeon.Actor.Actions.Melee
-                      , Dungeon.Actor.Actions.Move
-                      , Dungeon.Actor.Actions.PickUp
-                      , Dungeon.Actor.Actions.Wait
-                      , Dungeon.Actor.NpcBehavior
-                      , Dungeon.Actor.Friendly
-                      , Dungeon.Actor.Inventory
-                      , Dungeon.Actor.Player
-                      , Dungeon.Actor.Monsters
-                      , Dungeon.Actor.Status
-                      , Dungeon.Actor.Status.Hp
-                      , Dungeon.Actor.Status.Experience
                       , Dungeon.Generate
                       , Dungeon.Generate.Room
                       , Dungeon.Init

@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Dungeon.Actor.Inventory
+module Actor.Inventory
     ( Inventory
     , inventory
     , addItem

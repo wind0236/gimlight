@@ -1,15 +1,15 @@
-module Dungeon.Actor.Actions.Melee
+module Actor.Actions.Melee
     ( meleeAction
     ) where
 
-import           Control.Lens          ((^.))
-import           Control.Monad.Writer  (Writer)
-import           Dungeon               (Dungeon, popActorAt, pushActor)
-import           Dungeon.Actor         (Actor, position)
-import qualified Dungeon.Actor         as A
-import           Dungeon.Actor.Actions (Action, ActionStatus (Failed, Ok))
-import           Linear.V2             (V2)
-import           Log                   (MessageLog)
+import           Actor                (Actor, position)
+import qualified Actor                as A
+import           Actor.Actions        (Action, ActionStatus (Failed, Ok))
+import           Control.Lens         ((^.))
+import           Control.Monad.Writer (Writer)
+import           Dungeon              (Dungeon, popActorAt, pushActor)
+import           Linear.V2            (V2)
+import           Log                  (MessageLog)
 
 meleeAction :: V2 Int -> Action
 meleeAction offset src dungeon = result

@@ -38,14 +38,14 @@ module Dungeon
     , pushItem
     ) where
 
+import           Actor                (Actor, isPlayer)
+import qualified Actor                as A
 import           Control.Lens         (makeLenses, (%~), (&), (.~), (^.))
 import           Coord                (Coord)
 import           Data.Array.Base      (IArray (bounds), assocs, (//))
 import           Data.Binary          (Binary)
 import           Data.Foldable        (find)
 import           Data.List            (findIndex)
-import           Dungeon.Actor        (Actor, isPlayer)
-import qualified Dungeon.Actor        as A
 import           Dungeon.Item         (Item)
 import qualified Dungeon.Item         as I
 import           Dungeon.Map.Bool     (BoolMap)

@@ -8,11 +8,11 @@ module Talking
     , message
     ) where
 
-import           Control.Lens  (makeLenses)
-import           Data.Binary   (Binary)
-import           Dungeon.Actor (Actor)
-import           GHC.Generics  (Generic)
-import           Localization  (MultilingualText)
+import           Actor        (Actor)
+import           Control.Lens (makeLenses)
+import           Data.Binary  (Binary)
+import           GHC.Generics (Generic)
+import           Localization (MultilingualText)
 
 data TalkWith =
     TalkWith

@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Dungeon.Actor.Status.Hp
+module Actor.Status.Hp
     ( Hp
     , hp
     , getHp

@@ -1,15 +1,15 @@
-module Dungeon.Actor.Actions.PickUp
+module Actor.Actions.PickUp
     ( pickUpAction
     ) where
 
-import           Control.Lens            ((&), (.~), (^.))
-import           Control.Monad.Writer    (tell)
-import           Dungeon                 (popItemAt, pushActor)
-import           Dungeon.Actor           (inventoryItems, position)
-import           Dungeon.Actor.Actions   (Action, ActionStatus (Failed, Ok))
-import           Dungeon.Actor.Inventory (addItem)
-import           Dungeon.Item            (getName)
-import qualified Localization.Texts      as T
+import           Actor                (inventoryItems, position)
+import           Actor.Actions        (Action, ActionStatus (Failed, Ok))
+import           Actor.Inventory      (addItem)
+import           Control.Lens         ((&), (.~), (^.))
+import           Control.Monad.Writer (tell)
+import           Dungeon              (popItemAt, pushActor)
+import           Dungeon.Item         (getName)
+import qualified Localization.Texts   as T
 
 pickUpAction :: Action
 pickUpAction e d =

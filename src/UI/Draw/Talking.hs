@@ -4,8 +4,8 @@ module UI.Draw.Talking
     ( drawTalking
     ) where
 
+import           Actor                    (standingImagePath)
 import           Control.Lens             ((&), (.~), (^.))
-import           Dungeon.Actor            (standingImagePath)
 import           GameModel.Config         (Config)
 import           GameModel.Status.Talking (TalkingHandler, destructHandler)
 import           Localization             (getLocalizedText)

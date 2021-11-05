@@ -4,6 +4,12 @@ module UI.Draw.Exploring
     ( drawExploring
     ) where
 
+import           Actor                      (getCurrentExperiencePoint,
+                                             getDefence,
+                                             getExperiencePointForNextLevel,
+                                             getHp, getLevel, getMaxHp,
+                                             getPower, walkingImagePath)
+import qualified Actor                      as A
 import           Control.Lens               ((&), (.~), (^.))
 import           Control.Monad              (guard)
 import           Coord                      (Coord)
@@ -12,12 +18,6 @@ import           Data.Maybe                 (mapMaybe)
 import           Dungeon                    (Dungeon, actors, explored, items,
                                              mapWidthAndHeight, playerPosition,
                                              tileMap, visible)
-import           Dungeon.Actor              (getCurrentExperiencePoint,
-                                             getDefence,
-                                             getExperiencePointForNextLevel,
-                                             getHp, getLevel, getMaxHp,
-                                             getPower, walkingImagePath)
-import qualified Dungeon.Actor              as A
 import qualified Dungeon.Item               as I
 import qualified Dungeon.Map.Tile           as MT
 import           GameModel.Config           (Config)

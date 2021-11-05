@@ -1,16 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Dungeon.Actor.Friendly
+module Actor.Friendly
     ( electria
     ) where
 
-import           Coord                   (Coord)
-import           Data.Text               (Text)
-import           Dungeon.Actor           (Actor, ActorKind (FriendlyNpc), actor)
-import           Dungeon.Actor.Status    (Status, status)
-import           Dungeon.Actor.Status.Hp (hp)
-import           Localization            (MultilingualText)
-import qualified Localization.Texts      as T
+import           Actor              (Actor, ActorKind (FriendlyNpc), actor)
+import           Actor.Status       (Status, status)
+import           Actor.Status.Hp    (hp)
+import           Coord              (Coord)
+import           Data.Text          (Text)
+import           Localization       (MultilingualText)
+import qualified Localization.Texts as T
 
 electria :: Coord -> Actor
 electria position =

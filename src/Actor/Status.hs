@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Dungeon.Actor.Status
+module Actor.Status
     ( Status
     , status
     , getLevel
@@ -14,17 +14,17 @@ module Dungeon.Actor.Status
     , getDefence
     ) where
 
-import           Data.Binary                     (Binary)
-import           Data.Maybe                      (isNothing)
-import           Dungeon.Actor.Status.Experience (Experience, gainExperience)
-import qualified Dungeon.Actor.Status.Experience as E
-import           Dungeon.Actor.Status.Hp         (Hp)
-import qualified Dungeon.Actor.Status.Hp         as HP
-import           GHC.Generics                    (Generic)
-import           Localization                    (MultilingualText)
-import qualified Localization.Texts              as T
-import           Log                             (MessageLog)
-import qualified Log                             as M
+import           Actor.Status.Experience (Experience, gainExperience)
+import qualified Actor.Status.Experience as E
+import           Actor.Status.Hp         (Hp)
+import qualified Actor.Status.Hp         as HP
+import           Data.Binary             (Binary)
+import           Data.Maybe              (isNothing)
+import           GHC.Generics            (Generic)
+import           Localization            (MultilingualText)
+import qualified Localization.Texts      as T
+import           Log                     (MessageLog)
+import qualified Log                     as M
 
 data Status =
     Status

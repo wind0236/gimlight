@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Dungeon.Actor
+module Actor
     ( Actor
     , player
     , getLevel
@@ -30,21 +30,21 @@ module Dungeon.Actor
     , removeNthItem
     ) where
 
-import           Control.Lens            (makeLenses, (%~), (&), (.~), (^.))
-import           Control.Monad.Writer    (MonadWriter (writer), Writer)
-import           Coord                   (Coord)
-import           Data.Binary             (Binary)
-import           Data.Text               (Text)
-import           Dungeon.Actor.Inventory (Inventory, inventory)
-import qualified Dungeon.Actor.Inventory as I
-import           Dungeon.Actor.Status    (Status)
-import qualified Dungeon.Actor.Status    as S
-import           Dungeon.Actor.Status.Hp (hp)
-import           Dungeon.Item            (Item)
-import           GHC.Generics            (Generic)
-import           Localization            (MultilingualText)
-import qualified Localization.Texts      as T
-import           Log                     (MessageLog)
+import           Actor.Inventory      (Inventory, inventory)
+import qualified Actor.Inventory      as I
+import           Actor.Status         (Status)
+import qualified Actor.Status         as S
+import           Actor.Status.Hp      (hp)
+import           Control.Lens         (makeLenses, (%~), (&), (.~), (^.))
+import           Control.Monad.Writer (MonadWriter (writer), Writer)
+import           Coord                (Coord)
+import           Data.Binary          (Binary)
+import           Data.Text            (Text)
+import           Dungeon.Item         (Item)
+import           GHC.Generics         (Generic)
+import           Localization         (MultilingualText)
+import qualified Localization.Texts   as T
+import           Log                  (MessageLog)
 
 data ActorKind
     = Player

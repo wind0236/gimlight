@@ -1,22 +1,21 @@
-module Dungeon.Actor.NpcBehavior
+module Actor.NpcBehavior
     ( handleNpcTurns
     ) where
 
-import           Control.Lens                ((&), (.~), (^.))
-import           Control.Monad.Writer        (MonadWriter (writer), Writer)
-import           Coord                       (Coord)
-import           Data.Maybe                  (fromMaybe)
-import           Dungeon                     (Dungeon, getPlayerActor, npcs,
-                                              popActorAt)
-import           Dungeon.Actor               (Actor, pathToDestination,
-                                              position)
-import           Dungeon.Actor.Actions       (Action)
-import           Dungeon.Actor.Actions.Melee (meleeAction)
-import           Dungeon.Actor.Actions.Move  (moveAction)
-import           Dungeon.Actor.Actions.Wait  (waitAction)
-import           Dungeon.PathFinder          (getPathTo)
-import           Linear.V2                   (V2 (V2))
-import           Log                         (MessageLog)
+import           Actor                (Actor, pathToDestination, position)
+import           Actor.Actions        (Action)
+import           Actor.Actions.Melee  (meleeAction)
+import           Actor.Actions.Move   (moveAction)
+import           Actor.Actions.Wait   (waitAction)
+import           Control.Lens         ((&), (.~), (^.))
+import           Control.Monad.Writer (MonadWriter (writer), Writer)
+import           Coord                (Coord)
+import           Data.Maybe           (fromMaybe)
+import           Dungeon              (Dungeon, getPlayerActor, npcs,
+                                       popActorAt)
+import           Dungeon.PathFinder   (getPathTo)
+import           Linear.V2            (V2 (V2))
+import           Log                  (MessageLog)
 
 handleNpcTurns :: Dungeon -> Writer MessageLog Dungeon
 handleNpcTurns d = foldl foldStep (writer (d, [])) $ npcs d

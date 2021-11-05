@@ -2,9 +2,9 @@ module Dungeon.Init
     ( initDungeon
     ) where
 
+import           Actor                     (player)
 import           Data.Maybe                (fromMaybe)
 import           Dungeon                   (Dungeon, updateMap)
-import           Dungeon.Actor             (player)
 import           Dungeon.Predefined.Beaeve (beaeve)
 import           Linear.V2                 (V2 (V2))
 

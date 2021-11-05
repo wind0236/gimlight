@@ -2,32 +2,32 @@ module Dungeon.Generate
     ( generateMultipleFloorsDungeon
     ) where
 
-import           Control.Lens           ((^.))
-import           Coord                  (Coord)
-import           Data.Array             (bounds, (//))
-import           Data.Maybe             (fromMaybe)
-import           Data.Tree              (Tree (Node, rootLabel, subForest))
-import           Dungeon                (Dungeon, DungeonKind (DungeonType),
-                                         addAscendingAndDescendingStiars,
-                                         changeTile, dungeon,
-                                         stairsPositionCandidates)
-import           Dungeon.Actor          (Actor)
-import qualified Dungeon.Actor          as A
-import           Dungeon.Actor.Monsters (orc, troll)
-import           Dungeon.Generate.Room  (Room (..), center,
-                                         roomFromTwoPositionInclusive,
-                                         roomFromWidthHeight, roomOverlaps)
-import           Dungeon.Item           (Item, herb, sampleBook)
-import qualified Dungeon.Item           as I
-import           Dungeon.Map.Tile       (TileMap, allWallTiles, downStairs,
-                                         floorTile, upStairs)
-import           Dungeon.Size           (maxSize, minSize)
-import           Dungeon.Stairs         (StairsPair (StairsPair))
-import           Linear.V2              (V2 (..), _x, _y)
-import           System.Random          (Random (randomR), StdGen, random)
-import           TreeZipper             (TreeZipper, appendNode, getFocused,
-                                         goDownBy, goToRootAndGetTree, modify,
-                                         treeZipper)
+import           Actor                 (Actor)
+import qualified Actor                 as A
+import           Actor.Monsters        (orc, troll)
+import           Control.Lens          ((^.))
+import           Coord                 (Coord)
+import           Data.Array            (bounds, (//))
+import           Data.Maybe            (fromMaybe)
+import           Data.Tree             (Tree (Node, rootLabel, subForest))
+import           Dungeon               (Dungeon, DungeonKind (DungeonType),
+                                        addAscendingAndDescendingStiars,
+                                        changeTile, dungeon,
+                                        stairsPositionCandidates)
+import           Dungeon.Generate.Room (Room (..), center,
+                                        roomFromTwoPositionInclusive,
+                                        roomFromWidthHeight, roomOverlaps)
+import           Dungeon.Item          (Item, herb, sampleBook)
+import qualified Dungeon.Item          as I
+import           Dungeon.Map.Tile      (TileMap, allWallTiles, downStairs,
+                                        floorTile, upStairs)
+import           Dungeon.Size          (maxSize, minSize)
+import           Dungeon.Stairs        (StairsPair (StairsPair))
+import           Linear.V2             (V2 (..), _x, _y)
+import           System.Random         (Random (randomR), StdGen, random)
+import           TreeZipper            (TreeZipper, appendNode, getFocused,
+                                        goDownBy, goToRootAndGetTree, modify,
+                                        treeZipper)
 
 generateMultipleFloorsDungeon ::
        StdGen
