@@ -16,6 +16,7 @@ executable roguelike
                       , Dungeon.Actor
                       , Dungeon.Actor.Actions
                       , Dungeon.Actor.Actions.Consume
+                      , Dungeon.Actor.Actions.Drop
                       , Dungeon.Actor.Actions.Melee
                       , Dungeon.Actor.Actions.Move
                       , Dungeon.Actor.Actions.PickUp
@@ -52,6 +53,7 @@ executable roguelike
                       , GameModel.Status.Exploring.Dungeons
                       , GameModel.Status.ReadingBook
                       , GameModel.Status.Scene
+                      , GameModel.Status.SelectingItemToDrop
                       , GameModel.Status.SelectingItemToUse
                       , GameModel.Status.Talking
                       , Localization
@@ -77,7 +79,8 @@ executable roguelike
                       , UI.Draw.ReadingBook
                       , UI.Draw.Scene
                       , UI.Draw.SelectingLocale
-                      , UI.Draw.SelectingItem
+                      , UI.Draw.SelectingItemToDrop
+                      , UI.Draw.SelectingItemToUse
                       , UI.Draw.Talking
                       , UI.Draw.Title
                       , UI.Event

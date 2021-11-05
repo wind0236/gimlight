@@ -35,6 +35,7 @@ module Dungeon
     , addAscendingAndDescendingStiars
     , addDescendingStairs
     , ascendingStairs
+    , pushItem
     ) where
 
 import           Control.Lens         (makeLenses, (%~), (&), (.~), (^.))
@@ -145,6 +146,9 @@ actorAt c d = find (\x -> x ^. A.position == c) $ d ^. actors
 
 pushActor :: Actor -> Dungeon -> Dungeon
 pushActor e d = d & actors %~ (e :)
+
+pushItem :: Item -> Dungeon -> Dungeon
+pushItem i d = d & items %~ (i :)
 
 popActorAt :: Coord -> Dungeon -> (Maybe Actor, Dungeon)
 popActorAt c = popActorIf (\x -> x ^. A.position == c)

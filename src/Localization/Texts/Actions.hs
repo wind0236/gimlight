@@ -6,6 +6,8 @@ module Localization.Texts.Actions
     , youGotNohing
     , bagIsFull
     , whatToUse
+    , whatToDrop
+    , youDropped
     , healed
     , damagedMessage
     , deathMessage
@@ -40,6 +42,14 @@ healed who amount =
 
 whatToUse :: MultilingualText
 whatToUse = multilingualText "What do you consume" "何を使う？"
+
+whatToDrop :: MultilingualText
+whatToDrop = multilingualText "What do you drop?" "何を置く？"
+
+youDropped :: MultilingualText -> MultilingualText
+youDropped name =
+    multilingualText "You dropped " "あなたは" <>
+    name <> multilingualText "." "を床に置いた．"
 
 damagedMessage ::
        Int -> MultilingualText -> MultilingualText -> MultilingualText

@@ -2,38 +2,44 @@ module Dungeon.Actor.Player
     ( playerBumpAction
     , handlePlayerMoving
     , handlePlayerPickingUp
+    , handlePlayerSelectingItemToDrop
     , handlePlayerSelectingItemToUse
     , handlePlayerConsumeItem
+    , handlePlayerDropItem
     ) where
 
-import           Control.Lens                        ((^.))
-import           Data.Maybe                          (fromMaybe)
-import           Dungeon                             (isTown)
-import           Dungeon.Actor                       (Actor, isMonster,
-                                                      talkMessage)
-import qualified Dungeon.Actor                       as A
-import           Dungeon.Actor.Actions               (ActionStatus (Failed, Ok, ReadingStarted))
-import           Dungeon.Actor.Actions.Consume       (consumeAction)
-import           Dungeon.Actor.Actions.Melee         (meleeAction)
-import           Dungeon.Actor.Actions.Move          (moveAction)
-import           Dungeon.Actor.Actions.PickUp        (pickUpAction)
-import           GameModel.Status                    (GameStatus (Exploring, GameOver, ReadingBook, SelectingItemToUse, Talking))
-import           GameModel.Status.Exploring          (ExploringHandler, actorAt,
-                                                      completeThisTurn,
-                                                      doPlayerAction,
-                                                      getCurrentDungeon,
-                                                      getPlayerActor,
-                                                      getPlayerPosition,
-                                                      isPositionInDungeon)
-import qualified GameModel.Status.Exploring          as GSE
-import           GameModel.Status.ReadingBook        (readingBookHandler)
-import           GameModel.Status.SelectingItemToUse (SelectingItemToUseHandler,
-                                                      finishSelecting,
-                                                      getSelectingIndex,
-                                                      selectingItemToUseHandler)
-import           GameModel.Status.Talking            (talkingHandler)
-import           Linear.V2                           (V2)
-import           Talking                             (talkWith)
+import           Control.Lens                         ((^.))
+import           Data.Maybe                           (fromMaybe)
+import           Dungeon                              (isTown)
+import           Dungeon.Actor                        (Actor, isMonster,
+                                                       talkMessage)
+import qualified Dungeon.Actor                        as A
+import           Dungeon.Actor.Actions                (ActionStatus (Failed, Ok, ReadingStarted))
+import           Dungeon.Actor.Actions.Consume        (consumeAction)
+import           Dungeon.Actor.Actions.Drop           (dropAction)
+import           Dungeon.Actor.Actions.Melee          (meleeAction)
+import           Dungeon.Actor.Actions.Move           (moveAction)
+import           Dungeon.Actor.Actions.PickUp         (pickUpAction)
+import           GameModel.Status                     (GameStatus (Exploring, GameOver, ReadingBook, SelectingItemToDrop, SelectingItemToUse, Talking))
+import           GameModel.Status.Exploring           (ExploringHandler,
+                                                       actorAt,
+                                                       completeThisTurn,
+                                                       doPlayerAction,
+                                                       getCurrentDungeon,
+                                                       getPlayerActor,
+                                                       getPlayerPosition,
+                                                       isPositionInDungeon)
+import qualified GameModel.Status.Exploring           as GSE
+import           GameModel.Status.ReadingBook         (readingBookHandler)
+import           GameModel.Status.SelectingItemToDrop (SelectingItemToDropHandler,
+                                                       selectingItemToDropHandler)
+import qualified GameModel.Status.SelectingItemToDrop as D
+import           GameModel.Status.SelectingItemToUse  (SelectingItemToUseHandler,
+                                                       selectingItemToUseHandler)
+import qualified GameModel.Status.SelectingItemToUse  as U
+import           GameModel.Status.Talking             (talkingHandler)
+import           Linear.V2                            (V2)
+import           Talking                              (talkWith)
 
 playerBumpAction :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 playerBumpAction offset eh =
@@ -99,6 +105,13 @@ handlePlayerPickingUp eh =
             ReadingStarted _ -> error "Unreachable."
             Failed -> Exploring newHandler
 
+handlePlayerSelectingItemToDrop :: ExploringHandler -> GameStatus
+handlePlayerSelectingItemToDrop eh =
+    SelectingItemToDrop $ selectingItemToDropHandler xs eh
+  where
+    xs = A.getItems p
+    p = fromMaybe (error "Player is dead.") (getPlayerActor eh)
+
 handlePlayerSelectingItemToUse :: ExploringHandler -> GameStatus
 handlePlayerSelectingItemToUse eh =
     SelectingItemToUse $ selectingItemToUseHandler xs eh
@@ -108,13 +121,25 @@ handlePlayerSelectingItemToUse eh =
 
 handlePlayerConsumeItem :: SelectingItemToUseHandler -> GameStatus
 handlePlayerConsumeItem sh =
-    case getSelectingIndex sh of
+    case U.getSelectingIndex sh of
         Just n ->
             let (status, newHandler) =
-                    doPlayerAction (consumeAction n) $ finishSelecting sh
+                    doPlayerAction (consumeAction n) $ U.finishSelecting sh
              in case status of
                     Ok -> maybe GameOver Exploring $ completeThisTurn newHandler
                     ReadingStarted book ->
                         ReadingBook $ readingBookHandler book newHandler
                     Failed -> Exploring newHandler
         Nothing -> SelectingItemToUse sh
+
+handlePlayerDropItem :: SelectingItemToDropHandler -> GameStatus
+handlePlayerDropItem sh =
+    case D.getSelectingIndex sh of
+        Just n ->
+            let (status, newHandler) =
+                    doPlayerAction (dropAction n) $ D.finishSelecting sh
+             in case status of
+                    Ok -> maybe GameOver Exploring $ completeThisTurn newHandler
+                    ReadingStarted _ -> error "unreachable."
+                    Failed -> Exploring newHandler
+        Nothing -> SelectingItemToDrop sh

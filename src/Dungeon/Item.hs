@@ -10,6 +10,7 @@ module Dungeon.Item
     , getPosition
     , getIconImagePath
     , getEffect
+    , setPosition
     , isUsableManyTimes
     ) where
 
@@ -65,6 +66,9 @@ getEffect Item {effect = e} = e
 
 isUsableManyTimes :: Item -> Bool
 isUsableManyTimes Item {usableManyTimes = u} = u
+
+setPosition :: Coord -> Item -> Item
+setPosition p i = i {position = p}
 
 herb :: Coord -> Item
 herb p = item T.herb p "images/herb.png" (Heal $ healHandler 4) False

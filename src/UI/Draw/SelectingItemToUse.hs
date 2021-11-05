@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module UI.Draw.SelectingItem
-    ( drawSelectingItem
+module UI.Draw.SelectingItemToUse
+    ( drawSelectingItemToUse
     ) where
 
 import           Dungeon.Item                        (getName)
@@ -16,8 +16,8 @@ import           TextShow                            (TextShow (showt))
 import           UI.Draw.KeyEvent                    (withKeyEvents)
 import           UI.Types                            (GameWidgetNode)
 
-drawSelectingItem :: SelectingItemToUseHandler -> Config -> GameWidgetNode
-drawSelectingItem sh c = withKeyEvents $ vstack labels
+drawSelectingItemToUse :: SelectingItemToUseHandler -> Config -> GameWidgetNode
+drawSelectingItemToUse sh c = withKeyEvents $ vstack labels
   where
     labels = label topLabel : map label addAsterlist
     addAsterlist =
