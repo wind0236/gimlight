@@ -7,7 +7,7 @@ module Actor.Actions
 import           Actor                      (Actor)
 import           Control.Monad.Trans.Writer (Writer)
 import           Dungeon                    (Dungeon)
-import           Dungeon.Item.Book          (Book)
+import           Item.Book                  (Book)
 import           Log                        (MessageLog)
 
 data ActionStatus

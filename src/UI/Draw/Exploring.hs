@@ -18,12 +18,12 @@ import           Data.Maybe                 (mapMaybe)
 import           Dungeon                    (Dungeon, actors, explored, items,
                                              mapWidthAndHeight, playerPosition,
                                              tileMap, visible)
-import qualified Dungeon.Item               as I
 import qualified Dungeon.Map.Tile           as MT
 import           GameModel.Config           (Config)
 import           GameModel.Status.Exploring (ExploringHandler,
                                              getCurrentDungeon, getMessageLog,
                                              getPlayerActor)
+import qualified Item                       as I
 import           Linear.V2                  (V2 (V2), _x, _y)
 import           Localization               (getLocalizedText)
 import qualified Localization.Texts         as T

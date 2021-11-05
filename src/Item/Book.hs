@@ -1,4 +1,4 @@
-module Dungeon.Item.Book
+module Item.Book
     ( Book
     ) where
 

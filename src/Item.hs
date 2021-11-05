@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Dungeon.Item
+module Item
     ( Item
     , Effect(..)
     , herb
@@ -17,9 +17,9 @@ module Dungeon.Item
 import           Coord              (Coord)
 import           Data.Binary        (Binary)
 import           Data.Text          (Text)
-import           Dungeon.Item.Book  (Book)
-import           Dungeon.Item.Heal  (HealHandler, healHandler)
 import           GHC.Generics       (Generic)
+import           Item.Book          (Book)
+import           Item.Heal          (HealHandler, healHandler)
 import           Localization       (MultilingualText)
 import qualified Localization.Texts as T
 

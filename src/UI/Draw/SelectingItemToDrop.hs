@@ -4,11 +4,11 @@ module UI.Draw.SelectingItemToDrop
     ( drawSelectingItemToDrop
     ) where
 
-import           Dungeon.Item                         (getName)
 import           GameModel.Config                     (Config)
 import           GameModel.Status.SelectingItemToDrop (SelectingItemToDropHandler,
                                                        getItems,
                                                        getSelectingIndex)
+import           Item                                 (getName)
 import           Localization                         (getLocalizedText)
 import qualified Localization.Texts                   as T
 import           Monomer                              (label, vstack)

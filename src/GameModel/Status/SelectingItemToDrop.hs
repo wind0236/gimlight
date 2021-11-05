@@ -11,9 +11,9 @@ module GameModel.Status.SelectingItemToDrop
     ) where
 
 import           Data.Binary                (Binary)
-import           Dungeon.Item               (Item)
 import           GHC.Generics               (Generic)
 import           GameModel.Status.Exploring (ExploringHandler)
+import           Item                       (Item)
 
 data SelectingItemToDropHandler =
     SelectingItemToDropHandler

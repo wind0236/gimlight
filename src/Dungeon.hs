@@ -46,8 +46,6 @@ import           Data.Array.Base      (IArray (bounds), assocs, (//))
 import           Data.Binary          (Binary)
 import           Data.Foldable        (find)
 import           Data.List            (findIndex)
-import           Dungeon.Item         (Item)
-import qualified Dungeon.Item         as I
 import           Dungeon.Map.Bool     (BoolMap)
 import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
                                        updateExploredMap)
@@ -55,6 +53,8 @@ import           Dungeon.Map.Fov      (Fov, calculateFov, initFov)
 import           Dungeon.Map.Tile     (Tile, TileMap, transparent, walkable)
 import           Dungeon.Stairs       (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics         (Generic)
+import           Item                 (Item)
+import qualified Item                 as I
 import           Linear.V2            (V2 (..))
 
 data DungeonKind

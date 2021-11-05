@@ -7,7 +7,7 @@ import           Actor.Actions        (Action, ActionStatus (Failed, Ok))
 import           Control.Lens         ((^.))
 import           Control.Monad.Writer (tell)
 import           Dungeon              (pushActor, pushItem)
-import           Dungeon.Item         (Item, getName, setPosition)
+import           Item                 (Item, getName, setPosition)
 import qualified Localization.Texts   as T
 
 dropAction :: Int -> Action

@@ -11,9 +11,9 @@ module GameModel.Status.SelectingItemToUse
     ) where
 
 import           Data.Binary                (Binary)
-import           Dungeon.Item               (Item)
 import           GHC.Generics               (Generic)
 import           GameModel.Status.Exploring (ExploringHandler)
+import           Item                       (Item)
 
 data SelectingItemToUseHandler =
     SelectingItemToUseHandler

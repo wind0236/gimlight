@@ -32,9 +32,6 @@ executable roguelike
                       , Dungeon.Generate
                       , Dungeon.Generate.Room
                       , Dungeon.Init
-                      , Dungeon.Item
-                      , Dungeon.Item.Book
-                      , Dungeon.Item.Heal
                       , Dungeon.Map
                       , Dungeon.Map.Bool
                       , Dungeon.Map.Explored
@@ -56,6 +53,9 @@ executable roguelike
                       , GameModel.Status.SelectingItemToDrop
                       , GameModel.Status.SelectingItemToUse
                       , GameModel.Status.Talking
+                      , Item
+                      , Item.Book
+                      , Item.Heal
                       , Localization
                       , Localization.Texts
                       , Localization.Texts.Actions

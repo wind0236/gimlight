@@ -11,8 +11,8 @@ module Actor.Inventory
 
 import           Control.Lens (makeLenses, (%~), (&), (.~), (^.))
 import           Data.Binary  (Binary)
-import           Dungeon.Item (Item)
 import           GHC.Generics (Generic)
+import           Item         (Item)
 
 data Inventory =
     Inventory

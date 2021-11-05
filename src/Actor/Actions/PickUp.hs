@@ -8,7 +8,7 @@ import           Actor.Inventory      (addItem)
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)
 import           Dungeon              (popItemAt, pushActor)
-import           Dungeon.Item         (getName)
+import           Item                 (getName)
 import qualified Localization.Texts   as T
 
 pickUpAction :: Action

@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Dungeon.Item.Heal
+module Item.Heal
     ( HealHandler
     , healHandler
     , getHealAmount

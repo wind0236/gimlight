@@ -8,9 +8,9 @@ import           Actor.Actions        (Action,
 import           Control.Lens         ((^.))
 import           Control.Monad.Writer (tell)
 import           Dungeon              (pushActor)
-import           Dungeon.Item         (Effect (Book, Heal), getEffect,
+import           Item                 (Effect (Book, Heal), getEffect,
                                        isUsableManyTimes)
-import           Dungeon.Item.Heal    (getHealAmount)
+import           Item.Heal            (getHealAmount)
 import qualified Localization.Texts   as T
 
 consumeAction :: Int -> Action
