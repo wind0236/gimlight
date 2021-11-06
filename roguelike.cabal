@@ -22,7 +22,6 @@ executable roguelike
                       , Actor.NpcBehavior
                       , Actor.Friendly
                       , Actor.Inventory
-                      , Actor.Player
                       , Actor.Monsters
                       , Actor.Status
                       , Actor.Status.Hp
@@ -66,6 +65,7 @@ executable roguelike
                       , Localization.Texts.Status
                       , Localization.Texts.Title
                       , Log
+                      , Player
                       , Save
                       , Scene
                       , Talking

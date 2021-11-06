@@ -1,4 +1,4 @@
-module Actor.Player
+module Player
     ( playerBumpAction
     , handlePlayerMoving
     , handlePlayerPickingUp

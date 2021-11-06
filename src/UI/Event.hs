@@ -4,10 +4,6 @@ module UI.Event
     ( handleEvent
     ) where
 
-import           Actor.Player             (handlePlayerAfterSelecting,
-                                           handlePlayerMoving,
-                                           handlePlayerPickingUp,
-                                           handlePlayerSelectingItem)
 import           Data.Maybe               (fromMaybe)
 import           Data.Text                (Text)
 import           GameConfig               (Language (English, Japanese),
@@ -26,6 +22,10 @@ import           GameStatus.Talking       (finishTalking)
 import           Linear.V2                (V2 (V2))
 import           Monomer                  (EventResponse (Model, Task),
                                            exitApplication)
+import           Player                   (handlePlayerAfterSelecting,
+                                           handlePlayerMoving,
+                                           handlePlayerPickingUp,
+                                           handlePlayerSelectingItem)
 import           Save                     (load, save)
 import           UI.Types                 (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished),
                                            GameEventResponse, GameWidgetEnv,
