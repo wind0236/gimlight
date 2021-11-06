@@ -1,16 +1,16 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module GameModel.Status.ReadingBook
+module GameStatus.ReadingBook
     ( ReadingBookHandler
     , readingBookHandler
     , getContent
     , finishReading
     ) where
 
-import           Data.Binary                (Binary)
-import           GHC.Generics               (Generic)
-import           GameModel.Status.Exploring (ExploringHandler, completeThisTurn)
-import           Localization               (MultilingualText)
+import           Data.Binary          (Binary)
+import           GHC.Generics         (Generic)
+import           GameStatus.Exploring (ExploringHandler, completeThisTurn)
+import           Localization         (MultilingualText)
 
 data ReadingBookHandler =
     ReadingBookHandler

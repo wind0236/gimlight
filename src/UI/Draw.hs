@@ -3,7 +3,7 @@ module UI.Draw
     ) where
 
 import           GameModel                   (GameModel (GameModel, config, status))
-import           GameModel.Status            (GameStatus (Exploring, GameOver, ReadingBook, Scene, SelectingItemToDrop, SelectingItemToUse, SelectingLocale, Talking, Title))
+import           GameStatus                  (GameStatus (Exploring, GameOver, ReadingBook, Scene, SelectingItemToDrop, SelectingItemToUse, SelectingLocale, Talking, Title))
 import           UI.Draw.Exploring           (drawExploring)
 import           UI.Draw.GameOver            (drawGameOver)
 import           UI.Draw.ReadingBook         (drawReadingBook)

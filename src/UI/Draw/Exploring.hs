@@ -4,46 +4,42 @@ module UI.Draw.Exploring
     ( drawExploring
     ) where
 
-import           Actor                      (getCurrentExperiencePoint,
-                                             getDefence,
-                                             getExperiencePointForNextLevel,
-                                             getHp, getLevel, getMaxHp,
-                                             getPower, walkingImagePath)
-import qualified Actor                      as A
-import           Control.Lens               ((&), (.~), (^.))
-import           Control.Monad              (guard)
-import           Coord                      (Coord)
-import           Data.Array                 ((!))
-import           Data.Maybe                 (mapMaybe)
-import           Dungeon                    (Dungeon, actors, explored, items,
-                                             mapWidthAndHeight, playerPosition,
-                                             tileMap, visible)
-import qualified Dungeon.Map.Tile           as MT
-import           GameModel.Config           (Config)
-import           GameModel.Status.Exploring (ExploringHandler,
-                                             getCurrentDungeon, getMessageLog,
-                                             getPlayerActor)
-import qualified Item                       as I
-import           Linear.V2                  (V2 (V2), _x, _y)
-import           Localization               (getLocalizedText)
-import qualified Localization.Texts         as T
-import           Monomer                    (CmbAlignLeft (alignLeft),
-                                             CmbBgColor (bgColor),
-                                             CmbHeight (height),
-                                             CmbMultiline (multiline),
-                                             CmbPaddingL (paddingL),
-                                             CmbPaddingT (paddingT),
-                                             CmbStyleBasic (styleBasic),
-                                             CmbWidth (width), black, box_,
-                                             filler, hgrid, hstack, image,
-                                             label, label_, vgrid, vstack,
-                                             zstack)
-import qualified Monomer.Lens               as L
-import           TextShow                   (TextShow (showt))
-import           UI.Draw.Config             (logRows, tileColumns, tileHeight,
-                                             tileRows, tileWidth, windowWidth)
-import           UI.Draw.KeyEvent           (withKeyEvents)
-import           UI.Types                   (GameWidgetNode)
+import           Actor                (getCurrentExperiencePoint, getDefence,
+                                       getExperiencePointForNextLevel, getHp,
+                                       getLevel, getMaxHp, getPower,
+                                       walkingImagePath)
+import qualified Actor                as A
+import           Control.Lens         ((&), (.~), (^.))
+import           Control.Monad        (guard)
+import           Coord                (Coord)
+import           Data.Array           ((!))
+import           Data.Maybe           (mapMaybe)
+import           Dungeon              (Dungeon, actors, explored, items,
+                                       mapWidthAndHeight, playerPosition,
+                                       tileMap, visible)
+import qualified Dungeon.Map.Tile     as MT
+import           GameModel.Config     (Config)
+import           GameStatus.Exploring (ExploringHandler, getCurrentDungeon,
+                                       getMessageLog, getPlayerActor)
+import qualified Item                 as I
+import           Linear.V2            (V2 (V2), _x, _y)
+import           Localization         (getLocalizedText)
+import qualified Localization.Texts   as T
+import           Monomer              (CmbAlignLeft (alignLeft),
+                                       CmbBgColor (bgColor), CmbHeight (height),
+                                       CmbMultiline (multiline),
+                                       CmbPaddingL (paddingL),
+                                       CmbPaddingT (paddingT),
+                                       CmbStyleBasic (styleBasic),
+                                       CmbWidth (width), black, box_, filler,
+                                       hgrid, hstack, image, label, label_,
+                                       vgrid, vstack, zstack)
+import qualified Monomer.Lens         as L
+import           TextShow             (TextShow (showt))
+import           UI.Draw.Config       (logRows, tileColumns, tileHeight,
+                                       tileRows, tileWidth, windowWidth)
+import           UI.Draw.KeyEvent     (withKeyEvents)
+import           UI.Types             (GameWidgetNode)
 
 drawExploring :: ExploringHandler -> Config -> GameWidgetNode
 drawExploring eh c =

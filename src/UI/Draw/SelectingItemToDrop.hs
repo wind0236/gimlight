@@ -4,17 +4,16 @@ module UI.Draw.SelectingItemToDrop
     ( drawSelectingItemToDrop
     ) where
 
-import           GameModel.Config                     (Config)
-import           GameModel.Status.SelectingItemToDrop (SelectingItemToDropHandler,
-                                                       getItems,
-                                                       getSelectingIndex)
-import           Item                                 (getName)
-import           Localization                         (getLocalizedText)
-import qualified Localization.Texts                   as T
-import           Monomer                              (label, vstack)
-import           TextShow                             (TextShow (showt))
-import           UI.Draw.KeyEvent                     (withKeyEvents)
-import           UI.Types                             (GameWidgetNode)
+import           GameModel.Config               (Config)
+import           GameStatus.SelectingItemToDrop (SelectingItemToDropHandler,
+                                                 getItems, getSelectingIndex)
+import           Item                           (getName)
+import           Localization                   (getLocalizedText)
+import qualified Localization.Texts             as T
+import           Monomer                        (label, vstack)
+import           TextShow                       (TextShow (showt))
+import           UI.Draw.KeyEvent               (withKeyEvents)
+import           UI.Types                       (GameWidgetNode)
 
 drawSelectingItemToDrop ::
        SelectingItemToDropHandler -> Config -> GameWidgetNode

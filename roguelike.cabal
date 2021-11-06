@@ -45,14 +45,14 @@ executable roguelike
                       , Dungeon.Stairs
                       , GameModel
                       , GameModel.Config
-                      , GameModel.Status
-                      , GameModel.Status.Exploring
-                      , GameModel.Status.Exploring.Dungeons
-                      , GameModel.Status.ReadingBook
-                      , GameModel.Status.Scene
-                      , GameModel.Status.SelectingItemToDrop
-                      , GameModel.Status.SelectingItemToUse
-                      , GameModel.Status.Talking
+                      , GameStatus
+                      , GameStatus.Exploring
+                      , GameStatus.Exploring.Dungeons
+                      , GameStatus.ReadingBook
+                      , GameStatus.Scene
+                      , GameStatus.SelectingItemToDrop
+                      , GameStatus.SelectingItemToUse
+                      , GameStatus.Talking
                       , Item
                       , Item.Book
                       , Item.Heal

@@ -8,38 +8,36 @@ module Actor.Player
     , handlePlayerDropItem
     ) where
 
-import           Actor                                (Actor, isMonster,
-                                                       talkMessage)
-import qualified Actor                                as A
-import           Actor.Actions                        (ActionStatus (Failed, Ok, ReadingStarted))
-import           Actor.Actions.Consume                (consumeAction)
-import           Actor.Actions.Drop                   (dropAction)
-import           Actor.Actions.Melee                  (meleeAction)
-import           Actor.Actions.Move                   (moveAction)
-import           Actor.Actions.PickUp                 (pickUpAction)
-import           Control.Lens                         ((^.))
-import           Data.Maybe                           (fromMaybe)
-import           Dungeon                              (isTown)
-import           GameModel.Status                     (GameStatus (Exploring, GameOver, ReadingBook, SelectingItemToDrop, SelectingItemToUse, Talking))
-import           GameModel.Status.Exploring           (ExploringHandler,
-                                                       actorAt,
-                                                       completeThisTurn,
-                                                       doPlayerAction,
-                                                       getCurrentDungeon,
-                                                       getPlayerActor,
-                                                       getPlayerPosition,
-                                                       isPositionInDungeon)
-import qualified GameModel.Status.Exploring           as GSE
-import           GameModel.Status.ReadingBook         (readingBookHandler)
-import           GameModel.Status.SelectingItemToDrop (SelectingItemToDropHandler,
-                                                       selectingItemToDropHandler)
-import qualified GameModel.Status.SelectingItemToDrop as D
-import           GameModel.Status.SelectingItemToUse  (SelectingItemToUseHandler,
-                                                       selectingItemToUseHandler)
-import qualified GameModel.Status.SelectingItemToUse  as U
-import           GameModel.Status.Talking             (talkingHandler)
-import           Linear.V2                            (V2)
-import           Talking                              (talkWith)
+import           Actor                          (Actor, isMonster, talkMessage)
+import qualified Actor                          as A
+import           Actor.Actions                  (ActionStatus (Failed, Ok, ReadingStarted))
+import           Actor.Actions.Consume          (consumeAction)
+import           Actor.Actions.Drop             (dropAction)
+import           Actor.Actions.Melee            (meleeAction)
+import           Actor.Actions.Move             (moveAction)
+import           Actor.Actions.PickUp           (pickUpAction)
+import           Control.Lens                   ((^.))
+import           Data.Maybe                     (fromMaybe)
+import           Dungeon                        (isTown)
+import           GameStatus                     (GameStatus (Exploring, GameOver, ReadingBook, SelectingItemToDrop, SelectingItemToUse, Talking))
+import           GameStatus.Exploring           (ExploringHandler, actorAt,
+                                                 completeThisTurn,
+                                                 doPlayerAction,
+                                                 getCurrentDungeon,
+                                                 getPlayerActor,
+                                                 getPlayerPosition,
+                                                 isPositionInDungeon)
+import qualified GameStatus.Exploring           as GSE
+import           GameStatus.ReadingBook         (readingBookHandler)
+import           GameStatus.SelectingItemToDrop (SelectingItemToDropHandler,
+                                                 selectingItemToDropHandler)
+import qualified GameStatus.SelectingItemToDrop as D
+import           GameStatus.SelectingItemToUse  (SelectingItemToUseHandler,
+                                                 selectingItemToUseHandler)
+import qualified GameStatus.SelectingItemToUse  as U
+import           GameStatus.Talking             (talkingHandler)
+import           Linear.V2                      (V2)
+import           Talking                        (talkWith)
 
 playerBumpAction :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 playerBumpAction offset eh =

@@ -4,17 +4,16 @@ module UI.Draw.SelectingItemToUse
     ( drawSelectingItemToUse
     ) where
 
-import           GameModel.Config                    (Config)
-import           GameModel.Status.SelectingItemToUse (SelectingItemToUseHandler,
-                                                      getItems,
-                                                      getSelectingIndex)
-import           Item                                (getName)
-import           Localization                        (getLocalizedText)
-import qualified Localization.Texts                  as T
-import           Monomer                             (label, vstack)
-import           TextShow                            (TextShow (showt))
-import           UI.Draw.KeyEvent                    (withKeyEvents)
-import           UI.Types                            (GameWidgetNode)
+import           GameModel.Config              (Config)
+import           GameStatus.SelectingItemToUse (SelectingItemToUseHandler,
+                                                getItems, getSelectingIndex)
+import           Item                          (getName)
+import           Localization                  (getLocalizedText)
+import qualified Localization.Texts            as T
+import           Monomer                       (label, vstack)
+import           TextShow                      (TextShow (showt))
+import           UI.Draw.KeyEvent              (withKeyEvents)
+import           UI.Types                      (GameWidgetNode)
 
 drawSelectingItemToUse :: SelectingItemToUseHandler -> Config -> GameWidgetNode
 drawSelectingItemToUse sh c = withKeyEvents $ vstack labels

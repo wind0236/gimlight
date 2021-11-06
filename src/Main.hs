@@ -6,7 +6,7 @@ module Main
 
 import           GameModel        (GameModel (GameModel, config, status))
 import           GameModel.Config (getLocale, readConfigOrDefault)
-import           GameModel.Status (GameStatus (SelectingLocale, Title))
+import           GameStatus       (GameStatus (SelectingLocale, Title))
 import           Monomer          (MainWindowState (MainWindowNormal),
                                    appFontDef, appInitEvent, appTheme,
                                    appWindowResizable, appWindowState,

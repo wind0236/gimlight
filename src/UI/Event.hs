@@ -4,34 +4,33 @@ module UI.Event
     ( handleEvent
     ) where
 
-import           Actor.Player                         (handlePlayerConsumeItem,
-                                                       handlePlayerDropItem,
-                                                       handlePlayerMoving,
-                                                       handlePlayerPickingUp,
-                                                       handlePlayerSelectingItemToDrop,
-                                                       handlePlayerSelectingItemToUse)
-import           Data.Maybe                           (fromMaybe)
-import           Data.Text                            (Text)
-import           GameModel                            (GameModel (GameModel, config, status))
-import           GameModel.Config                     (Language (English, Japanese),
-                                                       setLocale, writeConfig)
-import           GameModel.Status                     (GameStatus (Exploring, GameOver, ReadingBook, Scene, SelectingItemToDrop, SelectingItemToUse, SelectingLocale, Talking, Title),
-                                                       newGameStatus)
-import           GameModel.Status.Exploring           (ascendStairsAtPlayerPosition,
-                                                       descendStairsAtPlayerPosition)
-import           GameModel.Status.ReadingBook         (finishReading)
-import           GameModel.Status.Scene               (nextSceneOrFinish)
-import qualified GameModel.Status.SelectingItemToDrop as D
-import qualified GameModel.Status.SelectingItemToUse  as U
-import           GameModel.Status.Talking             (finishTalking)
-import           Linear.V2                            (V2 (V2))
-import           Monomer                              (EventResponse (Model, Task),
-                                                       exitApplication)
-import           Save                                 (load, save)
-import           UI.Types                             (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished),
-                                                       GameEventResponse,
-                                                       GameWidgetEnv,
-                                                       GameWidgetNode)
+import           Actor.Player                   (handlePlayerConsumeItem,
+                                                 handlePlayerDropItem,
+                                                 handlePlayerMoving,
+                                                 handlePlayerPickingUp,
+                                                 handlePlayerSelectingItemToDrop,
+                                                 handlePlayerSelectingItemToUse)
+import           Data.Maybe                     (fromMaybe)
+import           Data.Text                      (Text)
+import           GameModel                      (GameModel (GameModel, config, status))
+import           GameModel.Config               (Language (English, Japanese),
+                                                 setLocale, writeConfig)
+import           GameStatus                     (GameStatus (Exploring, GameOver, ReadingBook, Scene, SelectingItemToDrop, SelectingItemToUse, SelectingLocale, Talking, Title),
+                                                 newGameStatus)
+import           GameStatus.Exploring           (ascendStairsAtPlayerPosition,
+                                                 descendStairsAtPlayerPosition)
+import           GameStatus.ReadingBook         (finishReading)
+import           GameStatus.Scene               (nextSceneOrFinish)
+import qualified GameStatus.SelectingItemToDrop as D
+import qualified GameStatus.SelectingItemToUse  as U
+import           GameStatus.Talking             (finishTalking)
+import           Linear.V2                      (V2 (V2))
+import           Monomer                        (EventResponse (Model, Task),
+                                                 exitApplication)
+import           Save                           (load, save)
+import           UI.Types                       (AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished),
+                                                 GameEventResponse,
+                                                 GameWidgetEnv, GameWidgetNode)
 
 handleEvent ::
        GameWidgetEnv

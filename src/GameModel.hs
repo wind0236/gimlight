@@ -6,7 +6,7 @@ module GameModel
     ) where
 
 import           GameModel.Config (Config)
-import           GameModel.Status (GameStatus)
+import           GameStatus       (GameStatus)
 
 data GameModel =
     GameModel
