@@ -4,7 +4,7 @@ module UI.Draw.SelectingItemToDrop
     ( drawSelectingItemToDrop
     ) where
 
-import           GameModel.Config               (Config)
+import           GameConfig                     (Config)
 import           GameStatus.SelectingItemToDrop (SelectingItemToDropHandler,
                                                  getItems, getSelectingIndex)
 import           Item                           (getName)

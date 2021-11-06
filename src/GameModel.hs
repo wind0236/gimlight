@@ -5,8 +5,8 @@ module GameModel
     ( GameModel(..)
     ) where
 
-import           GameModel.Config (Config)
-import           GameStatus       (GameStatus)
+import           GameConfig (Config)
+import           GameStatus (GameStatus)
 
 data GameModel =
     GameModel

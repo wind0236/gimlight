@@ -18,7 +18,7 @@ import           Dungeon              (Dungeon, actors, explored, items,
                                        mapWidthAndHeight, playerPosition,
                                        tileMap, visible)
 import qualified Dungeon.Map.Tile     as MT
-import           GameModel.Config     (Config)
+import           GameConfig           (Config)
 import           GameStatus.Exploring (ExploringHandler, getCurrentDungeon,
                                        getMessageLog, getPlayerActor)
 import qualified Item                 as I

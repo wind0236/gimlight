@@ -12,9 +12,9 @@ import           Actor.Player                   (handlePlayerConsumeItem,
                                                  handlePlayerSelectingItemToUse)
 import           Data.Maybe                     (fromMaybe)
 import           Data.Text                      (Text)
-import           GameModel                      (GameModel (GameModel, config, status))
-import           GameModel.Config               (Language (English, Japanese),
+import           GameConfig                     (Language (English, Japanese),
                                                  setLocale, writeConfig)
+import           GameModel                      (GameModel (GameModel, config, status))
 import           GameStatus                     (GameStatus (Exploring, GameOver, ReadingBook, Scene, SelectingItemToDrop, SelectingItemToUse, SelectingLocale, Talking, Title),
                                                  newGameStatus)
 import           GameStatus.Exploring           (ascendStairsAtPlayerPosition,

@@ -6,7 +6,7 @@ module UI.Draw.Talking
 
 import           Actor              (standingImagePath)
 import           Control.Lens       ((&), (.~), (^.))
-import           GameModel.Config   (Config)
+import           GameConfig         (Config)
 import           GameStatus.Talking (TalkingHandler, destructHandler)
 import           Localization       (getLocalizedText)
 import           Monomer            (CmbBgColor (bgColor),

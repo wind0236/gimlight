@@ -4,7 +4,7 @@ module UI.Draw.SelectingItemToUse
     ( drawSelectingItemToUse
     ) where
 
-import           GameModel.Config              (Config)
+import           GameConfig                    (Config)
 import           GameStatus.SelectingItemToUse (SelectingItemToUseHandler,
                                                 getItems, getSelectingIndex)
 import           Item                          (getName)

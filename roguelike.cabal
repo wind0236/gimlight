@@ -43,8 +43,8 @@ executable roguelike
                       , Dungeon.Predefined.GlobalMap
                       , Dungeon.Size
                       , Dungeon.Stairs
+                      , GameConfig
                       , GameModel
-                      , GameModel.Config
                       , GameStatus
                       , GameStatus.Exploring
                       , GameStatus.Exploring.Dungeons

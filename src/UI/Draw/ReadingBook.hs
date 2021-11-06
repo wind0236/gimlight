@@ -2,7 +2,7 @@ module UI.Draw.ReadingBook
     ( drawReadingBook
     ) where
 
-import           GameModel.Config       (Config)
+import           GameConfig             (Config)
 import           GameStatus.ReadingBook (ReadingBookHandler, getContent)
 import           Localization           (getLocalizedText)
 import           Monomer                (label_, multiline, styleBasic,

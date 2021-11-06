@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module GameModel.Config
+module GameConfig
     ( Config
     , Language(..)
     , readConfigOrDefault

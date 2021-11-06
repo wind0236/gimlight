@@ -3,7 +3,7 @@ module UI.Draw.Scene
     ) where
 
 import           Control.Lens     ((^.))
-import           GameModel.Config (Config)
+import           GameConfig       (Config)
 import           GameStatus.Scene (SceneHandler, destructHandler)
 import           Localization     (getLocalizedText)
 import           Monomer          (CmbMultiline (multiline),

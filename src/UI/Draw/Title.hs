@@ -4,7 +4,7 @@ module UI.Draw.Title
     ( drawTitle
     ) where
 
-import           GameModel.Config   (Config)
+import           GameConfig         (Config)
 import           Localization       (getLocalizedText)
 import qualified Localization.Texts as T
 import           Monomer            (CmbStyleBasic (styleBasic),
