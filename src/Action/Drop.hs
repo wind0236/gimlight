@@ -1,9 +1,9 @@
-module Actor.Actions.Drop
+module Action.Drop
     ( dropAction
     ) where
 
+import           Action               (Action, ActionStatus (Failed, Ok))
 import           Actor                (position, removeNthItem)
-import           Actor.Actions        (Action, ActionStatus (Failed, Ok))
 import           Control.Lens         ((^.))
 import           Control.Monad.Writer (tell)
 import           Dungeon              (pushActor, pushItem)

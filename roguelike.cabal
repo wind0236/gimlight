@@ -11,14 +11,14 @@ executable roguelike
     main-is:          Main.hs
     ghc-options:      -threaded -Wall -Werror
 
-    other-modules:      Actor
-                      , Actor.Actions
-                      , Actor.Actions.Consume
-                      , Actor.Actions.Drop
-                      , Actor.Actions.Melee
-                      , Actor.Actions.Move
-                      , Actor.Actions.PickUp
-                      , Actor.Actions.Wait
+    other-modules:      Action
+                      , Action.Consume
+                      , Action.Drop
+                      , Action.Melee
+                      , Action.Move
+                      , Action.PickUp
+                      , Action.Wait
+                      , Actor
                       , Actor.NpcBehavior
                       , Actor.Friendly
                       , Actor.Inventory

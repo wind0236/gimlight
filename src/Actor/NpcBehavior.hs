@@ -2,11 +2,11 @@ module Actor.NpcBehavior
     ( handleNpcTurns
     ) where
 
+import           Action               (Action)
+import           Action.Melee         (meleeAction)
+import           Action.Move          (moveAction)
+import           Action.Wait          (waitAction)
 import           Actor                (Actor, pathToDestination, position)
-import           Actor.Actions        (Action)
-import           Actor.Actions.Melee  (meleeAction)
-import           Actor.Actions.Move   (moveAction)
-import           Actor.Actions.Wait   (waitAction)
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (MonadWriter (writer), Writer)
 import           Coord                (Coord)

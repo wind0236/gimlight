@@ -1,9 +1,9 @@
-module Actor.Actions.Move
+module Action.Move
     ( moveAction
     ) where
 
+import           Action               (Action, ActionStatus (Failed, Ok))
 import           Actor                (Actor, position)
-import           Actor.Actions        (Action, ActionStatus (Failed, Ok))
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)
 import           Coord                (Coord)

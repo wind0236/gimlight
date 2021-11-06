@@ -17,8 +17,8 @@ module GameStatus.Exploring
     , getMessageLog
     ) where
 
+import           Action                        (Action, ActionStatus)
 import           Actor                         (Actor)
-import           Actor.Actions                 (Action, ActionStatus)
 import           Control.Lens                  (makeLenses, (%~), (&), (.~),
                                                 (^.))
 import           Control.Monad.Trans.Writer    (runWriter)

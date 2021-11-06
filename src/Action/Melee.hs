@@ -1,10 +1,10 @@
-module Actor.Actions.Melee
+module Action.Melee
     ( meleeAction
     ) where
 
+import           Action               (Action, ActionStatus (Failed, Ok))
 import           Actor                (Actor, position)
 import qualified Actor                as A
-import           Actor.Actions        (Action, ActionStatus (Failed, Ok))
 import           Control.Lens         ((^.))
 import           Control.Monad.Writer (Writer)
 import           Dungeon              (Dungeon, popActorAt, pushActor)

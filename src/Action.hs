@@ -1,4 +1,4 @@
-module Actor.Actions
+module Action
     ( Action
     , ActionResult
     , ActionStatus(..)

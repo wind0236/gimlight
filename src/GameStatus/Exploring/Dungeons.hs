@@ -7,8 +7,8 @@ module GameStatus.Exploring.Dungeons
     , handleNpcTurns
     ) where
 
+import           Action                     (Action, ActionStatus (Failed))
 import           Actor                      (Actor, isPlayer, position)
-import           Actor.Actions              (Action, ActionStatus (Failed))
 import qualified Actor.NpcBehavior          as NPC
 import           Control.Lens               ((%~), (&), (.~), (^.))
 import           Control.Monad.Trans.Writer (Writer)

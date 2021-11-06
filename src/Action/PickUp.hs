@@ -1,9 +1,9 @@
-module Actor.Actions.PickUp
+module Action.PickUp
     ( pickUpAction
     ) where
 
+import           Action               (Action, ActionStatus (Failed, Ok))
 import           Actor                (inventoryItems, position)
-import           Actor.Actions        (Action, ActionStatus (Failed, Ok))
 import           Actor.Inventory      (addItem)
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)

@@ -8,14 +8,14 @@ module Actor.Player
     , handlePlayerDropItem
     ) where
 
+import           Action                         (ActionStatus (Failed, Ok, ReadingStarted))
+import           Action.Consume                 (consumeAction)
+import           Action.Drop                    (dropAction)
+import           Action.Melee                   (meleeAction)
+import           Action.Move                    (moveAction)
+import           Action.PickUp                  (pickUpAction)
 import           Actor                          (Actor, isMonster, talkMessage)
 import qualified Actor                          as A
-import           Actor.Actions                  (ActionStatus (Failed, Ok, ReadingStarted))
-import           Actor.Actions.Consume          (consumeAction)
-import           Actor.Actions.Drop             (dropAction)
-import           Actor.Actions.Melee            (meleeAction)
-import           Actor.Actions.Move             (moveAction)
-import           Actor.Actions.PickUp           (pickUpAction)
 import           Control.Lens                   ((^.))
 import           Data.Maybe                     (fromMaybe)
 import           Dungeon                        (isTown)

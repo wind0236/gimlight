@@ -1,10 +1,10 @@
-module Actor.Actions.Consume
+module Action.Consume
     ( consumeAction
     ) where
 
-import           Actor                (healHp, name, removeNthItem)
-import           Actor.Actions        (Action,
+import           Action               (Action,
                                        ActionStatus (Failed, Ok, ReadingStarted))
+import           Actor                (healHp, name, removeNthItem)
 import           Control.Lens         ((^.))
 import           Control.Monad.Writer (tell)
 import           Dungeon              (pushActor)
