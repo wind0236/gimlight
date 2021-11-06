@@ -4,7 +4,7 @@ module UI.Draw.Title
     ( drawTitle
     ) where
 
-import           GameConfig         (Config)
+import           GameConfig         (GameConfig)
 import           Localization       (getLocalizedText)
 import qualified Localization.Texts as T
 import           Monomer            (CmbStyleBasic (styleBasic),
@@ -12,7 +12,7 @@ import           Monomer            (CmbStyleBasic (styleBasic),
 import           UI.Draw.KeyEvent   (withKeyEvents)
 import           UI.Types           (GameWidgetNode)
 
-drawTitle :: Config -> GameWidgetNode
+drawTitle :: GameConfig -> GameWidgetNode
 drawTitle c =
     withKeyEvents $
     vstack

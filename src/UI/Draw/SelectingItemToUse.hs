@@ -4,7 +4,7 @@ module UI.Draw.SelectingItemToUse
     ( drawSelectingItemToUse
     ) where
 
-import           GameConfig                    (Config)
+import           GameConfig                    (GameConfig)
 import           GameStatus.SelectingItemToUse (SelectingItemToUseHandler,
                                                 getItems, getSelectingIndex)
 import           Item                          (getName)
@@ -15,7 +15,8 @@ import           TextShow                      (TextShow (showt))
 import           UI.Draw.KeyEvent              (withKeyEvents)
 import           UI.Types                      (GameWidgetNode)
 
-drawSelectingItemToUse :: SelectingItemToUseHandler -> Config -> GameWidgetNode
+drawSelectingItemToUse ::
+       SelectingItemToUseHandler -> GameConfig -> GameWidgetNode
 drawSelectingItemToUse sh c = withKeyEvents $ vstack labels
   where
     labels = label topLabel : map label addAsterlist

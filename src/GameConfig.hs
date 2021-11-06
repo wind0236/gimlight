@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module GameConfig
-    ( Config
+    ( GameConfig
     , Language(..)
     , readConfigOrDefault
     , writeConfig
@@ -22,18 +22,18 @@ data Language
 
 instance Binary Language
 
-newtype Config =
-    Config
+newtype GameConfig =
+    GameConfig
         { language :: Maybe Language
         }
     deriving (Eq, Show, Generic)
 
-instance Binary Config
+instance Binary GameConfig
 
-readConfigOrDefault :: IO Config
+readConfigOrDefault :: IO GameConfig
 readConfigOrDefault = fromMaybe initConfig <$> tryReadConfig
 
-tryReadConfig :: IO (Maybe Config)
+tryReadConfig :: IO (Maybe GameConfig)
 tryReadConfig = do
     fileExists <- doesFileExist configFilePath
     if fileExists
@@ -44,17 +44,17 @@ tryReadConfig = do
             encodeFile configFilePath initConfig
             return Nothing
 
-writeConfig :: Config -> IO ()
+writeConfig :: GameConfig -> IO ()
 writeConfig = encodeFile configFilePath
 
-initConfig :: Config
-initConfig = Config {language = Nothing}
+initConfig :: GameConfig
+initConfig = GameConfig {language = Nothing}
 
-setLocale :: Language -> Config -> Config
+setLocale :: Language -> GameConfig -> GameConfig
 setLocale l c = c {language = Just l}
 
-getLocale :: Config -> Maybe Language
-getLocale Config {language = l} = l
+getLocale :: GameConfig -> Maybe Language
+getLocale GameConfig {language = l} = l
 
 configFilePath :: FilePath
 configFilePath = "config"

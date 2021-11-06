@@ -10,7 +10,8 @@ module Localization
 import           Data.Binary  (Binary)
 import           Data.Text    (Text, append)
 import           GHC.Generics (Generic)
-import           GameConfig   (Config, Language (English, Japanese), getLocale)
+import           GameConfig   (GameConfig, Language (English, Japanese),
+                               getLocale)
 
 data MultilingualText =
     MultilingualText
@@ -31,7 +32,7 @@ instance Monoid MultilingualText where
 multilingualText :: Text -> Text -> MultilingualText
 multilingualText = MultilingualText
 
-getLocalizedText :: Config -> MultilingualText -> Text
+getLocalizedText :: GameConfig -> MultilingualText -> Text
 getLocalizedText cfg lt =
     case getLocale cfg of
         Just English  -> en lt

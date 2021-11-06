@@ -6,7 +6,7 @@ module UI.Draw.Talking
 
 import           Actor              (standingImagePath)
 import           Control.Lens       ((&), (.~), (^.))
-import           GameConfig         (Config)
+import           GameConfig         (GameConfig)
 import           GameStatus.Talking (TalkingHandler, destructHandler)
 import           Localization       (getLocalizedText)
 import           Monomer            (CmbBgColor (bgColor),
@@ -21,7 +21,7 @@ import           UI.Draw.Exploring  (drawExploring)
 import           UI.Draw.KeyEvent   (withKeyEvents)
 import           UI.Types           (GameWidgetNode)
 
-drawTalking :: TalkingHandler -> Config -> GameWidgetNode
+drawTalking :: TalkingHandler -> GameConfig -> GameWidgetNode
 drawTalking th c =
     withKeyEvents $
     zstack
@@ -33,7 +33,7 @@ drawTalking th c =
   where
     (with, afterGameStatus) = destructHandler th
 
-talkingWindow :: Config -> TalkWith -> GameWidgetNode
+talkingWindow :: GameConfig -> TalkWith -> GameWidgetNode
 talkingWindow c tw = hstack [image (tw ^. person . standingImagePath), window]
   where
     window =

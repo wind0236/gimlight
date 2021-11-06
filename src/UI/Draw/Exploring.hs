@@ -18,7 +18,7 @@ import           Dungeon              (Dungeon, actors, explored, items,
                                        mapWidthAndHeight, playerPosition,
                                        tileMap, visible)
 import qualified Dungeon.Map.Tile     as MT
-import           GameConfig           (Config)
+import           GameConfig           (GameConfig)
 import           GameStatus.Exploring (ExploringHandler, getCurrentDungeon,
                                        getMessageLog, getPlayerActor)
 import qualified Item                 as I
@@ -41,7 +41,7 @@ import           UI.Draw.Config       (logRows, tileColumns, tileHeight,
 import           UI.Draw.KeyEvent     (withKeyEvents)
 import           UI.Types             (GameWidgetNode)
 
-drawExploring :: ExploringHandler -> Config -> GameWidgetNode
+drawExploring :: ExploringHandler -> GameConfig -> GameWidgetNode
 drawExploring eh c =
     withKeyEvents $ vstack [statusAndMapGrid, messageLogArea eh c]
   where
@@ -52,7 +52,7 @@ drawExploring eh c =
               [width $ fromIntegral $ windowWidth - tileWidth * tileColumns]
             ]
 
-messageLogArea :: ExploringHandler -> Config -> GameWidgetNode
+messageLogArea :: ExploringHandler -> GameConfig -> GameWidgetNode
 messageLogArea eh c =
     vstack $
     fmap (\x -> label_ (getLocalizedText c x) [multiline]) $
@@ -65,7 +65,7 @@ mapGrid eh =
     , height $ fromIntegral mapDrawingHeight
     ]
 
-statusGrid :: ExploringHandler -> Config -> GameWidgetNode
+statusGrid :: ExploringHandler -> GameConfig -> GameWidgetNode
 statusGrid eh c =
     vstack $
     maybe

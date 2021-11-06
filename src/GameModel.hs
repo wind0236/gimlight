@@ -5,12 +5,12 @@ module GameModel
     ( GameModel(..)
     ) where
 
-import           GameConfig (Config)
+import           GameConfig (GameConfig)
 import           GameStatus (GameStatus)
 
 data GameModel =
     GameModel
         { status :: GameStatus
-        , config :: Config
+        , config :: GameConfig
         }
     deriving (Eq, Show)

@@ -3,7 +3,7 @@ module UI.Draw.Scene
     ) where
 
 import           Control.Lens     ((^.))
-import           GameConfig       (Config)
+import           GameConfig       (GameConfig)
 import           GameStatus.Scene (SceneHandler, destructHandler)
 import           Localization     (getLocalizedText)
 import           Monomer          (CmbMultiline (multiline),
@@ -14,7 +14,7 @@ import           Scene            (backgroundImage, elements, text)
 import           UI.Draw.KeyEvent (withKeyEvents)
 import           UI.Types         (GameWidgetNode)
 
-drawScene :: SceneHandler -> Config -> GameWidgetNode
+drawScene :: SceneHandler -> GameConfig -> GameWidgetNode
 drawScene sh c =
     withKeyEvents $
     zstack

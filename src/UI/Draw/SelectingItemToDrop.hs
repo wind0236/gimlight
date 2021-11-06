@@ -4,7 +4,7 @@ module UI.Draw.SelectingItemToDrop
     ( drawSelectingItemToDrop
     ) where
 
-import           GameConfig                     (Config)
+import           GameConfig                     (GameConfig)
 import           GameStatus.SelectingItemToDrop (SelectingItemToDropHandler,
                                                  getItems, getSelectingIndex)
 import           Item                           (getName)
@@ -16,7 +16,7 @@ import           UI.Draw.KeyEvent               (withKeyEvents)
 import           UI.Types                       (GameWidgetNode)
 
 drawSelectingItemToDrop ::
-       SelectingItemToDropHandler -> Config -> GameWidgetNode
+       SelectingItemToDropHandler -> GameConfig -> GameWidgetNode
 drawSelectingItemToDrop sh c = withKeyEvents $ vstack labels
   where
     labels = label topLabel : map label addAsterlist
