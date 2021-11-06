@@ -50,8 +50,7 @@ executable roguelike
                       , GameStatus.Exploring.Dungeons
                       , GameStatus.ReadingBook
                       , GameStatus.Scene
-                      , GameStatus.SelectingItemToDrop
-                      , GameStatus.SelectingItemToUse
+                      , GameStatus.SelectingItem
                       , GameStatus.Talking
                       , Item
                       , Item.Book
@@ -79,8 +78,7 @@ executable roguelike
                       , UI.Draw.ReadingBook
                       , UI.Draw.Scene
                       , UI.Draw.SelectingLocale
-                      , UI.Draw.SelectingItemToDrop
-                      , UI.Draw.SelectingItemToUse
+                      , UI.Draw.SelectingItem
                       , UI.Draw.Talking
                       , UI.Draw.Title
                       , UI.Event
