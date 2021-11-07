@@ -42,7 +42,9 @@ jobs:
       run: "echo \"package * \n  ghc-options: -fwrite-ide-info\" > cabal.project.local"
 
     - name: Build
-      run: cabal build --enable-tests --enable-benchmarks all
+      run: |
+        cabal clean # This is needed to run `weeder` correctly.
+        cabal build --enable-tests --enable-benchmarks all
 
     - name: Detect unused lines
       run: |
