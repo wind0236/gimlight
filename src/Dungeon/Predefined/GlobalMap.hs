@@ -3,8 +3,8 @@ module Dungeon.Predefined.GlobalMap
     ) where
 
 import           Data.Array         ((//))
-import           Dungeon            (Dungeon, DungeonKind (GlobalMap), dungeon)
-import qualified Dungeon.Identifier as Identifier
+import           Dungeon            (Dungeon, dungeon)
+import           Dungeon.Identifier (Identifier (GlobalMap))
 import           Dungeon.Map.Tile   (TileMap, allWallTiles, dungeonTile,
                                      floorTile, townTile, wallTile)
 import           Linear.V2          (V2 (V2))
@@ -35,7 +35,6 @@ globalMap =
         []
         []
         GlobalMap
-        Identifier.GlobalMap
 
 stringArrayToMap :: [String] -> TileMap
 stringArrayToMap list =

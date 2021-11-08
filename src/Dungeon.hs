@@ -24,7 +24,6 @@ module Dungeon
     , isPositionInDungeon
     , npcs
     , positionOnParentMap
-    , DungeonKind(..)
     , actors
     , tileMap
     , visible
@@ -47,6 +46,7 @@ import           Data.Binary          (Binary)
 import           Data.Foldable        (find)
 import           Data.List            (findIndex)
 import           Dungeon.Identifier   (Identifier)
+import qualified Dungeon.Identifier   as Identifier
 import           Dungeon.Map.Bool     (BoolMap)
 import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
                                        updateExploredMap)
@@ -57,14 +57,6 @@ import           GHC.Generics         (Generic)
 import           Item                 (Item)
 import qualified Item                 as I
 import           Linear.V2            (V2 (..))
-
-data DungeonKind
-    = Town
-    | DungeonType
-    | GlobalMap
-    deriving (Show, Ord, Eq, Generic)
-
-instance Binary DungeonKind
 
 data Dungeon =
     Dungeon
@@ -80,8 +72,7 @@ data Dungeon =
           -- to the global map.
         , _ascendingStairs     :: Maybe StairsPair
         , _descendingStairs    :: [StairsPair]
-        , _dungeonKind         :: DungeonKind
-        , identifier           :: Identifier
+        , _identifier          :: Identifier
         }
     deriving (Show, Ord, Eq, Generic)
 
@@ -89,8 +80,8 @@ makeLenses ''Dungeon
 
 instance Binary Dungeon
 
-dungeon :: TileMap -> [Actor] -> [Item] -> DungeonKind -> Identifier -> Dungeon
-dungeon t e i d ident =
+dungeon :: TileMap -> [Actor] -> [Item] -> Identifier -> Dungeon
+dungeon t e i ident =
     Dungeon
         { _tileMap = t
         , _visible = initFov widthAndHeight
@@ -100,8 +91,7 @@ dungeon t e i d ident =
         , _positionOnParentMap = Nothing
         , _ascendingStairs = Nothing
         , _descendingStairs = []
-        , _dungeonKind = d
-        , identifier = ident
+        , _identifier = ident
         }
   where
     widthAndHeight = snd (bounds t) + V2 1 1
@@ -201,7 +191,7 @@ mapWidthAndHeight :: Dungeon -> V2 Int
 mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1
 
 isTown :: Dungeon -> Bool
-isTown d = d ^. dungeonKind == Town
+isTown d = Identifier.isTown $ d ^. identifier
 
 isPositionInDungeon :: Coord -> Dungeon -> Bool
 isPositionInDungeon c d = x >= 0 && x < width && y >= 0 && y < height

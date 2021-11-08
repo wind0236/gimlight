@@ -10,7 +10,7 @@ import           Coord                 (Coord)
 import           Data.Array            (bounds, (//))
 import           Data.Maybe            (fromMaybe)
 import           Data.Tree             (Tree (Node, rootLabel, subForest))
-import           Dungeon               (Dungeon, DungeonKind (DungeonType),
+import           Dungeon               (Dungeon,
                                         addAscendingAndDescendingStiars,
                                         changeTile, dungeon,
                                         stairsPositionCandidates)
@@ -103,12 +103,7 @@ generateDungeon ::
     -> Identifier
     -> (Dungeon, Coord, StdGen)
 generateDungeon g maxRooms roomMinSize roomMaxSize mapSize ident =
-    ( dungeon
-          (tiles // [(enterPosition, upStairs)])
-          actors
-          items
-          DungeonType
-          ident
+    ( dungeon (tiles // [(enterPosition, upStairs)]) actors items ident
     , enterPosition
     , g''')
   where
