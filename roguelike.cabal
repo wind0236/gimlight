@@ -61,7 +61,6 @@ executable roguelike
                       , Localization.Texts.Books
                       , Localization.Texts.Items
                       , Localization.Texts.Scene
-                      , Localization.Texts.SelectingItem
                       , Localization.Texts.Status
                       , Localization.Texts.Title
                       , Log

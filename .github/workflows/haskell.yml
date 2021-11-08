@@ -48,7 +48,7 @@ jobs:
 
     - name: Detect unused lines
       run: |
-        cabal install weeder
+        cabal install weeder --ignore-project
         ~/.cabal/bin/weeder
 
     - name: Run tests
