@@ -30,6 +30,7 @@ executable roguelike
                       , Dungeon
                       , Dungeon.Generate
                       , Dungeon.Generate.Room
+                      , Dungeon.Identifier
                       , Dungeon.Init
                       , Dungeon.Map
                       , Dungeon.Map.Bool

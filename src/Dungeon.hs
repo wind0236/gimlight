@@ -46,6 +46,7 @@ import           Data.Array.Base      (IArray (bounds), assocs, (//))
 import           Data.Binary          (Binary)
 import           Data.Foldable        (find)
 import           Data.List            (findIndex)
+import           Dungeon.Identifier   (Identifier)
 import           Dungeon.Map.Bool     (BoolMap)
 import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
                                        updateExploredMap)
@@ -80,6 +81,7 @@ data Dungeon =
         , _ascendingStairs     :: Maybe StairsPair
         , _descendingStairs    :: [StairsPair]
         , _dungeonKind         :: DungeonKind
+        , identifier           :: Identifier
         }
     deriving (Show, Ord, Eq, Generic)
 
@@ -87,8 +89,8 @@ makeLenses ''Dungeon
 
 instance Binary Dungeon
 
-dungeon :: TileMap -> [Actor] -> [Item] -> DungeonKind -> Dungeon
-dungeon t e i d =
+dungeon :: TileMap -> [Actor] -> [Item] -> DungeonKind -> Identifier -> Dungeon
+dungeon t e i d ident =
     Dungeon
         { _tileMap = t
         , _visible = initFov widthAndHeight
@@ -99,6 +101,7 @@ dungeon t e i d =
         , _ascendingStairs = Nothing
         , _descendingStairs = []
         , _dungeonKind = d
+        , identifier = ident
         }
   where
     widthAndHeight = snd (bounds t) + V2 1 1
