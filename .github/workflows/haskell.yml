@@ -56,5 +56,5 @@ jobs:
 
     - name: Run hlint
       run: |
-        cabal install hlint
+        cabal install hlint --ignore-project
         ~/.cabal/bin/hlint .
