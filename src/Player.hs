@@ -19,7 +19,7 @@ import           Data.Maybe               (fromMaybe)
 import           Dungeon                  (isTown)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, SelectingItem, Talking))
 import           GameStatus.Exploring     (ExploringHandler, actorAt,
-                                           completeThisTurn, doPlayerAction,
+                                           processAfterPlayerTurn, doPlayerAction,
                                            getCurrentDungeon, getPlayerActor,
                                            getPlayerPosition,
                                            isPositionInDungeon)
@@ -40,7 +40,7 @@ handlePlayerMoving offset gs =
      in if isSuccess
             then case newState of
                      Exploring eh ->
-                         maybe GameOver Exploring (completeThisTurn eh)
+                         maybe GameOver Exploring (processAfterPlayerTurn eh)
                      _ -> newState
             else newState
 
@@ -48,7 +48,7 @@ handlePlayerPickingUp :: ExploringHandler -> GameStatus
 handlePlayerPickingUp eh =
     let (status, newHandler) = doPlayerAction pickUpAction eh
      in case status of
-            Ok -> maybe GameOver Exploring $ completeThisTurn newHandler
+            Ok -> maybe GameOver Exploring $ processAfterPlayerTurn newHandler
             ReadingStarted _ -> error "Unreachable."
             Failed -> Exploring newHandler
 
@@ -68,7 +68,7 @@ handlePlayerAfterSelecting h = result
             Nothing -> SelectingItem h
     newState status handlerAfterAction =
         case status of
-            Ok -> maybe GameOver Exploring $ completeThisTurn handlerAfterAction
+            Ok -> maybe GameOver Exploring $ processAfterPlayerTurn handlerAfterAction
             ReadingStarted book ->
                 ReadingBook $ readingBookHandler book handlerAfterAction
             Failed -> Exploring handlerAfterAction

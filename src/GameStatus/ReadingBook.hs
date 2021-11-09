@@ -9,7 +9,7 @@ module GameStatus.ReadingBook
 
 import           Data.Binary          (Binary)
 import           GHC.Generics         (Generic)
-import           GameStatus.Exploring (ExploringHandler, completeThisTurn)
+import           GameStatus.Exploring (ExploringHandler, processAfterPlayerTurn)
 import           Localization         (MultilingualText)
 
 data ReadingBookHandler =
@@ -28,4 +28,4 @@ getContent :: ReadingBookHandler -> MultilingualText
 getContent (ReadingBookHandler c _) = c
 
 finishReading :: ReadingBookHandler -> Maybe ExploringHandler
-finishReading (ReadingBookHandler _ h) = completeThisTurn h
+finishReading (ReadingBookHandler _ h) = processAfterPlayerTurn h

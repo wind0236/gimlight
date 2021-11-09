@@ -8,7 +8,7 @@ module GameStatus.Exploring
     , descendStairsAtPlayerPosition
     , exitDungeon
     , doPlayerAction
-    , completeThisTurn
+    , processAfterPlayerTurn
     , getPlayerActor
     , getPlayerPosition
     , actorAt
@@ -69,8 +69,8 @@ doPlayerAction action eh = (status, newHandler)
         eh & messageLog %~ L.addMessages newLog &
         dungeons .~ dungeonsAfterAction
 
-completeThisTurn :: ExploringHandler -> Maybe ExploringHandler
-completeThisTurn eh =
+processAfterPlayerTurn :: ExploringHandler -> Maybe ExploringHandler
+processAfterPlayerTurn eh =
     (\x -> handlerAfterNpcTurns & dungeons %~ modify (const x)) <$>
     newCurrentDungeon
   where
