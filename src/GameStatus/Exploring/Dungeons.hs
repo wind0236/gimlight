@@ -7,7 +7,9 @@ module GameStatus.Exploring.Dungeons
     , handleNpcTurns
     ) where
 
-import           Action                     (Action, ActionStatus (Failed))
+import           Action                     (Action,
+                                             ActionResult (newDungeon, status),
+                                             ActionStatus (Failed))
 import           Actor                      (Actor, isPlayer, position)
 import qualified Actor.NpcBehavior          as NPC
 import           Control.Lens               ((%~), (&), (.~), (^.))
@@ -105,10 +107,13 @@ doPlayerAction action ds = result
     currentDungeonWithoutPlayer = getFocused zipperWithoutPlayer
     result =
         case player of
-            Just p ->
-                let dungeonAfterAction = action p currentDungeonWithoutPlayer
-                 in (\(a, d) -> (a, modify (const d) zipperWithoutPlayer)) <$>
-                    dungeonAfterAction
+            Just p -> do
+                actionResult <- action p currentDungeonWithoutPlayer
+                let statusAndNewDungeon =
+                        (status actionResult, newDungeon actionResult)
+                return $
+                    (\(a, d) -> (a, modify (const d) zipperWithoutPlayer))
+                        statusAndNewDungeon
             Nothing -> return (Failed, ds)
 
 handleNpcTurns :: Dungeons -> Writer MessageLog Dungeons

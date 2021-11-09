@@ -2,7 +2,8 @@ module Action.Move
     ( moveAction
     ) where
 
-import           Action               (Action, ActionStatus (Failed, Ok))
+import           Action               (Action, ActionResult (ActionResult),
+                                       ActionStatus (Failed, Ok))
 import           Actor                (Actor, position)
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)
@@ -20,8 +21,9 @@ moveAction offset src d =
     if not (movable d (src ^. position + offset))
         then do
             tell [T.youCannotMoveThere]
-            return (Failed, pushActor src d)
-        else return (Ok, pushActor (updatePosition d src offset) d)
+            return $ ActionResult Failed $ pushActor src d
+        else return $
+             ActionResult Ok $ pushActor (updatePosition d src offset) d
 
 updatePosition :: Dungeon -> Actor -> V2 Int -> Actor
 updatePosition d src offset =

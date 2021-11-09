@@ -1,6 +1,7 @@
 module Action
     ( Action
-    , ActionResult
+    , ActionResult(..)
+    , ActionResultWithLog
     , ActionStatus(..)
     ) where
 
@@ -15,6 +16,12 @@ data ActionStatus
     | ReadingStarted Book
     | Failed
 
-type Action = Actor -> Dungeon -> ActionResult
+data ActionResult =
+    ActionResult
+        { status     :: ActionStatus
+        , newDungeon :: Dungeon
+        }
 
-type ActionResult = Writer MessageLog (ActionStatus, Dungeon)
+type Action = Actor -> Dungeon -> ActionResultWithLog
+
+type ActionResultWithLog = Writer MessageLog ActionResult

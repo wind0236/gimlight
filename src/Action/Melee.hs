@@ -2,14 +2,13 @@ module Action.Melee
     ( meleeAction
     ) where
 
-import           Action               (Action, ActionStatus (Failed, Ok))
-import           Actor                (Actor, position)
-import qualified Actor                as A
-import           Control.Lens         ((^.))
-import           Control.Monad.Writer (Writer)
-import           Dungeon              (Dungeon, popActorAt, pushActor)
-import           Linear.V2            (V2)
-import           Log                  (MessageLog)
+import           Action       (Action, ActionResult (ActionResult),
+                               ActionResultWithLog, ActionStatus (Failed, Ok))
+import           Actor        (Actor, position)
+import qualified Actor        as A
+import           Control.Lens ((^.))
+import           Dungeon      (Dungeon, popActorAt, pushActor)
+import           Linear.V2    (V2)
 
 meleeAction :: V2 Int -> Action
 meleeAction offset src dungeon = result
@@ -18,17 +17,16 @@ meleeAction offset src dungeon = result
     (target, dungeonWithoutTarget) = popActorAt dstPosition dungeon
     result =
         case target of
-            Nothing       -> return (Failed, pushActor src dungeon)
+            Nothing -> return $ ActionResult Failed $ pushActor src dungeon
             Just defender -> attackFromTo src defender dungeonWithoutTarget
 
-attackFromTo ::
-       Actor -> Actor -> Dungeon -> Writer MessageLog (ActionStatus, Dungeon)
+attackFromTo :: Actor -> Actor -> Dungeon -> ActionResultWithLog
 attackFromTo attacker defender dungeonWithoutAttackerAndDefender = do
     (newAttacker, newDefender) <- A.attackFromTo attacker defender
-    return
-        ( Ok
-        , pushActor newAttacker $
-          maybe
-              dungeonWithoutAttackerAndDefender
-              (`pushActor` dungeonWithoutAttackerAndDefender)
-              newDefender)
+    return $
+        ActionResult Ok $
+        pushActor newAttacker $
+        maybe
+            dungeonWithoutAttackerAndDefender
+            (`pushActor` dungeonWithoutAttackerAndDefender)
+            newDefender

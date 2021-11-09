@@ -2,7 +2,8 @@ module Action.Drop
     ( dropAction
     ) where
 
-import           Action               (Action, ActionStatus (Failed, Ok))
+import           Action               (Action, ActionResult (ActionResult),
+                                       ActionStatus (Failed, Ok))
 import           Actor                (position, removeNthItem)
 import           Control.Lens         ((^.))
 import           Control.Monad.Writer (tell)
@@ -16,13 +17,14 @@ dropAction n e d =
         Just x -> dropItem x newActor d
         Nothing -> do
             tell [T.whatToDrop]
-            return (Failed, pushActor e d)
+            return $ ActionResult Failed $ pushActor e d
   where
     (item, newActor) = removeNthItem n e
 
 dropItem :: Item -> Action
 dropItem item actor dungeon = do
     tell [T.youDropped $ getName item]
-    return (Ok, pushActor actor $ pushItem itemWithNewPosition dungeon)
+    return $
+        ActionResult Ok $ pushActor actor $ pushItem itemWithNewPosition dungeon
   where
     itemWithNewPosition = setPosition (actor ^. position) item

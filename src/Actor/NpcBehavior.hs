@@ -2,7 +2,7 @@ module Actor.NpcBehavior
     ( handleNpcTurns
     ) where
 
-import           Action               (Action)
+import           Action               (Action, newDungeon)
 import           Action.Melee         (meleeAction)
 import           Action.Move          (moveAction)
 import           Action.Wait          (waitAction)
@@ -29,7 +29,7 @@ handleNpcTurn c d = maybe (return d) doAction theActor
     doAction actor = npcAction actor dungeonWithoutTheActor
 
 npcAction :: Actor -> Dungeon -> Writer MessageLog Dungeon
-npcAction e d = snd <$> action entityAfterUpdatingPath d
+npcAction e d = newDungeon <$> action entityAfterUpdatingPath d
   where
     entityAfterUpdatingPath = updatePath e d
     action = selectAction entityAfterUpdatingPath d

@@ -2,7 +2,8 @@ module Action.PickUp
     ( pickUpAction
     ) where
 
-import           Action               (Action, ActionStatus (Failed, Ok))
+import           Action               (Action, ActionResult (ActionResult),
+                                       ActionStatus (Failed, Ok))
 import           Actor                (inventoryItems, position)
 import           Actor.Inventory      (addItem)
 import           Control.Lens         ((&), (.~), (^.))
@@ -18,16 +19,16 @@ pickUpAction e d =
             case addItem x (e ^. inventoryItems) of
                 Just xs -> do
                     tell [T.youGotItem $ getName x]
-                    return
-                        ( Ok
-                        , pushActor
-                              (e & inventoryItems .~ xs)
-                              dungeonAfterPickingUp)
+                    return $
+                        ActionResult Ok $
+                        pushActor
+                            (e & inventoryItems .~ xs)
+                            dungeonAfterPickingUp
                 Nothing -> do
                     tell [T.bagIsFull]
-                    return (Failed, pushActor e d)
+                    return $ ActionResult Failed $ pushActor e d
         Nothing -> do
             tell [T.youGotNohing]
-            return (Failed, pushActor e d)
+            return $ ActionResult Failed $ pushActor e d
   where
     (item, dungeonAfterPickingUp) = popItemAt (e ^. position) d
