@@ -34,6 +34,50 @@ import           GameStatus.Talking       (talkingHandler)
 import           Linear.V2                (V2)
 import           Talking                  (talkWith)
 
+handlePlayerMoving :: V2 Int -> ExploringHandler -> GameStatus
+handlePlayerMoving offset gs =
+    let (isSuccess, newState) = playerBumpAction offset gs
+     in if isSuccess
+            then case newState of
+                     Exploring eh ->
+                         maybe GameOver Exploring (completeThisTurn eh)
+                     _ -> newState
+            else newState
+
+handlePlayerPickingUp :: ExploringHandler -> GameStatus
+handlePlayerPickingUp eh =
+    let (status, newHandler) = doPlayerAction pickUpAction eh
+     in case status of
+            Ok -> maybe GameOver Exploring $ completeThisTurn newHandler
+            ReadingStarted _ -> error "Unreachable."
+            Failed -> Exploring newHandler
+
+handlePlayerSelectingItem :: Reason -> ExploringHandler -> GameStatus
+handlePlayerSelectingItem reason eh =
+    SelectingItem $ selectingItemHandler xs reason eh
+  where
+    xs = A.getItems p
+    p = fromMaybe (error "Player is dead.") (getPlayerActor eh)
+
+handlePlayerAfterSelecting :: SelectingItemHandler -> GameStatus
+handlePlayerAfterSelecting h = result
+  where
+    result =
+        case getSelectingIndex h of
+            Just n  -> uncurry newState $ actionResult n
+            Nothing -> SelectingItem h
+    newState status handlerAfterAction =
+        case status of
+            Ok -> maybe GameOver Exploring $ completeThisTurn handlerAfterAction
+            ReadingStarted book ->
+                ReadingBook $ readingBookHandler book handlerAfterAction
+            Failed -> Exploring handlerAfterAction
+    actionResult index = doPlayerAction (action index) $ getExploringHandler h
+    action =
+        case getReason h of
+            Use  -> consumeAction
+            Drop -> dropAction
+
 playerBumpAction :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 playerBumpAction offset eh =
     let destination =
@@ -79,47 +123,3 @@ exitDungeon eh =
     case GSE.exitDungeon eh of
         Just newEh -> Exploring newEh
         Nothing    -> error "Failed to exit from the dungeon."
-
-handlePlayerMoving :: V2 Int -> ExploringHandler -> GameStatus
-handlePlayerMoving offset gs =
-    let (isSuccess, newState) = playerBumpAction offset gs
-     in if isSuccess
-            then case newState of
-                     Exploring eh ->
-                         maybe GameOver Exploring (completeThisTurn eh)
-                     _ -> newState
-            else newState
-
-handlePlayerPickingUp :: ExploringHandler -> GameStatus
-handlePlayerPickingUp eh =
-    let (status, newHandler) = doPlayerAction pickUpAction eh
-     in case status of
-            Ok -> maybe GameOver Exploring $ completeThisTurn newHandler
-            ReadingStarted _ -> error "Unreachable."
-            Failed -> Exploring newHandler
-
-handlePlayerSelectingItem :: Reason -> ExploringHandler -> GameStatus
-handlePlayerSelectingItem reason eh =
-    SelectingItem $ selectingItemHandler xs reason eh
-  where
-    xs = A.getItems p
-    p = fromMaybe (error "Player is dead.") (getPlayerActor eh)
-
-handlePlayerAfterSelecting :: SelectingItemHandler -> GameStatus
-handlePlayerAfterSelecting h = result
-  where
-    result =
-        case getSelectingIndex h of
-            Just n  -> uncurry newState $ actionResult n
-            Nothing -> SelectingItem h
-    newState status handlerAfterAction =
-        case status of
-            Ok -> maybe GameOver Exploring $ completeThisTurn handlerAfterAction
-            ReadingStarted book ->
-                ReadingBook $ readingBookHandler book handlerAfterAction
-            Failed -> Exploring handlerAfterAction
-    actionResult index = doPlayerAction (action index) $ getExploringHandler h
-    action =
-        case getReason h of
-            Use  -> consumeAction
-            Drop -> dropAction
