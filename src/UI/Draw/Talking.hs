@@ -16,7 +16,7 @@ import           Monomer            (CmbBgColor (bgColor),
                                      CmbTextSize (textSize), black, filler,
                                      gray, hstack, image, label, red, zstack)
 import qualified Monomer.Lens       as L
-import           Talking            (TalkWith, message, person)
+import           Talking            (TalkWith, getMessage, getPerson)
 import           UI.Draw.Exploring  (drawExploring)
 import           UI.Draw.KeyEvent   (withKeyEvents)
 import           UI.Types           (GameWidgetNode)
@@ -34,11 +34,11 @@ drawTalking th c =
     (with, afterGameStatus) = destructHandler th
 
 talkingWindow :: GameConfig -> TalkWith -> GameWidgetNode
-talkingWindow c tw = hstack [image (tw ^. person . standingImagePath), window]
+talkingWindow c tw = hstack [image (getPerson tw ^. standingImagePath), window]
   where
     window =
         zstack
             [ image "images/talking_window.png"
-            , label (getLocalizedText c (tw ^. message)) `styleBasic`
+            , label (getLocalizedText c $ getMessage tw) `styleBasic`
               [textColor red, textSize 16, paddingL 50]
             ]
