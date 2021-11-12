@@ -68,7 +68,6 @@ executable roguelike
                       , Player
                       , Save
                       , Scene
-                      , Talking
                       , TreeZipper
                       , UI.Draw
                       , UI.Draw.Config

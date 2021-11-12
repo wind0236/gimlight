@@ -3,29 +3,36 @@
 module GameStatus.Talking
     ( TalkingHandler
     , talkingHandler
-    , destructHandler
+    , getTalkingPartner
+    , getMessage
     , finishTalking
     ) where
 
+import           Actor                (Actor)
 import           Data.Binary          (Binary)
 import           GHC.Generics         (Generic)
 import           GameStatus.Exploring (ExploringHandler)
-import           Talking              (TalkWith)
+import           Localization         (MultilingualText)
 
 data TalkingHandler =
     TalkingHandler
-        { talk         :: TalkWith
-        , afterTalking :: ExploringHandler
+        { talkingPartner :: Actor
+        , message        :: MultilingualText
+        , afterTalking   :: ExploringHandler
         }
     deriving (Show, Ord, Eq, Generic)
 
 instance Binary TalkingHandler
 
-talkingHandler :: TalkWith -> ExploringHandler -> TalkingHandler
+talkingHandler ::
+       Actor -> MultilingualText -> ExploringHandler -> TalkingHandler
 talkingHandler = TalkingHandler
 
-destructHandler :: TalkingHandler -> (TalkWith, ExploringHandler)
-destructHandler TalkingHandler {talk = t, afterTalking = at} = (t, at)
+getTalkingPartner :: TalkingHandler -> Actor
+getTalkingPartner (TalkingHandler a _ _) = a
+
+getMessage :: TalkingHandler -> MultilingualText
+getMessage (TalkingHandler _ m _) = m
 
 finishTalking :: TalkingHandler -> ExploringHandler
 finishTalking TalkingHandler {afterTalking = at} = at

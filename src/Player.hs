@@ -19,10 +19,10 @@ import           Data.Maybe               (fromMaybe)
 import           Dungeon                  (isTown)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, SelectingItem, Talking))
 import           GameStatus.Exploring     (ExploringHandler, actorAt,
-                                           processAfterPlayerTurn, doPlayerAction,
-                                           getCurrentDungeon, getPlayerActor,
-                                           getPlayerPosition,
-                                           isPositionInDungeon)
+                                           doPlayerAction, getCurrentDungeon,
+                                           getPlayerActor, getPlayerPosition,
+                                           isPositionInDungeon,
+                                           processAfterPlayerTurn)
 import qualified GameStatus.Exploring     as GSE
 import           GameStatus.ReadingBook   (readingBookHandler)
 import           GameStatus.SelectingItem (Reason (Drop, Use),
@@ -32,7 +32,6 @@ import           GameStatus.SelectingItem (Reason (Drop, Use),
                                            selectingItemHandler)
 import           GameStatus.Talking       (talkingHandler)
 import           Linear.V2                (V2)
-import           Talking                  (talkWith)
 
 handlePlayerMoving :: V2 Int -> ExploringHandler -> GameStatus
 handlePlayerMoving offset gs =
@@ -68,7 +67,9 @@ handlePlayerAfterSelecting h = result
             Nothing -> SelectingItem h
     newState status handlerAfterAction =
         case status of
-            Ok -> maybe GameOver Exploring $ processAfterPlayerTurn handlerAfterAction
+            Ok ->
+                maybe GameOver Exploring $
+                processAfterPlayerTurn handlerAfterAction
             ReadingStarted book ->
                 ReadingBook $ readingBookHandler book handlerAfterAction
             Failed -> Exploring handlerAfterAction
@@ -98,9 +99,7 @@ meleeOrTalk offset target eh =
                      Ok               -> (True, Exploring newHandler)
                      ReadingStarted _ -> error "Unreachable."
                      Failed           -> (False, Exploring newHandler)
-        else ( True
-             , Talking $
-               talkingHandler (talkWith target $ target ^. talkMessage) eh)
+        else (True, Talking $ talkingHandler target (target ^. talkMessage) eh)
 
 moveOrExitMap :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 moveOrExitMap offset eh =
