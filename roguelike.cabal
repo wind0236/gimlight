@@ -21,6 +21,7 @@ executable roguelike
                       , Actor
                       , Actor.NpcBehavior
                       , Actor.Friendly
+                      , Actor.Friendly.Electria
                       , Actor.Inventory
                       , Actor.Monsters
                       , Actor.Status
