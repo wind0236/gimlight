@@ -3,34 +3,57 @@
 module GameStatus.Scene
     ( SceneHandler
     , sceneHandler
-    , destructHandler
+    , withoutSpeaker
+    , text
+    , getBackgroundImagePath
+    , getCurrentScene
     , nextSceneOrFinish
     ) where
 
-import           Control.Lens         ((%~), (&), (^.))
 import           Data.Binary          (Binary)
+import           Data.Text            (Text)
 import           GHC.Generics         (Generic)
 import           GameStatus.Exploring (ExploringHandler)
-import           Scene                (Scene, elements)
+import           Localization         (MultilingualText)
+
+newtype SceneElement =
+    WithoutSpeaker MultilingualText
+    deriving (Show, Ord, Eq, Generic)
+
+instance Binary SceneElement
 
 data SceneHandler =
     SceneHandler
-        { scene      :: Scene
-        , afterScene :: ExploringHandler
+        { backgroundImage :: Text
+        , elements        :: [SceneElement]
+        , afterScene      :: ExploringHandler
         }
     deriving (Show, Ord, Eq, Generic)
 
 instance Binary SceneHandler
 
-sceneHandler :: Scene -> ExploringHandler -> SceneHandler
+withoutSpeaker :: MultilingualText -> SceneElement
+withoutSpeaker = WithoutSpeaker
+
+text :: SceneElement -> MultilingualText
+text (WithoutSpeaker t) = t
+
+getBackgroundImagePath :: SceneHandler -> Text
+getBackgroundImagePath = backgroundImage
+
+getCurrentScene :: SceneHandler -> SceneElement
+getCurrentScene = head . elements
+
+sceneHandler :: Text -> [SceneElement] -> ExploringHandler -> SceneHandler
 sceneHandler = SceneHandler
 
-destructHandler :: SceneHandler -> (Scene, ExploringHandler)
-destructHandler SceneHandler {scene = s, afterScene = after} = (s, after)
-
 nextSceneOrFinish :: SceneHandler -> Either ExploringHandler SceneHandler
-nextSceneOrFinish SceneHandler {scene = s, afterScene = af} =
-    if length (s ^. elements) == 1
+nextSceneOrFinish SceneHandler { backgroundImage = b
+                               , elements = es
+                               , afterScene = af
+                               } =
+    if length es == 1
         then Left af
         else Right $
-             SceneHandler {scene = s & elements %~ tail, afterScene = af}
+             SceneHandler
+                 {backgroundImage = b, elements = tail es, afterScene = af}

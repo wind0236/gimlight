@@ -20,13 +20,13 @@ import           GHC.Generics                 (Generic)
 import           GameStatus.Exploring         (ExploringHandler,
                                                exploringHandler)
 import           GameStatus.ReadingBook       (ReadingBookHandler)
-import           GameStatus.Scene             (SceneHandler, sceneHandler)
+import           GameStatus.Scene             (SceneHandler, sceneHandler,
+                                               withoutSpeaker)
 import           GameStatus.SelectingItem     (SelectingItemHandler)
 import           GameStatus.Talking           (TalkingHandler)
 import           Linear.V2                    (V2 (V2))
 import qualified Localization.Texts           as T
 import qualified Log                          as L
-import           Scene                        (gameStartScene)
 import           System.Random                (getStdGen)
 import           TreeZipper                   (appendTree, goDownBy, treeZipper)
 
@@ -72,4 +72,9 @@ newGameStatus = do
         initExploring =
             exploringHandler initZipper $
             foldr (L.addMessage . L.message) L.emptyLog [T.welcome]
-    return $ Scene $ sceneHandler gameStartScene initExploring
+    return $
+        Scene $
+        sceneHandler
+            "images/game_opening.png"
+            [withoutSpeaker T.title1, withoutSpeaker T.title2]
+            initExploring

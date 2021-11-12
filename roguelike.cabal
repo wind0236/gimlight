@@ -67,7 +67,6 @@ executable roguelike
                       , Log
                       , Player
                       , Save
-                      , Scene
                       , TreeZipper
                       , UI.Draw
                       , UI.Draw.Config
