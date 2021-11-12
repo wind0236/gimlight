@@ -12,6 +12,7 @@ module Actor
     , getMaxHp
     , getPower
     , getDefence
+    , getTalkingPart
     , monster
     , isPlayer
     , isMonster
@@ -22,7 +23,6 @@ module Actor
     , name
     , pathToDestination
     , standingImagePath
-    , talkMessage
     , walkingImagePath
     , healHp
     , inventoryItems
@@ -30,21 +30,22 @@ module Actor
     , removeNthItem
     ) where
 
-import           Actor.Inventory      (Inventory, inventory)
-import qualified Actor.Inventory      as I
-import           Actor.Status         (Status)
-import qualified Actor.Status         as S
-import           Actor.Status.Hp      (hp)
-import           Control.Lens         (makeLenses, (%~), (&), (.~), (^.))
-import           Control.Monad.Writer (MonadWriter (writer), Writer)
-import           Coord                (Coord)
-import           Data.Binary          (Binary)
-import           Data.Text            (Text)
-import           GHC.Generics         (Generic)
-import           Item                 (Item)
-import           Localization         (MultilingualText)
-import qualified Localization.Texts   as T
-import           Log                  (MessageLog)
+import           Actor.Inventory         (Inventory, inventory)
+import qualified Actor.Inventory         as I
+import           Actor.Status            (Status)
+import qualified Actor.Status            as S
+import           Actor.Status.Hp         (hp)
+import           Control.Lens            (makeLenses, (%~), (&), (.~), (^.))
+import           Control.Monad.Writer    (MonadWriter (writer), Writer)
+import           Coord                   (Coord)
+import           Data.Binary             (Binary)
+import           Data.Text               (Text)
+import           GHC.Generics            (Generic)
+import           GameStatus.Talking.Part (TalkingPart)
+import           Item                    (Item)
+import           Localization            (MultilingualText)
+import qualified Localization.Texts      as T
+import           Log                     (MessageLog)
 
 data ActorKind
     = Player
@@ -61,7 +62,7 @@ data Actor =
         , _status            :: Status
         , _pathToDestination :: [Coord]
         , _actorKind         :: ActorKind
-        , _talkMessage       :: MultilingualText
+        , _talk              :: Maybe TalkingPart
         , _walkingImagePath  :: Text
         , _standingImagePath :: Text
         , _inventoryItems    :: Inventory
@@ -77,7 +78,7 @@ actor ::
     -> MultilingualText
     -> Status
     -> ActorKind
-    -> MultilingualText
+    -> Maybe TalkingPart
     -> Text
     -> Text
     -> Actor
@@ -87,7 +88,7 @@ actor position' name' st ak talkMessage' walkingImagePath' standingImagePath' =
         , _name = name'
         , _status = st
         , _pathToDestination = []
-        , _talkMessage = talkMessage'
+        , _talk = talkMessage'
         , _walkingImagePath = walkingImagePath'
         , _standingImagePath = standingImagePath'
         , _actorKind = ak
@@ -101,7 +102,7 @@ monster position' name' st walking =
         name'
         st
         Monster
-        mempty
+        Nothing
         walking
         "images/sample_standing_picture.png"
 
@@ -112,7 +113,7 @@ player c =
         T.player
         st
         Player
-        mempty
+        Nothing
         "images/player.png"
         "images/sample_standing_picture.png"
   where
@@ -129,6 +130,9 @@ getHp e = S.getHp $ e ^. status
 
 getMaxHp :: Actor -> Int
 getMaxHp e = S.getMaxHp $ e ^. status
+
+getTalkingPart :: Actor -> Maybe TalkingPart
+getTalkingPart a = a ^. talk
 
 attackFromTo :: Actor -> Actor -> (Writer MessageLog) (Actor, Maybe Actor)
 attackFromTo attacker defender = writer ((newAttacker, newDefender), msg)

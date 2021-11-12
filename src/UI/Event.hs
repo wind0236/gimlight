@@ -12,13 +12,15 @@ import           GameModel                (GameModel (GameModel, config, status)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, Scene, SelectingItem, SelectingLocale, Talking, Title),
                                            newGameStatus)
 import           GameStatus.Exploring     (ascendStairsAtPlayerPosition,
-                                           descendStairsAtPlayerPosition)
+                                           descendStairsAtPlayerPosition,
+                                           processAfterPlayerTurn)
 import           GameStatus.ReadingBook   (finishReading)
 import           GameStatus.Scene         (nextSceneOrFinish)
 import           GameStatus.SelectingItem (Reason (Drop, Use),
                                            getExploringHandler, selectNextItem,
                                            selectPrevItem)
-import           GameStatus.Talking       (finishTalking)
+import           GameStatus.Talking       (proceedTalking, selectNextChoice,
+                                           selectPrevChoice)
 import           Linear.V2                (V2 (V2))
 import           Monomer                  (EventResponse (Model, Task),
                                            exitApplication)
@@ -91,9 +93,16 @@ handleKeyInputDuringExploring e@GameModel {status = st@(Exploring eh)} k
 handleKeyInputDuringExploring _ _ = error "We are not exploring."
 
 handleKeyInputDuringTalking :: GameModel -> Text -> [GameEventResponse]
-handleKeyInputDuringTalking e@GameModel {status = Talking th} k
-    | k == "Enter" = [Model $ e {status = Exploring $ finishTalking th}]
+handleKeyInputDuringTalking e@GameModel {status = Talking h} k
+    | k == "Enter" = [Model $ e {status = nextStatus}]
+    | k == "Up" = [Model $e {status = Talking $ selectPrevChoice h}]
+    | k == "Down" = [Model $ e {status = Talking $ selectNextChoice h}]
     | otherwise = []
+  where
+    nextStatus =
+        case proceedTalking h of
+            Right h' -> Talking h'
+            Left eh  -> maybe GameOver Exploring (processAfterPlayerTurn eh)
 handleKeyInputDuringTalking _ _ = error "We are not talking."
 
 handleKeyInputDuringScene :: GameModel -> Text -> [GameEventResponse]

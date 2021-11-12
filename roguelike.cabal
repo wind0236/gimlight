@@ -53,6 +53,7 @@ executable roguelike
                       , GameStatus.Scene
                       , GameStatus.SelectingItem
                       , GameStatus.Talking
+                      , GameStatus.Talking.Part
                       , Item
                       , Item.Book
                       , Item.Heal

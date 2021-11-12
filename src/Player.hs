@@ -12,9 +12,8 @@ import           Action.Drop              (dropAction)
 import           Action.Melee             (meleeAction)
 import           Action.Move              (moveAction)
 import           Action.PickUp            (pickUpAction)
-import           Actor                    (Actor, isMonster, talkMessage)
+import           Actor                    (Actor, getTalkingPart, isMonster)
 import qualified Actor                    as A
-import           Control.Lens             ((^.))
 import           Data.Maybe               (fromMaybe)
 import           Dungeon                  (isTown)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, SelectingItem, Talking))
@@ -99,7 +98,9 @@ meleeOrTalk offset target eh =
                      Ok               -> (True, Exploring newHandler)
                      ReadingStarted _ -> error "Unreachable."
                      Failed           -> (False, Exploring newHandler)
-        else (True, Talking $ talkingHandler target (target ^. talkMessage) eh)
+        else case getTalkingPart target of
+                 Just x  -> (True, Talking $ talkingHandler target x eh)
+                 Nothing -> error "No talk handler is set."
 
 moveOrExitMap :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 moveOrExitMap offset eh =
