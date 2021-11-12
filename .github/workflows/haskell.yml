@@ -25,8 +25,7 @@ jobs:
         cache-name: cache-cabal
       with:
         path: |
-          ~/.cabal/packages
-          ~/.cabal/store
+          ~/.cabal
           dist-newstyle
         key: ${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}
 
