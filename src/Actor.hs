@@ -5,6 +5,7 @@
 module Actor
     ( Actor
     , player
+    , getIdentifier
     , getLevel
     , getCurrentExperiencePoint
     , getExperiencePointForNextLevel
@@ -20,7 +21,6 @@ module Actor
     , attackFromTo
     , actor
     , position
-    , name
     , pathToDestination
     , standingImagePath
     , walkingImagePath
@@ -30,6 +30,8 @@ module Actor
     , removeNthItem
     ) where
 
+import           Actor.Identifier        (Identifier, toName)
+import qualified Actor.Identifier        as Identifier
 import           Actor.Inventory         (Inventory, inventory)
 import qualified Actor.Inventory         as I
 import           Actor.Status            (Status)
@@ -43,8 +45,6 @@ import           Data.Text               (Text)
 import           GHC.Generics            (Generic)
 import           GameStatus.Talking.Part (TalkingPart)
 import           Item                    (Item)
-import           Localization            (MultilingualText)
-import qualified Localization.Texts      as T
 import           Log                     (MessageLog)
 
 data ActorKind
@@ -58,7 +58,7 @@ instance Binary ActorKind
 data Actor =
     Actor
         { _position          :: Coord
-        , _name              :: MultilingualText
+        , _identifier        :: Identifier
         , _status            :: Status
         , _pathToDestination :: [Coord]
         , _actorKind         :: ActorKind
@@ -75,17 +75,17 @@ instance Binary Actor
 
 actor ::
        Coord
-    -> MultilingualText
+    -> Identifier
     -> Status
     -> ActorKind
     -> Maybe TalkingPart
     -> Text
     -> Text
     -> Actor
-actor position' name' st ak talkMessage' walkingImagePath' standingImagePath' =
+actor position' id' st ak talkMessage' walkingImagePath' standingImagePath' =
     Actor
         { _position = position'
-        , _name = name'
+        , _identifier = id'
         , _status = st
         , _pathToDestination = []
         , _talk = talkMessage'
@@ -95,7 +95,7 @@ actor position' name' st ak talkMessage' walkingImagePath' standingImagePath' =
         , _inventoryItems = inventory 5
         }
 
-monster :: Coord -> MultilingualText -> Status -> Text -> Actor
+monster :: Coord -> Identifier -> Status -> Text -> Actor
 monster position' name' st walking =
     actor
         position'
@@ -110,7 +110,7 @@ player :: Coord -> Actor
 player c =
     actor
         c
-        T.player
+        Identifier.Player
         st
         Player
         Nothing
@@ -124,6 +124,9 @@ isPlayer e = e ^. actorKind == Player
 
 isMonster :: Actor -> Bool
 isMonster e = e ^. actorKind == Monster
+
+getIdentifier :: Actor -> Identifier
+getIdentifier a = a ^. identifier
 
 getHp :: Actor -> Int
 getHp e = S.getHp $ e ^. status
@@ -141,7 +144,10 @@ attackFromTo attacker defender = writer ((newAttacker, newDefender), msg)
         S.attackFromTo (attacker ^. status) (defender ^. status)
     newAttacker = attacker & status .~ newAttackerStatus
     newDefender = (\x -> defender & status .~ x) <$> newDefenderStatus
-    msg = msgFunc (attacker ^. name) (defender ^. name)
+    msg =
+        msgFunc
+            (toName $ getIdentifier attacker)
+            (toName $ getIdentifier defender)
 
 healHp :: Int -> Actor -> Actor
 healHp amount a = a & status %~ S.healHp amount

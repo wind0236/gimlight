@@ -4,8 +4,8 @@ module Action.Consume
 
 import           Action               (Action, ActionResult (ActionResult),
                                        ActionStatus (Failed, Ok, ReadingStarted))
-import           Actor                (healHp, name, removeNthItem)
-import           Control.Lens         ((^.))
+import           Actor                (getIdentifier, healHp, removeNthItem)
+import           Actor.Identifier     (toName)
 import           Control.Monad.Writer (tell)
 import           Dungeon              (pushActor)
 import           Item                 (Effect (Book, Heal), getEffect,
@@ -31,7 +31,7 @@ consumeAction n e d =
 
 doItemEffect :: Effect -> Action
 doItemEffect (Heal handler) actor dungeon = do
-    tell [T.healed (actor ^. name) amount]
+    tell [T.healed (toName $ getIdentifier actor) amount]
     return $ ActionResult Ok $ pushActor (healHp amount actor) dungeon
   where
     amount = getHealAmount handler

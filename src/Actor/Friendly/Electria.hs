@@ -6,6 +6,7 @@ module Actor.Friendly.Electria
 
 import           Actor                   (Actor)
 import           Actor.Friendly          (friendly)
+import           Actor.Identifier        (Identifier (Electria))
 import           Actor.Status            (status)
 import           Actor.Status.Hp         (hp)
 import           Coord                   (Coord)
@@ -18,7 +19,7 @@ electria :: Coord -> Actor
 electria position =
     friendly
         position
-        T.electria
+        Electria
         st
         talking
         "images/electria.png"
