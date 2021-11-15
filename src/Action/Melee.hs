@@ -17,16 +17,14 @@ meleeAction offset src dungeon = result
     (target, dungeonWithoutTarget) = popActorAt dstPosition dungeon
     result =
         case target of
-            Nothing -> return $ ActionResult Failed $ pushActor src dungeon
+            Nothing -> return $ ActionResult Failed (pushActor src dungeon) []
             Just defender -> attackFromTo src defender dungeonWithoutTarget
 
 attackFromTo :: Actor -> Actor -> Dungeon -> ActionResultWithLog
-attackFromTo attacker defender dungeonWithoutAttackerAndDefender = do
+attackFromTo attacker defender d = do
     (newAttacker, newDefender) <- A.attackFromTo attacker defender
-    return $
-        ActionResult Ok $
-        pushActor newAttacker $
-        maybe
-            dungeonWithoutAttackerAndDefender
-            (`pushActor` dungeonWithoutAttackerAndDefender)
-            newDefender
+    let (newDungeon, killed) =
+            case newDefender of
+                Just x  -> (pushActor newAttacker $ pushActor x d, [])
+                Nothing -> (pushActor newAttacker d, [defender])
+    return $ ActionResult Ok newDungeon killed

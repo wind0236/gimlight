@@ -62,6 +62,7 @@ executable roguelike
                       , Localization.Texts
                       , Localization.Texts.Actions
                       , Localization.Texts.Actors
+                      , Localization.Texts.Actors.Electria
                       , Localization.Texts.Books
                       , Localization.Texts.Items
                       , Localization.Texts.Scene
@@ -69,6 +70,8 @@ executable roguelike
                       , Localization.Texts.Title
                       , Log
                       , Player
+                      , Quest
+                      , Quest.KillBats
                       , Save
                       , TreeZipper
                       , UI.Draw

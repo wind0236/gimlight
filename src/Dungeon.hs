@@ -9,6 +9,7 @@
 module Dungeon
     ( Dungeon
     , dungeon
+    , getIdentifier
     , changeTile
     , popActorAt
     , popActorIf
@@ -95,6 +96,9 @@ dungeon t e i ident =
         }
   where
     widthAndHeight = snd (bounds t) + V2 1 1
+
+getIdentifier :: Dungeon -> Identifier
+getIdentifier d = d ^. identifier
 
 changeTile :: Coord -> Tile -> Dungeon -> Dungeon
 changeTile c t d = d & tileMap %~ (\x -> x // [(c, t)])

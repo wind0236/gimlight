@@ -27,6 +27,7 @@ import           GameStatus.Talking           (TalkingHandler)
 import           Linear.V2                    (V2 (V2))
 import qualified Localization.Texts           as T
 import qualified Log                          as L
+import           Quest                        (questCollection)
 import           System.Random                (getStdGen)
 import           TreeZipper                   (appendTree, goDownBy, treeZipper)
 
@@ -70,8 +71,10 @@ newGameStatus = do
                 (error "Unreachable.")
                 (goDownBy (== beaeveWithParentMap) zipper)
         initExploring =
-            exploringHandler initZipper $
-            foldr (L.addMessage . L.message) L.emptyLog [T.welcome]
+            exploringHandler
+                initZipper
+                (foldr (L.addMessage . L.message) L.emptyLog [T.welcome])
+                questCollection
     return $
         Scene $
         sceneHandler

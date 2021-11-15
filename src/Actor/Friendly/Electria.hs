@@ -11,9 +11,12 @@ import           Actor.Status            (status)
 import           Actor.Status.Hp         (hp)
 import           Coord                   (Coord)
 import           Data.List.NonEmpty      (fromList)
-import           GameStatus.Talking.Part (TalkingPart (Selection),
-                                          selectionHandler)
+import           GameStatus.Talking.Part (TalkingPart (QuestInquiry, Selection, UpdateQuest),
+                                          questInquiryHandler, selectionHandler,
+                                          updateQuestHandler)
 import qualified Localization.Texts      as T
+import           Quest                   (Inquiry (IsEnoughBatsKilled, IsKillBatsCompleted, IsKillBatsStarted),
+                                          Updater (CompleteKillBats, StartKillBats))
 
 electria :: Coord -> Actor
 electria position =
@@ -28,14 +31,48 @@ electria position =
     st = status (hp 1) 1 1
 
 talking :: TalkingPart
-talking = q
+talking = isQuestCompleted
   where
-    q =
-        Selection $selectionHandler T.talkWithElectria $
-        fromList [(T.yes, Just afterYes), (T.no, Just afterNo)]
-    afterYes =
+    isQuestCompleted =
+        QuestInquiry $
+        questInquiryHandler
+            IsKillBatsCompleted
+            (Just afterCompleted)
+            (Just isQuestStarted)
+    isQuestStarted =
+        QuestInquiry $
+        questInquiryHandler
+            IsKillBatsStarted
+            (Just isEnoughBatsKilled)
+            (Just beforeStarted)
+    afterCompleted =
         Selection $
-        selectionHandler T.talkWithElectriaYes $ fromList [(T.yes, Nothing)]
-    afterNo =
-        Selection $selectionHandler T.talkWithElectriaNo $
-        fromList [(T.yes, Nothing)]
+        selectionHandler T.electriaAfterCompletion $ fromList [(T.yes, Nothing)]
+    isEnoughBatsKilled =
+        QuestInquiry $
+        questInquiryHandler
+            IsEnoughBatsKilled
+            (Just youDidIt)
+            (Just questIsOnGoing)
+    youDidIt =
+        UpdateQuest $
+        updateQuestHandler CompleteKillBats $
+        Just $
+        Selection $
+        selectionHandler T.electriaCompleted $ fromList [(T.yes, Nothing)]
+    questIsOnGoing =
+        Selection $
+        selectionHandler T.electriaNotCompleted $ fromList [(T.yes, Nothing)]
+    beforeStarted =
+        Selection $
+        selectionHandler T.electriaBeforeQuest $
+        fromList [(T.yes, Just startQuest), (T.no, Just rejected)]
+    startQuest =
+        UpdateQuest $
+        updateQuestHandler StartKillBats $
+        Just $
+        Selection $
+        selectionHandler T.electriaAccept $ fromList [(T.yes, Nothing)]
+    rejected =
+        Selection $
+        selectionHandler T.electriaReject $ fromList [(T.yes, Nothing)]

@@ -20,6 +20,7 @@ data ActionResult =
     ActionResult
         { status     :: ActionStatus
         , newDungeon :: Dungeon
+        , killed     :: [Actor]
         }
 
 type Action = Actor -> Dungeon -> ActionResultWithLog

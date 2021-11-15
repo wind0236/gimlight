@@ -8,7 +8,7 @@ module GameStatus.Exploring.Dungeons
     ) where
 
 import           Action                     (Action,
-                                             ActionResult (newDungeon, status),
+                                             ActionResult (killed, newDungeon, status),
                                              ActionStatus (Failed))
 import           Actor                      (Actor, isPlayer, position)
 import qualified Actor.NpcBehavior          as NPC
@@ -100,7 +100,7 @@ exitDungeon ds = newZipper
             _                -> Nothing
 
 doPlayerAction ::
-       Action -> Dungeons -> Writer MessageLog (ActionStatus, Dungeons)
+       Action -> Dungeons -> Writer MessageLog (ActionStatus, Dungeons, [Actor])
 doPlayerAction action ds = result
   where
     (player, zipperWithoutPlayer) = popPlayer ds
@@ -112,13 +112,17 @@ doPlayerAction action ds = result
                 let statusAndNewDungeon =
                         (status actionResult, newDungeon actionResult)
                 return $
-                    (\(a, d) -> (a, modify (const d) zipperWithoutPlayer))
+                    (\(a, d) ->
+                         ( a
+                         , modify (const d) zipperWithoutPlayer
+                         , killed actionResult))
                         statusAndNewDungeon
-            Nothing -> return (Failed, ds)
+            Nothing -> return (Failed, ds, [])
 
-handleNpcTurns :: Dungeons -> Writer MessageLog Dungeons
+handleNpcTurns :: Dungeons -> Writer MessageLog (Dungeons, [Actor])
 handleNpcTurns ds =
-    (\x -> modify (const x) ds) <$> NPC.handleNpcTurns (getFocused ds)
+    (\(x, ks) -> (modify (const x) ds, ks)) <$>
+    NPC.handleNpcTurns (getFocused ds)
 
 popPlayer :: Dungeons -> (Maybe Actor, Dungeons)
 popPlayer = popActorIf isPlayer

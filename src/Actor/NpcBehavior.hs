@@ -2,11 +2,13 @@ module Actor.NpcBehavior
     ( handleNpcTurns
     ) where
 
-import           Action               (Action, newDungeon)
+import           Action               (Action, ActionResult (killed),
+                                       newDungeon)
 import           Action.Melee         (meleeAction)
 import           Action.Move          (moveAction)
 import           Action.Wait          (waitAction)
 import           Actor                (Actor, pathToDestination, position)
+import           Control.Arrow        ((&&&))
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (MonadWriter (writer), Writer)
 import           Coord                (Coord)
@@ -17,19 +19,22 @@ import           Dungeon.PathFinder   (getPathTo)
 import           Linear.V2            (V2 (V2))
 import           Log                  (MessageLog)
 
-handleNpcTurns :: Dungeon -> Writer MessageLog Dungeon
-handleNpcTurns d = foldl foldStep (writer (d, [])) $ npcs d
+handleNpcTurns :: Dungeon -> Writer MessageLog (Dungeon, [Actor])
+handleNpcTurns d = foldl foldStep (writer ((d, []), [])) $ npcs d
   where
-    foldStep acc x = acc >>= handleNpcTurn (x ^. position)
+    foldStep acc x = do
+        (d', l) <- acc
+        (newD, newLog) <- handleNpcTurn (x ^. position) d'
+        return (newD, newLog ++ l)
 
-handleNpcTurn :: Coord -> Dungeon -> Writer MessageLog Dungeon
-handleNpcTurn c d = maybe (return d) doAction theActor
+handleNpcTurn :: Coord -> Dungeon -> Writer MessageLog (Dungeon, [Actor])
+handleNpcTurn c d = maybe (return (d, [])) doAction theActor
   where
     (theActor, dungeonWithoutTheActor) = popActorAt c d
     doAction actor = npcAction actor dungeonWithoutTheActor
 
-npcAction :: Actor -> Dungeon -> Writer MessageLog Dungeon
-npcAction e d = newDungeon <$> action entityAfterUpdatingPath d
+npcAction :: Actor -> Dungeon -> Writer MessageLog (Dungeon, [Actor])
+npcAction e d = (newDungeon &&& killed) <$> action entityAfterUpdatingPath d
   where
     entityAfterUpdatingPath = updatePath e d
     action = selectAction entityAfterUpdatingPath d

@@ -14,8 +14,10 @@ module GameStatus.Talking
 import           Actor                   (Actor)
 import           Data.Binary             (Binary)
 import           GHC.Generics            (Generic)
-import           GameStatus.Exploring    (ExploringHandler)
-import           GameStatus.Talking.Part (TalkingPart)
+import           GameStatus.Exploring    (ExploringHandler, getQuests,
+                                          updateQuests)
+import           GameStatus.Talking.Part (TalkingPart,
+                                          proceedNonVisiblePartsIfNecessary)
 import qualified GameStatus.Talking.Part as Part
 
 data TalkingHandler =
@@ -29,7 +31,13 @@ data TalkingHandler =
 instance Binary TalkingHandler
 
 talkingHandler :: Actor -> TalkingPart -> ExploringHandler -> TalkingHandler
-talkingHandler = TalkingHandler
+talkingHandler a p h = TalkingHandler a updatedPart updatedHandler
+  where
+    updatedHandler = updateQuests updatedQuests h
+    (updatedPart, updatedQuests) =
+        case proceedNonVisiblePartsIfNecessary (getQuests h) p of
+            (Just x, h') -> (x, h')
+            (Nothing, _) -> error "No part to show."
 
 getTalkingPartner :: TalkingHandler -> Actor
 getTalkingPartner (TalkingHandler a _ _) = a
@@ -42,9 +50,10 @@ getExploringHandler (TalkingHandler _ _ h) = h
 
 proceedTalking :: TalkingHandler -> Either ExploringHandler TalkingHandler
 proceedTalking (TalkingHandler a p at) =
-    case Part.proceedTalking p of
-        Just x  -> Right $ TalkingHandler a x at
-        Nothing -> Left at
+    case Part.proceedTalking (getQuests at) p of
+        (Just next, updatedQuests) ->
+            Right $ TalkingHandler a next (updateQuests updatedQuests at)
+        (Nothing, updatedQuests) -> Left $ updateQuests updatedQuests at
 
 selectPrevChoice :: TalkingHandler -> TalkingHandler
 selectPrevChoice (TalkingHandler a p at) =

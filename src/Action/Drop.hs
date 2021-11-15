@@ -17,7 +17,7 @@ dropAction n e d =
         Just x -> dropItem x newActor d
         Nothing -> do
             tell [T.whatToDrop]
-            return $ ActionResult Failed $ pushActor e d
+            return $ ActionResult Failed (pushActor e d) []
   where
     (item, newActor) = removeNthItem n e
 
@@ -25,6 +25,9 @@ dropItem :: Item -> Action
 dropItem item actor dungeon = do
     tell [T.youDropped $ getName item]
     return $
-        ActionResult Ok $ pushActor actor $ pushItem itemWithNewPosition dungeon
+        ActionResult
+            Ok
+            (pushActor actor $ pushItem itemWithNewPosition dungeon)
+            []
   where
     itemWithNewPosition = setPosition (actor ^. position) item

@@ -7,4 +7,4 @@ import           Action  (Action, ActionResult (ActionResult),
 import           Dungeon (pushActor)
 
 waitAction :: Action
-waitAction e d = return $ ActionResult Ok $ pushActor e d
+waitAction e d = return $ ActionResult Ok (pushActor e d) []

@@ -20,15 +20,17 @@ pickUpAction e d =
                 Just xs -> do
                     tell [T.youGotItem $ getName x]
                     return $
-                        ActionResult Ok $
-                        pushActor
-                            (e & inventoryItems .~ xs)
-                            dungeonAfterPickingUp
+                        ActionResult
+                            Ok
+                            (pushActor
+                                 (e & inventoryItems .~ xs)
+                                 dungeonAfterPickingUp)
+                            []
                 Nothing -> do
                     tell [T.bagIsFull]
-                    return $ ActionResult Failed $ pushActor e d
+                    return $ ActionResult Failed (pushActor e d) []
         Nothing -> do
             tell [T.youGotNohing]
-            return $ ActionResult Failed $ pushActor e d
+            return $ ActionResult Failed (pushActor e d) []
   where
     (item, dungeonAfterPickingUp) = popItemAt (e ^. position) d

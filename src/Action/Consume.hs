@@ -19,7 +19,7 @@ consumeAction n e d =
         Just x -> useItem x
         Nothing -> do
             tell [T.whatToUse]
-            return $ ActionResult Failed $ pushActor e d
+            return $ ActionResult Failed (pushActor e d) []
   where
     useItem x =
         let actor =
@@ -32,8 +32,8 @@ consumeAction n e d =
 doItemEffect :: Effect -> Action
 doItemEffect (Heal handler) actor dungeon = do
     tell [T.healed (toName $ getIdentifier actor) amount]
-    return $ ActionResult Ok $ pushActor (healHp amount actor) dungeon
+    return $ ActionResult Ok (pushActor (healHp amount actor) dungeon) []
   where
     amount = getHealAmount handler
 doItemEffect (Book handler) actor dungeon =
-    return $ ActionResult (ReadingStarted handler) $ pushActor actor dungeon
+    return $ ActionResult (ReadingStarted handler) (pushActor actor dungeon) []
