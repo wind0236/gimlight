@@ -2,7 +2,6 @@ module Dungeon.Predefined.Beaeve
     ( beaeve
     ) where
 
-import           Actor                   (Actor)
 import           Actor.Friendly.Electria (electria)
 import           Data.Array              ((//))
 import           Dungeon                 (Dungeon, dungeon)
@@ -11,8 +10,8 @@ import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile,
                                           wallTile)
 import           Linear.V2               (V2 (V2))
 
-beaeve :: Actor -> Dungeon
-beaeve player =
+beaeve :: Dungeon
+beaeve =
     dungeon
         (stringArrayToMap
              [ "#########################"
@@ -30,7 +29,7 @@ beaeve player =
              , "#.......................#"
              , "#####......##############"
              ])
-        [player, electria $ V2 4 5]
+        [electria $ V2 4 5]
         []
         Beaeve
 
