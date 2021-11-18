@@ -105,7 +105,7 @@ mapTiles eh = box_ [alignLeft] $ vgrid rows `styleBasic` styles
     isExplored c = (d ^. explored) ! c
     cell c =
         zstack
-            [ image $ (d ^. tileMap) ! c ^. MT.imagePath
+            [ image $ MT.getImagePath $ (d ^. tileMap) ! c
             , filler `styleBasic` [bgColor $ black & L.a .~ cellOpacity c]
             ]
     cellOpacity c =

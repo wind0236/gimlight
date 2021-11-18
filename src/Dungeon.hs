@@ -52,7 +52,7 @@ import           Dungeon.Map.Bool     (BoolMap)
 import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
                                        updateExploredMap)
 import           Dungeon.Map.Fov      (Fov, calculateFov, initFov)
-import           Dungeon.Map.Tile     (Tile, TileMap, transparent, walkable)
+import           Dungeon.Map.Tile     (Tile, TileMap, isTransparent, isWalkable)
 import           Dungeon.Stairs       (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics         (Generic)
 import           Item                 (Item)
@@ -183,10 +183,10 @@ stairsPositionCandidates d =
     isDownStairsPosition c = c `elem` map upStairs (d ^. descendingStairs)
 
 walkableFloor :: Dungeon -> BoolMap
-walkableFloor d = fmap (^. walkable) (d ^. tileMap)
+walkableFloor d = fmap isWalkable (d ^. tileMap)
 
 transparentMap :: Dungeon -> BoolMap
-transparentMap d = fmap (^. transparent) (d ^. tileMap)
+transparentMap d = fmap isTransparent (d ^. tileMap)
 
 npcs :: Dungeon -> [Actor]
 npcs d = filter (not . isPlayer) $ d ^. actors
