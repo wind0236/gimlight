@@ -30,7 +30,7 @@ pickUpAction e d =
                     tell [T.bagIsFull]
                     return $ ActionResult Failed (pushActor e d) []
         Nothing -> do
-            tell [T.youGotNohing]
+            tell [T.youGotNothing]
             return $ ActionResult Failed (pushActor e d) []
   where
     (item, dungeonAfterPickingUp) = popItemAt (e ^. position) d

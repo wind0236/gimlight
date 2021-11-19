@@ -3,7 +3,7 @@
 module Localization.Texts.Actions
     ( youCannotMoveThere
     , youGotItem
-    , youGotNohing
+    , youGotNothing
     , bagIsFull
     , whatToUse
     , whatToDrop
@@ -25,8 +25,8 @@ youGotItem :: MultilingualText -> MultilingualText
 youGotItem item =
     multilingualText "You got " "" <> item <> multilingualText "." "を入手した．"
 
-youGotNohing :: MultilingualText
-youGotNohing = multilingualText "You got nothing." "あなたは無を入手した．"
+youGotNothing :: MultilingualText
+youGotNothing = multilingualText "You got nothing." "あなたは無を入手した．"
 
 bagIsFull :: MultilingualText
 bagIsFull = multilingualText "Your bag is full." "バッグは一杯だ．"
