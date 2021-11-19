@@ -13,4 +13,4 @@ data GameModel =
         { status :: GameStatus
         , config :: GameConfig
         }
-    deriving (Eq, Show)
+    deriving (Eq)

@@ -14,7 +14,7 @@ data AppEvent
     | AppSaveFinished
     | AppLoadFinished GameModel
     | AppKeyboardInput Text
-    deriving (Eq, Show)
+    deriving (Eq)
 
 type GameWidgetEnv = WidgetEnv GameModel AppEvent
 
