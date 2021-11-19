@@ -17,13 +17,12 @@ import           Linear.V2            (V2 (V2))
 import qualified Localization.Texts   as T
 
 moveAction :: V2 Int -> Action
-moveAction offset src d =
-    if not (movable d (src ^. position + offset))
-        then do
-            tell [T.youCannotMoveThere]
-            return $ ActionResult Failed (pushActor src d) []
-        else return $
-             ActionResult Ok (pushActor (updatePosition d src offset) d) []
+moveAction offset src d
+    | not (movable d (src ^. position + offset)) = do
+        tell [T.youCannotMoveThere]
+        return $ ActionResult Failed (pushActor src d) []
+    | otherwise =
+        return $ ActionResult Ok (pushActor (updatePosition d src offset) d) []
 
 updatePosition :: Dungeon -> Actor -> V2 Int -> Actor
 updatePosition d src offset =
