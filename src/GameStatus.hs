@@ -13,6 +13,7 @@ import           Data.Tree                    (Tree (Node, rootLabel, subForest)
 import           Dungeon                      (addAscendingAndDescendingStiars,
                                                addDescendingStairs)
 import           Dungeon.Init                 (initDungeon)
+import           Dungeon.Map.Tile.JSONReader  (readTileFile)
 import           Dungeon.Predefined.BatsCave  (batsDungeon)
 import           Dungeon.Predefined.GlobalMap (globalMap)
 import           Dungeon.Stairs               (StairsPair (StairsPair))
@@ -47,9 +48,12 @@ instance Binary GameStatus
 newGameStatus :: IO GameStatus
 newGameStatus = do
     g <- getStdGen
-    let (stairsPosition, bats) = batsDungeon g
-        beaeve = initDungeon
-        gm = globalMap
+    tileCollection <-
+        fromMaybe (error "Failed to read the tile file.") <$>
+        readTileFile "maps/tiles.json"
+    gm <- globalMap
+    beaeve <- initDungeon tileCollection
+    let (stairsPosition, bats) = batsDungeon g tileCollection
         (gmWithBatsStairs, batsRootMapWithParentMap) =
             addAscendingAndDescendingStiars
                 (StairsPair (V2 9 6) stairsPosition)
@@ -75,6 +79,7 @@ newGameStatus = do
                 initZipper
                 (foldr (L.addMessage . L.message) L.emptyLog [T.welcome])
                 questCollection
+                tileCollection
     return $
         Scene $
         sceneHandler

@@ -14,7 +14,7 @@ import           Item.Heal            (getHealAmount)
 import qualified Localization.Texts   as T
 
 consumeAction :: Int -> Action
-consumeAction n e d =
+consumeAction n e tiles d =
     case item of
         Just x -> useItem x
         Nothing -> do
@@ -26,14 +26,14 @@ consumeAction n e d =
                 if isUsableManyTimes x
                     then e
                     else newActor
-         in doItemEffect (getEffect x) actor d
+         in doItemEffect (getEffect x) actor tiles d
     (item, newActor) = removeNthItem n e
 
 doItemEffect :: Effect -> Action
-doItemEffect (Heal handler) actor dungeon = do
+doItemEffect (Heal handler) actor _ dungeon = do
     tell [T.healed (toName $ getIdentifier actor) amount]
     return $ ActionResult Ok (pushActor (healHp amount actor) dungeon) []
   where
     amount = getHealAmount handler
-doItemEffect (Book handler) actor dungeon =
+doItemEffect (Book handler) actor _ dungeon =
     return $ ActionResult (ReadingStarted handler) (pushActor actor dungeon) []

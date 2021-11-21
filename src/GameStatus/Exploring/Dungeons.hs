@@ -20,6 +20,7 @@ import           Dungeon                    (Dungeon, actors, ascendingStairs,
                                              descendingStairs,
                                              positionOnParentMap, updateMap)
 import qualified Dungeon                    as D
+import           Dungeon.Map.Tile           (TileCollection)
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
 import           TreeZipper                 (TreeZipper, getFocused, goDownBy,
@@ -27,8 +28,8 @@ import           TreeZipper                 (TreeZipper, getFocused, goDownBy,
 
 type Dungeons = TreeZipper Dungeon
 
-ascendStairsAtPlayerPosition :: Dungeons -> Maybe Dungeons
-ascendStairsAtPlayerPosition ds = newZipper
+ascendStairsAtPlayerPosition :: TileCollection -> Dungeons -> Maybe Dungeons
+ascendStairsAtPlayerPosition ts ds = newZipper
   where
     (player, zipperWithoutPlayer) = popPlayer ds
     newPlayer =
@@ -50,11 +51,11 @@ ascendStairsAtPlayerPosition ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (updateMap $ d & actors %~ (:) p))
+                     (updateMap ts $ d & actors %~ (:) p))
             g
 
-descendStairsAtPlayerPosition :: Dungeons -> Maybe Dungeons
-descendStairsAtPlayerPosition ds = newZipper
+descendStairsAtPlayerPosition :: TileCollection -> Dungeons -> Maybe Dungeons
+descendStairsAtPlayerPosition ts ds = newZipper
   where
     (player, zipperWithoutPlayer) = popPlayer ds
     newPlayer =
@@ -80,7 +81,7 @@ descendStairsAtPlayerPosition ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (updateMap $ d & actors %~ (:) p))
+                     (updateMap ts $ d & actors %~ (:) p))
             g
 
 exitDungeon :: Dungeons -> Maybe Dungeons
@@ -100,15 +101,18 @@ exitDungeon ds = newZipper
             _                -> Nothing
 
 doPlayerAction ::
-       Action -> Dungeons -> Writer MessageLog (ActionStatus, Dungeons, [Actor])
-doPlayerAction action ds = result
+       Action
+    -> TileCollection
+    -> Dungeons
+    -> Writer MessageLog (ActionStatus, Dungeons, [Actor])
+doPlayerAction action ts ds = result
   where
     (player, zipperWithoutPlayer) = popPlayer ds
     currentDungeonWithoutPlayer = getFocused zipperWithoutPlayer
     result =
         case player of
             Just p -> do
-                actionResult <- action p currentDungeonWithoutPlayer
+                actionResult <- action p ts currentDungeonWithoutPlayer
                 let statusAndNewDungeon =
                         (status actionResult, newDungeon actionResult)
                 return $
@@ -119,10 +123,11 @@ doPlayerAction action ds = result
                         statusAndNewDungeon
             Nothing -> return (Failed, ds, [])
 
-handleNpcTurns :: Dungeons -> Writer MessageLog (Dungeons, [Actor])
-handleNpcTurns ds =
+handleNpcTurns ::
+       TileCollection -> Dungeons -> Writer MessageLog (Dungeons, [Actor])
+handleNpcTurns ts ds =
     (\(x, ks) -> (modify (const x) ds, ks)) <$>
-    NPC.handleNpcTurns (getFocused ds)
+    NPC.handleNpcTurns ts (getFocused ds)
 
 popPlayer :: Dungeons -> (Maybe Actor, Dungeons)
 popPlayer = popActorIf isPlayer

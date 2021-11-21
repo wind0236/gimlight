@@ -28,6 +28,7 @@ import           Coord                         (Coord)
 import           Data.Binary                   (Binary)
 import           Dungeon                       (Dungeon)
 import qualified Dungeon                       as D
+import           Dungeon.Map.Tile              (TileCollection)
 import           GHC.Generics                  (Generic)
 import           GameStatus.Exploring.Dungeons (Dungeons)
 import qualified GameStatus.Exploring.Dungeons as DS
@@ -39,9 +40,10 @@ import           TreeZipper                    (TreeZipper, getFocused, modify)
 
 data ExploringHandler =
     ExploringHandler
-        { _dungeons   :: Dungeons
-        , _messageLog :: MessageLog
-        , _quests     :: QuestCollection
+        { _dungeons       :: Dungeons
+        , _messageLog     :: MessageLog
+        , _quests         :: QuestCollection
+        , _tileCollection :: TileCollection
         }
     deriving (Show, Ord, Eq, Generic)
 
@@ -50,18 +52,22 @@ makeLenses ''ExploringHandler
 instance Binary ExploringHandler
 
 exploringHandler ::
-       TreeZipper Dungeon -> MessageLog -> QuestCollection -> ExploringHandler
+       TreeZipper Dungeon
+    -> MessageLog
+    -> QuestCollection
+    -> TileCollection
+    -> ExploringHandler
 exploringHandler = ExploringHandler
 
 ascendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 ascendStairsAtPlayerPosition eh =
     (\x -> eh & dungeons .~ x) <$>
-    DS.ascendStairsAtPlayerPosition (eh ^. dungeons)
+    DS.ascendStairsAtPlayerPosition (eh ^. tileCollection) (eh ^. dungeons)
 
 descendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 descendStairsAtPlayerPosition eh =
     (\x -> eh & dungeons .~ x) <$>
-    DS.descendStairsAtPlayerPosition (eh ^. dungeons)
+    DS.descendStairsAtPlayerPosition (eh ^. tileCollection) (eh ^. dungeons)
 
 exitDungeon :: ExploringHandler -> Maybe ExploringHandler
 exitDungeon eh = (\x -> eh & dungeons .~ x) <$> DS.exitDungeon (eh ^. dungeons)
@@ -70,7 +76,8 @@ doPlayerAction :: Action -> ExploringHandler -> (ActionStatus, ExploringHandler)
 doPlayerAction action eh = (status, newHandler)
   where
     ((status, dungeonsAfterAction, killed), newLog) =
-        runWriter $ DS.doPlayerAction action $ eh ^. dungeons
+        runWriter $
+        DS.doPlayerAction action (eh ^. tileCollection) (eh ^. dungeons)
     newHandler =
         eh & messageLog %~ L.addMessages newLog &
         dungeons .~ dungeonsAfterAction &
@@ -88,7 +95,8 @@ processAfterPlayerTurn eh =
   where
     updateQuestsForResult d = handleWithTurnResult d $ map getIdentifier killed
     newCurrentDungeon =
-        D.updateMap $ getFocused $ handlerAfterNpcTurns ^. dungeons
+        D.updateMap (eh ^. tileCollection) $
+        getFocused $ handlerAfterNpcTurns ^. dungeons
     (handlerAfterNpcTurns, killed) = handleNpcTurns eh
 
 handleNpcTurns :: ExploringHandler -> (ExploringHandler, [Actor])
@@ -98,7 +106,7 @@ handleNpcTurns eh = (newHandler, killed)
         eh & dungeons .~ dungeonsAfterNpcTurns &
         messageLog %~ L.addMessages newLog
     ((dungeonsAfterNpcTurns, killed), newLog) =
-        runWriter $ DS.handleNpcTurns $ eh ^. dungeons
+        runWriter $ DS.handleNpcTurns (eh ^. tileCollection) (eh ^. dungeons)
 
 updateQuests :: QuestCollection -> ExploringHandler -> ExploringHandler
 updateQuests q e = e & quests .~ q

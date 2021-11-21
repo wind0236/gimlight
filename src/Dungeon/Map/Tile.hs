@@ -1,42 +1,45 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Dungeon.Map.Tile
     ( TileMap
-    , allWallTiles
     , Tile
+    , TileCollection
+    , TileId
+    , tile
+    , allWallTiles
     , isWalkable
     , isTransparent
-    , getImagePath
-    , wallTile
     , floorTile
-    , townTile
-    , dungeonTile
     , upStairs
     , downStairs
     ) where
 
 import           Data.Array   (Array)
 import           Data.Binary  (Binary)
-import           Data.Text    (Text)
 import qualified Dungeon.Map  as M
 import           GHC.Generics (Generic)
 import           Linear.V2    (V2)
+
+type TileId = Int
+
+type TileMap = Array (V2 Int) TileId
 
 data Tile =
     Tile
         { walkable    :: Bool
         , transparent :: Bool
-        , imagePath   :: Text
         }
     deriving (Show, Ord, Eq, Generic)
 
 instance Binary Tile
 
-type TileMap = Array (V2 Int) Tile
+type TileCollection = Array Int Tile
+
+tile :: Bool -> Bool -> Tile
+tile = Tile
 
 allWallTiles :: V2 Int -> TileMap
-allWallTiles widthAndHeight = M.generate widthAndHeight (const wallTile)
+allWallTiles widthAndHeight = M.generate widthAndHeight (const 1)
 
 isWalkable :: Tile -> Bool
 isWalkable = walkable
@@ -44,41 +47,11 @@ isWalkable = walkable
 isTransparent :: Tile -> Bool
 isTransparent = transparent
 
-getImagePath :: Tile -> Text
-getImagePath = imagePath
+floorTile :: TileId
+floorTile = 0
 
-wallTile :: Tile
-wallTile =
-    Tile {walkable = False, transparent = False, imagePath = "images/wall.png"}
+upStairs :: TileId
+upStairs = 3
 
-floorTile :: Tile
-floorTile =
-    Tile {walkable = True, transparent = True, imagePath = "images/grass.png"}
-
-townTile :: Tile
-townTile =
-    Tile {walkable = True, transparent = True, imagePath = "images/town.png"}
-
-dungeonTile :: Tile
-dungeonTile =
-    Tile
-        { walkable = True
-        , transparent = True
-        , imagePath = "images/dungeon_chip.png"
-        }
-
-upStairs :: Tile
-upStairs =
-    Tile
-        { walkable = True
-        , transparent = True
-        , imagePath = "images/up_stairs.png"
-        }
-
-downStairs :: Tile
-downStairs =
-    Tile
-        { walkable = True
-        , transparent = True
-        , imagePath = "images/down_stairs.png"
-        }
+downStairs :: TileId
+downStairs = 4

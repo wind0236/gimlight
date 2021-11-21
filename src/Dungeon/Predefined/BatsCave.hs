@@ -7,10 +7,12 @@ import           Data.Tree          (Tree)
 import           Dungeon            (Dungeon)
 import           Dungeon.Generate   (generateMultipleFloorsDungeon)
 import           Dungeon.Identifier (Identifier (BatsCave))
+import           Dungeon.Map.Tile   (TileCollection)
 import           Linear.V2          (V2 (V2))
 import           System.Random      (StdGen)
 
-batsDungeon :: StdGen -> (Coord, Tree Dungeon)
-batsDungeon g = (pos, d)
+batsDungeon :: StdGen -> TileCollection -> (Coord, Tree Dungeon)
+batsDungeon g ts = (pos, d)
   where
-    (d, pos, _) = generateMultipleFloorsDungeon g 3 10 5 8 (V2 50 50) BatsCave
+    (d, pos, _) =
+        generateMultipleFloorsDungeon g ts 3 10 5 8 (V2 50 50) BatsCave

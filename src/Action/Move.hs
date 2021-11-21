@@ -12,29 +12,30 @@ import           Data.Array           ((!))
 import           Data.Maybe           (isNothing)
 import           Dungeon              (Dungeon, actorAt, mapWidthAndHeight,
                                        pushActor, tileMap)
-import           Dungeon.Map.Tile     (isWalkable)
+import           Dungeon.Map.Tile     (TileCollection, isWalkable)
 import           Linear.V2            (V2 (V2))
 import qualified Localization.Texts   as T
 
 moveAction :: V2 Int -> Action
-moveAction offset src d
-    | not (movable d (src ^. position + offset)) = do
+moveAction offset src tiles d
+    | not (movable tiles d (src ^. position + offset)) = do
         tell [T.youCannotMoveThere]
         return $ ActionResult Failed (pushActor src d) []
     | otherwise =
-        return $ ActionResult Ok (pushActor (updatePosition d src offset) d) []
+        return $
+        ActionResult Ok (pushActor (updatePosition tiles d src offset) d) []
 
-updatePosition :: Dungeon -> Actor -> V2 Int -> Actor
-updatePosition d src offset =
+updatePosition :: TileCollection -> Dungeon -> Actor -> V2 Int -> Actor
+updatePosition ts d src offset =
     let next = nextPosition d src offset
-     in if movable d next
+     in if movable ts d next
             then src & position .~ next
             else src
 
-movable :: Dungeon -> Coord -> Bool
-movable d c =
+movable :: TileCollection -> Dungeon -> Coord -> Bool
+movable ts d c =
     isNothing (actorAt c d) &&
-    isPositionInRange d c && isWalkable ((d ^. tileMap) ! c)
+    isPositionInRange d c && isWalkable (ts ! ((d ^. tileMap) ! c))
 
 nextPosition :: Dungeon -> Actor -> V2 Int -> Coord
 nextPosition d src offset =

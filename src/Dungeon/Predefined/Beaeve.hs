@@ -3,44 +3,19 @@ module Dungeon.Predefined.Beaeve
     ) where
 
 import           Actor.Friendly.Electria (electria)
-import           Data.Array              ((//))
+import           Data.Maybe              (fromMaybe)
 import           Dungeon                 (Dungeon, dungeon)
 import           Dungeon.Identifier      (Identifier (Beaeve))
-import           Dungeon.Map.Tile        (TileMap, allWallTiles, floorTile,
-                                          wallTile)
+import qualified Dungeon.Map.JSONReader  as JSONReader
+import           Dungeon.Map.Tile        (TileMap)
 import           Linear.V2               (V2 (V2))
 
-beaeve :: Dungeon
-beaeve =
-    dungeon
-        (stringArrayToMap
-             [ "#########################"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#.......................#"
-             , "#####......##############"
-             ])
-        [electria $ V2 4 5]
-        []
-        Beaeve
+beaeve :: IO Dungeon
+beaeve = do
+    tileMap <- readMapFile
+    return $ dungeon tileMap [electria $ V2 4 5] [] Beaeve
 
-stringArrayToMap :: [String] -> TileMap
-stringArrayToMap list =
-    allWallTiles (V2 width height) //
-    [(V2 x y, tile c) | (y, row) <- zip [0 ..] list, (x, c) <- zip [0 ..] row]
-  where
-    tile c
-        | c == '#' = wallTile
-        | c == '.' = floorTile
-        | otherwise = error "Invalid tile type."
-    height = length list
-    width = length $ head list
+readMapFile :: IO TileMap
+readMapFile = do
+    tileMap <- JSONReader.readMapFile "maps/beaeve.json"
+    return $ fromMaybe (error "Failed to read the map file of Beaeve") tileMap

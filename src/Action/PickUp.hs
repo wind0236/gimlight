@@ -14,7 +14,7 @@ import           Item                 (Item, getName)
 import qualified Localization.Texts   as T
 
 pickUpAction :: Action
-pickUpAction e d = maybe youGotNothing pickUpItem item
+pickUpAction e _ d = maybe youGotNothing pickUpItem item
   where
     pickUpItem i =
         case addItem i (e ^. inventoryItems) of

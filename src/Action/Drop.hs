@@ -12,9 +12,9 @@ import           Item                 (Item, getName, setPosition)
 import qualified Localization.Texts   as T
 
 dropAction :: Int -> Action
-dropAction n e d =
+dropAction n e tiles d =
     case item of
-        Just x -> dropItem x newActor d
+        Just x -> dropItem x newActor tiles d
         Nothing -> do
             tell [T.whatToDrop]
             return $ ActionResult Failed (pushActor e d) []
@@ -22,7 +22,7 @@ dropAction n e d =
     (item, newActor) = removeNthItem n e
 
 dropItem :: Item -> Action
-dropItem item actor dungeon = do
+dropItem item actor _ dungeon = do
     tell [T.youDropped $ getName item]
     return $
         ActionResult

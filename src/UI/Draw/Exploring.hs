@@ -4,50 +4,68 @@ module UI.Draw.Exploring
     ( drawExploring
     ) where
 
-import           Actor                (getCurrentExperiencePoint, getDefence,
-                                       getExperiencePointForNextLevel, getHp,
-                                       getLevel, getMaxHp, getPower,
-                                       walkingImagePath)
-import qualified Actor                as A
-import           Control.Lens         ((&), (.~), (^.))
-import           Control.Monad        (guard)
-import           Coord                (Coord)
-import           Data.Array           ((!))
-import           Data.Maybe           (mapMaybe)
-import           Dungeon              (Dungeon, actors, explored, items,
-                                       mapWidthAndHeight, playerPosition,
-                                       tileMap, visible)
-import qualified Dungeon.Map.Tile     as MT
-import           GameConfig           (GameConfig)
-import           GameStatus.Exploring (ExploringHandler, getCurrentDungeon,
-                                       getMessageLog, getPlayerActor)
-import qualified Item                 as I
-import           Linear.V2            (V2 (V2), _x, _y)
-import           Localization         (getLocalizedText)
-import qualified Localization.Texts   as T
-import           Monomer              (CmbAlignLeft (alignLeft),
-                                       CmbBgColor (bgColor), CmbHeight (height),
-                                       CmbMultiline (multiline),
-                                       CmbPaddingL (paddingL),
-                                       CmbPaddingT (paddingT),
-                                       CmbStyleBasic (styleBasic),
-                                       CmbWidth (width), black, box_, filler,
-                                       hgrid, hstack, image, label, label_,
-                                       vgrid, vstack, zstack)
-import qualified Monomer.Lens         as L
-import           TextShow             (TextShow (showt))
-import           UI.Draw.Config       (logRows, tileColumns, tileHeight,
-                                       tileRows, tileWidth, windowWidth)
-import           UI.Draw.KeyEvent     (withKeyEvents)
-import           UI.Types             (GameWidgetNode)
+import           Actor                           (getCurrentExperiencePoint,
+                                                  getDefence,
+                                                  getExperiencePointForNextLevel,
+                                                  getHp, getLevel, getMaxHp,
+                                                  getPower, walkingImagePath)
+import qualified Actor                           as A
+import           Codec.Picture                   (Image (imageData),
+                                                  PixelRGBA8 (PixelRGBA8),
+                                                  pixelMap)
+import           Control.Applicative             (ZipList (ZipList, getZipList))
+import           Control.Lens                    ((^.))
+import           Control.Monad                   (guard)
+import           Coord                           (Coord)
+import           Data.Array                      ((!))
+import           Data.Default                    (Default (def))
+import           Data.Maybe                      (mapMaybe)
+import           Data.Vector.Split               (chunksOf)
+import qualified Data.Vector.Storable            as V
+import           Data.Vector.Storable.ByteString (vectorToByteString)
+import           Dungeon                         (Dungeon, actors, explored,
+                                                  items, mapWidthAndHeight,
+                                                  playerPosition, tileMap,
+                                                  visible)
+import           GameConfig                      (GameConfig)
+import           GameStatus.Exploring            (ExploringHandler,
+                                                  getCurrentDungeon,
+                                                  getMessageLog, getPlayerActor)
+import qualified Item                            as I
+import           Linear.V2                       (V2 (V2), _x, _y)
+import           Localization                    (getLocalizedText)
+import qualified Localization.Texts              as T
+import           Monomer                         (CmbHeight (height),
+                                                  CmbMultiline (multiline),
+                                                  CmbPaddingL (paddingL),
+                                                  CmbPaddingT (paddingT),
+                                                  CmbStyleBasic (styleBasic),
+                                                  CmbWidth (width),
+                                                  Point (Point), Rect (Rect),
+                                                  Renderer (addImage, beginPath, deleteImage, fill, setFillImagePattern),
+                                                  Size (Size), Widget,
+                                                  WidgetNode, currentStyle,
+                                                  defaultWidgetNode,
+                                                  drawRoundedRect,
+                                                  getContentArea, hstack, image,
+                                                  label, label_, vstack, zstack)
+import           Monomer.Widgets.Single          (Single (singleRender),
+                                                  createSingle)
+import           TextShow                        (TextShow (showt))
+import           UI.Draw.Config                  (logRows, tileColumns,
+                                                  tileHeight, tileRows,
+                                                  tileWidth, windowWidth)
+import           UI.Draw.KeyEvent                (withKeyEvents)
+import           UI.Graphics.MapTiles            (MapTiles)
+import           UI.Types                        (GameWidgetNode)
 
-drawExploring :: ExploringHandler -> GameConfig -> GameWidgetNode
-drawExploring eh c =
+drawExploring :: MapTiles -> ExploringHandler -> GameConfig -> GameWidgetNode
+drawExploring tileGraphics eh c =
     withKeyEvents $ vstack [statusAndMapGrid, messageLogArea eh c]
   where
     statusAndMapGrid =
         hstack
-            [ mapGrid eh
+            [ mapGrid tileGraphics eh
             , statusGrid eh c `styleBasic`
               [width $ fromIntegral $ windowWidth - tileWidth * tileColumns]
             ]
@@ -58,9 +76,9 @@ messageLogArea eh c =
     fmap (\x -> label_ (getLocalizedText c x) [multiline]) $
     take logRows $ getMessageLog eh
 
-mapGrid :: ExploringHandler -> GameWidgetNode
-mapGrid eh =
-    zstack (mapTiles eh : (mapItems eh ++ mapActors eh)) `styleBasic`
+mapGrid :: MapTiles -> ExploringHandler -> GameWidgetNode
+mapGrid tileGraphics eh =
+    zstack (mapWidget tileGraphics eh : (mapItems eh ++ mapActors eh)) `styleBasic`
     [ width $ fromIntegral mapDrawingWidth
     , height $ fromIntegral mapDrawingHeight
     ]
@@ -80,43 +98,63 @@ statusGrid eh c =
                " / " <> showt (getExperiencePointForNextLevel x)
              , label $ "HP: " <> showt (getHp x) <> " / " <> showt (getMaxHp x)
              , label $ atk <> ": " <> showt (getPower x)
-             , label $ def <> ": " <> showt (getDefence x)
+             , label $ defence <> ": " <> showt (getDefence x)
              ]) $
     getPlayerActor eh
   where
     lvl = getLocalizedText c T.level
     experience = getLocalizedText c T.experience
     atk = getLocalizedText c T.attack
-    def = getLocalizedText c T.defence
+    defence = getLocalizedText c T.defence
 
-mapTiles :: ExploringHandler -> GameWidgetNode
-mapTiles eh = box_ [alignLeft] $ vgrid rows `styleBasic` styles
+mapWidget :: MapTiles -> ExploringHandler -> WidgetNode s e
+mapWidget tiles eh = defaultWidgetNode "map" $ makeMap tiles eh
+
+makeMap :: MapTiles -> ExploringHandler -> Widget s e
+makeMap tileGraphics eh = createSingle () def {singleRender = render}
   where
-    d = getCurrentDungeon eh
-    V2 bottomLeftX bottomLeftY = bottomLeftCoord d
+    render wenv node renderer = do
+        addImage renderer imagePath mapSize rows []
+        beginPath renderer
+        setFillImagePattern
+            renderer
+            imagePath
+            (Point x y)
+            (Size w h)
+            angle
+            transparent
+        drawRoundedRect renderer (Rect x y w h) def
+        fill renderer
+        deleteImage renderer imagePath
+      where
+        style = currentStyle wenv node
+        Rect x y w h = getContentArea node style
+        angle = 0
+        transparent = 1
     rows =
-        [ hgrid $ row y
-        | y <-
-              [bottomLeftY + tileRows - 1,bottomLeftY + tileRows - 2 .. bottomLeftY]
-        ]
+        vectorToByteString $
+        V.concat [row y | y <- [topLeftCoordY .. topLeftCoordY + tileRows - 1]]
     row y =
-        [cell $ V2 x y | x <- [bottomLeftX .. bottomLeftX + tileColumns - 1]]
+        V.concat $
+        getZipList $
+        foldl1
+            (\acc x -> (V.++) <$> acc <*> x)
+            [ ZipList $ imageAt $ V2 x y
+            | x <- [topLeftCoordX .. topLeftCoordX + tileColumns - 1]
+            ]
+    imageAt c =
+        chunksOf (tileWidth * 4) $ -- `(*4)` for R, G, B, and A bytes.
+        imageData $
+        pixelMap (applyOpacity c) $ tileGraphics ! ((d ^. tileMap) ! c)
+    applyOpacity c (PixelRGBA8 r g b a)
+        | isVisible c = PixelRGBA8 r g b a
+        | isExplored c = PixelRGBA8 (r `div` 2) (g `div` 2) (b `div` 2) a
+        | otherwise = PixelRGBA8 0 0 0 0xff
     isVisible c = (d ^. visible) ! c
     isExplored c = (d ^. explored) ! c
-    cell c =
-        zstack
-            [ image $ MT.getImagePath $ (d ^. tileMap) ! c
-            , filler `styleBasic` [bgColor $ black & L.a .~ cellOpacity c]
-            ]
-    cellOpacity c =
-        case (isVisible c, isExplored c) of
-            (True, _) -> 0
-            (_, True) -> 0.5
-            _         -> 1
-    styles =
-        [ width $ fromIntegral mapDrawingWidth
-        , height $ fromIntegral mapDrawingHeight
-        ]
+    d = getCurrentDungeon eh
+    V2 topLeftCoordX topLeftCoordY = topLeftCoord d
+    imagePath = "mapWidget"
 
 mapItems :: ExploringHandler -> [GameWidgetNode]
 mapItems eh = mapMaybe itemToImage $ d ^. items
@@ -125,17 +163,17 @@ mapItems eh = mapMaybe itemToImage $ d ^. items
         guard (isItemDrawed item) >>
         return (image (I.getIconImagePath item) `styleBasic` style item)
     isItemDrawed item =
-        let pos = itemPositionOnDisplay item
+        let displayPosition = itemPositionOnDisplay item
             isVisible = (d ^. visible) ! I.getPosition item
-         in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
+         in V2 0 0 <= displayPosition &&
+            displayPosition < V2 tileColumns tileRows && isVisible
     d = getCurrentDungeon eh
     leftPadding item =
         fromIntegral $ itemPositionOnDisplay item ^. _x * tileWidth
     topPadding item =
-        fromIntegral $
-        mapDrawingHeight - (itemPositionOnDisplay item ^. _y + 1) * tileHeight
+        fromIntegral $ itemPositionOnDisplay item ^. _y * tileHeight
     style item = [paddingL $ leftPadding item, paddingT $ topPadding item]
-    itemPositionOnDisplay item = I.getPosition item - bottomLeftCoord d
+    itemPositionOnDisplay item = I.getPosition item - topLeftCoord d
 
 mapActors :: ExploringHandler -> [GameWidgetNode]
 mapActors eh = mapMaybe actorToImage $ d ^. actors
@@ -144,20 +182,20 @@ mapActors eh = mapMaybe actorToImage $ d ^. actors
     leftPadding actor =
         fromIntegral $ actorPositionOnDisplay actor ^. _x * tileWidth
     topPadding actor =
-        fromIntegral $
-        mapDrawingHeight - (actorPositionOnDisplay actor ^. _y + 1) * tileHeight
+        fromIntegral $ (actorPositionOnDisplay actor ^. _y) * tileHeight
     style actor = [paddingL $ leftPadding actor, paddingT $ topPadding actor]
-    actorPositionOnDisplay actor = actor ^. A.position - bottomLeftCoord d
+    actorPositionOnDisplay actor = actor ^. A.position - topLeftCoord d
     isActorDrawed actor =
-        let pos = actorPositionOnDisplay actor
+        let displayPosition = actorPositionOnDisplay actor
             isVisible = (d ^. visible) ! (actor ^. A.position)
-         in V2 0 0 <= pos && pos <= topRightCoord d && isVisible
+         in V2 0 0 <= displayPosition &&
+            displayPosition < V2 tileColumns tileRows && isVisible
     actorToImage actor =
         guard (isActorDrawed actor) >>
         return (image (actor ^. walkingImagePath) `styleBasic` style actor)
 
-bottomLeftCoord :: Dungeon -> Coord
-bottomLeftCoord d = V2 x y
+topLeftCoord :: Dungeon -> Coord
+topLeftCoord d = V2 x y
   where
     V2 unadjustedX unadjestedY =
         maybe
@@ -168,10 +206,11 @@ bottomLeftCoord d = V2 x y
     x = max 0 $ min maxX unadjustedX
     y = max 0 $ min maxY unadjestedY
 
-topRightCoord :: Dungeon -> Coord
-topRightCoord d = bottomLeftCoord d + mapWidthAndHeight d - V2 1 1
+mapSize :: Size
+mapSize = Size (fromIntegral mapDrawingWidth) (fromIntegral mapDrawingHeight)
 
-mapDrawingWidth, mapDrawingHeight :: Int
+mapDrawingWidth :: Int
 mapDrawingWidth = tileWidth * tileColumns
 
+mapDrawingHeight :: Int
 mapDrawingHeight = tileHeight * tileRows

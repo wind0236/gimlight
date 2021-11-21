@@ -15,34 +15,45 @@ import           Coord                (Coord)
 import           Data.Maybe           (fromMaybe)
 import           Dungeon              (Dungeon, getPlayerActor, npcs,
                                        popActorAt)
+import           Dungeon.Map.Tile     (TileCollection)
 import           Dungeon.PathFinder   (getPathTo)
 import           Linear.V2            (V2 (V2))
 import           Log                  (MessageLog)
 
-handleNpcTurns :: Dungeon -> Writer MessageLog (Dungeon, [Actor])
-handleNpcTurns d = foldl foldStep (writer ((d, []), [])) $ npcs d
+handleNpcTurns ::
+       TileCollection -> Dungeon -> Writer MessageLog (Dungeon, [Actor])
+handleNpcTurns ts d = foldl foldStep (writer ((d, []), [])) $ npcs d
   where
     foldStep acc x = do
         (d', l) <- acc
-        (newD, newLog) <- handleNpcTurn (x ^. position) d'
+        (newD, newLog) <- handleNpcTurn (x ^. position) ts d'
         return (newD, newLog ++ l)
 
-handleNpcTurn :: Coord -> Dungeon -> Writer MessageLog (Dungeon, [Actor])
-handleNpcTurn c d = maybe (return (d, [])) doAction theActor
+handleNpcTurn ::
+       Coord
+    -> TileCollection
+    -> Dungeon
+    -> Writer MessageLog (Dungeon, [Actor])
+handleNpcTurn c ts d = maybe (return (d, [])) doAction theActor
   where
     (theActor, dungeonWithoutTheActor) = popActorAt c d
-    doAction actor = npcAction actor dungeonWithoutTheActor
+    doAction actor = npcAction actor ts dungeonWithoutTheActor
 
-npcAction :: Actor -> Dungeon -> Writer MessageLog (Dungeon, [Actor])
-npcAction e d = (newDungeon &&& killed) <$> action entityAfterUpdatingPath d
+npcAction ::
+       Actor
+    -> TileCollection
+    -> Dungeon
+    -> Writer MessageLog (Dungeon, [Actor])
+npcAction e ts d =
+    (newDungeon &&& killed) <$> action entityAfterUpdatingPath ts d
   where
-    entityAfterUpdatingPath = updatePath e d
+    entityAfterUpdatingPath = updatePath e ts d
     action = selectAction entityAfterUpdatingPath d
 
-updatePath :: Actor -> Dungeon -> Actor
-updatePath e d = e & pathToDestination .~ newPath
+updatePath :: Actor -> TileCollection -> Dungeon -> Actor
+updatePath e ts d = e & pathToDestination .~ newPath
   where
-    newPath = fromMaybe [] $ dst >>= getPathTo d src
+    newPath = fromMaybe [] $ dst >>= getPathTo ts d src
     src = e ^. position
     dst = fmap (^. position) player
     player = getPlayerActor d

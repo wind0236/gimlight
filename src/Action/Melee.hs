@@ -11,7 +11,7 @@ import           Dungeon      (Dungeon, popActorAt, pushActor)
 import           Linear.V2    (V2)
 
 meleeAction :: V2 Int -> Action
-meleeAction offset src dungeon = result
+meleeAction offset src _ dungeon = result
   where
     dstPosition = src ^. position + offset
     (target, dungeonWithoutTarget) = popActorAt dstPosition dungeon

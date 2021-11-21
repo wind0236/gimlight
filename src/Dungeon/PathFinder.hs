@@ -8,14 +8,15 @@ import           Data.Graph.AStar (aStar)
 import           Data.HashSet     (HashSet, fromList)
 import           Dungeon          (Dungeon, walkableFloor)
 import           Dungeon.Map.Bool (BoolMap)
+import           Dungeon.Map.Tile (TileCollection)
 import           Linear.V2        (V2 (..))
 
-getPathTo :: Dungeon -> Coord -> Coord -> Maybe [Coord]
-getPathTo d src dst =
-    aStar (neighbors d) distanceBetween (distanceBetween dst) (== dst) src
+getPathTo :: TileCollection -> Dungeon -> Coord -> Coord -> Maybe [Coord]
+getPathTo ts d src dst =
+    aStar (neighbors ts d) distanceBetween (distanceBetween dst) (== dst) src
 
-neighbors :: Dungeon -> Coord -> HashSet Coord
-neighbors d src = fromList $ candidate (walkableFloor d) src
+neighbors :: TileCollection -> Dungeon -> Coord -> HashSet Coord
+neighbors ts d src = fromList $ candidate (walkableFloor ts d) src
 
 distanceBetween :: Coord -> Coord -> Int
 distanceBetween p0 p1 =

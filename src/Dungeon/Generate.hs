@@ -18,8 +18,8 @@ import           Dungeon.Generate.Room (Room (..), center,
                                         roomFromTwoPositionInclusive,
                                         roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Identifier    (Identifier)
-import           Dungeon.Map.Tile      (TileMap, allWallTiles, downStairs,
-                                        floorTile, upStairs)
+import           Dungeon.Map.Tile      (TileCollection, TileMap, allWallTiles,
+                                        downStairs, floorTile, upStairs)
 import           Dungeon.Size          (maxSize, minSize)
 import           Dungeon.Stairs        (StairsPair (StairsPair))
 import           Item                  (Item, herb, sampleBook)
@@ -32,6 +32,7 @@ import           TreeZipper            (TreeZipper, appendNode, getFocused,
 
 generateMultipleFloorsDungeon ::
        StdGen
+    -> TileCollection
     -> Int
     -> Int
     -> Int
@@ -39,7 +40,7 @@ generateMultipleFloorsDungeon ::
     -> V2 Int
     -> Identifier
     -> (Tree Dungeon, Coord, StdGen)
-generateMultipleFloorsDungeon g floorsNum maxRooms roomMinSize roomMaxSize mapSize ident =
+generateMultipleFloorsDungeon g ts floorsNum maxRooms roomMinSize roomMaxSize mapSize ident =
     (goToRootAndGetTree dungeonZipper, ascendingStairsInFirstFloor, g'')
   where
     (firstFloor, ascendingStairsInFirstFloor, g') =
@@ -52,6 +53,7 @@ generateMultipleFloorsDungeon g floorsNum maxRooms roomMinSize roomMaxSize mapSi
                  uncurry
                      generateDungeonAndAppend
                      acc
+                     ts
                      maxRooms
                      roomMinSize
                      roomMaxSize
@@ -63,18 +65,19 @@ generateMultipleFloorsDungeon g floorsNum maxRooms roomMinSize roomMaxSize mapSi
 generateDungeonAndAppend ::
        TreeZipper Dungeon
     -> StdGen
+    -> TileCollection
     -> Int
     -> Int
     -> Int
     -> V2 Int
     -> Identifier
     -> (TreeZipper Dungeon, StdGen)
-generateDungeonAndAppend zipper g maxRooms roomMinSize roomMaxSize mapSize ident =
+generateDungeonAndAppend zipper g ts maxRooms roomMinSize roomMaxSize mapSize ident =
     (zipperFocusingNext, g'')
   where
     (generatedDungeon, lowerStairsPosition, g') =
         generateDungeon g maxRooms roomMinSize roomMaxSize mapSize ident
-    (upperStairsPosition, g'') = newStairsPosition g' $ getFocused zipper
+    (upperStairsPosition, g'') = newStairsPosition g' ts $ getFocused zipper
     (newUpperDungeon, newLowerDungeon) =
         addAscendingAndDescendingStiars
             (StairsPair upperStairsPosition lowerStairsPosition)
@@ -88,10 +91,10 @@ generateDungeonAndAppend zipper g maxRooms roomMinSize roomMaxSize mapSize ident
             (error "unreachable.")
             (goDownBy (== newLowerDungeon) newZipper)
 
-newStairsPosition :: StdGen -> Dungeon -> (Coord, StdGen)
-newStairsPosition g d = (candidates !! index, g')
+newStairsPosition :: StdGen -> TileCollection -> Dungeon -> (Coord, StdGen)
+newStairsPosition g ts d = (candidates !! index, g')
   where
-    candidates = stairsPositionCandidates d
+    candidates = stairsPositionCandidates ts d
     (index, g') = randomR (0, length candidates - 1) g
 
 generateDungeon ::
