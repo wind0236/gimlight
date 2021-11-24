@@ -31,6 +31,7 @@ executable gimlight
                       , Coord
                       , Dungeon
                       , Dungeon.Generate
+                      , Dungeon.Generate.Config
                       , Dungeon.Generate.Room
                       , Dungeon.Identifier
                       , Dungeon.Init

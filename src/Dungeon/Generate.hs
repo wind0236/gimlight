@@ -2,81 +2,63 @@ module Dungeon.Generate
     ( generateMultipleFloorsDungeon
     ) where
 
-import           Actor                 (Actor)
-import qualified Actor                 as A
-import           Actor.Monsters        (orc, troll)
-import           Control.Lens          ((^.))
-import           Coord                 (Coord)
-import           Data.Array            (bounds, (//))
-import           Data.Maybe            (fromMaybe)
-import           Data.Tree             (Tree (Node, rootLabel, subForest))
-import           Dungeon               (Dungeon,
-                                        addAscendingAndDescendingStiars,
-                                        changeTile, dungeon,
-                                        stairsPositionCandidates)
-import           Dungeon.Generate.Room (Room (..), center,
-                                        roomFromTwoPositionInclusive,
-                                        roomFromWidthHeight, roomOverlaps)
-import           Dungeon.Identifier    (Identifier)
-import           Dungeon.Map.Tile      (TileCollection, TileMap, allWallTiles,
-                                        downStairs, floorTile, upStairs)
-import           Dungeon.Size          (maxSize, minSize)
-import           Dungeon.Stairs        (StairsPair (StairsPair))
-import           Item                  (Item, herb, sampleBook)
-import qualified Item                  as I
-import           Linear.V2             (V2 (..), _x, _y)
-import           System.Random         (Random (randomR), StdGen, random)
-import           TreeZipper            (TreeZipper, appendNode, getFocused,
-                                        goDownBy, goToRootAndGetTree, modify,
-                                        treeZipper)
+import           Actor                   (Actor)
+import qualified Actor                   as A
+import           Actor.Monsters          (orc, troll)
+import           Control.Lens            ((^.))
+import           Coord                   (Coord)
+import           Data.Array              (bounds, (//))
+import           Data.Maybe              (fromMaybe)
+import           Data.Tree               (Tree (Node, rootLabel, subForest))
+import           Dungeon                 (Dungeon,
+                                          addAscendingAndDescendingStiars,
+                                          changeTile, dungeon,
+                                          stairsPositionCandidates)
+import           Dungeon.Generate.Config (Config (maxRooms, numOfFloors, roomMaxSize, roomMinSize))
+import           Dungeon.Generate.Room   (Room (..), center,
+                                          roomFromTwoPositionInclusive,
+                                          roomFromWidthHeight, roomOverlaps)
+import           Dungeon.Identifier      (Identifier)
+import           Dungeon.Map.Tile        (TileCollection, TileMap, allWallTiles,
+                                          downStairs, floorTile, upStairs)
+import           Dungeon.Size            (maxSize, minSize)
+import           Dungeon.Stairs          (StairsPair (StairsPair))
+import           Item                    (Item, herb, sampleBook)
+import qualified Item                    as I
+import           Linear.V2               (V2 (..), _x, _y)
+import           System.Random           (Random (randomR), StdGen, random)
+import           TreeZipper              (TreeZipper, appendNode, getFocused,
+                                          goDownBy, goToRootAndGetTree, modify,
+                                          treeZipper)
 
 generateMultipleFloorsDungeon ::
        StdGen
     -> TileCollection
-    -> Int
-    -> Int
-    -> Int
-    -> Int
-    -> V2 Int
+    -> Config
     -> Identifier
     -> (Tree Dungeon, Coord, StdGen)
-generateMultipleFloorsDungeon g ts floorsNum maxRooms roomMinSize roomMaxSize mapSize ident =
+generateMultipleFloorsDungeon g ts cfg ident =
     (goToRootAndGetTree dungeonZipper, ascendingStairsInFirstFloor, g'')
   where
-    (firstFloor, ascendingStairsInFirstFloor, g') =
-        generateDungeon g maxRooms roomMinSize roomMaxSize mapSize ident
+    (firstFloor, ascendingStairsInFirstFloor, g') = generateDungeon g cfg ident
     treeWithFirstFloor = Node {rootLabel = firstFloor, subForest = []}
     zipperWithFirstFloor = treeZipper treeWithFirstFloor
     (dungeonZipper, g'') =
         foldl
-            (\acc _ ->
-                 uncurry
-                     generateDungeonAndAppend
-                     acc
-                     ts
-                     maxRooms
-                     roomMinSize
-                     roomMaxSize
-                     mapSize
-                     ident)
+            (\acc _ -> uncurry generateDungeonAndAppend acc ts cfg ident)
             (zipperWithFirstFloor, g')
-            [1 .. floorsNum - 1]
+            [1 .. numOfFloors cfg - 1]
 
 generateDungeonAndAppend ::
        TreeZipper Dungeon
     -> StdGen
     -> TileCollection
-    -> Int
-    -> Int
-    -> Int
-    -> V2 Int
+    -> Config
     -> Identifier
     -> (TreeZipper Dungeon, StdGen)
-generateDungeonAndAppend zipper g ts maxRooms roomMinSize roomMaxSize mapSize ident =
-    (zipperFocusingNext, g'')
+generateDungeonAndAppend zipper g ts cfg ident = (zipperFocusingNext, g'')
   where
-    (generatedDungeon, lowerStairsPosition, g') =
-        generateDungeon g maxRooms roomMinSize roomMaxSize mapSize ident
+    (generatedDungeon, lowerStairsPosition, g') = generateDungeon g cfg ident
     (upperStairsPosition, g'') = newStairsPosition g' ts $ getFocused zipper
     (newUpperDungeon, newLowerDungeon) =
         addAscendingAndDescendingStiars
@@ -97,15 +79,8 @@ newStairsPosition g ts d = (candidates !! index, g')
     candidates = stairsPositionCandidates ts d
     (index, g') = randomR (0, length candidates - 1) g
 
-generateDungeon ::
-       StdGen
-    -> Int
-    -> Int
-    -> Int
-    -> V2 Int
-    -> Identifier
-    -> (Dungeon, Coord, StdGen)
-generateDungeon g maxRooms roomMinSize roomMaxSize mapSize ident =
+generateDungeon :: StdGen -> Config -> Identifier -> (Dungeon, Coord, StdGen)
+generateDungeon g cfg ident =
     ( dungeon (tiles // [(enterPosition, upStairs)]) actors items ident
     , enterPosition
     , g''')
@@ -118,10 +93,7 @@ generateDungeon g maxRooms roomMinSize roomMaxSize mapSize ident =
             (allWallTiles (V2 width height))
             (V2 0 0)
             g''
-            maxRooms
-            roomMinSize
-            roomMaxSize
-            mapSize
+            cfg
     (width, g') = randomR (minSize, maxSize) g
     (height, g'') = randomR (minSize, maxSize) g'
 
@@ -132,28 +104,22 @@ generateDungeonAccum ::
     -> TileMap
     -> Coord
     -> StdGen
-    -> Int
-    -> Int
-    -> Int
-    -> V2 Int
+    -> Config
     -> (TileMap, [Actor], [Item], V2 Int, StdGen)
-generateDungeonAccum itemsAcc enemiesAcc _ d pos g 0 _ _ _ =
-    (d, enemiesAcc, itemsAcc, pos, g)
-generateDungeonAccum itemsAcc enemiesAcc acc tileMap playerPos g maxRooms roomMinSize roomMaxSize mapSize =
-    generateDungeonAccum
-        newItemsAcc
-        newEnemiesAcc
-        newAcc
-        newDungeon
-        newPlayerPos
-        g''''''
-        (maxRooms - 1)
-        roomMinSize
-        roomMaxSize
-        mapSize
+generateDungeonAccum itemsAcc enemiesAcc acc tileMap playerPos g cfg
+    | maxRooms cfg == 0 = (tileMap, enemiesAcc, itemsAcc, playerPos, g)
+    | otherwise =
+        generateDungeonAccum
+            newItemsAcc
+            newEnemiesAcc
+            newAcc
+            newDungeon
+            newPlayerPos
+            g''''''
+            cfg {maxRooms = maxRooms cfg - 1}
   where
-    (roomWidth, g') = randomR (roomMinSize, roomMaxSize) g
-    (roomHeight, g'') = randomR (roomMinSize, roomMaxSize) g'
+    (roomWidth, g') = randomR (roomMinSize cfg, roomMaxSize cfg) g
+    (roomHeight, g'') = randomR (roomMinSize cfg, roomMaxSize cfg) g'
     (x, g''') = randomR (0, width - roomWidth - 1) g''
     (y, g'''') = randomR (0, height - roomHeight - 1) g'''
     room = roomFromWidthHeight (V2 x y) (V2 roomWidth roomHeight)
