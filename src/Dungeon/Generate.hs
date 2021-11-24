@@ -118,29 +118,27 @@ generateDungeonAccum itemsAcc enemiesAcc acc tileMap playerPos g cfg
             g''''''
             cfg {maxRooms = maxRooms cfg - 1}
   where
+    (newItemsAcc, newEnemiesAcc, newAcc, newDungeon, newPlayerPos)
+        | usable =
+            ( items ++ itemsAcc
+            , enemies ++ enemiesAcc
+            , room : acc
+            , appendRoom
+            , center room)
+        | otherwise = (itemsAcc, enemiesAcc, acc, tileMap, playerPos)
+    usable = not $ any (roomOverlaps room) acc
+    appendRoom
+        | null acc = createRoom room tileMap
+        | otherwise =
+            tunnelBetween (center room) (center $ head acc) $
+            createRoom room tileMap
     (roomWidth, g') = randomR (roomMinSize cfg, roomMaxSize cfg) g
     (roomHeight, g'') = randomR (roomMinSize cfg, roomMaxSize cfg) g'
     (x, g''') = randomR (0, width - roomWidth - 1) g''
     (y, g'''') = randomR (0, height - roomHeight - 1) g'''
     room = roomFromWidthHeight (V2 x y) (V2 roomWidth roomHeight)
-    usable = not $ any (roomOverlaps room) acc
     (enemies, g''''') = placeEnemies g'''' room maxMonstersPerRoom
     (items, g'''''') = placeItems g''''' room maxItemsPerRoom
-    (newItemsAcc, newEnemiesAcc, newAcc, newDungeon, newPlayerPos)
-        | usable =
-            if null acc
-                then ( items ++ itemsAcc
-                     , enemies ++ enemiesAcc
-                     , room : acc
-                     , createRoom room tileMap
-                     , center room)
-                else ( items ++ itemsAcc
-                     , enemies ++ enemiesAcc
-                     , room : acc
-                     , tunnelBetween (center room) (center $ head acc) $
-                       createRoom room tileMap
-                     , center room)
-        | otherwise = (itemsAcc, enemiesAcc, acc, tileMap, playerPos)
     V2 width height = snd (bounds tileMap) + V2 1 1
 
 createRoom :: Room -> TileMap -> TileMap
