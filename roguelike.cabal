@@ -1,5 +1,5 @@
 cabal-version:      2.4
-name:               roguelike
+name:               gimlight
 version:            0.1.0.0
 
 author:             Hiroki Tokunaga
@@ -7,7 +7,7 @@ maintainer:         tokusan441@gmail.com
 
 extra-source-files: CHANGELOG.md
 
-executable roguelike
+executable gimlight
     main-is:          Main.hs
     ghc-options:      -threaded -Wall -Werror
 
