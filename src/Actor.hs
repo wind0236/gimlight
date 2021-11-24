@@ -17,6 +17,7 @@ module Actor
     , monster
     , isPlayer
     , isMonster
+    , isFriendlyNpc
     , ActorKind(FriendlyNpc)
     , attackFromTo
     , actor
@@ -124,6 +125,9 @@ isPlayer e = e ^. actorKind == Player
 
 isMonster :: Actor -> Bool
 isMonster e = e ^. actorKind == Monster
+
+isFriendlyNpc :: Actor -> Bool
+isFriendlyNpc e = e ^. actorKind == FriendlyNpc
 
 getIdentifier :: Actor -> Identifier
 getIdentifier a = a ^. identifier

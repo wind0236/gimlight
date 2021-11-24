@@ -7,14 +7,15 @@ import           Action               (Action, ActionResult (killed),
 import           Action.Melee         (meleeAction)
 import           Action.Move          (moveAction)
 import           Action.Wait          (waitAction)
-import           Actor                (Actor, pathToDestination, position)
+import           Actor                (Actor, isFriendlyNpc, pathToDestination,
+                                       position)
 import           Control.Arrow        ((&&&))
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (MonadWriter (writer), Writer)
 import           Coord                (Coord)
 import           Data.Maybe           (fromMaybe)
 import           Dungeon              (Dungeon, getPlayerActor, npcs,
-                                       popActorAt)
+                                       popActorAt, pushActor)
 import           Dungeon.Map.Tile     (TileCollection)
 import           Dungeon.PathFinder   (getPathTo)
 import           Linear.V2            (V2 (V2))
@@ -44,8 +45,10 @@ npcAction ::
     -> TileCollection
     -> Dungeon
     -> Writer MessageLog (Dungeon, [Actor])
-npcAction e ts d =
-    (newDungeon &&& killed) <$> action entityAfterUpdatingPath ts d
+npcAction e ts d
+    | isFriendlyNpc e = return (pushActor e d, [])
+    | otherwise =
+        (newDungeon &&& killed) <$> action entityAfterUpdatingPath ts d
   where
     entityAfterUpdatingPath = updatePath e ts d
     action = selectAction entityAfterUpdatingPath d
