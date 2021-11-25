@@ -9,8 +9,9 @@ import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)
 import           Coord                (Coord)
 import           Data.Array           ((!))
-import           Data.Maybe           (isNothing)
-import           Dungeon              (Dungeon, actorAt, mapWidthAndHeight,
+import           Data.Foldable        (find)
+import           Data.Maybe           (isJust)
+import           Dungeon              (Dungeon, getActors, mapWidthAndHeight,
                                        pushActor, tileMap)
 import           Dungeon.Map.Tile     (TileCollection, isWalkable)
 import           Linear.V2            (V2 (V2))
@@ -34,8 +35,11 @@ updatePosition ts d src offset =
 
 movable :: TileCollection -> Dungeon -> Coord -> Bool
 movable ts d c =
-    isNothing (actorAt c d) &&
+    not actorExistsAtDestination &&
     isPositionInRange d c && isWalkable (ts ! ((d ^. tileMap) ! c))
+  where
+    actorExistsAtDestination =
+        isJust $ find (\x -> x ^. position == c) $ getActors d
 
 nextPosition :: Dungeon -> Actor -> V2 Int -> Coord
 nextPosition d src offset =

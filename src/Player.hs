@@ -12,14 +12,17 @@ import           Action.Drop              (dropAction)
 import           Action.Melee             (meleeAction)
 import           Action.Move              (moveAction)
 import           Action.PickUp            (pickUpAction)
-import           Actor                    (Actor, getTalkingPart, isMonster)
+import           Actor                    (Actor, getTalkingPart, isMonster,
+                                           position)
 import qualified Actor                    as A
+import           Control.Lens             ((^.))
+import           Data.Foldable            (find)
 import           Data.Maybe               (fromMaybe)
-import           Dungeon                  (isTown)
+import           Dungeon                  (getActors, isTown)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, SelectingItem, Talking))
-import           GameStatus.Exploring     (ExploringHandler, actorAt,
-                                           doPlayerAction, getCurrentDungeon,
-                                           getPlayerActor, getPlayerPosition,
+import           GameStatus.Exploring     (ExploringHandler, doPlayerAction,
+                                           getCurrentDungeon, getPlayerActor,
+                                           getPlayerPosition,
                                            isPositionInDungeon,
                                            processAfterPlayerTurn)
 import qualified GameStatus.Exploring     as GSE
@@ -80,15 +83,19 @@ handlePlayerAfterSelecting h = result
 
 playerBumpAction :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 playerBumpAction offset eh =
-    let destination =
-            case getPlayerPosition eh of
-                Just p  -> p + offset
-                Nothing -> error "The player is dead."
-        action =
-            case actorAt destination eh of
-                Just actorAtDestination -> meleeOrTalk offset actorAtDestination
-                Nothing                 -> moveOrExitMap offset
+    let action =
+            case actorAtDestination of
+                Just x  -> meleeOrTalk offset x
+                Nothing -> moveOrExitMap offset
      in action eh
+  where
+    actorAtDestination =
+        find (\x -> x ^. position == destination) $
+        getActors $ getCurrentDungeon eh
+    destination =
+        case getPlayerPosition eh of
+            Just p  -> p + offset
+            Nothing -> error "The player is dead."
 
 meleeOrTalk :: V2 Int -> Actor -> ExploringHandler -> (Bool, GameStatus)
 meleeOrTalk offset target eh =

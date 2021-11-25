@@ -23,7 +23,6 @@ module Dungeon
     , updateMap
     , calculateFovAt
     , isTown
-    , actorAt
     , isPositionInDungeon
     , npcs
     , positionOnParentMap
@@ -145,9 +144,6 @@ getPlayerActor d = find isPlayer $ d ^. actors
 
 getActors :: Dungeon -> [Actor]
 getActors d = d ^. actors
-
-actorAt :: Coord -> Dungeon -> Maybe Actor
-actorAt c d = find (\x -> x ^. A.position == c) $ d ^. actors
 
 pushActor :: Actor -> Dungeon -> Dungeon
 pushActor e d = d & actors %~ (e :)
