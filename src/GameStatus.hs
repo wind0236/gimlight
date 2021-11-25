@@ -25,6 +25,7 @@ import           GameStatus.Scene             (SceneHandler, sceneHandler,
                                                withoutSpeaker)
 import           GameStatus.SelectingItem     (SelectingItemHandler)
 import           GameStatus.Talking           (TalkingHandler)
+import           IndexGenerator               (generator)
 import           Linear.V2                    (V2 (V2))
 import qualified Localization.Texts           as T
 import qualified Log                          as L
@@ -52,8 +53,8 @@ newGameStatus = do
         fromMaybe (error "Failed to read the tile file.") <$>
         readTileFile "maps/tiles.json"
     gm <- globalMap
-    beaeve <- initDungeon tileCollection
-    let (stairsPosition, bats) = batsDungeon g tileCollection
+    (beaeve, ig) <- initDungeon generator tileCollection
+    let (stairsPosition, bats, _, _) = batsDungeon g ig tileCollection
         (gmWithBatsStairs, batsRootMapWithParentMap) =
             addAscendingAndDescendingStiars
                 (StairsPair (V2 9 6) stairsPosition)

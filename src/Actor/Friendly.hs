@@ -8,7 +8,15 @@ import           Actor.Status            (Status)
 import           Coord                   (Coord)
 import           Data.Text               (Text)
 import           GameStatus.Talking.Part (TalkingPart)
+import           IndexGenerator          (IndexGenerator)
 
 friendly ::
-       Coord -> Identifier -> Status -> TalkingPart -> Text -> Text -> Actor
-friendly position name st p = actor position name st FriendlyNpc (Just p)
+       IndexGenerator
+    -> Coord
+    -> Identifier
+    -> Status
+    -> TalkingPart
+    -> Text
+    -> Text
+    -> (Actor, IndexGenerator)
+friendly ig position name st p = actor ig position name st FriendlyNpc (Just p)

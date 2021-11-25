@@ -10,6 +10,7 @@ module Dungeon
     ( Dungeon
     , dungeon
     , getIdentifier
+    , getActors
     , changeTile
     , popActorAt
     , popActorIf
@@ -141,6 +142,9 @@ playerPosition d = (^. A.position) <$> getPlayerActor d
 
 getPlayerActor :: Dungeon -> Maybe Actor
 getPlayerActor d = find isPlayer $ d ^. actors
+
+getActors :: Dungeon -> [Actor]
+getActors d = d ^. actors
 
 actorAt :: Coord -> Dungeon -> Maybe Actor
 actorAt c d = find (\x -> x ^. A.position == c) $ d ^. actors

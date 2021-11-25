@@ -14,13 +14,15 @@ import           Data.List.NonEmpty      (fromList)
 import           GameStatus.Talking.Part (TalkingPart (QuestInquiry, Selection, UpdateQuest),
                                           questInquiryHandler, selectionHandler,
                                           updateQuestHandler)
+import           IndexGenerator          (IndexGenerator)
 import qualified Localization.Texts      as T
 import           Quest                   (Inquiry (IsEnoughBatsKilled, IsKillBatsCompleted, IsKillBatsStarted),
                                           Updater (CompleteKillBats, StartKillBats))
 
-electria :: Coord -> Actor
-electria position =
+electria :: IndexGenerator -> Coord -> (Actor, IndexGenerator)
+electria ig position =
     friendly
+        ig
         position
         Electria
         st

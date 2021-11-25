@@ -8,12 +8,15 @@ import           Dungeon                 (Dungeon, dungeon)
 import           Dungeon.Identifier      (Identifier (Beaeve))
 import qualified Dungeon.Map.JSONReader  as JSONReader
 import           Dungeon.Map.Tile        (TileMap)
+import           IndexGenerator          (IndexGenerator)
 import           Linear.V2               (V2 (V2))
 
-beaeve :: IO Dungeon
-beaeve = do
+beaeve :: IndexGenerator -> IO (Dungeon, IndexGenerator)
+beaeve ig = do
     tileMap <- readMapFile
-    return $ dungeon tileMap [electria $ V2 4 5] [] Beaeve
+    return (dungeon tileMap [electria'] [] Beaeve, ig')
+  where
+    (electria', ig') = electria ig (V2 4 5)
 
 readMapFile :: IO TileMap
 readMapFile = do

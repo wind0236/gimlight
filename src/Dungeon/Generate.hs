@@ -23,6 +23,7 @@ import           Dungeon.Map.Tile        (TileCollection, TileMap, allWallTiles,
                                           downStairs, floorTile, upStairs)
 import           Dungeon.Size            (maxSize, minSize)
 import           Dungeon.Stairs          (StairsPair (StairsPair))
+import           IndexGenerator          (IndexGenerator)
 import           Item                    (Item, herb, sampleBook)
 import qualified Item                    as I
 import           Linear.V2               (V2 (..), _x, _y)
@@ -33,32 +34,38 @@ import           TreeZipper              (TreeZipper, appendNode, getFocused,
 
 generateMultipleFloorsDungeon ::
        StdGen
+    -> IndexGenerator
     -> TileCollection
     -> Config
     -> Identifier
-    -> (Tree Dungeon, Coord, StdGen)
-generateMultipleFloorsDungeon g ts cfg ident =
-    (goToRootAndGetTree dungeonZipper, ascendingStairsInFirstFloor, g'')
+    -> (Tree Dungeon, Coord, StdGen, IndexGenerator)
+generateMultipleFloorsDungeon g ig ts cfg ident =
+    (goToRootAndGetTree dungeonZipper, ascendingStairsInFirstFloor, g'', ig'')
   where
-    (firstFloor, ascendingStairsInFirstFloor, g') = generateDungeon g cfg ident
+    (firstFloor, ascendingStairsInFirstFloor, g', ig') =
+        generateDungeon g ig cfg ident
     treeWithFirstFloor = Node {rootLabel = firstFloor, subForest = []}
     zipperWithFirstFloor = treeZipper treeWithFirstFloor
-    (dungeonZipper, g'') =
+    (dungeonZipper, g'', ig'') =
         foldl
-            (\acc _ -> uncurry generateDungeonAndAppend acc ts cfg ident)
-            (zipperWithFirstFloor, g')
+            (\(dacc, gacc, igacc) _ ->
+                 generateDungeonAndAppend dacc gacc igacc ts cfg ident)
+            (zipperWithFirstFloor, g', ig')
             [1 .. numOfFloors cfg - 1]
 
 generateDungeonAndAppend ::
        TreeZipper Dungeon
     -> StdGen
+    -> IndexGenerator
     -> TileCollection
     -> Config
     -> Identifier
-    -> (TreeZipper Dungeon, StdGen)
-generateDungeonAndAppend zipper g ts cfg ident = (zipperFocusingNext, g'')
+    -> (TreeZipper Dungeon, StdGen, IndexGenerator)
+generateDungeonAndAppend zipper g ig ts cfg ident =
+    (zipperFocusingNext, g'', ig')
   where
-    (generatedDungeon, lowerStairsPosition, g') = generateDungeon g cfg ident
+    (generatedDungeon, lowerStairsPosition, g', ig') =
+        generateDungeon g ig cfg ident
     (upperStairsPosition, g'') = newStairsPosition g' ts $ getFocused zipper
     (newUpperDungeon, newLowerDungeon) =
         addAscendingAndDescendingStiars
@@ -79,13 +86,19 @@ newStairsPosition g ts d = (candidates !! index, g')
     candidates = stairsPositionCandidates ts d
     (index, g') = randomR (0, length candidates - 1) g
 
-generateDungeon :: StdGen -> Config -> Identifier -> (Dungeon, Coord, StdGen)
-generateDungeon g cfg ident =
+generateDungeon ::
+       StdGen
+    -> IndexGenerator
+    -> Config
+    -> Identifier
+    -> (Dungeon, Coord, StdGen, IndexGenerator)
+generateDungeon g ig cfg ident =
     ( dungeon (tiles // [(enterPosition, upStairs)]) actors items ident
     , enterPosition
-    , g''')
+    , g'''
+    , ig')
   where
-    (tiles, actors, items, enterPosition, g''') =
+    (tiles, actors, items, enterPosition, g''', ig') =
         generateDungeonAccum
             []
             []
@@ -93,6 +106,7 @@ generateDungeon g cfg ident =
             (allWallTiles (V2 width height))
             (V2 0 0)
             g''
+            ig
             cfg
     (width, g') = randomR (minSize, maxSize) g
     (height, g'') = randomR (minSize, maxSize) g'
@@ -104,10 +118,11 @@ generateDungeonAccum ::
     -> TileMap
     -> Coord
     -> StdGen
+    -> IndexGenerator
     -> Config
-    -> (TileMap, [Actor], [Item], V2 Int, StdGen)
-generateDungeonAccum itemsAcc enemiesAcc acc tileMap playerPos g cfg
-    | maxRooms cfg == 0 = (tileMap, enemiesAcc, itemsAcc, playerPos, g)
+    -> (TileMap, [Actor], [Item], V2 Int, StdGen, IndexGenerator)
+generateDungeonAccum itemsAcc enemiesAcc acc tileMap playerPos g ig cfg
+    | maxRooms cfg == 0 = (tileMap, enemiesAcc, itemsAcc, playerPos, g, ig)
     | otherwise =
         generateDungeonAccum
             newItemsAcc
@@ -116,6 +131,7 @@ generateDungeonAccum itemsAcc enemiesAcc acc tileMap playerPos g cfg
             newDungeon
             newPlayerPos
             g''''''
+            ig'
             cfg {maxRooms = maxRooms cfg - 1}
   where
     (newItemsAcc, newEnemiesAcc, newAcc, newDungeon, newPlayerPos)
@@ -137,7 +153,7 @@ generateDungeonAccum itemsAcc enemiesAcc acc tileMap playerPos g cfg
     (x, g''') = randomR (0, width - roomWidth - 1) g''
     (y, g'''') = randomR (0, height - roomHeight - 1) g'''
     room = roomFromWidthHeight (V2 x y) (V2 roomWidth roomHeight)
-    (enemies, g''''') = placeEnemies g'''' room maxMonstersPerRoom
+    (enemies, ig', g''''') = placeEnemies g'''' ig room maxMonstersPerRoom
     (items, g'''''') = placeItems g''''' room maxItemsPerRoom
     V2 width height = snd (bounds tileMap) + V2 1 1
 
@@ -156,16 +172,27 @@ tunnelBetween start end d = createRoom path1 $ createRoom path2 d
     path2 = roomFromTwoPositionInclusive corner end
     corner = V2 (start ^. _x) (end ^. _y)
 
-placeEnemies :: StdGen -> Room -> Int -> ([Actor], StdGen)
+placeEnemies ::
+       StdGen
+    -> IndexGenerator
+    -> Room
+    -> Int
+    -> ([Actor], IndexGenerator, StdGen)
 placeEnemies = placeEnemiesAccum []
 
-placeEnemiesAccum :: [Actor] -> StdGen -> Room -> Int -> ([Actor], StdGen)
-placeEnemiesAccum e g _ 0 = (e, g)
-placeEnemiesAccum e g r n = placeEnemiesAccum newEnemies g''' r (n - 1)
+placeEnemiesAccum ::
+       [Actor]
+    -> StdGen
+    -> IndexGenerator
+    -> Room
+    -> Int
+    -> ([Actor], IndexGenerator, StdGen)
+placeEnemiesAccum e g ig _ 0 = (e, ig, g)
+placeEnemiesAccum e g ig r n = placeEnemiesAccum newEnemies g''' ig' r (n - 1)
   where
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
-    (enemy, g''') = newMonster g'' (V2 x y)
+    ((enemy, ig'), g''') = newMonster g'' ig (V2 x y)
     newEnemies =
         if V2 x y `notElem` map (^. A.position) e
             then enemy : e
@@ -188,12 +215,13 @@ placeItemsAccum items g r n = placeItemsAccum newItems g''' r (n - 1)
                      else sampleBook (V2 x y) : items
             else items
 
-newMonster :: StdGen -> Coord -> (Actor, StdGen)
-newMonster g c =
+newMonster ::
+       StdGen -> IndexGenerator -> Coord -> ((Actor, IndexGenerator), StdGen)
+newMonster g ig c =
     let (r, g') = random g :: (Float, StdGen)
      in if r < 0.8
-            then (orc c, g')
-            else (troll c, g')
+            then (orc ig c, g')
+            else (troll ig c, g')
 
 maxMonstersPerRoom :: Int
 maxMonstersPerRoom = 1

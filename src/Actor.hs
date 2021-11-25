@@ -5,6 +5,7 @@
 module Actor
     ( Actor
     , player
+    , getIndex
     , getIdentifier
     , getLevel
     , getCurrentExperiencePoint
@@ -29,6 +30,7 @@ module Actor
     , inventoryItems
     , getItems
     , removeNthItem
+    , target
     ) where
 
 import           Actor.Identifier        (Identifier, toName)
@@ -45,6 +47,7 @@ import           Data.Binary             (Binary)
 import           Data.Text               (Text)
 import           GHC.Generics            (Generic)
 import           GameStatus.Talking.Part (TalkingPart)
+import           IndexGenerator          (Index, IndexGenerator, generate)
 import           Item                    (Item)
 import           Log                     (MessageLog)
 
@@ -58,7 +61,8 @@ instance Binary ActorKind
 
 data Actor =
     Actor
-        { _position          :: Coord
+        { _index             :: Index
+        , _position          :: Coord
         , _identifier        :: Identifier
         , _status            :: Status
         , _pathToDestination :: [Coord]
@@ -67,6 +71,7 @@ data Actor =
         , _walkingImagePath  :: Text
         , _standingImagePath :: Text
         , _inventoryItems    :: Inventory
+        , _target            :: Maybe Index
         }
     deriving (Show, Ord, Eq, Generic)
 
@@ -75,30 +80,44 @@ makeLenses ''Actor
 instance Binary Actor
 
 actor ::
-       Coord
+       IndexGenerator
+    -> Coord
     -> Identifier
     -> Status
     -> ActorKind
     -> Maybe TalkingPart
     -> Text
     -> Text
-    -> Actor
-actor position' id' st ak talkMessage' walkingImagePath' standingImagePath' =
-    Actor
-        { _position = position'
-        , _identifier = id'
-        , _status = st
-        , _pathToDestination = []
-        , _talk = talkMessage'
-        , _walkingImagePath = walkingImagePath'
-        , _standingImagePath = standingImagePath'
-        , _actorKind = ak
-        , _inventoryItems = inventory 5
-        }
+    -> (Actor, IndexGenerator)
+actor ig position' id' st ak talkMessage' walkingImagePath' standingImagePath' =
+    (a, newGenerator)
+  where
+    a =
+        Actor
+            { _index = idx
+            , _position = position'
+            , _identifier = id'
+            , _status = st
+            , _pathToDestination = []
+            , _talk = talkMessage'
+            , _walkingImagePath = walkingImagePath'
+            , _standingImagePath = standingImagePath'
+            , _actorKind = ak
+            , _inventoryItems = inventory 5
+            , _target = Nothing
+            }
+    (idx, newGenerator) = generate ig
 
-monster :: Coord -> Identifier -> Status -> Text -> Actor
-monster position' name' st walking =
+monster ::
+       IndexGenerator
+    -> Coord
+    -> Identifier
+    -> Status
+    -> Text
+    -> (Actor, IndexGenerator)
+monster ig position' name' st walking =
     actor
+        ig
         position'
         name'
         st
@@ -107,9 +126,10 @@ monster position' name' st walking =
         walking
         "images/sample_standing_picture.png"
 
-player :: Coord -> Actor
-player c =
+player :: IndexGenerator -> Coord -> (Actor, IndexGenerator)
+player ig c =
     actor
+        ig
         c
         Identifier.Player
         st
@@ -155,6 +175,9 @@ attackFromTo attacker defender = writer ((newAttacker, newDefender), msg)
 
 healHp :: Int -> Actor -> Actor
 healHp amount a = a & status %~ S.healHp amount
+
+getIndex :: Actor -> Index
+getIndex a = a ^. index
 
 getLevel :: Actor -> Int
 getLevel a = S.getLevel $ a ^. status
