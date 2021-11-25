@@ -70,10 +70,9 @@ selectAction e d
     | otherwise = moveOrWait e
 
 moveOrWait :: Actor -> Action
-moveOrWait e =
-    if null $ e ^. pathToDestination
-        then waitAction
-        else popPathToDestinationAndMove
+moveOrWait e
+    | null $ e ^. pathToDestination = waitAction
+    | otherwise = popPathToDestinationAndMove
 
 popPathToDestinationAndMove :: Action
 popPathToDestinationAndMove e = moveAction offset e'
