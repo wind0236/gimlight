@@ -36,6 +36,7 @@ executable gimlight
                       , Dungeon.Identifier
                       , Dungeon.Init
                       , Dungeon.Map
+                      , Dungeon.Map.Actor
                       , Dungeon.Map.Bool
                       , Dungeon.Map.Explored
                       , Dungeon.Map.Fov
