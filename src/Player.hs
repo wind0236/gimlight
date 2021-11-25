@@ -98,16 +98,17 @@ playerBumpAction offset eh =
             Nothing -> error "The player is dead."
 
 meleeOrTalk :: V2 Int -> Actor -> ExploringHandler -> (Bool, GameStatus)
-meleeOrTalk offset target eh =
-    if isMonster target
-        then let (status, newHandler) = doPlayerAction (meleeAction offset) eh
-              in case status of
-                     Ok               -> (True, Exploring newHandler)
-                     ReadingStarted _ -> error "Unreachable."
-                     Failed           -> (False, Exploring newHandler)
-        else case getTalkingPart target of
-                 Just x  -> (True, Talking $ talkingHandler target x eh)
-                 Nothing -> error "No talk handler is set."
+meleeOrTalk offset target eh
+    | isMonster target =
+        let (status, newHandler) = doPlayerAction (meleeAction offset) eh
+         in case status of
+                Ok               -> (True, Exploring newHandler)
+                ReadingStarted _ -> error "Unreachable."
+                Failed           -> (False, Exploring newHandler)
+    | otherwise =
+        case getTalkingPart target of
+            Just x  -> (True, Talking $ talkingHandler target x eh)
+            Nothing -> error "No talk handler is set."
 
 moveOrExitMap :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 moveOrExitMap offset eh =
