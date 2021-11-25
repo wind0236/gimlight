@@ -13,9 +13,11 @@ import           Control.Arrow        ((&&&))
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (MonadWriter (writer), Writer)
 import           Coord                (Coord)
+import           Data.Array           ((!))
 import           Data.Maybe           (fromMaybe)
-import           Dungeon              (Dungeon, getPlayerActor, npcs,
-                                       popActorAt, pushActor)
+import           Dungeon              (Dungeon, calculateFovAt, getPlayerActor,
+                                       npcs, playerPosition, popActorAt,
+                                       pushActor)
 import           Dungeon.Map.Tile     (TileCollection)
 import           Dungeon.PathFinder   (getPathTo)
 import           Linear.V2            (V2 (V2))
@@ -50,11 +52,14 @@ npcAction e ts d
     | otherwise =
         (newDungeon &&& killed) <$> action entityAfterUpdatingPath ts d
   where
-    entityAfterUpdatingPath = updatePath e ts d
     action = selectAction entityAfterUpdatingPath d
+    entityAfterUpdatingPath = fromMaybe e (updatePath e ts d)
 
-updatePath :: Actor -> TileCollection -> Dungeon -> Actor
-updatePath e ts d = e & pathToDestination .~ newPath
+updatePath :: Actor -> TileCollection -> Dungeon -> Maybe Actor
+updatePath e ts d
+    | isPlayerInFov (e ^. position) ts d =
+        Just $ e & pathToDestination .~ newPath
+    | otherwise = Nothing
   where
     newPath = fromMaybe [] $ dst >>= getPathTo ts d src
     src = e ^. position
@@ -95,3 +100,7 @@ offsetToPlayer e d = fmap (\x -> x - e ^. position) playerPos
   where
     p = getPlayerActor d
     playerPos = fmap (^. position) p
+
+isPlayerInFov :: Coord -> TileCollection -> Dungeon -> Bool
+isPlayerInFov c ts d =
+    ((\p -> calculateFovAt c ts d ! p) <$> playerPosition d) == Just True

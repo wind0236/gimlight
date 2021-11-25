@@ -20,6 +20,7 @@ module Dungeon
     , playerPosition
     , stairsPositionCandidates
     , updateMap
+    , calculateFovAt
     , isTown
     , actorAt
     , isPositionInDungeon
@@ -130,8 +131,10 @@ updateExplored d =
 
 updateFov :: TileCollection -> Dungeon -> Maybe Dungeon
 updateFov ts d =
-    (\pos -> d & visible .~ calculateFov pos (transparentMap ts d)) <$>
-    playerPosition d
+    (\pos -> d & visible .~ calculateFovAt pos ts d) <$> playerPosition d
+
+calculateFovAt :: Coord -> TileCollection -> Dungeon -> BoolMap
+calculateFovAt c ts d = calculateFov c (transparentMap ts d)
 
 playerPosition :: Dungeon -> Maybe Coord
 playerPosition d = (^. A.position) <$> getPlayerActor d
