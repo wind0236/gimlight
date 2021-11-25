@@ -114,17 +114,17 @@ meleeOrTalk offset target eh
 moveOrExitMap :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 moveOrExitMap offset eh
     | isPositionInDungeon destination eh || not (isTown (getCurrentDungeon eh)) =
-        let (status, newHandler) = doPlayerAction (moveAction offset) eh
-         in case status of
-                Ok               -> (True, Exploring newHandler)
-                ReadingStarted _ -> error "Unreachable."
-                Failed           -> (False, Exploring newHandler)
+        case status of
+            Ok               -> (True, Exploring newHandler)
+            ReadingStarted _ -> error "Unreachable."
+            Failed           -> (False, Exploring newHandler)
     | otherwise = (True, exitDungeon eh)
   where
     destination =
         case getPlayerPosition eh of
             Just p  -> p + offset
             Nothing -> error "The player is dead."
+    (status, newHandler) = doPlayerAction (moveAction offset) eh
 
 exitDungeon :: ExploringHandler -> GameStatus
 exitDungeon eh =
