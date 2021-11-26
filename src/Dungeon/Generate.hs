@@ -7,7 +7,6 @@ import qualified Actor                   as A
 import           Actor.Monsters          (orc, troll)
 import           Control.Lens            ((^.))
 import           Coord                   (Coord)
-import           Data.Array              (bounds, (//))
 import           Data.Maybe              (fromMaybe)
 import           Data.Tree               (Tree (Node, rootLabel, subForest))
 import           Dungeon                 (Dungeon,
@@ -20,7 +19,8 @@ import           Dungeon.Generate.Room   (Room (..), center,
                                           roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Identifier      (Identifier)
 import           Dungeon.Map.Tile        (TileCollection, TileMap, allWallTiles,
-                                          downStairs, floorTile, upStairs)
+                                          changeTileAt, downStairs, floorTile,
+                                          upStairs, widthAndHeight)
 import           Dungeon.Size            (maxSize, minSize)
 import           Dungeon.Stairs          (StairsPair (StairsPair))
 import           IndexGenerator          (IndexGenerator)
@@ -93,7 +93,7 @@ generateDungeon ::
     -> Identifier
     -> (Dungeon, Coord, StdGen, IndexGenerator)
 generateDungeon g ig cfg ident =
-    ( dungeon (tiles // [(enterPosition, upStairs)]) actors items ident
+    ( dungeon (changeTileAt enterPosition upStairs tiles) actors items ident
     , enterPosition
     , g'''
     , ig')
@@ -155,15 +155,14 @@ generateDungeonAccum itemsAcc enemiesAcc acc tileMap playerPos g ig cfg
     room = roomFromWidthHeight (V2 x y) (V2 roomWidth roomHeight)
     (enemies, ig', g''''') = placeEnemies g'''' ig room maxMonstersPerRoom
     (items, g'''''') = placeItems g''''' room maxItemsPerRoom
-    V2 width height = snd (bounds tileMap) + V2 1 1
+    V2 width height = widthAndHeight tileMap
 
 createRoom :: Room -> TileMap -> TileMap
 createRoom room r =
-    r //
-    [ (V2 x y, floorTile)
-    | x <- [x1 room .. x2 room - 1]
-    , y <- [y1 room .. y2 room - 1]
-    ]
+    foldl
+        (\acc x -> changeTileAt x floorTile acc)
+        r
+        [V2 x y | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 
 tunnelBetween :: Coord -> Coord -> TileMap -> TileMap
 tunnelBetween start end d = createRoom path1 $ createRoom path2 d

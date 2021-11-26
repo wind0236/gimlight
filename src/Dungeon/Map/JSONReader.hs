@@ -9,7 +9,7 @@ import           Control.Monad    (guard)
 import           Data.Aeson.Lens  (_Array, _Integer, key, values)
 import           Data.Array       (array)
 import           Data.Vector      (toList)
-import           Dungeon.Map.Tile (TileMap)
+import           Dungeon.Map.Tile (TileMap, tileMap)
 import           Linear.V2        (V2 (V2))
 
 readMapFile :: FilePath -> IO (Maybe TileMap)
@@ -21,7 +21,7 @@ parseMapFile json = do
     tiles <- getTiles json
     guard $ height * width == length tiles
     guard $ all (>= 0) tiles
-    Just $ array (V2 0 0, V2 (width - 1) (height - 1)) $
+    Just $ tileMap $ array (V2 0 0, V2 (width - 1) (height - 1)) $
         zip [V2 x y | y <- [0 .. height - 1], x <- [0 .. width - 1]] tiles
 
 getMapSize :: String -> Maybe (V2 Int)

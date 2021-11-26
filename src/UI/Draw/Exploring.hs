@@ -19,7 +19,7 @@ import           Control.Monad                   (guard)
 import           Coord                           (Coord)
 import           Data.Array                      ((!))
 import           Data.Default                    (Default (def))
-import           Data.Maybe                      (mapMaybe)
+import           Data.Maybe                      (fromMaybe, mapMaybe)
 import           Data.Vector.Split               (chunksOf)
 import qualified Data.Vector.Storable            as V
 import           Data.Vector.Storable.ByteString (vectorToByteString)
@@ -27,6 +27,7 @@ import           Dungeon                         (Dungeon, actors, explored,
                                                   items, mapWidthAndHeight,
                                                   playerPosition, tileMap,
                                                   visible)
+import           Dungeon.Map.Tile                (tileIdAt)
 import           GameConfig                      (GameConfig)
 import           GameStatus.Exploring            (ExploringHandler,
                                                   getCurrentDungeon,
@@ -144,8 +145,11 @@ makeMap tileGraphics eh = createSingle () def {singleRender = render}
             ]
     imageAt c =
         chunksOf (tileWidth * 4) $ -- `(*4)` for R, G, B, and A bytes.
-        imageData $
-        pixelMap (applyOpacity c) $ tileGraphics ! ((d ^. tileMap) ! c)
+        imageData $ pixelMap (applyOpacity c) $ tileGraphics ! tileId c
+    tileId c =
+        fromMaybe
+            (error "Failed to get the tile ID.")
+            (tileIdAt c (d ^. tileMap))
     applyOpacity c (PixelRGBA8 r g b a)
         | isVisible c = PixelRGBA8 r g b a
         | isExplored c = PixelRGBA8 (r `div` 2) (g `div` 2) (b `div` 2) a

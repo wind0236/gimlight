@@ -2,6 +2,13 @@
 
 module Dungeon.Map.Tile
     ( TileMap
+    , tileMap
+    , widthAndHeight
+    , changeTileAt
+    , walkableMap
+    , transparentMap
+    , tileIdAt
+    , isWalkableAt
     , Tile
     , TileCollection
     , TileId
@@ -14,15 +21,49 @@ module Dungeon.Map.Tile
     , downStairs
     ) where
 
-import           Data.Array   (Array)
-import           Data.Binary  (Binary)
-import qualified Dungeon.Map  as M
-import           GHC.Generics (Generic)
-import           Linear.V2    (V2)
+import           Coord            (Coord)
+import           Data.Array       (Array, bounds, (!), (//))
+import           Data.Binary      (Binary)
+import qualified Dungeon.Map      as M
+import           Dungeon.Map.Bool (BoolMap)
+import           GHC.Generics     (Generic)
+import           Linear.V2        (V2 (V2))
 
 type TileId = Int
 
-type TileMap = Array (V2 Int) TileId
+newtype TileMap =
+    TileMap (Array (V2 Int) TileId)
+    deriving (Show, Ord, Eq, Generic)
+
+instance Binary TileMap
+
+tileMap :: Array (V2 Int) TileId -> TileMap
+tileMap = TileMap
+
+widthAndHeight :: TileMap -> V2 Int
+widthAndHeight (TileMap m) = snd (bounds m) + V2 1 1
+
+changeTileAt :: Coord -> TileId -> TileMap -> TileMap
+changeTileAt c i (TileMap m) = TileMap $ m // [(c, i)]
+
+walkableMap :: TileCollection -> TileMap -> BoolMap
+walkableMap tc (TileMap m) = isWalkable . (tc !) <$> m
+
+transparentMap :: TileCollection -> TileMap -> BoolMap
+transparentMap tc (TileMap m) = isTransparent . (tc !) <$> m
+
+tileIdAt :: Coord -> TileMap -> Maybe TileId
+tileIdAt c (TileMap m)
+    | c >= lower && c <= upper = Just $ m ! c
+    | otherwise = Nothing
+  where
+    (lower, upper) = bounds m
+
+isWalkableAt :: Coord -> TileCollection -> TileMap -> Bool
+isWalkableAt c tc t =
+    case tileIdAt c t of
+        Just x  -> isWalkable (tc ! x)
+        Nothing -> False
 
 data Tile =
     Tile
@@ -39,7 +80,7 @@ tile :: Bool -> Bool -> Tile
 tile = Tile
 
 allWallTiles :: V2 Int -> TileMap
-allWallTiles widthAndHeight = M.generate widthAndHeight (const 1)
+allWallTiles wh = TileMap $ M.generate wh (const 1)
 
 isWalkable :: Tile -> Bool
 isWalkable = walkable

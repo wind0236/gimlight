@@ -8,12 +8,11 @@ import           Actor                (Actor, position)
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)
 import           Coord                (Coord)
-import           Data.Array           ((!))
 import           Data.Foldable        (find)
 import           Data.Maybe           (isJust)
 import           Dungeon              (Dungeon, getActors, mapWidthAndHeight,
                                        pushActor, tileMap)
-import           Dungeon.Map.Tile     (TileCollection, isWalkable)
+import           Dungeon.Map.Tile     (TileCollection, isWalkableAt)
 import           Linear.V2            (V2 (V2))
 import qualified Localization.Texts   as T
 
@@ -36,7 +35,7 @@ updatePosition ts d src offset =
 movable :: TileCollection -> Dungeon -> Coord -> Bool
 movable ts d c =
     not actorExistsAtDestination &&
-    isPositionInRange d c && isWalkable (ts ! ((d ^. tileMap) ! c))
+    isPositionInRange d c && isWalkableAt c ts (d ^. tileMap)
   where
     actorExistsAtDestination =
         isJust $ find (\x -> x ^. position == c) $ getActors d

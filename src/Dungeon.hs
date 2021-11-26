@@ -43,7 +43,7 @@ import           Actor                (Actor, isPlayer)
 import qualified Actor                as A
 import           Control.Lens         (makeLenses, (%~), (&), (.~), (^.))
 import           Coord                (Coord)
-import           Data.Array.Base      (IArray (bounds), assocs, (!), (//))
+import           Data.Array.Base      (assocs)
 import           Data.Binary          (Binary)
 import           Data.Foldable        (find)
 import           Data.List            (findIndex)
@@ -54,7 +54,9 @@ import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
                                        updateExploredMap)
 import           Dungeon.Map.Fov      (Fov, calculateFov, initFov)
 import           Dungeon.Map.Tile     (TileCollection, TileId, TileMap,
-                                       isTransparent, isWalkable)
+                                       changeTileAt, walkableMap,
+                                       widthAndHeight)
+import qualified Dungeon.Map.Tile     as TileMap
 import           Dungeon.Stairs       (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics         (Generic)
 import           Item                 (Item)
@@ -87,8 +89,8 @@ dungeon :: TileMap -> [Actor] -> [Item] -> Identifier -> Dungeon
 dungeon t e i ident =
     Dungeon
         { _tileMap = t
-        , _visible = initFov widthAndHeight
-        , _explored = initExploredMap widthAndHeight
+        , _visible = initFov (widthAndHeight t)
+        , _explored = initExploredMap (widthAndHeight t)
         , _actors = e
         , _items = i
         , _positionOnParentMap = Nothing
@@ -96,14 +98,12 @@ dungeon t e i ident =
         , _descendingStairs = []
         , _identifier = ident
         }
-  where
-    widthAndHeight = snd (bounds t) + V2 1 1
 
 getIdentifier :: Dungeon -> Identifier
 getIdentifier d = d ^. identifier
 
 changeTile :: Coord -> TileId -> Dungeon -> Dungeon
-changeTile c t d = d & tileMap %~ (\x -> x // [(c, t)])
+changeTile c t d = d & tileMap %~ changeTileAt c t
 
 addAscendingAndDescendingStiars ::
        StairsPair -> (Dungeon, Dungeon) -> (Dungeon, Dungeon)
@@ -187,16 +187,16 @@ stairsPositionCandidates ts d =
     isDownStairsPosition c = c `elem` map upStairs (d ^. descendingStairs)
 
 walkableFloor :: TileCollection -> Dungeon -> BoolMap
-walkableFloor ts d = fmap (isWalkable . (ts !)) (d ^. tileMap)
+walkableFloor ts d = walkableMap ts (d ^. tileMap)
 
 transparentMap :: TileCollection -> Dungeon -> BoolMap
-transparentMap ts d = fmap (isTransparent . (ts !)) (d ^. tileMap)
+transparentMap ts d = TileMap.transparentMap ts (d ^. tileMap)
 
 npcs :: Dungeon -> [Actor]
 npcs d = filter (not . isPlayer) $ d ^. actors
 
 mapWidthAndHeight :: Dungeon -> V2 Int
-mapWidthAndHeight d = snd (bounds $ d ^. tileMap) + V2 1 1
+mapWidthAndHeight d = TileMap.widthAndHeight (d ^. tileMap)
 
 isTown :: Dungeon -> Bool
 isTown d = Identifier.isTown $ d ^. identifier
