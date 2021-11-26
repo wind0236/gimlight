@@ -83,7 +83,7 @@ tile :: Bool -> Bool -> Tile
 tile = Tile
 
 allWallTiles :: V2 Int -> TileMap
-allWallTiles wh = TileMap $ M.generate wh (const 1)
+allWallTiles wh = TileMap $ M.generate wh (const wallTile)
 
 isWalkable :: Tile -> Bool
 isWalkable = walkable
@@ -93,6 +93,9 @@ isTransparent = transparent
 
 floorTile :: TileId
 floorTile = 0
+
+wallTile :: TileId
+wallTile = 1
 
 upStairs :: TileId
 upStairs = 3
