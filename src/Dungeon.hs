@@ -139,7 +139,7 @@ playerPosition :: Dungeon -> Maybe Coord
 playerPosition d = (^. A.position) <$> getPlayerActor d
 
 getPlayerActor :: Dungeon -> Maybe Actor
-getPlayerActor d = find isPlayer $ d ^. actors
+getPlayerActor = find isPlayer . getActors
 
 getActors :: Dungeon -> [Actor]
 getActors d = d ^. actors
@@ -155,7 +155,7 @@ popActorAt c = popActorIf (\x -> x ^. A.position == c)
 
 popActorIf :: (Actor -> Bool) -> Dungeon -> (Maybe Actor, Dungeon)
 popActorIf f d =
-    let xs = d ^. actors
+    let xs = getActors d
      in case findIndex f xs of
             Just x ->
                 let actor = xs !! x
@@ -192,7 +192,7 @@ transparentMap :: TileCollection -> Dungeon -> BoolMap
 transparentMap ts d = TileMap.transparentMap ts (d ^. tileMap)
 
 npcs :: Dungeon -> [Actor]
-npcs d = filter (not . isPlayer) $ d ^. actors
+npcs = filter (not . isPlayer) . getActors
 
 mapWidthAndHeight :: Dungeon -> V2 Int
 mapWidthAndHeight d = TileMap.widthAndHeight (d ^. tileMap)
