@@ -24,6 +24,7 @@ module Dungeon.Map.Tile
 import           Coord            (Coord)
 import           Data.Array       (Array, bounds, (!), (//))
 import           Data.Binary      (Binary)
+import           Data.Maybe       (isJust)
 import qualified Dungeon.Map      as M
 import           Dungeon.Map.Bool (BoolMap)
 import           GHC.Generics     (Generic)
@@ -43,8 +44,10 @@ tileMap = TileMap
 widthAndHeight :: TileMap -> V2 Int
 widthAndHeight (TileMap m) = snd (bounds m) + V2 1 1
 
-changeTileAt :: Coord -> TileId -> TileMap -> TileMap
-changeTileAt c i (TileMap m) = TileMap $ m // [(c, i)]
+changeTileAt :: Coord -> TileId -> TileMap -> Maybe TileMap
+changeTileAt c i (TileMap m)
+    | isJust $ tileIdAt c (TileMap m) = Just $ TileMap $ m // [(c, i)]
+    | otherwise = Nothing
 
 walkableMap :: TileCollection -> TileMap -> BoolMap
 walkableMap tc (TileMap m) = isWalkable . (tc !) <$> m

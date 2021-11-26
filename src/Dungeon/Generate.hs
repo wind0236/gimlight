@@ -73,7 +73,9 @@ generateDungeonAndAppend zipper g ig ts cfg ident =
             (getFocused zipper, generatedDungeon)
     newZipper =
         appendNode newLowerDungeon $
-        modify (changeTile upperStairsPosition downStairs) $
+        modify
+            (fromMaybe (error "Failed to change the tile.") .
+             changeTile upperStairsPosition downStairs) $
         modify (const newUpperDungeon) zipper
     zipperFocusingNext =
         fromMaybe
@@ -93,7 +95,12 @@ generateDungeon ::
     -> Identifier
     -> (Dungeon, Coord, StdGen, IndexGenerator)
 generateDungeon g ig cfg ident =
-    ( dungeon (changeTileAt enterPosition upStairs tiles) actors items ident
+    ( dungeon
+          (fromMaybe (error "Failed to change the tile.") $
+           changeTileAt enterPosition upStairs tiles)
+          actors
+          items
+          ident
     , enterPosition
     , g'''
     , ig')
@@ -160,7 +167,10 @@ generateDungeonAccum itemsAcc enemiesAcc acc tileMap playerPos g ig cfg
 createRoom :: Room -> TileMap -> TileMap
 createRoom room r =
     foldl
-        (\acc x -> changeTileAt x floorTile acc)
+        (\acc x ->
+             fromMaybe
+                 (error "Failed to change a tile.")
+                 (changeTileAt x floorTile acc))
         r
         [V2 x y | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 

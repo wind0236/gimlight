@@ -102,8 +102,8 @@ dungeon t e i ident =
 getIdentifier :: Dungeon -> Identifier
 getIdentifier d = d ^. identifier
 
-changeTile :: Coord -> TileId -> Dungeon -> Dungeon
-changeTile c t d = d & tileMap %~ changeTileAt c t
+changeTile :: Coord -> TileId -> Dungeon -> Maybe Dungeon
+changeTile c t d = (\x -> d & tileMap .~ x) <$> changeTileAt c t (d ^. tileMap)
 
 addAscendingAndDescendingStiars ::
        StairsPair -> (Dungeon, Dungeon) -> (Dungeon, Dungeon)
