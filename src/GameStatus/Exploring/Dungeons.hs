@@ -12,11 +12,11 @@ import           Action                     (Action,
                                              ActionStatus (Failed))
 import           Actor                      (Actor, isPlayer, position)
 import qualified Actor.NpcBehavior          as NPC
-import           Control.Lens               ((%~), (&), (.~), (^.))
+import           Control.Lens               ((&), (.~), (^.))
 import           Control.Monad.Trans.Writer (Writer)
 import           Data.Foldable              (find)
 import           Data.Maybe                 (fromMaybe)
-import           Dungeon                    (Dungeon, actors, ascendingStairs,
+import           Dungeon                    (Dungeon, ascendingStairs,
                                              descendingStairs,
                                              positionOnParentMap, updateMap)
 import qualified Dungeon                    as D
@@ -51,7 +51,7 @@ ascendStairsAtPlayerPosition ts ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (updateMap ts $ d & actors %~ (:) p))
+                     (updateMap ts $ D.pushActor p d))
             g
 
 descendStairsAtPlayerPosition :: TileCollection -> Dungeons -> Maybe Dungeons
@@ -81,7 +81,7 @@ descendStairsAtPlayerPosition ts ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (updateMap ts $ d & actors %~ (:) p))
+                     (updateMap ts $ D.pushActor p d))
             g
 
 exitDungeon :: Dungeons -> Maybe Dungeons
@@ -97,7 +97,7 @@ exitDungeon ds = newZipper
     zipperFocusingGlobalMap = goUp zipperWithoutPlayer
     newZipper =
         case (zipperFocusingGlobalMap, newPlayer) of
-            (Just g, Just p) -> Just $ modify (\d -> d & actors %~ (:) p) g
+            (Just g, Just p) -> Just $ modify (D.pushActor p) g
             _                -> Nothing
 
 doPlayerAction ::

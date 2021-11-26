@@ -26,7 +26,6 @@ module Dungeon
     , isPositionInDungeon
     , npcs
     , positionOnParentMap
-    , actors
     , tileMap
     , visible
     , explored

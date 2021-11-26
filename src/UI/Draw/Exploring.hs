@@ -23,7 +23,7 @@ import           Data.Maybe                      (fromMaybe, mapMaybe)
 import           Data.Vector.Split               (chunksOf)
 import qualified Data.Vector.Storable            as V
 import           Data.Vector.Storable.ByteString (vectorToByteString)
-import           Dungeon                         (Dungeon, actors, explored,
+import           Dungeon                         (Dungeon, explored, getActors,
                                                   items, mapWidthAndHeight,
                                                   playerPosition, tileMap,
                                                   visible)
@@ -180,7 +180,7 @@ mapItems eh = mapMaybe itemToImage $ d ^. items
     itemPositionOnDisplay item = I.getPosition item - topLeftCoord d
 
 mapActors :: ExploringHandler -> [GameWidgetNode]
-mapActors eh = mapMaybe actorToImage $ d ^. actors
+mapActors eh = mapMaybe actorToImage $ getActors d
   where
     d = getCurrentDungeon eh
     leftPadding actor =
