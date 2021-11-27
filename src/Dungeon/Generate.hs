@@ -199,12 +199,12 @@ placeItemsAccum items g r n = placeItemsAccum newItems g''' r (n - 1)
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
     (prob, g''') = random g'' :: (Float, StdGen)
-    newItems =
-        if V2 x y `notElem` map I.getPosition items
-            then if prob < 0.8
-                     then herb (V2 x y) : items
-                     else sampleBook (V2 x y) : items
-            else items
+    newItems
+        | V2 x y `notElem` map I.getPosition items = newItem : items
+        | otherwise = items
+    newItem
+        | prob < 0.8 = herb (V2 x y)
+        | otherwise = sampleBook (V2 x y)
 
 newMonster :: StdGen -> IndexGenerator -> ((Actor, IndexGenerator), StdGen)
 newMonster g ig =
