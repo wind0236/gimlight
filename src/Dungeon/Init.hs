@@ -15,7 +15,7 @@ initDungeon ig ts = do
     (beaeve', ig'') <- beaeve ig'
     let d =
             fromMaybe (error "Failed to initialize the first map.") $
-            updateMap ts $ pushActor player' beaeve'
+            updateMap ts $ pushActor (V2 5 5) player' beaeve'
     return (d, ig'')
   where
-    (player', ig') = player ig (V2 5 5)
+    (player', ig') = player ig

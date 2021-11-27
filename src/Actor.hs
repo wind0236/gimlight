@@ -22,7 +22,6 @@ module Actor
     , ActorKind(FriendlyNpc)
     , attackFromTo
     , actor
-    , position
     , pathToDestination
     , standingImagePath
     , walkingImagePath
@@ -62,7 +61,6 @@ instance Binary ActorKind
 data Actor =
     Actor
         { _index             :: Index
-        , _position          :: Coord
         , _identifier        :: Identifier
         , _status            :: Status
         , _pathToDestination :: [Coord]
@@ -81,7 +79,6 @@ instance Binary Actor
 
 actor ::
        IndexGenerator
-    -> Coord
     -> Identifier
     -> Status
     -> ActorKind
@@ -89,13 +86,12 @@ actor ::
     -> Text
     -> Text
     -> (Actor, IndexGenerator)
-actor ig position' id' st ak talkMessage' walkingImagePath' standingImagePath' =
+actor ig id' st ak talkMessage' walkingImagePath' standingImagePath' =
     (a, newGenerator)
   where
     a =
         Actor
             { _index = idx
-            , _position = position'
             , _identifier = id'
             , _status = st
             , _pathToDestination = []
@@ -109,16 +105,10 @@ actor ig position' id' st ak talkMessage' walkingImagePath' standingImagePath' =
     (idx, newGenerator) = generate ig
 
 monster ::
-       IndexGenerator
-    -> Coord
-    -> Identifier
-    -> Status
-    -> Text
-    -> (Actor, IndexGenerator)
-monster ig position' name' st walking =
+       IndexGenerator -> Identifier -> Status -> Text -> (Actor, IndexGenerator)
+monster ig name' st walking =
     actor
         ig
-        position'
         name'
         st
         Monster
@@ -126,11 +116,10 @@ monster ig position' name' st walking =
         walking
         "images/sample_standing_picture.png"
 
-player :: IndexGenerator -> Coord -> (Actor, IndexGenerator)
-player ig c =
+player :: IndexGenerator -> (Actor, IndexGenerator)
+player ig =
     actor
         ig
-        c
         Identifier.Player
         st
         Player

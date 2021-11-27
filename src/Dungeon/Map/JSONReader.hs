@@ -9,19 +9,19 @@ import           Control.Monad    (guard)
 import           Data.Aeson.Lens  (_Array, _Integer, key, values)
 import           Data.Array       (array)
 import           Data.Vector      (toList)
-import           Dungeon.Map.Tile (TileMap, tileMap)
+import           Dungeon.Map.Cell (CellMap, cellMap)
 import           Linear.V2        (V2 (V2))
 
-readMapFile :: FilePath -> IO (Maybe TileMap)
+readMapFile :: FilePath -> IO (Maybe CellMap)
 readMapFile path = parseMapFile <$> readFile path
 
-parseMapFile :: String -> Maybe TileMap
+parseMapFile :: String -> Maybe CellMap
 parseMapFile json = do
     V2 height width <- getMapSize json
     tiles <- getTiles json
     guard $ height * width == length tiles
     guard $ all (>= 0) tiles
-    Just $ tileMap $ array (V2 0 0, V2 (width - 1) (height - 1)) $
+    Just $ cellMap $ array (V2 0 0, V2 (width - 1) (height - 1)) $
         zip [V2 x y | y <- [0 .. height - 1], x <- [0 .. width - 1]] tiles
 
 getMapSize :: String -> Maybe (V2 Int)

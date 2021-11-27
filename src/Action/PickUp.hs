@@ -5,7 +5,7 @@ module Action.PickUp
 import           Action               (Action, ActionResult (ActionResult),
                                        ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
-import           Actor                (inventoryItems, position)
+import           Actor                (inventoryItems)
 import           Actor.Inventory      (Inventory, addItem)
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)
@@ -14,7 +14,7 @@ import           Item                 (Item, getName)
 import qualified Localization.Texts   as T
 
 pickUpAction :: Action
-pickUpAction e _ d = maybe youGotNothing pickUpItem item
+pickUpAction position e _ d = maybe youGotNothing pickUpItem item
   where
     pickUpItem i =
         case addItem i (e ^. inventoryItems) of
@@ -27,13 +27,14 @@ pickUpAction e _ d = maybe youGotNothing pickUpItem item
             ActionResult
                 Ok
                 (pushActor
+                     position
                      (e & inventoryItems .~ newInventory)
                      dungeonAfterPickingUp)
                 []
     bagIsFull = do
         tell [T.bagIsFull]
-        return $ ActionResult Failed (pushActor e d) []
+        return $ ActionResult Failed (pushActor position e d) []
     youGotNothing = do
         tell [T.youGotNothing]
-        return $ ActionResult Failed (pushActor e d) []
-    (item, dungeonAfterPickingUp) = popItemAt (e ^. position) d
+        return $ ActionResult Failed (pushActor position e d) []
+    (item, dungeonAfterPickingUp) = popItemAt position d

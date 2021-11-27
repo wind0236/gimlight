@@ -5,15 +5,15 @@ module Dungeon.Predefined.GlobalMap
 import           Data.Maybe             (fromMaybe)
 import           Dungeon                (Dungeon, dungeon)
 import           Dungeon.Identifier     (Identifier (GlobalMap))
+import           Dungeon.Map.Cell       (CellMap)
 import qualified Dungeon.Map.JSONReader as JSONReader
-import           Dungeon.Map.Tile       (TileMap)
 
 globalMap :: IO Dungeon
 globalMap = do
     tileMap <- readMapFile
-    return $ dungeon tileMap [] [] GlobalMap
+    return $ dungeon tileMap [] GlobalMap
 
-readMapFile :: IO TileMap
+readMapFile :: IO CellMap
 readMapFile = do
     tileMap <- JSONReader.readMapFile "maps/global_map.json"
     return $

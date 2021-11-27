@@ -1,0 +1,133 @@
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections   #-}
+
+module Dungeon.Map.Cell
+    ( CellMap
+    , cellMap
+    , allWallTiles
+    , changeTileAt
+    , walkableMap
+    , widthAndHeight
+    , isWalkableAt
+    , locateActorAt
+    , removeActorAt
+    , removeActorIf
+    , positionsAndActors
+    , transparentMap
+    , tileIdAt
+    , cellAt
+    ) where
+
+import           Actor            (Actor)
+import           Control.Lens     (makeLenses, (&), (.~), (?~), (^.))
+import           Coord            (Coord)
+import           Data.Array       (Array, assocs, bounds, (!), (//))
+import           Data.Binary      (Binary)
+import           Data.Foldable    (find)
+import           Data.Maybe       (isJust, isNothing, mapMaybe)
+import qualified Dungeon.Map      as M
+import           Dungeon.Map.Bool (BoolMap)
+import           Dungeon.Map.Tile (TileCollection, TileId, wallTile)
+import qualified Dungeon.Map.Tile as Tile
+import           GHC.Generics     (Generic)
+import           Linear.V2        (V2 (V2))
+
+data Cell =
+    Cell
+        { _tileId :: TileId
+        , _actor  :: Maybe Actor
+        }
+    deriving (Show, Ord, Eq, Generic)
+
+makeLenses ''Cell
+
+instance Binary Cell
+
+isWalkable :: TileCollection -> Cell -> Bool
+isWalkable tc c = Tile.isWalkable (tc ! (c ^. tileId)) && isNothing (c ^. actor)
+
+isTransparent :: TileCollection -> Cell -> Bool
+isTransparent tc c = Tile.isTransparent (tc ! (c ^. tileId))
+
+locateActor :: Actor -> Cell -> Maybe Cell
+locateActor a c
+    | isJust (c ^. actor) = Nothing
+    | otherwise = Just $ c & actor ?~ a
+
+removeActor :: Cell -> Maybe (Actor, Cell)
+removeActor c =
+    case c ^. actor of
+        Just a  -> Just (a, c & actor .~ Nothing)
+        Nothing -> Nothing
+
+newtype CellMap =
+    CellMap (Array (V2 Int) Cell)
+    deriving (Show, Ord, Eq, Generic)
+
+instance Binary CellMap
+
+cellMap :: Array (V2 Int) TileId -> CellMap
+cellMap = CellMap . fmap (`Cell` Nothing)
+
+allWallTiles :: V2 Int -> CellMap
+allWallTiles wh = CellMap $ M.generate wh (const (Cell wallTile Nothing))
+
+widthAndHeight :: CellMap -> V2 Int
+widthAndHeight (CellMap m) = snd (bounds m) + V2 1 1
+
+changeTileAt :: Coord -> TileId -> CellMap -> Maybe CellMap
+changeTileAt c i (CellMap m)
+    | isJust $ tileIdAt c (CellMap m) = Just $ CellMap $ m // [(c, newTile)]
+    | otherwise = Nothing
+  where
+    newTile = m ! c & tileId .~ i
+
+walkableMap :: TileCollection -> CellMap -> BoolMap
+walkableMap tc (CellMap cm) = isWalkable tc <$> cm
+
+transparentMap :: TileCollection -> CellMap -> BoolMap
+transparentMap tc (CellMap cm) = isTransparent tc <$> cm
+
+isWalkableAt :: Coord -> TileCollection -> CellMap -> Bool
+isWalkableAt c tc t =
+    case cellAt c t of
+        Just x  -> isWalkable tc x
+        Nothing -> False
+
+positionsAndActors :: CellMap -> [(Coord, Actor)]
+positionsAndActors (CellMap cm) = mapMaybe mapStep $ assocs cm
+  where
+    mapStep (coord, cell) = (coord, ) <$> cell ^. actor
+
+locateActorAt :: Actor -> Coord -> CellMap -> Maybe CellMap
+locateActorAt a c (CellMap cm)
+    | coordIsInRange c (CellMap cm) =
+        (\x -> CellMap (cm // [(c, x)])) <$> newCell
+    | otherwise = Nothing
+  where
+    newCell = locateActor a (cm ! c)
+
+removeActorAt :: Coord -> CellMap -> Maybe (Actor, CellMap)
+removeActorAt c (CellMap cm) =
+    case cellAt c (CellMap cm) >>= removeActor of
+        Just (a, newCell) -> Just (a, CellMap $ cm // [(c, newCell)])
+        Nothing           -> Nothing
+
+removeActorIf :: (Actor -> Bool) -> CellMap -> Maybe (Actor, CellMap)
+removeActorIf f cm = position >>= flip removeActorAt cm
+  where
+    position = fst <$> find (f . snd) (positionsAndActors cm)
+
+tileIdAt :: Coord -> CellMap -> Maybe TileId
+tileIdAt c t = (^. tileId) <$> cellAt c t
+
+cellAt :: Coord -> CellMap -> Maybe Cell
+cellAt c (CellMap m)
+    | coordIsInRange c (CellMap m) = Just $ m ! c
+    | otherwise = Nothing
+
+coordIsInRange :: Coord -> CellMap -> Bool
+coordIsInRange c (CellMap m) = c >= lower && c <= upper
+  where
+    (lower, upper) = bounds m

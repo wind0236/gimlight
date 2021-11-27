@@ -2,29 +2,42 @@ module Action.Melee
     ( meleeAction
     ) where
 
-import           Action       (Action, ActionResult (ActionResult),
-                               ActionResultWithLog, ActionStatus (Failed, Ok))
-import           Actor        (Actor, position)
-import qualified Actor        as A
-import           Control.Lens ((^.))
-import           Dungeon      (Dungeon, popActorAt, pushActor)
-import           Linear.V2    (V2)
+import           Action    (Action, ActionResult (ActionResult),
+                            ActionResultWithLog, ActionStatus (Failed, Ok))
+import           Actor     (Actor)
+import qualified Actor     as A
+import           Coord     (Coord)
+import           Dungeon   (Dungeon, popActorAt, pushActor)
+import           Linear.V2 (V2)
 
 meleeAction :: V2 Int -> Action
-meleeAction offset src _ dungeon = result
+meleeAction offset srcPosition src _ dungeon = result
   where
-    dstPosition = src ^. position + offset
+    dstPosition = srcPosition + offset
     (target, dungeonWithoutTarget) = popActorAt dstPosition dungeon
     result =
         case target of
-            Nothing -> return $ ActionResult Failed (pushActor src dungeon) []
-            Just defender -> attackFromTo src defender dungeonWithoutTarget
+            Nothing ->
+                return $
+                ActionResult Failed (pushActor srcPosition src dungeon) []
+            Just defender ->
+                attackFromTo
+                    srcPosition
+                    dstPosition
+                    src
+                    defender
+                    dungeonWithoutTarget
 
-attackFromTo :: Actor -> Actor -> Dungeon -> ActionResultWithLog
-attackFromTo attacker defender d = do
+attackFromTo ::
+       Coord -> Coord -> Actor -> Actor -> Dungeon -> ActionResultWithLog
+attackFromTo attackerPosition defenderPosition attacker defender d = do
     (newAttacker, newDefender) <- A.attackFromTo attacker defender
     let (newDungeon, killed) =
             case newDefender of
-                Just x  -> (pushActor newAttacker $ pushActor x d, [])
-                Nothing -> (pushActor newAttacker d, [defender])
+                Just x ->
+                    ( pushActor attackerPosition newAttacker $
+                      pushActor defenderPosition x d
+                    , [])
+                Nothing ->
+                    (pushActor attackerPosition newAttacker d, [defender])
     return $ ActionResult Ok newDungeon killed

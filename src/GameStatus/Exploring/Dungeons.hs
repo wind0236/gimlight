@@ -10,9 +10,9 @@ module GameStatus.Exploring.Dungeons
 import           Action                     (Action,
                                              ActionResult (killed, newDungeon, status),
                                              ActionStatus (Failed))
-import           Actor                      (Actor, isPlayer, position)
+import           Actor                      (Actor, isPlayer)
 import qualified Actor.NpcBehavior          as NPC
-import           Control.Lens               ((&), (.~), (^.))
+import           Control.Lens               ((^.))
 import           Control.Monad.Trans.Writer (Writer)
 import           Data.Foldable              (find)
 import           Data.Maybe                 (fromMaybe)
@@ -32,56 +32,49 @@ ascendStairsAtPlayerPosition :: TileCollection -> Dungeons -> Maybe Dungeons
 ascendStairsAtPlayerPosition ts ds = newZipper
   where
     (player, zipperWithoutPlayer) = popPlayer ds
-    newPlayer =
-        case (player, newPosition) of
-            (Just p, Just pos) -> Just $ p & position .~ pos
-            _                  -> Nothing
     ascendable =
         (downStairs <$> getFocused ds ^. ascendingStairs) ==
-        fmap (^. position) player
+        D.playerPosition (getFocused ds)
     zipperFocusingNextDungeon = goUp zipperWithoutPlayer
     newPosition = upStairs <$> getFocused ds ^. ascendingStairs
     newZipper =
-        case (zipperFocusingNextDungeon, newPlayer, ascendable) of
-            (Just g, Just p, True) -> updateMapOrError g p
-            _                      -> Nothing
-    updateMapOrError g p =
+        case (zipperFocusingNextDungeon, newPosition, player, ascendable) of
+            (Just g, Just pos, Just p, True) -> updateMapOrError g pos p
+            _                                -> Nothing
+    updateMapOrError g pos p =
         Just $
         modify
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (updateMap ts $ D.pushActor p d))
+                     (updateMap ts $ D.pushActor pos p d))
             g
 
 descendStairsAtPlayerPosition :: TileCollection -> Dungeons -> Maybe Dungeons
 descendStairsAtPlayerPosition ts ds = newZipper
   where
     (player, zipperWithoutPlayer) = popPlayer ds
-    newPlayer =
-        case (player, newPosition) of
-            (Just p, Just pos) -> Just $ p & position .~ pos
-            _                  -> Nothing
     zipperFocusingNextDungeon =
         goDownBy
-            (\x -> x ^. positionOnParentMap == fmap (^. position) player)
+            (\x -> x ^. positionOnParentMap == currentPosition)
             zipperWithoutPlayer
     newPosition =
         downStairs <$>
         find
-            (\(StairsPair from _) -> Just from == fmap (^. position) player)
+            (\(StairsPair from _) -> Just from == currentPosition)
             (getFocused ds ^. descendingStairs)
+    currentPosition = D.playerPosition $ getFocused ds
     newZipper =
-        case (zipperFocusingNextDungeon, newPlayer) of
-            (Just g, Just p) -> updateMapOrError g p
-            _                -> Nothing
-    updateMapOrError g p =
+        case (zipperFocusingNextDungeon, newPosition, player) of
+            (Just g, Just pos, Just p) -> updateMapOrError g pos p
+            _                          -> Nothing
+    updateMapOrError g pos p =
         Just $
         modify
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (updateMap ts $ D.pushActor p d))
+                     (updateMap ts $ D.pushActor pos p d))
             g
 
 exitDungeon :: Dungeons -> Maybe Dungeons
@@ -90,15 +83,11 @@ exitDungeon ds = newZipper
     (player, zipperWithoutPlayer) = popPlayer ds
     currentDungeon = getFocused ds
     newPosition = currentDungeon ^. positionOnParentMap
-    newPlayer =
-        case (player, newPosition) of
-            (Just p, Just pos) -> Just $ p & position .~ pos
-            _                  -> Nothing
     zipperFocusingGlobalMap = goUp zipperWithoutPlayer
     newZipper =
-        case (zipperFocusingGlobalMap, newPlayer) of
-            (Just g, Just p) -> Just $ modify (D.pushActor p) g
-            _                -> Nothing
+        case (zipperFocusingGlobalMap, newPosition, player) of
+            (Just g, Just pos, Just p) -> Just $ modify (D.pushActor pos p) g
+            _                          -> Nothing
 
 doPlayerAction ::
        Action
@@ -112,7 +101,8 @@ doPlayerAction action ts ds = result
     result =
         case player of
             Just p -> do
-                actionResult <- action p ts currentDungeonWithoutPlayer
+                actionResult <-
+                    action playerPos p ts currentDungeonWithoutPlayer
                 let statusAndNewDungeon =
                         (status actionResult, newDungeon actionResult)
                 return $
@@ -122,6 +112,10 @@ doPlayerAction action ts ds = result
                          , killed actionResult))
                         statusAndNewDungeon
             Nothing -> return (Failed, ds, [])
+    playerPos =
+        fromMaybe
+            (error "Failed to get the player position")
+            (D.playerPosition $ getFocused ds)
 
 handleNpcTurns ::
        TileCollection -> Dungeons -> Writer MessageLog (Dungeons, [Actor])

@@ -7,6 +7,7 @@ module Action
 
 import           Actor                      (Actor)
 import           Control.Monad.Trans.Writer (Writer)
+import           Coord                      (Coord)
 import           Dungeon                    (Dungeon)
 import           Dungeon.Map.Tile           (TileCollection)
 import           Item.Book                  (Book)
@@ -24,6 +25,6 @@ data ActionResult =
         , killed     :: [Actor]
         }
 
-type Action = Actor -> TileCollection -> Dungeon -> ActionResultWithLog
+type Action = Coord -> Actor -> TileCollection -> Dungeon -> ActionResultWithLog
 
 type ActionResultWithLog = Writer MessageLog ActionResult

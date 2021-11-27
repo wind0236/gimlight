@@ -114,7 +114,7 @@ getQuests :: ExploringHandler -> QuestCollection
 getQuests e = e ^. quests
 
 getPlayerActor :: ExploringHandler -> Maybe Actor
-getPlayerActor = D.getPlayerActor . getCurrentDungeon
+getPlayerActor = fmap snd . D.getPlayerActor . getCurrentDungeon
 
 getPlayerPosition :: ExploringHandler -> Maybe Coord
 getPlayerPosition = D.playerPosition . getCurrentDungeon

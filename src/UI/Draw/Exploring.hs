@@ -9,7 +9,6 @@ import           Actor                           (getCurrentExperiencePoint,
                                                   getExperiencePointForNextLevel,
                                                   getHp, getLevel, getMaxHp,
                                                   getPower, walkingImagePath)
-import qualified Actor                           as A
 import           Codec.Picture                   (Image (imageData),
                                                   PixelRGBA8 (PixelRGBA8),
                                                   pixelMap)
@@ -23,11 +22,11 @@ import           Data.Maybe                      (fromMaybe, mapMaybe)
 import           Data.Vector.Split               (chunksOf)
 import qualified Data.Vector.Storable            as V
 import           Data.Vector.Storable.ByteString (vectorToByteString)
-import           Dungeon                         (Dungeon, explored, getActors,
-                                                  items, mapWidthAndHeight,
-                                                  playerPosition, tileMap,
-                                                  visible)
-import           Dungeon.Map.Tile                (tileIdAt)
+import           Dungeon                         (Dungeon, cellMap, explored,
+                                                  getPositionsAndActors, items,
+                                                  mapWidthAndHeight,
+                                                  playerPosition, visible)
+import           Dungeon.Map.Cell                (tileIdAt)
 import           GameConfig                      (GameConfig)
 import           GameStatus.Exploring            (ExploringHandler,
                                                   getCurrentDungeon,
@@ -149,7 +148,7 @@ makeMap tileGraphics eh = createSingle () def {singleRender = render}
     tileId c =
         fromMaybe
             (error "Failed to get the tile ID.")
-            (tileIdAt c (d ^. tileMap))
+            (tileIdAt c (d ^. cellMap))
     applyOpacity c (PixelRGBA8 r g b a)
         | isVisible c = PixelRGBA8 r g b a
         | isExplored c = PixelRGBA8 (r `div` 2) (g `div` 2) (b `div` 2) a
@@ -180,23 +179,24 @@ mapItems eh = mapMaybe itemToImage $ d ^. items
     itemPositionOnDisplay item = I.getPosition item - topLeftCoord d
 
 mapActors :: ExploringHandler -> [GameWidgetNode]
-mapActors eh = mapMaybe actorToImage $ getActors d
+mapActors eh = mapMaybe actorToImage $ getPositionsAndActors d
   where
     d = getCurrentDungeon eh
     leftPadding actor =
         fromIntegral $ actorPositionOnDisplay actor ^. _x * tileWidth
     topPadding actor =
         fromIntegral $ (actorPositionOnDisplay actor ^. _y) * tileHeight
-    style actor = [paddingL $ leftPadding actor, paddingT $ topPadding actor]
-    actorPositionOnDisplay actor = actor ^. A.position - topLeftCoord d
-    isActorDrawed actor =
-        let displayPosition = actorPositionOnDisplay actor
-            isVisible = (d ^. visible) ! (actor ^. A.position)
+    style position =
+        [paddingL $ leftPadding position, paddingT $ topPadding position]
+    actorPositionOnDisplay position = position - topLeftCoord d
+    isActorDrawed position =
+        let displayPosition = actorPositionOnDisplay position
+            isVisible = (d ^. visible) ! position
          in V2 0 0 <= displayPosition &&
             displayPosition < V2 tileColumns tileRows && isVisible
-    actorToImage actor =
-        guard (isActorDrawed actor) >>
-        return (image (actor ^. walkingImagePath) `styleBasic` style actor)
+    actorToImage (position, actor) =
+        guard (isActorDrawed position) >>
+        return (image (actor ^. walkingImagePath) `styleBasic` style position)
 
 topLeftCoord :: Dungeon -> Coord
 topLeftCoord d = V2 x y

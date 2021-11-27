@@ -4,30 +4,29 @@ module Action.Drop
 
 import           Action               (Action, ActionResult (ActionResult),
                                        ActionStatus (Failed, Ok))
-import           Actor                (position, removeNthItem)
-import           Control.Lens         ((^.))
+import           Actor                (removeNthItem)
 import           Control.Monad.Writer (tell)
 import           Dungeon              (pushActor, pushItem)
 import           Item                 (Item, getName, setPosition)
 import qualified Localization.Texts   as T
 
 dropAction :: Int -> Action
-dropAction n e tiles d =
+dropAction n position e tiles d =
     case item of
-        Just x -> dropItem x newActor tiles d
+        Just x -> dropItem x position newActor tiles d
         Nothing -> do
             tell [T.whatToDrop]
-            return $ ActionResult Failed (pushActor e d) []
+            return $ ActionResult Failed (pushActor position e d) []
   where
     (item, newActor) = removeNthItem n e
 
 dropItem :: Item -> Action
-dropItem item actor _ dungeon = do
+dropItem item position actor _ dungeon = do
     tell [T.youDropped $ getName item]
     return $
         ActionResult
             Ok
-            (pushActor actor $ pushItem itemWithNewPosition dungeon)
+            (pushActor position actor $ pushItem itemWithNewPosition dungeon)
             []
   where
-    itemWithNewPosition = setPosition (actor ^. position) item
+    itemWithNewPosition = setPosition position item

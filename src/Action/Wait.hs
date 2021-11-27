@@ -7,4 +7,4 @@ import           Action  (Action, ActionResult (ActionResult),
 import           Dungeon (pushActor)
 
 waitAction :: Action
-waitAction e _ d = return $ ActionResult Ok (pushActor e d) []
+waitAction position e _ d = return $ ActionResult Ok (pushActor position e d) []

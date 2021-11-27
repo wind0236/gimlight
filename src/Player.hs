@@ -12,13 +12,11 @@ import           Action.Drop              (dropAction)
 import           Action.Melee             (meleeAction)
 import           Action.Move              (moveAction)
 import           Action.PickUp            (pickUpAction)
-import           Actor                    (Actor, getTalkingPart, isMonster,
-                                           position)
+import           Actor                    (Actor, getTalkingPart, isMonster)
 import qualified Actor                    as A
-import           Control.Lens             ((^.))
 import           Data.Foldable            (find)
 import           Data.Maybe               (fromMaybe)
-import           Dungeon                  (getActors, isTown)
+import           Dungeon                  (getPositionsAndActors, isTown)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, SelectingItem, Talking))
 import           GameStatus.Exploring     (ExploringHandler, doPlayerAction,
                                            getCurrentDungeon, getPlayerActor,
@@ -90,8 +88,10 @@ playerBumpAction offset eh = action eh
             Just x  -> meleeOrTalk offset x
             Nothing -> moveOrExitMap offset
     actorAtDestination =
-        find (\x -> x ^. position == destination) $
-        getActors $ getCurrentDungeon eh
+        snd <$>
+        find
+            (\(x, _) -> x == destination)
+            (getPositionsAndActors $ getCurrentDungeon eh)
     destination =
         case getPlayerPosition eh of
             Just p  -> p + offset

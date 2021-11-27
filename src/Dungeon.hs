@@ -24,9 +24,10 @@ module Dungeon
     , calculateFovAt
     , isTown
     , isPositionInDungeon
-    , npcs
+    , positionsAndNpcs
+    , getPositionsAndActors
     , positionOnParentMap
-    , tileMap
+    , cellMap
     , visible
     , explored
     , items
@@ -39,7 +40,6 @@ module Dungeon
     ) where
 
 import           Actor                (Actor, isPlayer)
-import qualified Actor                as A
 import           Control.Lens         (makeLenses, (%~), (&), (.~), (^.))
 import           Coord                (Coord)
 import           Data.Array.Base      (assocs)
@@ -49,13 +49,15 @@ import           Data.List            (findIndex)
 import           Dungeon.Identifier   (Identifier)
 import qualified Dungeon.Identifier   as Identifier
 import           Dungeon.Map.Bool     (BoolMap)
+import           Dungeon.Map.Cell     (CellMap, changeTileAt, locateActorAt,
+                                       positionsAndActors, removeActorAt,
+                                       removeActorIf, walkableMap,
+                                       widthAndHeight)
+import qualified Dungeon.Map.Cell     as Cell
 import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
                                        updateExploredMap)
 import           Dungeon.Map.Fov      (Fov, calculateFov, initFov)
-import           Dungeon.Map.Tile     (TileCollection, TileId, TileMap,
-                                       changeTileAt, walkableMap,
-                                       widthAndHeight)
-import qualified Dungeon.Map.Tile     as TileMap
+import           Dungeon.Map.Tile     (TileCollection, TileId)
 import           Dungeon.Stairs       (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics         (Generic)
 import           Item                 (Item)
@@ -64,10 +66,9 @@ import           Linear.V2            (V2 (..))
 
 data Dungeon =
     Dungeon
-        { _tileMap             :: TileMap
+        { _cellMap             :: CellMap
         , _visible             :: Fov
         , _explored            :: ExploredMap
-        , _actors              :: [Actor]
         , _items               :: [Item]
         , _positionOnParentMap :: Maybe Coord
           -- Do not integrate `_ascendingStairs` with
@@ -84,13 +85,12 @@ makeLenses ''Dungeon
 
 instance Binary Dungeon
 
-dungeon :: TileMap -> [Actor] -> [Item] -> Identifier -> Dungeon
-dungeon t e i ident =
+dungeon :: CellMap -> [Item] -> Identifier -> Dungeon
+dungeon c i ident =
     Dungeon
-        { _tileMap = t
-        , _visible = initFov (widthAndHeight t)
-        , _explored = initExploredMap (widthAndHeight t)
-        , _actors = e
+        { _cellMap = c
+        , _visible = initFov (widthAndHeight c)
+        , _explored = initExploredMap (widthAndHeight c)
         , _items = i
         , _positionOnParentMap = Nothing
         , _ascendingStairs = Nothing
@@ -102,7 +102,7 @@ getIdentifier :: Dungeon -> Identifier
 getIdentifier d = d ^. identifier
 
 changeTile :: Coord -> TileId -> Dungeon -> Maybe Dungeon
-changeTile c t d = (\x -> d & tileMap .~ x) <$> changeTileAt c t (d ^. tileMap)
+changeTile c t d = (\x -> d & cellMap .~ x) <$> changeTileAt c t (d ^. cellMap)
 
 addAscendingAndDescendingStiars ::
        StairsPair -> (Dungeon, Dungeon) -> (Dungeon, Dungeon)
@@ -136,32 +136,37 @@ calculateFovAt :: Coord -> TileCollection -> Dungeon -> BoolMap
 calculateFovAt c ts d = calculateFov c (transparentMap ts d)
 
 playerPosition :: Dungeon -> Maybe Coord
-playerPosition d = (^. A.position) <$> getPlayerActor d
+playerPosition d = fst <$> getPlayerActor d
 
-getPlayerActor :: Dungeon -> Maybe Actor
-getPlayerActor = find isPlayer . getActors
+getPlayerActor :: Dungeon -> Maybe (Coord, Actor)
+getPlayerActor = find (isPlayer . snd) . positionsAndActors . (^. cellMap)
 
 getActors :: Dungeon -> [Actor]
-getActors d = d ^. actors
+getActors = map snd . getPositionsAndActors
 
-pushActor :: Actor -> Dungeon -> Dungeon
-pushActor e d = d & actors %~ (e :)
+getPositionsAndActors :: Dungeon -> [(Coord, Actor)]
+getPositionsAndActors = positionsAndActors . (^. cellMap)
+
+pushActor :: Coord -> Actor -> Dungeon -> Dungeon
+pushActor p e d =
+    case locateActorAt e p (d ^. cellMap) of
+        Just x  -> d & cellMap .~ x
+        Nothing -> error "Failed to push an actor."
 
 pushItem :: Item -> Dungeon -> Dungeon
 pushItem i d = d & items %~ (i :)
 
 popActorAt :: Coord -> Dungeon -> (Maybe Actor, Dungeon)
-popActorAt c = popActorIf (\x -> x ^. A.position == c)
+popActorAt c d =
+    case removeActorAt c (d ^. cellMap) of
+        Just (a, newMap) -> (Just a, d & cellMap .~ newMap)
+        Nothing          -> (Nothing, d)
 
 popActorIf :: (Actor -> Bool) -> Dungeon -> (Maybe Actor, Dungeon)
 popActorIf f d =
-    let xs = getActors d
-     in case findIndex f xs of
-            Just x ->
-                let actor = xs !! x
-                    newEntities = take x xs ++ drop (x + 1) xs
-                 in (Just actor, d & actors .~ newEntities)
-            Nothing -> (Nothing, d)
+    case removeActorIf f (d ^. cellMap) of
+        Just (a, newMap) -> (Just a, d & cellMap .~ newMap)
+        Nothing          -> (Nothing, d)
 
 popItemAt :: Coord -> Dungeon -> (Maybe Item, Dungeon)
 popItemAt c = popItemIf (\x -> I.getPosition x == c)
@@ -186,16 +191,17 @@ stairsPositionCandidates ts d =
     isDownStairsPosition c = c `elem` map upStairs (d ^. descendingStairs)
 
 walkableFloor :: TileCollection -> Dungeon -> BoolMap
-walkableFloor ts d = walkableMap ts (d ^. tileMap)
+walkableFloor ts d = walkableMap ts (d ^. cellMap)
 
 transparentMap :: TileCollection -> Dungeon -> BoolMap
-transparentMap ts d = TileMap.transparentMap ts (d ^. tileMap)
+transparentMap ts d = Cell.transparentMap ts (d ^. cellMap)
 
-npcs :: Dungeon -> [Actor]
-npcs = filter (not . isPlayer) . getActors
+positionsAndNpcs :: Dungeon -> [(Coord, Actor)]
+positionsAndNpcs =
+    filter (not . isPlayer . snd) . positionsAndActors . (^. cellMap)
 
 mapWidthAndHeight :: Dungeon -> V2 Int
-mapWidthAndHeight d = TileMap.widthAndHeight (d ^. tileMap)
+mapWidthAndHeight d = widthAndHeight (d ^. cellMap)
 
 isTown :: Dungeon -> Bool
 isTown d = Identifier.isTown $ d ^. identifier

@@ -8,7 +8,7 @@ import           Action.Melee         (meleeAction)
 import           Action.Move          (moveAction)
 import           Action.Wait          (waitAction)
 import           Actor                (Actor, getIndex, isFriendlyNpc,
-                                       pathToDestination, position, target)
+                                       pathToDestination, target)
 import           Control.Arrow        ((&&&))
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (MonadWriter (writer), Writer)
@@ -16,8 +16,9 @@ import           Coord                (Coord)
 import           Data.Array           ((!))
 import           Data.Foldable        (find)
 import           Data.Maybe           (fromMaybe)
-import           Dungeon              (Dungeon, calculateFovAt, getActors, npcs,
-                                       popActorAt, pushActor)
+import           Dungeon              (Dungeon, calculateFovAt, getActors,
+                                       getPositionsAndActors, popActorAt,
+                                       positionsAndNpcs, pushActor)
 import           Dungeon.Map.Tile     (TileCollection)
 import           Dungeon.PathFinder   (getPathTo)
 import           Linear.V2            (V2 (V2))
@@ -25,11 +26,11 @@ import           Log                  (MessageLog)
 
 handleNpcTurns ::
        TileCollection -> Dungeon -> Writer MessageLog (Dungeon, [Actor])
-handleNpcTurns ts d = foldl foldStep (writer ((d, []), [])) $ npcs d
+handleNpcTurns ts d = foldl foldStep (writer ((d, []), [])) $ positionsAndNpcs d
   where
-    foldStep acc x = do
+    foldStep acc (position, _) = do
         (d', l) <- acc
-        (newD, newLog) <- handleNpcTurn (x ^. position) ts d'
+        (newD, newLog) <- handleNpcTurn position ts d'
         return (newD, newLog ++ l)
 
 handleNpcTurn ::
@@ -40,55 +41,57 @@ handleNpcTurn ::
 handleNpcTurn c ts d = maybe (return (d, [])) doAction theActor
   where
     (theActor, dungeonWithoutTheActor) = popActorAt c d
-    doAction actor = npcAction actor ts dungeonWithoutTheActor
+    doAction actor = npcAction c actor ts dungeonWithoutTheActor
 
 npcAction ::
-       Actor
+       Coord
+    -> Actor
     -> TileCollection
     -> Dungeon
     -> Writer MessageLog (Dungeon, [Actor])
-npcAction e ts d
-    | isFriendlyNpc e = return (pushActor e d, [])
-    | otherwise = (newDungeon &&& killed) <$> action entityAfterUpdatingMap ts d
+npcAction position e ts d
+    | isFriendlyNpc e = return (pushActor position e d, [])
+    | otherwise =
+        (newDungeon &&& killed) <$> action position entityAfterUpdatingMap ts d
   where
-    action = selectAction entityAfterUpdatingMap d
+    action = selectAction position entityAfterUpdatingMap d
     entityAfterUpdatingMap =
         fromMaybe
             entityAfterUpdatingTarget
-            (updatePath entityAfterUpdatingTarget ts d)
-    entityAfterUpdatingTarget = updateTarget ts d e
+            (updatePath position entityAfterUpdatingTarget ts d)
+    entityAfterUpdatingTarget = updateTarget position ts d e
 
-updateTarget :: TileCollection -> Dungeon -> Actor -> Actor
-updateTarget ts d a
+updateTarget :: Coord -> TileCollection -> Dungeon -> Actor -> Actor
+updateTarget srcPosition ts d a
     | currentTargetIsInFov = a
     | otherwise = a & target .~ (getIndex <$> nextTarget)
   where
-    currentTargetIsInFov =
-        case currentTarget of
-            Just x  -> fov ! (x ^. position)
-            Nothing -> False
+    currentTargetIsInFov = maybe False isInFov currentTarget
+    indexToPosition x =
+        fst <$>
+        find ((getIndex x ==) . getIndex . snd) (getPositionsAndActors d)
     currentTarget = find (\x -> a ^. target == Just (getIndex x)) $ getActors d
     nextTarget
         | null otherActorsInFov = Nothing
         | otherwise = Just $ head otherActorsInFov
-    otherActorsInFov = filter (\x -> fov ! (x ^. position)) otherActors
-    fov = calculateFovAt (a ^. position) ts d
+    otherActorsInFov = filter isInFov otherActors
+    fov = calculateFovAt srcPosition ts d
+    isInFov x = maybe False (fov !) (indexToPosition x)
     otherActors =
-        filter (\x -> (x ^. position) /= (a ^. position)) $ getActors d
+        map snd $ filter (\(x, _) -> x /= srcPosition) $ getPositionsAndActors d
 
-updatePath :: Actor -> TileCollection -> Dungeon -> Maybe Actor
-updatePath e ts d
-    | isTargetInFov ts d e = Just $ e & pathToDestination .~ newPath
+updatePath :: Coord -> Actor -> TileCollection -> Dungeon -> Maybe Actor
+updatePath src e ts d
+    | isTargetInFov src ts d e = Just $ e & pathToDestination .~ newPath
     | otherwise = Nothing
   where
     newPath = fromMaybe [] $ dst >>= getPathTo ts d src
-    src = e ^. position
     dst = getTargetPosition e d
 
-selectAction :: Actor -> Dungeon -> Action
-selectAction e d
-    | targetIsNextTo e d =
-        case offsetToTarget e d of
+selectAction :: Coord -> Actor -> Dungeon -> Action
+selectAction position e d
+    | targetIsNextTo position e d =
+        case offsetToTarget position e d of
             Just offset -> meleeAction offset
             Nothing     -> moveOrWait e
     | otherwise = moveOrWait e
@@ -99,30 +102,33 @@ moveOrWait e
     | otherwise = popPathToDestinationAndMove
 
 popPathToDestinationAndMove :: Action
-popPathToDestinationAndMove e = moveAction offset e'
+popPathToDestinationAndMove position e = moveAction offset position e'
   where
-    offset = next - e ^. position
+    offset = next - position
     (next, remaining) = (head path, tail path)
     path = e ^. pathToDestination
     e' = e & pathToDestination .~ remaining
 
-targetIsNextTo :: Actor -> Dungeon -> Bool
-targetIsNextTo e d =
+targetIsNextTo :: Coord -> Actor -> Dungeon -> Bool
+targetIsNextTo position e d =
     case distance of
         Just d' -> d' <= 1
         Nothing -> False
   where
-    distance = (\(V2 x y) -> max (abs x) (abs y)) <$> offsetToTarget e d
+    distance =
+        (\(V2 x y) -> max (abs x) (abs y)) <$> offsetToTarget position e d
 
-offsetToTarget :: Actor -> Dungeon -> Maybe (V2 Int)
-offsetToTarget e d = subtract (e ^. position) <$> getTargetPosition e d
+offsetToTarget :: Coord -> Actor -> Dungeon -> Maybe (V2 Int)
+offsetToTarget position e d = subtract position <$> getTargetPosition e d
 
-isTargetInFov :: TileCollection -> Dungeon -> Actor -> Bool
-isTargetInFov ts d actor =
-    ((calculateFovAt (actor ^. position) ts d !) <$> getTargetPosition actor d) ==
+isTargetInFov :: Coord -> TileCollection -> Dungeon -> Actor -> Bool
+isTargetInFov position ts d actor =
+    ((calculateFovAt position ts d !) <$> getTargetPosition actor d) ==
     Just True
 
 getTargetPosition :: Actor -> Dungeon -> Maybe Coord
 getTargetPosition actor d =
-    (^. position) <$>
-    find (\other -> actor ^. target == Just (getIndex other)) (getActors d)
+    fst <$>
+    find
+        (\(_, other) -> actor ^. target == Just (getIndex other))
+        (getPositionsAndActors d)
