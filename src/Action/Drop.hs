@@ -7,7 +7,7 @@ import           Action               (Action, ActionResult (ActionResult),
 import           Actor                (removeNthItem)
 import           Control.Monad.Writer (tell)
 import           Dungeon              (pushActor, pushItem)
-import           Item                 (Item, getName, setPosition)
+import           Item                 (Item, getName)
 import qualified Localization.Texts   as T
 
 dropAction :: Int -> Action
@@ -26,7 +26,5 @@ dropItem item position actor _ dungeon = do
     return $
         ActionResult
             Ok
-            (pushActor position actor $ pushItem itemWithNewPosition dungeon)
+            (pushActor position actor $ pushItem position item dungeon)
             []
-  where
-    itemWithNewPosition = setPosition position item

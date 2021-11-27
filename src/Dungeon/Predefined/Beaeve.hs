@@ -18,7 +18,7 @@ beaeve ig = do
             fromMaybe
                 (error "Failed to locate an actor.")
                 (locateActorAt electria' (V2 4 5) tileMap)
-    return (dungeon tileMap' [] Beaeve, ig')
+    return (dungeon tileMap' Beaeve, ig')
   where
     (electria', ig') = electria ig
 

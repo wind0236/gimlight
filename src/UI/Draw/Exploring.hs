@@ -23,10 +23,10 @@ import           Data.Vector.Split               (chunksOf)
 import qualified Data.Vector.Storable            as V
 import           Data.Vector.Storable.ByteString (vectorToByteString)
 import           Dungeon                         (Dungeon, cellMap, explored,
-                                                  getPositionsAndActors, items,
+                                                  getPositionsAndActors,
                                                   mapWidthAndHeight,
                                                   playerPosition, visible)
-import           Dungeon.Map.Cell                (tileIdAt)
+import           Dungeon.Map.Cell                (positionsAndItems, tileIdAt)
 import           GameConfig                      (GameConfig)
 import           GameStatus.Exploring            (ExploringHandler,
                                                   getCurrentDungeon,
@@ -160,23 +160,24 @@ makeMap tileGraphics eh = createSingle () def {singleRender = render}
     imagePath = "mapWidget"
 
 mapItems :: ExploringHandler -> [GameWidgetNode]
-mapItems eh = mapMaybe itemToImage $ d ^. items
+mapItems eh = mapMaybe itemToImage $ positionsAndItems $ d ^. cellMap
   where
-    itemToImage item =
-        guard (isItemDrawed item) >>
-        return (image (I.getIconImagePath item) `styleBasic` style item)
-    isItemDrawed item =
-        let displayPosition = itemPositionOnDisplay item
-            isVisible = (d ^. visible) ! I.getPosition item
+    itemToImage (position, item) =
+        guard (isItemDrawed position) >>
+        return (image (I.getIconImagePath item) `styleBasic` style position)
+    isItemDrawed position =
+        let displayPosition = itemPositionOnDisplay position
+            isVisible = (d ^. visible) ! position
          in V2 0 0 <= displayPosition &&
             displayPosition < V2 tileColumns tileRows && isVisible
     d = getCurrentDungeon eh
-    leftPadding item =
-        fromIntegral $ itemPositionOnDisplay item ^. _x * tileWidth
-    topPadding item =
-        fromIntegral $ itemPositionOnDisplay item ^. _y * tileHeight
-    style item = [paddingL $ leftPadding item, paddingT $ topPadding item]
-    itemPositionOnDisplay item = I.getPosition item - topLeftCoord d
+    leftPadding position =
+        fromIntegral $ itemPositionOnDisplay position ^. _x * tileWidth
+    topPadding position =
+        fromIntegral $ itemPositionOnDisplay position ^. _y * tileHeight
+    style position =
+        [paddingL $ leftPadding position, paddingT $ topPadding position]
+    itemPositionOnDisplay position = position - topLeftCoord d
 
 mapActors :: ExploringHandler -> [GameWidgetNode]
 mapActors eh = mapMaybe actorToImage $ getPositionsAndActors d

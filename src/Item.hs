@@ -7,14 +7,11 @@ module Item
     , herb
     , sampleBook
     , getName
-    , getPosition
     , getIconImagePath
     , getEffect
-    , setPosition
     , isUsableManyTimes
     ) where
 
-import           Coord              (Coord)
 import           Data.Binary        (Binary)
 import           Data.Text          (Text)
 import           GHC.Generics       (Generic)
@@ -33,7 +30,6 @@ instance Binary Effect
 data Item =
     Item
         { name            :: MultilingualText
-        , position        :: Coord
         , iconImagePath   :: Text
         , effect          :: Effect
         , usableManyTimes :: Bool
@@ -42,21 +38,12 @@ data Item =
 
 instance Binary Item
 
-item :: MultilingualText -> Coord -> Text -> Effect -> Bool -> Item
-item n p ip e u =
-    Item
-        { name = n
-        , position = p
-        , iconImagePath = ip
-        , effect = e
-        , usableManyTimes = u
-        }
+item :: MultilingualText -> Text -> Effect -> Bool -> Item
+item n ip e u =
+    Item {name = n, iconImagePath = ip, effect = e, usableManyTimes = u}
 
 getName :: Item -> MultilingualText
 getName Item {name = n} = n
-
-getPosition :: Item -> Coord
-getPosition Item {position = p} = p
 
 getIconImagePath :: Item -> Text
 getIconImagePath Item {iconImagePath = ip} = ip
@@ -67,12 +54,8 @@ getEffect Item {effect = e} = e
 isUsableManyTimes :: Item -> Bool
 isUsableManyTimes Item {usableManyTimes = u} = u
 
-setPosition :: Coord -> Item -> Item
-setPosition p i = i {position = p}
+herb :: Item
+herb = item T.herb "images/herb.png" (Heal $ healHandler 4) False
 
-herb :: Coord -> Item
-herb p = item T.herb p "images/herb.png" (Heal $ healHandler 4) False
-
-sampleBook :: Coord -> Item
-sampleBook p =
-    item T.sampleBook p "images/book.png" (Book T.sampleBookContent) True
+sampleBook :: Item
+sampleBook = item T.sampleBook "images/book.png" (Book T.sampleBookContent) True

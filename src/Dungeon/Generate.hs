@@ -18,14 +18,14 @@ import           Dungeon.Generate.Room   (Room (..), center,
                                           roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Identifier      (Identifier)
 import           Dungeon.Map.Cell        (CellMap, allWallTiles, changeTileAt,
-                                          locateActorAt, widthAndHeight)
+                                          locateActorAt, locateItemAt,
+                                          widthAndHeight)
 import           Dungeon.Map.Tile        (TileCollection, downStairs, floorTile,
                                           upStairs)
 import           Dungeon.Size            (maxSize, minSize)
 import           Dungeon.Stairs          (StairsPair (StairsPair))
 import           IndexGenerator          (IndexGenerator)
-import           Item                    (Item, herb, sampleBook)
-import qualified Item                    as I
+import           Item                    (herb, sampleBook)
 import           Linear.V2               (V2 (..), _x, _y)
 import           System.Random           (Random (randomR), StdGen, random)
 import           TreeZipper              (TreeZipper, appendNode, getFocused,
@@ -98,15 +98,13 @@ generateDungeon g ig cfg ident =
     ( dungeon
           (fromMaybe (error "Failed to change the tile.") $
            changeTileAt enterPosition upStairs tiles)
-          items
           ident
     , enterPosition
     , g'''
     , ig')
   where
-    (tiles, items, enterPosition, g''', ig') =
+    (tiles, enterPosition, g''', ig') =
         generateDungeonAccum
-            []
             []
             (allWallTiles (V2 width height))
             (V2 0 0)
@@ -117,19 +115,17 @@ generateDungeon g ig cfg ident =
     (height, g'') = randomR (minSize, maxSize) g'
 
 generateDungeonAccum ::
-       [Item]
-    -> [Room]
+       [Room]
     -> CellMap
     -> Coord
     -> StdGen
     -> IndexGenerator
     -> Config
-    -> (CellMap, [Item], V2 Int, StdGen, IndexGenerator)
-generateDungeonAccum itemsAcc acc tileMap playerPos g ig cfg
-    | maxRooms cfg == 0 = (tileMap, itemsAcc, playerPos, g, ig)
+    -> (CellMap, V2 Int, StdGen, IndexGenerator)
+generateDungeonAccum acc tileMap playerPos g ig cfg
+    | maxRooms cfg == 0 = (tileMap, playerPos, g, ig)
     | otherwise =
         generateDungeonAccum
-            newItemsAcc
             newAcc
             newMap
             newPlayerPos
@@ -137,10 +133,9 @@ generateDungeonAccum itemsAcc acc tileMap playerPos g ig cfg
             ig'
             cfg {maxRooms = maxRooms cfg - 1}
   where
-    (newMap, newItemsAcc, newAcc, newPlayerPos)
-        | usable =
-            (mapWithNewEnemies, items ++ itemsAcc, room : acc, center room)
-        | otherwise = (tileMap, itemsAcc, acc, playerPos)
+    (newMap, newAcc, newPlayerPos)
+        | usable = (mapWithItems, room : acc, center room)
+        | otherwise = (tileMap, acc, playerPos)
     usable = not $ any (roomOverlaps room) acc
     appendRoom
         | null acc = createRoom room tileMap
@@ -154,7 +149,8 @@ generateDungeonAccum itemsAcc acc tileMap playerPos g ig cfg
     room = roomFromWidthHeight (V2 x y) (V2 roomWidth roomHeight)
     (mapWithNewEnemies, ig', g''''') =
         placeEnemies appendRoom g'''' ig room maxMonstersPerRoom
-    (items, g'''''') = placeItems g''''' room maxItemsPerRoom
+    (mapWithItems, g'''''') =
+        placeItems mapWithNewEnemies g''''' room maxItemsPerRoom
     V2 width height = widthAndHeight tileMap
 
 createRoom :: Room -> CellMap -> CellMap
@@ -189,22 +185,20 @@ placeEnemies cellMap g ig r n = placeEnemies newMap g''' ig' r (n - 1)
     ((enemy, ig'), g''') = newMonster g'' ig
     newMap = fromMaybe cellMap (locateActorAt enemy (V2 x y) cellMap)
 
-placeItems :: StdGen -> Room -> Int -> ([Item], StdGen)
-placeItems = placeItemsAccum []
+placeItems :: CellMap -> StdGen -> Room -> Int -> (CellMap, StdGen)
+placeItems = placeItemsAccum
 
-placeItemsAccum :: [Item] -> StdGen -> Room -> Int -> ([Item], StdGen)
-placeItemsAccum items g _ 0 = (items, g)
-placeItemsAccum items g r n = placeItemsAccum newItems g''' r (n - 1)
+placeItemsAccum :: CellMap -> StdGen -> Room -> Int -> (CellMap, StdGen)
+placeItemsAccum cellMap g _ 0 = (cellMap, g)
+placeItemsAccum cellMap g r n = placeItemsAccum newMap g''' r (n - 1)
   where
+    newMap = fromMaybe cellMap (locateItemAt newItem (V2 x y) cellMap)
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
     (prob, g''') = random g'' :: (Float, StdGen)
-    newItems
-        | V2 x y `notElem` map I.getPosition items = newItem : items
-        | otherwise = items
     newItem
-        | prob < 0.8 = herb (V2 x y)
-        | otherwise = sampleBook (V2 x y)
+        | prob < 0.8 = herb
+        | otherwise = sampleBook
 
 newMonster :: StdGen -> IndexGenerator -> ((Actor, IndexGenerator), StdGen)
 newMonster g ig =

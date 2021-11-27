@@ -11,9 +11,12 @@ module Dungeon.Map.Cell
     , widthAndHeight
     , isWalkableAt
     , locateActorAt
+    , locateItemAt
     , removeActorAt
+    , removeItemAt
     , removeActorIf
     , positionsAndActors
+    , positionsAndItems
     , transparentMap
     , tileIdAt
     , cellAt
@@ -31,12 +34,14 @@ import           Dungeon.Map.Bool (BoolMap)
 import           Dungeon.Map.Tile (TileCollection, TileId, wallTile)
 import qualified Dungeon.Map.Tile as Tile
 import           GHC.Generics     (Generic)
+import           Item             (Item)
 import           Linear.V2        (V2 (V2))
 
 data Cell =
     Cell
         { _tileId :: TileId
         , _actor  :: Maybe Actor
+        , _item   :: Maybe Item
         }
     deriving (Show, Ord, Eq, Generic)
 
@@ -55,10 +60,21 @@ locateActor a c
     | isJust (c ^. actor) = Nothing
     | otherwise = Just $ c & actor ?~ a
 
+locateItem :: Item -> Cell -> Maybe Cell
+locateItem i c
+    | isJust (c ^. item) = Nothing
+    | otherwise = Just $ c & item ?~ i
+
 removeActor :: Cell -> Maybe (Actor, Cell)
 removeActor c =
     case c ^. actor of
         Just a  -> Just (a, c & actor .~ Nothing)
+        Nothing -> Nothing
+
+removeItem :: Cell -> Maybe (Item, Cell)
+removeItem c =
+    case c ^. item of
+        Just i  -> Just (i, c & item .~ Nothing)
         Nothing -> Nothing
 
 newtype CellMap =
@@ -68,10 +84,11 @@ newtype CellMap =
 instance Binary CellMap
 
 cellMap :: Array (V2 Int) TileId -> CellMap
-cellMap = CellMap . fmap (`Cell` Nothing)
+cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing)
 
 allWallTiles :: V2 Int -> CellMap
-allWallTiles wh = CellMap $ M.generate wh (const (Cell wallTile Nothing))
+allWallTiles wh =
+    CellMap $ M.generate wh (const (Cell wallTile Nothing Nothing))
 
 widthAndHeight :: CellMap -> V2 Int
 widthAndHeight (CellMap m) = snd (bounds m) + V2 1 1
@@ -100,6 +117,11 @@ positionsAndActors (CellMap cm) = mapMaybe mapStep $ assocs cm
   where
     mapStep (coord, cell) = (coord, ) <$> cell ^. actor
 
+positionsAndItems :: CellMap -> [(Coord, Item)]
+positionsAndItems (CellMap cm) = mapMaybe mapStep $ assocs cm
+  where
+    mapStep (coord, cell) = (coord, ) <$> cell ^. item
+
 locateActorAt :: Actor -> Coord -> CellMap -> Maybe CellMap
 locateActorAt a c (CellMap cm)
     | coordIsInRange c (CellMap cm) =
@@ -108,9 +130,23 @@ locateActorAt a c (CellMap cm)
   where
     newCell = locateActor a (cm ! c)
 
+locateItemAt :: Item -> Coord -> CellMap -> Maybe CellMap
+locateItemAt i c (CellMap cm)
+    | coordIsInRange c (CellMap cm) =
+        (\x -> CellMap (cm // [(c, x)])) <$> newCell
+    | otherwise = Nothing
+  where
+    newCell = locateItem i (cm ! c)
+
 removeActorAt :: Coord -> CellMap -> Maybe (Actor, CellMap)
 removeActorAt c (CellMap cm) =
     case cellAt c (CellMap cm) >>= removeActor of
+        Just (a, newCell) -> Just (a, CellMap $ cm // [(c, newCell)])
+        Nothing           -> Nothing
+
+removeItemAt :: Coord -> CellMap -> Maybe (Item, CellMap)
+removeItemAt c (CellMap cm) =
+    case cellAt c (CellMap cm) >>= removeItem of
         Just (a, newCell) -> Just (a, CellMap $ cm // [(c, newCell)])
         Nothing           -> Nothing
 

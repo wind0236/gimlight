@@ -11,7 +11,7 @@ import qualified Dungeon.Map.JSONReader as JSONReader
 globalMap :: IO Dungeon
 globalMap = do
     tileMap <- readMapFile
-    return $ dungeon tileMap [] GlobalMap
+    return $ dungeon tileMap GlobalMap
 
 readMapFile :: IO CellMap
 readMapFile = do

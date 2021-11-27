@@ -30,7 +30,6 @@ module Dungeon
     , cellMap
     , visible
     , explored
-    , items
     , popItemAt
     , descendingStairs
     , addAscendingAndDescendingStiars
@@ -40,18 +39,18 @@ module Dungeon
     ) where
 
 import           Actor                (Actor, isPlayer)
-import           Control.Lens         (makeLenses, (%~), (&), (.~), (^.))
+import           Control.Lens         (makeLenses, (&), (.~), (^.))
 import           Coord                (Coord)
 import           Data.Array.Base      (assocs)
 import           Data.Binary          (Binary)
 import           Data.Foldable        (find)
-import           Data.List            (findIndex)
 import           Dungeon.Identifier   (Identifier)
 import qualified Dungeon.Identifier   as Identifier
 import           Dungeon.Map.Bool     (BoolMap)
 import           Dungeon.Map.Cell     (CellMap, changeTileAt, locateActorAt,
-                                       positionsAndActors, removeActorAt,
-                                       removeActorIf, walkableMap,
+                                       locateItemAt, positionsAndActors,
+                                       removeActorAt, removeActorIf,
+                                       removeItemAt, walkableMap,
                                        widthAndHeight)
 import qualified Dungeon.Map.Cell     as Cell
 import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
@@ -61,7 +60,6 @@ import           Dungeon.Map.Tile     (TileCollection, TileId)
 import           Dungeon.Stairs       (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics         (Generic)
 import           Item                 (Item)
-import qualified Item                 as I
 import           Linear.V2            (V2 (..))
 
 data Dungeon =
@@ -69,7 +67,6 @@ data Dungeon =
         { _cellMap             :: CellMap
         , _visible             :: Fov
         , _explored            :: ExploredMap
-        , _items               :: [Item]
         , _positionOnParentMap :: Maybe Coord
           -- Do not integrate `_ascendingStairs` with
           -- `_positionOnParentMap` For example, towns have a `Just`
@@ -85,13 +82,12 @@ makeLenses ''Dungeon
 
 instance Binary Dungeon
 
-dungeon :: CellMap -> [Item] -> Identifier -> Dungeon
-dungeon c i ident =
+dungeon :: CellMap -> Identifier -> Dungeon
+dungeon c ident =
     Dungeon
         { _cellMap = c
         , _visible = initFov (widthAndHeight c)
         , _explored = initExploredMap (widthAndHeight c)
-        , _items = i
         , _positionOnParentMap = Nothing
         , _ascendingStairs = Nothing
         , _descendingStairs = []
@@ -153,8 +149,11 @@ pushActor p e d =
         Just x  -> d & cellMap .~ x
         Nothing -> error "Failed to push an actor."
 
-pushItem :: Item -> Dungeon -> Dungeon
-pushItem i d = d & items %~ (i :)
+pushItem :: Coord -> Item -> Dungeon -> Dungeon
+pushItem position i d =
+    case locateItemAt i position (d ^. cellMap) of
+        Just x  -> d & cellMap .~ x
+        Nothing -> error "Failed to push an item."
 
 popActorAt :: Coord -> Dungeon -> (Maybe Actor, Dungeon)
 popActorAt c d =
@@ -169,17 +168,10 @@ popActorIf f d =
         Nothing          -> (Nothing, d)
 
 popItemAt :: Coord -> Dungeon -> (Maybe Item, Dungeon)
-popItemAt c = popItemIf (\x -> I.getPosition x == c)
-
-popItemIf :: (Item -> Bool) -> Dungeon -> (Maybe Item, Dungeon)
-popItemIf f d =
-    let xs = d ^. items
-     in case findIndex f xs of
-            Just x ->
-                let item = xs !! x
-                    newItems = take x xs ++ drop (x + 1) xs
-                 in (Just item, d & items .~ newItems)
-            Nothing -> (Nothing, d)
+popItemAt c d =
+    case removeItemAt c (d ^. cellMap) of
+        Just (i, newMap) -> (Just i, d & cellMap .~ newMap)
+        Nothing          -> (Nothing, d)
 
 stairsPositionCandidates :: TileCollection -> Dungeon -> [Coord]
 stairsPositionCandidates ts d =
