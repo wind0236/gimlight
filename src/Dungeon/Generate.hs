@@ -202,10 +202,9 @@ placeEnemiesAccum e g ig r n = placeEnemiesAccum newEnemies g''' ig' r (n - 1)
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
     ((enemy, ig'), g''') = newMonster g'' ig (V2 x y)
-    newEnemies =
-        if V2 x y `notElem` map (^. A.position) e
-            then enemy : e
-            else e
+    newEnemies
+        | V2 x y `notElem` map (^. A.position) e = enemy : e
+        | otherwise = e
 
 placeItems :: StdGen -> Room -> Int -> ([Item], StdGen)
 placeItems = placeItemsAccum []
