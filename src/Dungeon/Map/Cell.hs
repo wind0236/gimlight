@@ -39,9 +39,10 @@ import           Linear.V2        (V2 (V2))
 
 data Cell =
     Cell
-        { _tileId :: TileId
-        , _actor  :: Maybe Actor
-        , _item   :: Maybe Item
+        { _tileId           :: TileId
+        , _actor            :: Maybe Actor
+        , _item             :: Maybe Item
+        , visibleFromPlayer :: Bool
         }
     deriving (Show, Ord, Eq, Generic)
 
@@ -84,11 +85,11 @@ newtype CellMap =
 instance Binary CellMap
 
 cellMap :: Array (V2 Int) TileId -> CellMap
-cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing)
+cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False)
 
 allWallTiles :: V2 Int -> CellMap
 allWallTiles wh =
-    CellMap $ M.generate wh (const (Cell wallTile Nothing Nothing))
+    CellMap $ M.generate wh (const (Cell wallTile Nothing Nothing False))
 
 widthAndHeight :: CellMap -> V2 Int
 widthAndHeight (CellMap m) = snd (bounds m) + V2 1 1
