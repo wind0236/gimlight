@@ -44,7 +44,7 @@ import           Linear.V2        (V2 (V2))
 
 data Cell =
     Cell
-        { _tileId            :: TileId
+        { _tileId            :: Maybe TileId
         , _actor             :: Maybe Actor
         , _item              :: Maybe Item
         , _explored          :: Bool
@@ -57,10 +57,13 @@ makeLenses ''Cell
 instance Binary Cell
 
 isWalkable :: TileCollection -> Cell -> Bool
-isWalkable tc c = Tile.isWalkable (tc ! (c ^. tileId)) && isNothing (c ^. actor)
+isWalkable tc c =
+    fmap (Tile.isWalkable . (tc !)) (c ^. tileId) /= Just False &&
+    isNothing (c ^. actor)
 
 isTransparent :: TileCollection -> Cell -> Bool
-isTransparent tc c = Tile.isTransparent (tc ! (c ^. tileId))
+isTransparent tc c =
+    fmap (Tile.isTransparent . (tc !)) (c ^. tileId) /= Just False
 
 locateActor :: Actor -> Cell -> Maybe Cell
 locateActor a c
@@ -90,17 +93,18 @@ newtype CellMap =
 
 instance Binary CellMap
 
-cellMap :: Array (V2 Int) TileId -> CellMap
+cellMap :: Array (V2 Int) (Maybe TileId) -> CellMap
 cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False False)
 
 allWallTiles :: V2 Int -> CellMap
 allWallTiles wh =
-    CellMap $ M.generate wh (const (Cell wallTile Nothing Nothing False False))
+    CellMap $
+    M.generate wh (const (Cell (Just wallTile) Nothing Nothing False False))
 
 widthAndHeight :: CellMap -> V2 Int
 widthAndHeight (CellMap m) = snd (bounds m) + V2 1 1
 
-changeTileAt :: Coord -> TileId -> CellMap -> Maybe CellMap
+changeTileAt :: Coord -> Maybe TileId -> CellMap -> Maybe CellMap
 changeTileAt c i (CellMap m)
     | isJust $ tileIdAt c (CellMap m) = Just $ CellMap $ m // [(c, newTile)]
     | otherwise = Nothing
@@ -193,7 +197,7 @@ removeActorIf f cm = position >>= flip removeActorAt cm
     position = fst <$> find (f . snd) (positionsAndActors cm)
 
 tileIdAt :: Coord -> CellMap -> Maybe TileId
-tileIdAt c t = (^. tileId) <$> cellAt c t
+tileIdAt c t = cellAt c t >>= (^. tileId)
 
 cellAt :: Coord -> CellMap -> Maybe Cell
 cellAt c (CellMap m)

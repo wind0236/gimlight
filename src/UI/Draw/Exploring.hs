@@ -11,14 +11,14 @@ import           Actor                           (getCurrentExperiencePoint,
                                                   getPower, walkingImagePath)
 import           Codec.Picture                   (Image (imageData),
                                                   PixelRGBA8 (PixelRGBA8),
-                                                  pixelMap)
+                                                  generateImage, pixelMap)
 import           Control.Applicative             (ZipList (ZipList, getZipList))
 import           Control.Lens                    ((^.))
 import           Control.Monad                   (guard)
 import           Coord                           (Coord)
 import           Data.Array                      ((!))
 import           Data.Default                    (Default (def))
-import           Data.Maybe                      (fromMaybe, mapMaybe)
+import           Data.Maybe                      (mapMaybe)
 import           Data.Vector.Split               (chunksOf)
 import qualified Data.Vector.Storable            as V
 import           Data.Vector.Storable.ByteString (vectorToByteString)
@@ -145,11 +145,10 @@ makeMap tileGraphics eh = createSingle () def {singleRender = render}
             ]
     imageAt c =
         chunksOf (tileWidth * 4) $ -- `(*4)` for R, G, B, and A bytes.
-        imageData $ pixelMap (applyOpacity c) $ tileGraphics ! tileId c
-    tileId c =
-        fromMaybe
-            (error "Failed to get the tile ID.")
-            (tileIdAt c (d ^. cellMap))
+        imageData $
+        pixelMap (applyOpacity c) $ maybe emptyImage (tileGraphics !) (tileId c)
+    emptyImage = generateImage (\_ _ -> PixelRGBA8 0 0 0 0) tileWidth tileHeight
+    tileId c = tileIdAt c (d ^. cellMap)
     applyOpacity c (PixelRGBA8 r g b a)
         | isVisible c = PixelRGBA8 r g b a
         | isExplored c = PixelRGBA8 (r `div` 2) (g `div` 2) (b `div` 2) a
@@ -187,7 +186,7 @@ mapActors eh = mapMaybe actorToImage $ getPositionsAndActors d
     leftPadding actor =
         fromIntegral $ actorPositionOnDisplay actor ^. _x * tileWidth
     topPadding actor =
-        fromIntegral $ (actorPositionOnDisplay actor ^. _y) * tileHeight
+        fromIntegral $ actorPositionOnDisplay actor ^. _y * tileHeight
     style position =
         [paddingL $ leftPadding position, paddingT $ topPadding position]
     actorPositionOnDisplay position = position - topLeftCoord d

@@ -78,7 +78,7 @@ generateDungeonAndAppend zipper g ig ts cfg ident =
                  x &
                  cellMap %~
                  (fromMaybe (error "Failed to change the tile.") .
-                  changeTileAt upperStairsPosition downStairs)) $
+                  changeTileAt upperStairsPosition (Just downStairs))) $
         modify (const newUpperDungeon) zipper
     zipperFocusingNext =
         fromMaybe
@@ -100,7 +100,7 @@ generateDungeon ::
 generateDungeon g ig cfg ident =
     ( dungeon
           (fromMaybe (error "Failed to change the tile.") $
-           changeTileAt enterPosition upStairs tiles)
+           changeTileAt enterPosition (Just upStairs) tiles)
           ident
     , enterPosition
     , g'''
@@ -162,7 +162,7 @@ createRoom room r =
         (\acc x ->
              fromMaybe
                  (error "Failed to change a tile.")
-                 (changeTileAt x floorTile acc))
+                 (changeTileAt x (Just floorTile) acc))
         r
         [V2 x y | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 
