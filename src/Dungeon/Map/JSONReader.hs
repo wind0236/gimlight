@@ -33,6 +33,6 @@ getMapSize json =
 getTiles :: String -> Maybe [Int]
 getTiles json =
     json ^? key "layers" . values . key "data" . _Array >>=
-    fmap (map (\x -> fromIntegral x - 1)) . -- The tile ID written in the tile JSON file starts from 0, but the ids written as `data` in the map file starts from 1 to let 0 have a meaning of "No tile". Since we will assume that all cells have a tile, we subtract 1 here.
+    fmap (map $ subtract 1 . fromIntegral) . -- The tile ID written in the tile JSON file starts from 0, but the ids written as `data` in the map file starts from 1 to let 0 have a meaning of "No tile". Since we will assume that all cells have a tile, we subtract 1 here.
     mapM (^? _Integer) .
     toList
