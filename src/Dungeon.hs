@@ -28,7 +28,6 @@ module Dungeon
     , getPositionsAndActors
     , positionOnParentMap
     , cellMap
-    , visible
     , popItemAt
     , descendingStairs
     , addAscendingAndDescendingStiars
@@ -49,10 +48,10 @@ import           Dungeon.Map.Bool   (BoolMap)
 import           Dungeon.Map.Cell   (CellMap, changeTileAt, locateActorAt,
                                      locateItemAt, positionsAndActors,
                                      removeActorAt, removeActorIf, removeItemAt,
-                                     updateExploredMap, walkableMap,
-                                     widthAndHeight)
+                                     updateExploredMap, updatePlayerFov,
+                                     walkableMap, widthAndHeight)
 import qualified Dungeon.Map.Cell   as Cell
-import           Dungeon.Map.Fov    (Fov, calculateFov, initFov)
+import           Dungeon.Map.Fov    (calculateFov)
 import           Dungeon.Map.Tile   (TileCollection, TileId)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics       (Generic)
@@ -62,7 +61,6 @@ import           Linear.V2          (V2 (..))
 data Dungeon =
     Dungeon
         { _cellMap             :: CellMap
-        , _visible             :: Fov
         , _positionOnParentMap :: Maybe Coord
           -- Do not integrate `_ascendingStairs` with
           -- `_positionOnParentMap` For example, towns have a `Just`
@@ -82,7 +80,6 @@ dungeon :: CellMap -> Identifier -> Dungeon
 dungeon c ident =
     Dungeon
         { _cellMap = c
-        , _visible = initFov (widthAndHeight c)
         , _positionOnParentMap = Nothing
         , _ascendingStairs = Nothing
         , _descendingStairs = []
@@ -116,11 +113,11 @@ updateMap :: TileCollection -> Dungeon -> Maybe Dungeon
 updateMap ts = updateFov ts . updateExplored
 
 updateExplored :: Dungeon -> Dungeon
-updateExplored d = d & cellMap %~ updateExploredMap (d ^. visible)
+updateExplored d = d & cellMap %~ updateExploredMap
 
 updateFov :: TileCollection -> Dungeon -> Maybe Dungeon
 updateFov ts d =
-    (\pos -> d & visible .~ calculateFovAt pos ts d) <$> playerPosition d
+    (\newMap -> d & cellMap .~ newMap) <$> updatePlayerFov ts (d ^. cellMap)
 
 calculateFovAt :: Coord -> TileCollection -> Dungeon -> BoolMap
 calculateFovAt c ts d = calculateFov c (transparentMap ts d)

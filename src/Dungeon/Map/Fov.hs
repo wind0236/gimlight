@@ -1,6 +1,5 @@
 module Dungeon.Map.Fov
     ( Fov
-    , initFov
     , calculateFov
     ) where
 
@@ -13,9 +12,6 @@ type Fov = BoolMap
 
 fovRadius :: Int
 fovRadius = 8
-
-initFov :: V2 Int -> Fov
-initFov = emptyBoolMap
 
 calculateFov :: Coord -> BoolMap -> Fov
 calculateFov src transparentMap =

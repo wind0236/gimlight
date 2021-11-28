@@ -8,6 +8,8 @@ module Dungeon.Map.Cell
     , allWallTiles
     , changeTileAt
     , updateExploredMap
+    , updatePlayerFov
+    , playerFov
     , walkableMap
     , transparentMap
     , exploredMap
@@ -24,7 +26,7 @@ module Dungeon.Map.Cell
     , cellAt
     ) where
 
-import           Actor            (Actor)
+import           Actor            (Actor, isPlayer)
 import           Control.Lens     (makeLenses, (&), (.~), (?~), (^.))
 import           Coord            (Coord)
 import           Data.Array       (Array, assocs, bounds, (!), (//))
@@ -33,7 +35,7 @@ import           Data.Foldable    (find)
 import           Data.Maybe       (isJust, isNothing, mapMaybe)
 import qualified Dungeon.Map      as M
 import           Dungeon.Map.Bool (BoolMap)
-import           Dungeon.Map.Fov  (Fov)
+import           Dungeon.Map.Fov  (calculateFov)
 import           Dungeon.Map.Tile (TileCollection, TileId, wallTile)
 import qualified Dungeon.Map.Tile as Tile
 import           GHC.Generics     (Generic)
@@ -42,10 +44,11 @@ import           Linear.V2        (V2 (V2))
 
 data Cell =
     Cell
-        { _tileId   :: TileId
-        , _actor    :: Maybe Actor
-        , _item     :: Maybe Item
-        , _explored :: Bool
+        { _tileId            :: TileId
+        , _actor             :: Maybe Actor
+        , _item              :: Maybe Item
+        , _explored          :: Bool
+        , _visibleFromPlayer :: Bool
         }
     deriving (Show, Ord, Eq, Generic)
 
@@ -88,11 +91,11 @@ newtype CellMap =
 instance Binary CellMap
 
 cellMap :: Array (V2 Int) TileId -> CellMap
-cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False)
+cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False False)
 
 allWallTiles :: V2 Int -> CellMap
 allWallTiles wh =
-    CellMap $ M.generate wh (const (Cell wallTile Nothing Nothing False))
+    CellMap $ M.generate wh (const (Cell wallTile Nothing Nothing False False))
 
 widthAndHeight :: CellMap -> V2 Int
 widthAndHeight (CellMap m) = snd (bounds m) + V2 1 1
@@ -110,14 +113,35 @@ walkableMap tc (CellMap cm) = isWalkable tc <$> cm
 exploredMap :: CellMap -> BoolMap
 exploredMap (CellMap cm) = (^. explored) <$> cm
 
+playerFov :: CellMap -> BoolMap
+playerFov (CellMap cm) = (^. visibleFromPlayer) <$> cm
+
 transparentMap :: TileCollection -> CellMap -> BoolMap
 transparentMap tc (CellMap cm) = isTransparent tc <$> cm
 
-updateExploredMap :: Fov -> CellMap -> CellMap
-updateExploredMap fov (CellMap cm) =
-    CellMap $ cm // [(pos, (cm ! pos) & explored .~ True) | pos <- visibleList]
+updateExploredMap :: CellMap -> CellMap
+updateExploredMap (CellMap cm) =
+    CellMap $ cm // [(pos, cm ! pos & explored .~ True) | pos <- visibleList]
   where
-    visibleList = map fst $ filter snd $ assocs fov
+    visibleList = map fst $ filter snd $ assocs $ playerFov $ CellMap cm
+
+updatePlayerFov :: TileCollection -> CellMap -> Maybe CellMap
+updatePlayerFov tc (CellMap cm) =
+    fmap
+        (\xs ->
+             CellMap $
+             cm //
+             [ (pos, cm ! pos & visibleFromPlayer .~ isVisible)
+             | (pos, isVisible) <- xs
+             ])
+        visibilityList
+  where
+    visibilityList = fmap assocs fov
+    fov =
+        (\x -> calculateFov x (transparentMap tc (CellMap cm))) <$>
+        playerPosition
+    playerPosition =
+        fmap fst $ find (isPlayer . snd) $ positionsAndActors $ CellMap cm
 
 isWalkableAt :: Coord -> TileCollection -> CellMap -> Bool
 isWalkableAt c tc t =

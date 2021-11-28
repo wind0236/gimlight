@@ -25,8 +25,8 @@ import           Data.Vector.Storable.ByteString (vectorToByteString)
 import           Dungeon                         (Dungeon, cellMap,
                                                   getPositionsAndActors,
                                                   mapWidthAndHeight,
-                                                  playerPosition, visible)
-import           Dungeon.Map.Cell                (exploredMap,
+                                                  playerPosition)
+import           Dungeon.Map.Cell                (exploredMap, playerFov,
                                                   positionsAndItems, tileIdAt)
 import           GameConfig                      (GameConfig)
 import           GameStatus.Exploring            (ExploringHandler,
@@ -154,7 +154,7 @@ makeMap tileGraphics eh = createSingle () def {singleRender = render}
         | isVisible c = PixelRGBA8 r g b a
         | isExplored c = PixelRGBA8 (r `div` 2) (g `div` 2) (b `div` 2) a
         | otherwise = PixelRGBA8 0 0 0 0xff
-    isVisible c = (d ^. visible) ! c
+    isVisible c = playerFov (d ^. cellMap) ! c
     isExplored c = exploredMap (d ^. cellMap) ! c
     d = getCurrentDungeon eh
     V2 topLeftCoordX topLeftCoordY = topLeftCoord d
@@ -168,7 +168,7 @@ mapItems eh = mapMaybe itemToImage $ positionsAndItems $ d ^. cellMap
         return (image (I.getIconImagePath item) `styleBasic` style position)
     isItemDrawed position =
         let displayPosition = itemPositionOnDisplay position
-            isVisible = (d ^. visible) ! position
+            isVisible = playerFov (d ^. cellMap) ! position
          in V2 0 0 <= displayPosition &&
             displayPosition < V2 tileColumns tileRows && isVisible
     d = getCurrentDungeon eh
@@ -193,7 +193,7 @@ mapActors eh = mapMaybe actorToImage $ getPositionsAndActors d
     actorPositionOnDisplay position = position - topLeftCoord d
     isActorDrawed position =
         let displayPosition = actorPositionOnDisplay position
-            isVisible = (d ^. visible) ! position
+            isVisible = playerFov (d ^. cellMap) ! position
          in V2 0 0 <= displayPosition &&
             displayPosition < V2 tileColumns tileRows && isVisible
     actorToImage (position, actor) =
