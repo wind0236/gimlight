@@ -11,7 +11,6 @@ module Dungeon
     , dungeon
     , getIdentifier
     , getActors
-    , changeTile
     , popActorAt
     , popActorIf
     , pushActor
@@ -45,14 +44,14 @@ import           Data.Foldable      (find)
 import           Dungeon.Identifier (Identifier)
 import qualified Dungeon.Identifier as Identifier
 import           Dungeon.Map.Bool   (BoolMap)
-import           Dungeon.Map.Cell   (CellMap, changeTileAt, locateActorAt,
-                                     locateItemAt, positionsAndActors,
-                                     removeActorAt, removeActorIf, removeItemAt,
+import           Dungeon.Map.Cell   (CellMap, locateActorAt, locateItemAt,
+                                     positionsAndActors, removeActorAt,
+                                     removeActorIf, removeItemAt,
                                      updateExploredMap, updatePlayerFov,
                                      walkableMap, widthAndHeight)
 import qualified Dungeon.Map.Cell   as Cell
 import           Dungeon.Map.Fov    (calculateFov)
-import           Dungeon.Map.Tile   (TileCollection, TileId)
+import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics       (Generic)
 import           Item               (Item)
@@ -88,9 +87,6 @@ dungeon c ident =
 
 getIdentifier :: Dungeon -> Identifier
 getIdentifier d = d ^. identifier
-
-changeTile :: Coord -> TileId -> Dungeon -> Maybe Dungeon
-changeTile c t d = (\x -> d & cellMap .~ x) <$> changeTileAt c t (d ^. cellMap)
 
 addAscendingAndDescendingStiars ::
        StairsPair -> (Dungeon, Dungeon) -> (Dungeon, Dungeon)

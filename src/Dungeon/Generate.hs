@@ -4,13 +4,13 @@ module Dungeon.Generate
 
 import           Actor                   (Actor)
 import           Actor.Monsters          (orc, troll)
-import           Control.Lens            ((^.))
+import           Control.Lens            ((%~), (&), (^.))
 import           Coord                   (Coord)
 import           Data.Maybe              (fromMaybe)
 import           Data.Tree               (Tree (Node, rootLabel, subForest))
 import           Dungeon                 (Dungeon,
                                           addAscendingAndDescendingStiars,
-                                          changeTile, dungeon,
+                                          cellMap, dungeon,
                                           stairsPositionCandidates)
 import           Dungeon.Generate.Config (Config (maxRooms, numOfFloors, roomMaxSize, roomMinSize))
 import           Dungeon.Generate.Room   (Room (..), center,
@@ -74,8 +74,11 @@ generateDungeonAndAppend zipper g ig ts cfg ident =
     newZipper =
         appendNode newLowerDungeon $
         modify
-            (fromMaybe (error "Failed to change the tile.") .
-             changeTile upperStairsPosition downStairs) $
+            (\x ->
+                 x &
+                 cellMap %~
+                 (fromMaybe (error "Failed to change the tile.") .
+                  changeTileAt upperStairsPosition downStairs)) $
         modify (const newUpperDungeon) zipper
     zipperFocusingNext =
         fromMaybe
@@ -177,22 +180,22 @@ placeEnemies ::
     -> Room
     -> Int
     -> (CellMap, IndexGenerator, StdGen)
-placeEnemies cellMap g ig _ 0 = (cellMap, ig, g)
-placeEnemies cellMap g ig r n = placeEnemies newMap g''' ig' r (n - 1)
+placeEnemies cm g ig _ 0 = (cm, ig, g)
+placeEnemies cm g ig r n = placeEnemies newMap g''' ig' r (n - 1)
   where
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
     ((enemy, ig'), g''') = newMonster g'' ig
-    newMap = fromMaybe cellMap (locateActorAt enemy (V2 x y) cellMap)
+    newMap = fromMaybe cm (locateActorAt enemy (V2 x y) cm)
 
 placeItems :: CellMap -> StdGen -> Room -> Int -> (CellMap, StdGen)
 placeItems = placeItemsAccum
 
 placeItemsAccum :: CellMap -> StdGen -> Room -> Int -> (CellMap, StdGen)
-placeItemsAccum cellMap g _ 0 = (cellMap, g)
-placeItemsAccum cellMap g r n = placeItemsAccum newMap g''' r (n - 1)
+placeItemsAccum cm g _ 0 = (cm, g)
+placeItemsAccum cm g r n = placeItemsAccum newMap g''' r (n - 1)
   where
-    newMap = fromMaybe cellMap (locateItemAt newItem (V2 x y) cellMap)
+    newMap = fromMaybe cm (locateItemAt newItem (V2 x y) cm)
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
     (prob, g''') = random g'' :: (Float, StdGen)
