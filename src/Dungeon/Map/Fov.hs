@@ -61,13 +61,11 @@ calculateLosAccum (V2 xnext ynext) transparentMap (V2 x0 y0) (V2 x1 y1) fov
   where
     dx = x1 - x0
     dy = y1 - y0
-    sx =
-        if x0 < x1
-            then 1
-            else -1
-    sy =
-        if y0 < y1
-            then 1
-            else -1
+    sx
+        | x0 < x1 = 1
+        | otherwise = -1
+    sy
+        | y0 < y1 = 1
+        | otherwise = -1
     dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
     V2 width height = snd (bounds fov) + V2 1 1
