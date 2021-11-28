@@ -29,7 +29,6 @@ module Dungeon
     , positionOnParentMap
     , cellMap
     , visible
-    , explored
     , popItemAt
     , descendingStairs
     , addAscendingAndDescendingStiars
@@ -38,35 +37,32 @@ module Dungeon
     , pushItem
     ) where
 
-import           Actor                (Actor, isPlayer)
-import           Control.Lens         (makeLenses, (&), (.~), (^.))
-import           Coord                (Coord)
-import           Data.Array.Base      (assocs)
-import           Data.Binary          (Binary)
-import           Data.Foldable        (find)
-import           Dungeon.Identifier   (Identifier)
-import qualified Dungeon.Identifier   as Identifier
-import           Dungeon.Map.Bool     (BoolMap)
-import           Dungeon.Map.Cell     (CellMap, changeTileAt, locateActorAt,
-                                       locateItemAt, positionsAndActors,
-                                       removeActorAt, removeActorIf,
-                                       removeItemAt, walkableMap,
-                                       widthAndHeight)
-import qualified Dungeon.Map.Cell     as Cell
-import           Dungeon.Map.Explored (ExploredMap, initExploredMap,
-                                       updateExploredMap)
-import           Dungeon.Map.Fov      (Fov, calculateFov, initFov)
-import           Dungeon.Map.Tile     (TileCollection, TileId)
-import           Dungeon.Stairs       (StairsPair (StairsPair, downStairs, upStairs))
-import           GHC.Generics         (Generic)
-import           Item                 (Item)
-import           Linear.V2            (V2 (..))
+import           Actor              (Actor, isPlayer)
+import           Control.Lens       (makeLenses, (%~), (&), (.~), (^.))
+import           Coord              (Coord)
+import           Data.Array.Base    (assocs)
+import           Data.Binary        (Binary)
+import           Data.Foldable      (find)
+import           Dungeon.Identifier (Identifier)
+import qualified Dungeon.Identifier as Identifier
+import           Dungeon.Map.Bool   (BoolMap)
+import           Dungeon.Map.Cell   (CellMap, changeTileAt, locateActorAt,
+                                     locateItemAt, positionsAndActors,
+                                     removeActorAt, removeActorIf, removeItemAt,
+                                     updateExploredMap, walkableMap,
+                                     widthAndHeight)
+import qualified Dungeon.Map.Cell   as Cell
+import           Dungeon.Map.Fov    (Fov, calculateFov, initFov)
+import           Dungeon.Map.Tile   (TileCollection, TileId)
+import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
+import           GHC.Generics       (Generic)
+import           Item               (Item)
+import           Linear.V2          (V2 (..))
 
 data Dungeon =
     Dungeon
         { _cellMap             :: CellMap
         , _visible             :: Fov
-        , _explored            :: ExploredMap
         , _positionOnParentMap :: Maybe Coord
           -- Do not integrate `_ascendingStairs` with
           -- `_positionOnParentMap` For example, towns have a `Just`
@@ -87,7 +83,6 @@ dungeon c ident =
     Dungeon
         { _cellMap = c
         , _visible = initFov (widthAndHeight c)
-        , _explored = initExploredMap (widthAndHeight c)
         , _positionOnParentMap = Nothing
         , _ascendingStairs = Nothing
         , _descendingStairs = []
@@ -121,8 +116,7 @@ updateMap :: TileCollection -> Dungeon -> Maybe Dungeon
 updateMap ts = updateFov ts . updateExplored
 
 updateExplored :: Dungeon -> Dungeon
-updateExplored d =
-    d & explored .~ updateExploredMap (d ^. visible) (d ^. explored)
+updateExplored d = d & cellMap %~ updateExploredMap (d ^. visible)
 
 updateFov :: TileCollection -> Dungeon -> Maybe Dungeon
 updateFov ts d =

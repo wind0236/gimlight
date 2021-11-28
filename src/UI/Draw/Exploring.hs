@@ -22,11 +22,12 @@ import           Data.Maybe                      (fromMaybe, mapMaybe)
 import           Data.Vector.Split               (chunksOf)
 import qualified Data.Vector.Storable            as V
 import           Data.Vector.Storable.ByteString (vectorToByteString)
-import           Dungeon                         (Dungeon, cellMap, explored,
+import           Dungeon                         (Dungeon, cellMap,
                                                   getPositionsAndActors,
                                                   mapWidthAndHeight,
                                                   playerPosition, visible)
-import           Dungeon.Map.Cell                (positionsAndItems, tileIdAt)
+import           Dungeon.Map.Cell                (exploredMap,
+                                                  positionsAndItems, tileIdAt)
 import           GameConfig                      (GameConfig)
 import           GameStatus.Exploring            (ExploringHandler,
                                                   getCurrentDungeon,
@@ -154,7 +155,7 @@ makeMap tileGraphics eh = createSingle () def {singleRender = render}
         | isExplored c = PixelRGBA8 (r `div` 2) (g `div` 2) (b `div` 2) a
         | otherwise = PixelRGBA8 0 0 0 0xff
     isVisible c = (d ^. visible) ! c
-    isExplored c = (d ^. explored) ! c
+    isExplored c = exploredMap (d ^. cellMap) ! c
     d = getCurrentDungeon eh
     V2 topLeftCoordX topLeftCoordY = topLeftCoord d
     imagePath = "mapWidget"
