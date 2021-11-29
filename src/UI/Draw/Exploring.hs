@@ -9,25 +9,20 @@ import           Actor                           (getCurrentExperiencePoint,
                                                   getExperiencePointForNextLevel,
                                                   getHp, getLevel, getMaxHp,
                                                   getPower, walkingImagePath)
-import           Codec.Picture                   (Image (imageData),
-                                                  PixelRGBA8 (PixelRGBA8),
-                                                  generateImage, pixelMap)
-import           Control.Applicative             (ZipList (ZipList, getZipList))
-import           Control.Lens                    ((^.))
+import           Codec.Picture                   (Image (imageData, imageHeight, imageWidth))
+import           Control.Lens                    ((&), (.~), (^.))
 import           Control.Monad                   (guard)
 import           Coord                           (Coord)
 import           Data.Array                      ((!))
-import           Data.Default                    (Default (def))
-import           Data.Maybe                      (mapMaybe)
-import           Data.Vector.Split               (chunksOf)
-import qualified Data.Vector.Storable            as V
+import           Data.Maybe                      (catMaybes, mapMaybe)
 import           Data.Vector.Storable.ByteString (vectorToByteString)
 import           Dungeon                         (Dungeon, cellMap,
                                                   getPositionsAndActors,
                                                   mapWidthAndHeight,
                                                   playerPosition)
-import           Dungeon.Map.Cell                (exploredMap, playerFov,
-                                                  positionsAndItems, tileIdAt)
+import           Dungeon.Map.Cell                (exploredMap, lower, playerFov,
+                                                  positionsAndItems,
+                                                  tileIdLayerAt, upper)
 import           GameConfig                      (GameConfig)
 import           GameStatus.Exploring            (ExploringHandler,
                                                   getCurrentDungeon,
@@ -36,22 +31,17 @@ import qualified Item                            as I
 import           Linear.V2                       (V2 (V2), _x, _y)
 import           Localization                    (getLocalizedText)
 import qualified Localization.Texts              as T
-import           Monomer                         (CmbHeight (height),
+import           Monomer                         (CmbBgColor (bgColor),
+                                                  CmbHeight (height),
                                                   CmbMultiline (multiline),
                                                   CmbPaddingL (paddingL),
                                                   CmbPaddingT (paddingT),
                                                   CmbStyleBasic (styleBasic),
-                                                  CmbWidth (width),
-                                                  Point (Point), Rect (Rect),
-                                                  Renderer (addImage, beginPath, deleteImage, fill, setFillImagePattern),
-                                                  Size (Size), Widget,
-                                                  WidgetNode, currentStyle,
-                                                  defaultWidgetNode,
-                                                  drawRoundedRect,
-                                                  getContentArea, hstack, image,
-                                                  label, label_, vstack, zstack)
-import           Monomer.Widgets.Single          (Single (singleRender),
-                                                  createSingle)
+                                                  CmbWidth (width), Size (Size),
+                                                  black, filler, hstack, image,
+                                                  imageMem, label, label_,
+                                                  vstack, zstack)
+import qualified Monomer.Lens                    as L
 import           TextShow                        (TextShow (showt))
 import           UI.Draw.Config                  (logRows, tileColumns,
                                                   tileHeight, tileRows,
@@ -108,56 +98,40 @@ statusGrid eh c =
     atk = getLocalizedText c T.attack
     defence = getLocalizedText c T.defence
 
-mapWidget :: MapTiles -> ExploringHandler -> WidgetNode s e
-mapWidget tiles eh = defaultWidgetNode "map" $ makeMap tiles eh
-
-makeMap :: MapTiles -> ExploringHandler -> Widget s e
-makeMap tileGraphics eh = createSingle () def {singleRender = render}
+mapWidget :: MapTiles -> ExploringHandler -> GameWidgetNode
+mapWidget tiles eh = vstack rows
   where
-    render wenv node renderer = do
-        addImage renderer imagePath mapSize rows []
-        beginPath renderer
-        setFillImagePattern
-            renderer
-            imagePath
-            (Point x y)
-            (Size w h)
-            angle
-            transparent
-        drawRoundedRect renderer (Rect x y w h) def
-        fill renderer
-        deleteImage renderer imagePath
+    rows = [row y | y <- [topLeftCoordY .. topLeftCoordY + tileRows - 1]]
+    row y = hstack $ columns y
+    columns y =
+        [ cell (V2 x y)
+        | x <- [topLeftCoordX .. topLeftCoordX + tileColumns - 1]
+        ]
+    cell c =
+        zstack $ catMaybes [lowerLayerAt c, upperLayerAt c, Just $ shadowAt c]
+    lowerLayerAt = layerOfAt lower
+    upperLayerAt = layerOfAt upper
+    layerOfAt which c = tileIdToImageMem <$> getTileIdOfLayerAt which c
+    tileIdToImageMem tileId =
+        imageMem
+            (showt tileId)
+            (vectorToByteString $ imageData img)
+            (imgSize img)
       where
-        style = currentStyle wenv node
-        Rect x y w h = getContentArea node style
-        angle = 0
-        transparent = 1
-    rows =
-        vectorToByteString $
-        V.concat [row y | y <- [topLeftCoordY .. topLeftCoordY + tileRows - 1]]
-    row y =
-        V.concat $
-        getZipList $
-        foldl1
-            (\acc x -> (V.++) <$> acc <*> x)
-            [ ZipList $ imageAt $ V2 x y
-            | x <- [topLeftCoordX .. topLeftCoordX + tileColumns - 1]
-            ]
-    imageAt c =
-        chunksOf (tileWidth * 4) $ -- `(*4)` for R, G, B, and A bytes.
-        imageData $
-        pixelMap (applyOpacity c) $ maybe emptyImage (tileGraphics !) (tileId c)
-    emptyImage = generateImage (\_ _ -> PixelRGBA8 0 0 0 0) tileWidth tileHeight
-    tileId c = tileIdAt c (d ^. cellMap)
-    applyOpacity c (PixelRGBA8 r g b a)
-        | isVisible c = PixelRGBA8 r g b a
-        | isExplored c = PixelRGBA8 (r `div` 2) (g `div` 2) (b `div` 2) a
-        | otherwise = PixelRGBA8 0 0 0 0xff
+        img = tiles ! tileId
+    imgSize img =
+        Size (fromIntegral $ imageWidth img) (fromIntegral $ imageHeight img)
+    shadowAt c = filler `styleBasic` [bgColor $ black & L.a .~ cellOpacity c]
+    cellOpacity c
+        | isVisible c = 0
+        | isExplored c = 0.5
+        | otherwise = 1
     isVisible c = playerFov (d ^. cellMap) ! c
     isExplored c = exploredMap (d ^. cellMap) ! c
-    d = getCurrentDungeon eh
+    getTileIdOfLayerAt which c = tileIdLayer c >>= (^. which)
+    tileIdLayer c = tileIdLayerAt c $ d ^. cellMap
     V2 topLeftCoordX topLeftCoordY = topLeftCoord d
-    imagePath = "mapWidget"
+    d = getCurrentDungeon eh
 
 mapItems :: ExploringHandler -> [GameWidgetNode]
 mapItems eh = mapMaybe itemToImage $ positionsAndItems $ d ^. cellMap
@@ -210,9 +184,6 @@ topLeftCoord d = V2 x y
     V2 maxX maxY = mapWidthAndHeight d - V2 tileColumns tileRows
     x = max 0 $ min maxX unadjustedX
     y = max 0 $ min maxY unadjestedY
-
-mapSize :: Size
-mapSize = Size (fromIntegral mapDrawingWidth) (fromIntegral mapDrawingHeight)
 
 mapDrawingWidth :: Int
 mapDrawingWidth = tileWidth * tileColumns

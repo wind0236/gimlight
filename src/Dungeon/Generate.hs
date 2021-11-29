@@ -4,7 +4,7 @@ module Dungeon.Generate
 
 import           Actor                   (Actor)
 import           Actor.Monsters          (orc, troll)
-import           Control.Lens            ((%~), (&), (^.))
+import           Control.Lens            ((%~), (&), (.~), (?~), (^.))
 import           Coord                   (Coord)
 import           Data.Maybe              (fromMaybe)
 import           Data.Tree               (Tree (Node, rootLabel, subForest))
@@ -18,10 +18,9 @@ import           Dungeon.Generate.Room   (Room (..), center,
                                           roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Identifier      (Identifier)
 import           Dungeon.Map.Cell        (CellMap, allWallTiles, changeTileAt,
-                                          locateActorAt, locateItemAt,
+                                          locateActorAt, locateItemAt, upper,
                                           widthAndHeight)
-import           Dungeon.Map.Tile        (TileCollection, downStairs, floorTile,
-                                          upStairs)
+import           Dungeon.Map.Tile        (TileCollection, downStairs, upStairs)
 import           Dungeon.Size            (maxSize, minSize)
 import           Dungeon.Stairs          (StairsPair (StairsPair))
 import           IndexGenerator          (IndexGenerator)
@@ -78,7 +77,9 @@ generateDungeonAndAppend zipper g ig ts cfg ident =
                  x &
                  cellMap %~
                  (fromMaybe (error "Failed to change the tile.") .
-                  changeTileAt upperStairsPosition (Just downStairs))) $
+                  changeTileAt
+                      (\tile -> tile & upper ?~ downStairs)
+                      upperStairsPosition)) $
         modify (const newUpperDungeon) zipper
     zipperFocusingNext =
         fromMaybe
@@ -100,7 +101,7 @@ generateDungeon ::
 generateDungeon g ig cfg ident =
     ( dungeon
           (fromMaybe (error "Failed to change the tile.") $
-           changeTileAt enterPosition (Just upStairs) tiles)
+           changeTileAt (\tile -> tile & upper ?~ upStairs) enterPosition tiles)
           ident
     , enterPosition
     , g'''
@@ -162,7 +163,7 @@ createRoom room r =
         (\acc x ->
              fromMaybe
                  (error "Failed to change a tile.")
-                 (changeTileAt x (Just floorTile) acc))
+                 (changeTileAt (\tile -> tile & upper .~ Nothing) x acc))
         r
         [V2 x y | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 

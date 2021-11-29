@@ -4,6 +4,9 @@
 
 module Dungeon.Map.Cell
     ( CellMap
+    , TileIdLayer(..)
+    , upper
+    , lower
     , cellMap
     , allWallTiles
     , changeTileAt
@@ -22,12 +25,12 @@ module Dungeon.Map.Cell
     , removeActorIf
     , positionsAndActors
     , positionsAndItems
-    , tileIdAt
+    , tileIdLayerAt
     , cellAt
     ) where
 
 import           Actor            (Actor, isPlayer)
-import           Control.Lens     (makeLenses, (&), (.~), (?~), (^.))
+import           Control.Lens     (makeLenses, (%~), (&), (.~), (?~), (^.))
 import           Coord            (Coord)
 import           Data.Array       (Array, assocs, bounds, (!), (//))
 import           Data.Binary      (Binary)
@@ -36,15 +39,26 @@ import           Data.Maybe       (isJust, isNothing, mapMaybe)
 import qualified Dungeon.Map      as M
 import           Dungeon.Map.Bool (BoolMap)
 import           Dungeon.Map.Fov  (calculateFov)
-import           Dungeon.Map.Tile (TileCollection, TileId, wallTile)
+import           Dungeon.Map.Tile (TileCollection, TileId, floorTile, wallTile)
 import qualified Dungeon.Map.Tile as Tile
 import           GHC.Generics     (Generic)
 import           Item             (Item)
 import           Linear.V2        (V2 (V2))
 
+data TileIdLayer =
+    TileIdLayer
+        { _upper :: Maybe TileId
+        , _lower :: Maybe TileId
+        }
+    deriving (Show, Ord, Eq, Generic)
+
+makeLenses ''TileIdLayer
+
+instance Binary TileIdLayer
+
 data Cell =
     Cell
-        { _tileId            :: Maybe TileId
+        { _tileIdLayer       :: TileIdLayer
         , _actor             :: Maybe Actor
         , _item              :: Maybe Item
         , _explored          :: Bool
@@ -58,12 +72,13 @@ instance Binary Cell
 
 isWalkable :: TileCollection -> Cell -> Bool
 isWalkable tc c =
-    fmap (Tile.isWalkable . (tc !)) (c ^. tileId) /= Just False &&
+    fmap (Tile.isWalkable . (tc !)) (c ^. (tileIdLayer . upper)) /= Just False &&
     isNothing (c ^. actor)
 
 isTransparent :: TileCollection -> Cell -> Bool
 isTransparent tc c =
-    fmap (Tile.isTransparent . (tc !)) (c ^. tileId) /= Just False
+    fmap (Tile.isTransparent . (tc !)) (c ^. (tileIdLayer . upper)) /=
+    Just False
 
 locateActor :: Actor -> Cell -> Maybe Cell
 locateActor a c
@@ -93,23 +108,33 @@ newtype CellMap =
 
 instance Binary CellMap
 
-cellMap :: Array (V2 Int) (Maybe TileId) -> CellMap
+cellMap :: Array (V2 Int) TileIdLayer -> CellMap
 cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False False)
 
 allWallTiles :: V2 Int -> CellMap
 allWallTiles wh =
     CellMap $
-    M.generate wh (const (Cell (Just wallTile) Nothing Nothing False False))
+    M.generate
+        wh
+        (const
+             (Cell
+                  (TileIdLayer (Just wallTile) (Just floorTile))
+                  Nothing
+                  Nothing
+                  False
+                  False))
 
 widthAndHeight :: CellMap -> V2 Int
 widthAndHeight (CellMap m) = snd (bounds m) + V2 1 1
 
-changeTileAt :: Coord -> Maybe TileId -> CellMap -> Maybe CellMap
-changeTileAt c i (CellMap m)
-    | isJust $ tileIdAt c (CellMap m) = Just $ CellMap $ m // [(c, newTile)]
+changeTileAt ::
+       (TileIdLayer -> TileIdLayer) -> Coord -> CellMap -> Maybe CellMap
+changeTileAt f c (CellMap m)
+    | isJust $ tileIdLayerAt c (CellMap m) =
+        Just $ CellMap $ m // [(c, newTile)]
     | otherwise = Nothing
   where
-    newTile = m ! c & tileId .~ i
+    newTile = m ! c & tileIdLayer %~ f
 
 walkableMap :: TileCollection -> CellMap -> BoolMap
 walkableMap tc (CellMap cm) = isWalkable tc <$> cm
@@ -196,8 +221,8 @@ removeActorIf f cm = position >>= flip removeActorAt cm
   where
     position = fst <$> find (f . snd) (positionsAndActors cm)
 
-tileIdAt :: Coord -> CellMap -> Maybe TileId
-tileIdAt c t = cellAt c t >>= (^. tileId)
+tileIdLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
+tileIdLayerAt c t = fmap (^. tileIdLayer) (cellAt c t)
 
 cellAt :: Coord -> CellMap -> Maybe Cell
 cellAt c (CellMap m)
@@ -205,6 +230,6 @@ cellAt c (CellMap m)
     | otherwise = Nothing
 
 coordIsInRange :: Coord -> CellMap -> Bool
-coordIsInRange c (CellMap m) = c >= lower && c <= upper
+coordIsInRange c (CellMap m) = c >= lowerBound && c <= upperBound
   where
-    (lower, upper) = bounds m
+    (lowerBound, upperBound) = bounds m
