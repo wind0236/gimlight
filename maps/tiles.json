@@ -92,6 +92,20 @@
                  "type":"bool",
                  "value":true
                 }]
+        }, 
+        {
+         "id":6,
+         "properties":[
+                {
+                 "name":"transparent",
+                 "type":"bool",
+                 "value":true
+                }, 
+                {
+                 "name":"walkable",
+                 "type":"bool",
+                 "value":false
+                }]
         }],
  "tilewidth":48,
  "type":"tileset",
