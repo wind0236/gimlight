@@ -37,7 +37,6 @@ import           Data.Binary      (Binary)
 import           Data.Foldable    (find)
 import           Data.Maybe       (isJust, isNothing, mapMaybe)
 import qualified Dungeon.Map      as M
-import           Dungeon.Map.Bool (BoolMap)
 import           Dungeon.Map.Fov  (calculateFov)
 import           Dungeon.Map.Tile (TileCollection, TileId, floorTile, wallTile)
 import qualified Dungeon.Map.Tile as Tile
@@ -136,16 +135,16 @@ changeTileAt f c (CellMap m)
   where
     newTile = m ! c & tileIdLayer %~ f
 
-walkableMap :: TileCollection -> CellMap -> BoolMap
+walkableMap :: TileCollection -> CellMap -> Array (V2 Int) Bool
 walkableMap tc (CellMap cm) = isWalkable tc <$> cm
 
-exploredMap :: CellMap -> BoolMap
+exploredMap :: CellMap -> Array (V2 Int) Bool
 exploredMap (CellMap cm) = (^. explored) <$> cm
 
-playerFov :: CellMap -> BoolMap
+playerFov :: CellMap -> Array (V2 Int) Bool
 playerFov (CellMap cm) = (^. visibleFromPlayer) <$> cm
 
-transparentMap :: TileCollection -> CellMap -> BoolMap
+transparentMap :: TileCollection -> CellMap -> Array (V2 Int) Bool
 transparentMap tc (CellMap cm) = isTransparent tc <$> cm
 
 updateExploredMap :: CellMap -> CellMap

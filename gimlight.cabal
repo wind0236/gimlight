@@ -36,7 +36,6 @@ executable gimlight
                       , Dungeon.Identifier
                       , Dungeon.Init
                       , Dungeon.Map
-                      , Dungeon.Map.Bool
                       , Dungeon.Map.Cell
                       , Dungeon.Map.Fov
                       , Dungeon.Map.JSONReader

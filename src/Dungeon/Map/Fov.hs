@@ -3,17 +3,16 @@ module Dungeon.Map.Fov
     , calculateFov
     ) where
 
-import           Coord            (Coord)
-import           Data.Array       (array, bounds, (!), (//))
-import           Dungeon.Map.Bool (BoolMap)
-import           Linear.V2        (V2 (..))
+import           Coord      (Coord)
+import           Data.Array (Array, array, bounds, (!), (//))
+import           Linear.V2  (V2 (..))
 
-type Fov = BoolMap
+type Fov = Array (V2 Int) Bool
 
 fovRadius :: Int
 fovRadius = 8
 
-calculateFov :: Coord -> BoolMap -> Fov
+calculateFov :: Coord -> Array (V2 Int) Bool -> Fov
 calculateFov src transparentMap =
     foldl
         (flip (calculateLos transparentMap src))
@@ -23,10 +22,10 @@ calculateFov src transparentMap =
         , y <- [(-fovRadius) .. fovRadius]
         ]
 
-calculateLos :: BoolMap -> Coord -> Coord -> Fov -> Fov
+calculateLos :: Array (V2 Int) Bool -> Coord -> Coord -> Fov -> Fov
 calculateLos m p0 = calculateLosAccum p0 m p0
 
-calculateLosAccum :: Coord -> BoolMap -> Coord -> Coord -> BoolMap -> BoolMap
+calculateLosAccum :: Coord -> Array (V2 Int) Bool -> Coord -> Coord -> Array (V2 Int) Bool -> Array (V2 Int) Bool
 calculateLosAccum (V2 xnext ynext) transparentMap (V2 x0 y0) (V2 x1 y1) fov
     | x1 < 0 || y1 < 0 || x1 >= width || y1 >= height = fov
     | V2 xnext ynext == V2 x1 y1 = fov // [(V2 x1 y1, True)]
@@ -66,7 +65,7 @@ calculateLosAccum (V2 xnext ynext) transparentMap (V2 x0 y0) (V2 x1 y1) fov
     dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
     V2 width height = snd (bounds fov) + V2 1 1
 
-darkFov :: V2 Int -> BoolMap
+darkFov :: V2 Int -> Array (V2 Int) Bool
 darkFov (V2 width height) =
     array
         (V2 0 0, V2 width height - V2 1 1)

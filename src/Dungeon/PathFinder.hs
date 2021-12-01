@@ -3,11 +3,10 @@ module Dungeon.PathFinder
     ) where
 
 import           Coord            (Coord)
-import           Data.Array       (bounds, (!))
+import           Data.Array       (Array, bounds, (!))
 import           Data.Graph.AStar (aStar)
 import           Data.HashSet     (HashSet, fromList)
 import           Dungeon          (Dungeon, walkableFloor)
-import           Dungeon.Map.Bool (BoolMap)
 import           Dungeon.Map.Tile (TileCollection)
 import           Linear.V2        (V2 (..))
 
@@ -29,7 +28,7 @@ distanceBetween p0 p1 =
         V2 x y = diff
      in x * x + y * y
 
-candidate :: BoolMap -> Coord -> Coord -> [Coord]
+candidate :: Array (V2 Int) Bool -> Coord -> Coord -> [Coord]
 candidate walkable dst (V2 sx sy)
     -- The destination is *not walkable* as there is an actor. However, it
     -- makes the `aStar` function return `Nothing`. So, we add the

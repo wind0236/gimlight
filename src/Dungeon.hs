@@ -38,19 +38,19 @@ module Dungeon
 import           Actor              (Actor, isPlayer)
 import           Control.Lens       (makeLenses, (%~), (&), (.~), (^.))
 import           Coord              (Coord)
+import           Data.Array         (Array)
 import           Data.Array.Base    (assocs)
 import           Data.Binary        (Binary)
 import           Data.Foldable      (find)
 import           Dungeon.Identifier (Identifier)
 import qualified Dungeon.Identifier as Identifier
-import           Dungeon.Map.Bool   (BoolMap)
 import           Dungeon.Map.Cell   (CellMap, locateActorAt, locateItemAt,
                                      positionsAndActors, removeActorAt,
                                      removeActorIf, removeItemAt,
                                      updateExploredMap, updatePlayerFov,
                                      walkableMap, widthAndHeight)
 import qualified Dungeon.Map.Cell   as Cell
-import           Dungeon.Map.Fov    (calculateFov)
+import           Dungeon.Map.Fov    (Fov, calculateFov)
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics       (Generic)
@@ -115,7 +115,7 @@ updateFov :: TileCollection -> Dungeon -> Maybe Dungeon
 updateFov ts d =
     (\newMap -> d & cellMap .~ newMap) <$> updatePlayerFov ts (d ^. cellMap)
 
-calculateFovAt :: Coord -> TileCollection -> Dungeon -> BoolMap
+calculateFovAt :: Coord -> TileCollection -> Dungeon -> Fov
 calculateFovAt c ts d = calculateFov c (transparentMap ts d)
 
 playerPosition :: Dungeon -> Maybe Coord
@@ -169,10 +169,10 @@ stairsPositionCandidates ts d =
     isUpStairsPosition c = (downStairs <$> d ^. ascendingStairs) == Just c
     isDownStairsPosition c = c `elem` map upStairs (d ^. descendingStairs)
 
-walkableFloor :: TileCollection -> Dungeon -> BoolMap
+walkableFloor :: TileCollection -> Dungeon -> Array (V2 Int) Bool
 walkableFloor ts d = walkableMap ts (d ^. cellMap)
 
-transparentMap :: TileCollection -> Dungeon -> BoolMap
+transparentMap :: TileCollection -> Dungeon -> Array (V2 Int) Bool
 transparentMap ts d = Cell.transparentMap ts (d ^. cellMap)
 
 positionsAndNpcs :: Dungeon -> [(Coord, Actor)]
