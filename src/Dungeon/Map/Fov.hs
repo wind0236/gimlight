@@ -4,8 +4,8 @@ module Dungeon.Map.Fov
     ) where
 
 import           Coord            (Coord)
-import           Data.Array       (bounds, (!), (//))
-import           Dungeon.Map.Bool (BoolMap, emptyBoolMap)
+import           Data.Array       (array, bounds, (!), (//))
+import           Dungeon.Map.Bool (BoolMap)
 import           Linear.V2        (V2 (..))
 
 type Fov = BoolMap
@@ -17,7 +17,7 @@ calculateFov :: Coord -> BoolMap -> Fov
 calculateFov src transparentMap =
     foldl
         (flip (calculateLos transparentMap src))
-        (emptyBoolMap $ snd (bounds transparentMap) + V2 1 1)
+        (darkFov $ snd (bounds transparentMap) + V2 1 1)
         [ src + V2 x y
         | x <- [(-fovRadius) .. fovRadius]
         , y <- [(-fovRadius) .. fovRadius]
@@ -65,3 +65,9 @@ calculateLosAccum (V2 xnext ynext) transparentMap (V2 x0 y0) (V2 x1 y1) fov
         | otherwise = -1
     dist = sqrt $ fromIntegral $ dx * dx + dy * dy :: Float
     V2 width height = snd (bounds fov) + V2 1 1
+
+darkFov :: V2 Int -> BoolMap
+darkFov (V2 width height) =
+    array
+        (V2 0 0, V2 width height - V2 1 1)
+        [(V2 y x, False) | y <- [0 .. height - 1], x <- [0 .. width - 1]]
