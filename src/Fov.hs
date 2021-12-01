@@ -1,4 +1,4 @@
-module Dungeon.Map.Fov
+module Fov
     ( Fov
     , calculateFov
     ) where
@@ -25,7 +25,13 @@ calculateFov src transparentMap =
 calculateLos :: Array (V2 Int) Bool -> Coord -> Coord -> Fov -> Fov
 calculateLos m p0 = calculateLosAccum p0 m p0
 
-calculateLosAccum :: Coord -> Array (V2 Int) Bool -> Coord -> Coord -> Array (V2 Int) Bool -> Array (V2 Int) Bool
+calculateLosAccum ::
+       Coord
+    -> Array (V2 Int) Bool
+    -> Coord
+    -> Coord
+    -> Array (V2 Int) Bool
+    -> Array (V2 Int) Bool
 calculateLosAccum (V2 xnext ynext) transparentMap (V2 x0 y0) (V2 x1 y1) fov
     | x1 < 0 || y1 < 0 || x1 >= width || y1 >= height = fov
     | V2 xnext ynext == V2 x1 y1 = fov // [(V2 x1 y1, True)]

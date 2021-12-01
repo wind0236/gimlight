@@ -50,9 +50,9 @@ import           Dungeon.Map.Cell   (CellMap, locateActorAt, locateItemAt,
                                      updateExploredMap, updatePlayerFov,
                                      walkableMap, widthAndHeight)
 import qualified Dungeon.Map.Cell   as Cell
-import           Dungeon.Map.Fov    (Fov, calculateFov)
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
+import           Fov                (Fov, calculateFov)
 import           GHC.Generics       (Generic)
 import           Item               (Item)
 import           Linear.V2          (V2 (..))

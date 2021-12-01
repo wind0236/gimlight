@@ -37,9 +37,9 @@ import           Data.Binary      (Binary)
 import           Data.Foldable    (find)
 import           Data.Maybe       (isJust, isNothing, mapMaybe)
 import qualified Dungeon.Map      as M
-import           Dungeon.Map.Fov  (calculateFov)
 import           Dungeon.Map.Tile (TileCollection, TileId, floorTile, wallTile)
 import qualified Dungeon.Map.Tile as Tile
+import           Fov              (calculateFov)
 import           GHC.Generics     (Generic)
 import           Item             (Item)
 import           Linear.V2        (V2 (V2))

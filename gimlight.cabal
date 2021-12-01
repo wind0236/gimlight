@@ -37,7 +37,6 @@ executable gimlight
                       , Dungeon.Init
                       , Dungeon.Map
                       , Dungeon.Map.Cell
-                      , Dungeon.Map.Fov
                       , Dungeon.Map.JSONReader
                       , Dungeon.Map.Tile
                       , Dungeon.Map.Tile.JSONReader
@@ -47,6 +46,7 @@ executable gimlight
                       , Dungeon.Predefined.GlobalMap
                       , Dungeon.Size
                       , Dungeon.Stairs
+                      , Fov
                       , GameConfig
                       , GameModel
                       , GameStatus
