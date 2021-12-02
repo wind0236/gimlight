@@ -7,8 +7,27 @@ maintainer:             tokusan441@gmail.com
 
 extra-source-files:     CHANGELOG.md
 
+Test-Suite spec
+    type:               exitcode-stdio-1.0
+    main-is:            Main.hs
+    ghc-options:        -Wall -Werror
+
+    other-modules:      Dungeon.Map.CellSpec
+
+    build-depends:      base
+                      , gimlight
+                      , hspec >= 2.9.1 && < 2.10
+                      , lens
+                      , linear
+                      , QuickCheck >= 2.14.2 && < 2.15
+
+    hs-source-dirs:     tests
+    default-Language:   Haskell2010
+
 library
-    exposed-modules:    Game
+    exposed-modules:    Dungeon.Map.Cell
+                      , Dungeon.Map.Tile
+                      , Game
 
     ghc-options:        -Wall -Werror
 
@@ -37,9 +56,7 @@ library
                       , Dungeon.Identifier
                       , Dungeon.Init
                       , Dungeon.Map
-                      , Dungeon.Map.Cell
                       , Dungeon.Map.JSONReader
-                      , Dungeon.Map.Tile
                       , Dungeon.Map.Tile.JSONReader
                       , Dungeon.PathFinder
                       , Dungeon.Predefined.BatsCave

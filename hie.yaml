@@ -1,5 +1,8 @@
 cradle:
   cabal:
+    - path: "tests"
+      component: "gimlight:test:spec"
+
     - path: "src"
       component: "lib:gimlight"
 

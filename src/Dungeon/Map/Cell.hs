@@ -8,6 +8,7 @@ module Dungeon.Map.Cell
     , upper
     , lower
     , cellMap
+    , tileIdLayer
     , allWallTiles
     , changeTileAt
     , updateExploredMap
