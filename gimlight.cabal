@@ -55,7 +55,6 @@ library
                       , Dungeon.Generate.Room
                       , Dungeon.Identifier
                       , Dungeon.Init
-                      , Dungeon.Map
                       , Dungeon.Map.JSONReader
                       , Dungeon.Map.Tile.JSONReader
                       , Dungeon.PathFinder

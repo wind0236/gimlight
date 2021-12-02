@@ -33,11 +33,10 @@ module Dungeon.Map.Cell
 import           Actor            (Actor, isPlayer)
 import           Control.Lens     (makeLenses, (%~), (&), (.~), (?~), (^.))
 import           Coord            (Coord)
-import           Data.Array       (Array, assocs, bounds, (!), (//))
+import           Data.Array       (Array, array, assocs, bounds, (!), (//))
 import           Data.Binary      (Binary)
 import           Data.Foldable    (find)
 import           Data.Maybe       (isJust, isNothing, mapMaybe)
-import qualified Dungeon.Map      as M
 import           Dungeon.Map.Tile (TileCollection, TileId, floorTile, wallTile)
 import qualified Dungeon.Map.Tile as Tile
 import           Fov              (calculateFov)
@@ -112,17 +111,19 @@ cellMap :: Array (V2 Int) TileIdLayer -> CellMap
 cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False False)
 
 allWallTiles :: V2 Int -> CellMap
-allWallTiles wh =
+allWallTiles (V2 width height) =
     CellMap $
-    M.generate
-        wh
-        (const
-             (Cell
-                  (TileIdLayer (Just wallTile) (Just floorTile))
-                  Nothing
-                  Nothing
-                  False
-                  False))
+    array
+        (V2 0 0, V2 width height - V2 1 1)
+        [(V2 x y, cell) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
+  where
+    cell =
+        Cell
+            (TileIdLayer (Just wallTile) (Just floorTile))
+            Nothing
+            Nothing
+            False
+            False
 
 widthAndHeight :: CellMap -> V2 Int
 widthAndHeight (CellMap m) = snd (bounds m) + V2 1 1
