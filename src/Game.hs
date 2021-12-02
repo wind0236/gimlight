@@ -1,8 +1,8 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main
-    ( main
+module Game
+    ( start
     ) where
 
 import           GameConfig     (getLocale, readConfigOrDefault)
@@ -18,8 +18,8 @@ import qualified UI.Event       as E
 import qualified UI.Graphics    as Graphics
 import           UI.Types       (AppEvent (..))
 
-main :: IO ()
-main = do
+start :: IO ()
+start = do
     initModel <- createModel
     startApp initModel handleEvent buildUI initUIConfig
   where
