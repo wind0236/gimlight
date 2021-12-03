@@ -12,9 +12,11 @@ Test-Suite spec
     main-is:            Main.hs
     ghc-options:        -Wall -Werror
 
-    other-modules:      Dungeon.Map.CellSpec
+    other-modules:      DungeonSpec
+                      , Dungeon.Map.CellSpec
 
-    build-depends:      base
+    build-depends:      array
+                      , base
                       , gimlight
                       , hspec >= 2.9.1 && < 2.10
                       , lens
@@ -25,8 +27,12 @@ Test-Suite spec
     default-Language:   Haskell2010
 
 library
-    exposed-modules:    Dungeon.Map.Cell
+    exposed-modules:    Actor
+                      , Dungeon
+                      , Dungeon.Identifier
+                      , Dungeon.Map.Cell
                       , Dungeon.Map.Tile
+                      , IndexGenerator
                       , Game
 
     ghc-options:        -Wall -Werror
@@ -38,7 +44,6 @@ library
                       , Action.Move
                       , Action.PickUp
                       , Action.Wait
-                      , Actor
                       , Actor.NpcBehavior
                       , Actor.Friendly
                       , Actor.Friendly.Electria
@@ -49,11 +54,9 @@ library
                       , Actor.Status.Hp
                       , Actor.Status.Experience
                       , Coord
-                      , Dungeon
                       , Dungeon.Generate
                       , Dungeon.Generate.Config
                       , Dungeon.Generate.Room
-                      , Dungeon.Identifier
                       , Dungeon.Init
                       , Dungeon.Map.JSONReader
                       , Dungeon.Map.Tile.JSONReader
@@ -74,7 +77,6 @@ library
                       , GameStatus.SelectingItem
                       , GameStatus.Talking
                       , GameStatus.Talking.Part
-                      , IndexGenerator
                       , Item
                       , Item.Book
                       , Item.Heal
