@@ -3,22 +3,31 @@ module Action.Drop
     ) where
 
 import           Action               (Action, ActionResult (ActionResult),
+                                       ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
 import           Actor                (removeNthItem)
 import           Control.Monad.Writer (tell)
-import           Dungeon              (pushActor, pushItem)
+import           Data.Maybe           (isJust)
+import           Dungeon              (popItemAt, pushActor, pushItem)
 import           Item                 (Item, getName)
+import           Localization         (MultilingualText)
 import qualified Localization.Texts   as T
 
 dropAction :: Int -> Action
-dropAction n position e tiles d =
-    case item of
-        Just x -> dropItem x position newActor tiles d
-        Nothing -> do
-            tell [T.whatToDrop]
-            return $ ActionResult Failed (pushActor position e d) []
+dropAction n position e tiles d
+    | itemExists = failWithReason T.itemExists
+    | otherwise =
+        case item of
+            Just x  -> dropItem x position newActor tiles d
+            Nothing -> failWithReason T.whatToDrop
   where
     (item, newActor) = removeNthItem n e
+    itemExists = isJust $ fst $ popItemAt position d
+    failWithReason :: MultilingualText -> ActionResultWithLog
+    failWithReason reason = do
+        tell [reason]
+        return failedResult
+    failedResult = ActionResult Failed (pushActor position e d) []
 
 dropItem :: Item -> Action
 dropItem item position actor _ dungeon = do

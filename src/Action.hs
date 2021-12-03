@@ -17,6 +17,7 @@ data ActionStatus
     = Ok
     | ReadingStarted Book
     | Failed
+    deriving (Show, Eq)
 
 data ActionResult =
     ActionResult
@@ -24,6 +25,7 @@ data ActionResult =
         , newDungeon :: Dungeon
         , killed     :: [Actor]
         }
+    deriving (Show, Eq)
 
 type Action = Coord -> Actor -> TileCollection -> Dungeon -> ActionResultWithLog
 

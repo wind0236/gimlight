@@ -4,6 +4,7 @@ module Localization.Texts.Actions
     ( youCannotMoveThere
     , youGotItem
     , youGotNothing
+    , itemExists
     , bagIsFull
     , whatToUse
     , whatToDrop
@@ -45,6 +46,10 @@ whatToUse = multilingualText "What do you consume" "何を使う？"
 
 whatToDrop :: MultilingualText
 whatToDrop = multilingualText "What do you drop?" "何を置く？"
+
+itemExists :: MultilingualText
+itemExists =
+    multilingualText "There is already an item at your foot." "足元には既にアイテムがある。"
 
 youDropped :: MultilingualText -> MultilingualText
 youDropped name =

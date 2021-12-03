@@ -41,6 +41,9 @@ Test-Suite spec
     other-modules:      DungeonSpec
                       , Dungeon.Map.CellSpec
 
+    other-modules:      Action.DropSpec
+                      , Dungeon.Map.CellSpec
+
     build-depends:      gimlight
                       , hspec >= 2.9.1 && < 2.10
                       , QuickCheck >= 2.14.2 && < 2.15
@@ -50,17 +53,20 @@ Test-Suite spec
 
 library
     import:             common
-    exposed-modules:    Actor
+    exposed-modules:    Action
+                      , Action.Drop
+                      , Actor
+                      , Actor.Inventory
                       , Dungeon
                       , Dungeon.Identifier
                       , Dungeon.Map.Cell
                       , Dungeon.Map.Tile
-                      , IndexGenerator
                       , Game
+                      , IndexGenerator
+                      , Item
+                      , Localization.Texts
 
-    other-modules:      Action
-                      , Action.Consume
-                      , Action.Drop
+    other-modules:      Action.Consume
                       , Action.Melee
                       , Action.Move
                       , Action.PickUp
@@ -69,7 +75,6 @@ library
                       , Actor.Friendly
                       , Actor.Friendly.Electria
                       , Actor.Identifier
-                      , Actor.Inventory
                       , Actor.Monsters
                       , Actor.Status
                       , Actor.Status.Hp
@@ -98,11 +103,9 @@ library
                       , GameStatus.SelectingItem
                       , GameStatus.Talking
                       , GameStatus.Talking.Part
-                      , Item
                       , Item.Book
                       , Item.Heal
                       , Localization
-                      , Localization.Texts
                       , Localization.Texts.Actions
                       , Localization.Texts.Actors
                       , Localization.Texts.Actors.Electria
