@@ -41,6 +41,7 @@ Test-Suite spec
     other-modules:      Action.DropSpec
                       , Dungeon.Map.CellSpec
                       , DungeonSpec
+                      , FovSpec
 
     build-depends:      gimlight
                       , hspec >= 2.9.1 && < 2.10
@@ -59,6 +60,7 @@ library
                       , Dungeon.Identifier
                       , Dungeon.Map.Cell
                       , Dungeon.Map.Tile
+                      , Fov
                       , Game
                       , IndexGenerator
                       , Item
@@ -90,7 +92,6 @@ library
                       , Dungeon.Predefined.GlobalMap
                       , Dungeon.Size
                       , Dungeon.Stairs
-                      , Fov
                       , GameConfig
                       , GameModel
                       , GameStatus

@@ -75,4 +75,4 @@ darkFov :: V2 Int -> Array (V2 Int) Bool
 darkFov (V2 width height) =
     array
         (V2 0 0, V2 width height - V2 1 1)
-        [(V2 y x, False) | y <- [0 .. height - 1], x <- [0 .. width - 1]]
+        [(V2 x y, False) | y <- [0 .. height - 1], x <- [0 .. width - 1]]
