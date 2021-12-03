@@ -38,11 +38,9 @@ Test-Suite spec
     import:             common
     type:               exitcode-stdio-1.0
     main-is:            Main.hs
-    other-modules:      DungeonSpec
-                      , Dungeon.Map.CellSpec
-
     other-modules:      Action.DropSpec
                       , Dungeon.Map.CellSpec
+                      , DungeonSpec
 
     build-depends:      gimlight
                       , hspec >= 2.9.1 && < 2.10
