@@ -7,26 +7,49 @@ maintainer:             tokusan441@gmail.com
 
 extra-source-files:     CHANGELOG.md
 
-Test-Suite spec
-    type:               exitcode-stdio-1.0
-    main-is:            Main.hs
+common common
+    build-depends:      astar >= 0.3.0 && < 0.4
+                      , array >= 0.5.4 && < 0.6
+                      , base >= 4.14.3 && < 4.15
+                      , binary >= 0.8.8 && < 0.9
+                      , bytestring-to-vector >= 0.3.0.1 && < 0.4
+                      , containers >= 0.6.5.1 && < 0.7
+                      , data-default >= 0.7.1 && < 0.8
+                      , directory >= 1.3.7 && < 1.4
+                      , lens >= 5.0.1 && < 5.1
+                      , lens-aeson >= 1.1.3 && < 1.2
+                      , linear >= 1.21.7 && < 1.22
+                      , JuicyPixels >= 3.3.6 && < 3.4
+                      , JuicyPixels-extra >= 0.5.2 && < 0.6
+                      , monomer >= 1.2.0.0 && < 1.3
+                      , mtl >= 2.2.2 && < 2.3
+                      , random >= 1.2.1 && < 1.3
+                      , split >= 0.2.3 && < 0.3
+                      , text >= 1.2.4 && < 1.3
+                      , text-show >= 3.9.2 && < 3.10
+                      , transformers >= 0.5.6 && < 0.6
+                      , unordered-containers >= 0.2.14 && < 0.3
+                      , vector >= 0.12.3.1 && < 0.13
+                      , vector-split >= 1.0.0.2 && < 1.1
     ghc-options:        -Wall -Werror
 
+
+Test-Suite spec
+    import:             common
+    type:               exitcode-stdio-1.0
+    main-is:            Main.hs
     other-modules:      DungeonSpec
                       , Dungeon.Map.CellSpec
 
-    build-depends:      array
-                      , base
-                      , gimlight
+    build-depends:      gimlight
                       , hspec >= 2.9.1 && < 2.10
-                      , lens
-                      , linear
                       , QuickCheck >= 2.14.2 && < 2.15
 
     hs-source-dirs:     tests
     default-Language:   Haskell2010
 
 library
+    import:             common
     exposed-modules:    Actor
                       , Dungeon
                       , Dungeon.Identifier
@@ -34,8 +57,6 @@ library
                       , Dungeon.Map.Tile
                       , IndexGenerator
                       , Game
-
-    ghc-options:        -Wall -Werror
 
     other-modules:      Action
                       , Action.Consume
@@ -112,40 +133,16 @@ library
                       , UI.Event
                       , UI.Types
 
-    build-depends:      astar >= 0.3.0 && < 0.4
-                      , array >= 0.5.4 && < 0.6
-                      , base >= 4.14.3 && < 4.15
-                      , binary >= 0.8.8 && < 0.9
-                      , bytestring-to-vector >= 0.3.0.1 && < 0.4
-                      , containers >= 0.6.5.1 && < 0.7
-                      , data-default >= 0.7.1 && < 0.8
-                      , directory >= 1.3.7 && < 1.4
-                      , lens >= 5.0.1 && < 5.1
-                      , lens-aeson >= 1.1.3 && < 1.2
-                      , linear >= 1.21.7 && < 1.22
-                      , JuicyPixels >= 3.3.6 && < 3.4
-                      , JuicyPixels-extra >= 0.5.2 && < 0.6
-                      , monomer >= 1.2.0.0 && < 1.3
-                      , mtl >= 2.2.2 && < 2.3
-                      , random >= 1.2.1 && < 1.3
-                      , split >= 0.2.3 && < 0.3
-                      , text >= 1.2.4 && < 1.3
-                      , text-show >= 3.9.2 && < 3.10
-                      , transformers >= 0.5.6 && < 0.6
-                      , unordered-containers >= 0.2.14 && < 0.3
-                      , vector >= 0.12.3.1 && < 0.13
-                      , vector-split >= 1.0.0.2 && < 1.1
-
     hs-source-dirs:     src
 
     default-language:   Haskell2010
 
 executable gimlight
+    import:             common
     main-is:            Main.hs
-    ghc-options:        -threaded -Wall -Werror
+    ghc-options:        -threaded
 
-    build-depends:      base >= 4.14.3 && < 4.15
-                      , gimlight
+    build-depends:      gimlight
 
     hs-source-dirs:     app
     default-language:   Haskell2010
