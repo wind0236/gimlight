@@ -6,9 +6,11 @@ import           Action               (Action, ActionResult (ActionResult),
                                        ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
 import           Actor                (removeNthItem)
+import           Control.Lens         ((^.))
 import           Control.Monad.Writer (tell)
 import           Data.Maybe           (isJust)
-import           Dungeon              (popItemAt, pushActor, pushItem)
+import           Dungeon              (cellMap, pushActor, pushItem)
+import           Dungeon.Map.Cell     (removeItemAt)
 import           Item                 (Item, getName)
 import           Localization         (MultilingualText)
 import qualified Localization.Texts   as T
@@ -22,7 +24,7 @@ dropAction n position e tiles d
             Nothing -> failWithReason T.whatToDrop
   where
     (item, newActor) = removeNthItem n e
-    itemExists = isJust $ fst $ popItemAt position d
+    itemExists = isJust $ removeItemAt position $ d ^. cellMap
     failWithReason :: MultilingualText -> ActionResultWithLog
     failWithReason reason = do
         tell [reason]

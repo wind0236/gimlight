@@ -11,10 +11,11 @@ import           Control.Lens         ((%~), (&))
 import           Control.Monad.Writer (writer)
 import           Data.Array           (array)
 import           Data.Maybe           (fromJust)
-import           Dungeon              (Dungeon, dungeon, popItemAt, pushActor,
-                                       pushItem)
+import           Dungeon              (Dungeon, dungeon, pushActor, pushItem)
+import qualified Dungeon              as D
 import           Dungeon.Identifier   (Identifier (Beaeve))
-import           Dungeon.Map.Cell     (TileIdLayer (TileIdLayer), cellMap)
+import           Dungeon.Map.Cell     (TileIdLayer (TileIdLayer), cellMap,
+                                       removeItemAt)
 import           Dungeon.Map.Tile     (TileCollection, tile)
 import           IndexGenerator       (generator)
 import           Item                 (getName, herb)
@@ -45,7 +46,8 @@ testPickUpSuccess =
             {status = Ok, newDungeon = dungeonAfterPickingUp, killed = []}
     dungeonAfterPickingUp =
         pushActor playerPosition actorWithItem $
-        snd $ popItemAt playerPosition initDungeon
+        initDungeon &
+        D.cellMap %~ (snd . fromJust . removeItemAt playerPosition)
     expectedLog = [T.youGotItem $ getName herb]
     actorWithItem =
         actorWithoutItem & inventoryItems %~ (fromJust . addItem herb)

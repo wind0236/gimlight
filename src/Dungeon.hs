@@ -27,7 +27,6 @@ module Dungeon
     , getPositionsAndActors
     , positionOnParentMap
     , cellMap
-    , popItemAt
     , descendingStairs
     , addAscendingAndDescendingStiars
     , addDescendingStairs
@@ -46,9 +45,9 @@ import           Dungeon.Identifier (Identifier)
 import qualified Dungeon.Identifier as Identifier
 import           Dungeon.Map.Cell   (CellMap, locateActorAt, locateItemAt,
                                      positionsAndActors, removeActorAt,
-                                     removeActorIf, removeItemAt,
-                                     updateExploredMap, updatePlayerFov,
-                                     walkableMap, widthAndHeight)
+                                     removeActorIf, updateExploredMap,
+                                     updatePlayerFov, walkableMap,
+                                     widthAndHeight)
 import qualified Dungeon.Map.Cell   as Cell
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
@@ -152,12 +151,6 @@ popActorIf :: (Actor -> Bool) -> Dungeon -> (Maybe Actor, Dungeon)
 popActorIf f d =
     case removeActorIf f (d ^. cellMap) of
         Just (a, newMap) -> (Just a, d & cellMap .~ newMap)
-        Nothing          -> (Nothing, d)
-
-popItemAt :: Coord -> Dungeon -> (Maybe Item, Dungeon)
-popItemAt c d =
-    case removeItemAt c (d ^. cellMap) of
-        Just (i, newMap) -> (Just i, d & cellMap .~ newMap)
         Nothing          -> (Nothing, d)
 
 stairsPositionCandidates :: TileCollection -> Dungeon -> [Coord]
