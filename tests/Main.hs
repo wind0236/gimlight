@@ -13,7 +13,7 @@ main = hspec spec
 
 spec :: Spec
 spec = do
-    describe "Action.DropSpec" Action.DropSpec.spec
+    describe "Action.Drop" Action.DropSpec.spec
     describe "Dungeon" DungeonSpec.spec
     describe "Dungeon.Map.Cell" Dungeon.Map.CellSpec.spec
     describe "Fov" FovSpec.spec
