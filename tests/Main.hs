@@ -3,6 +3,7 @@ module Main
     ) where
 
 import qualified Action.DropSpec
+import qualified Action.PickUpSpec
 import qualified Dungeon.Map.CellSpec
 import qualified DungeonSpec
 import qualified FovSpec
@@ -14,6 +15,7 @@ main = hspec spec
 spec :: Spec
 spec = do
     describe "Action.Drop" Action.DropSpec.spec
+    describe "Action.PickUp" Action.PickUpSpec.spec
     describe "Dungeon" DungeonSpec.spec
     describe "Dungeon.Map.Cell" Dungeon.Map.CellSpec.spec
     describe "Fov" FovSpec.spec

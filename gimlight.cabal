@@ -39,6 +39,7 @@ Test-Suite spec
     type:               exitcode-stdio-1.0
     main-is:            Main.hs
     other-modules:      Action.DropSpec
+                      , Action.PickUpSpec
                       , Dungeon.Map.CellSpec
                       , DungeonSpec
                       , FovSpec
@@ -54,6 +55,7 @@ library
     import:             common
     exposed-modules:    Action
                       , Action.Drop
+                      , Action.PickUp
                       , Actor
                       , Actor.Inventory
                       , Dungeon
@@ -69,7 +71,6 @@ library
     other-modules:      Action.Consume
                       , Action.Melee
                       , Action.Move
-                      , Action.PickUp
                       , Action.Wait
                       , Actor.NpcBehavior
                       , Actor.Friendly
