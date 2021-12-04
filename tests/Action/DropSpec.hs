@@ -9,14 +9,15 @@ import           Action                     (ActionResult (ActionResult, killed,
 import           Action.Drop                (dropAction)
 import           Actor                      (Actor, inventoryItems, player)
 import           Actor.Inventory            (addItem)
-import           Control.Lens               ((&), (.~), (^.))
+import           Control.Lens               ((%~), (&), (.~), (^.))
 import           Control.Monad.Trans.Writer (writer)
 import           Data.Array                 (array)
 import           Data.Maybe                 (fromJust)
-import           Dungeon                    (Dungeon, dungeon, pushActor,
-                                             pushItem)
+import           Dungeon                    (Dungeon, dungeon, pushActor)
+import qualified Dungeon                    as D
 import           Dungeon.Identifier         (Identifier (Beaeve))
-import           Dungeon.Map.Cell           (TileIdLayer (TileIdLayer), cellMap)
+import           Dungeon.Map.Cell           (TileIdLayer (TileIdLayer), cellMap,
+                                             locateItemAt)
 import           Dungeon.Map.Tile           (TileCollection, tile)
 import           IndexGenerator             (generator)
 import           Item                       (getName, herb)
@@ -41,8 +42,8 @@ testDropItemSuccessfully =
         ActionResult
             {status = Ok, newDungeon = dungeonAfterDropping, killed = []}
     dungeonAfterDropping =
-        pushItem playerPosition herb $
-        pushActor playerPosition actorWithoutItem initDungeon
+        pushActor playerPosition actorWithoutItem initDungeon &
+        D.cellMap %~ (fromJust . locateItemAt herb playerPosition)
     expectedLog = [T.youDropped $ getName herb]
     (actorWithoutItem, actorWithItem) = playerWithoutAndWithItem
     playerPosition = V2 1 0
@@ -64,7 +65,8 @@ testItemAlreadyExists =
     playerPosition = V2 0 0
 
 initDungeon :: Dungeon
-initDungeon = pushItem (V2 0 0) herb $ dungeon cm Beaeve
+initDungeon =
+    dungeon cm Beaeve & D.cellMap %~ (fromJust . locateItemAt herb (V2 0 0))
   where
     cm =
         cellMap $

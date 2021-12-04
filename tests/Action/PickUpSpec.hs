@@ -11,11 +11,11 @@ import           Control.Lens         ((%~), (&))
 import           Control.Monad.Writer (writer)
 import           Data.Array           (array)
 import           Data.Maybe           (fromJust)
-import           Dungeon              (Dungeon, dungeon, pushActor, pushItem)
+import           Dungeon              (Dungeon, dungeon, pushActor)
 import qualified Dungeon              as D
 import           Dungeon.Identifier   (Identifier (Beaeve))
 import           Dungeon.Map.Cell     (TileIdLayer (TileIdLayer), cellMap,
-                                       removeItemAt)
+                                       locateItemAt, removeItemAt)
 import           Dungeon.Map.Tile     (TileCollection, tile)
 import           IndexGenerator       (generator)
 import           Item                 (getName, herb)
@@ -101,7 +101,8 @@ testPickUpWhenInventoryIsFull =
     playerPosition = V2 0 0
 
 initDungeon :: Dungeon
-initDungeon = pushItem (V2 0 0) herb $ dungeon cm Beaeve
+initDungeon =
+    dungeon cm Beaeve & D.cellMap %~ (fromJust . locateItemAt herb (V2 0 0))
   where
     cm =
         cellMap $

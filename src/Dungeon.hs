@@ -31,7 +31,6 @@ module Dungeon
     , addAscendingAndDescendingStiars
     , addDescendingStairs
     , ascendingStairs
-    , pushItem
     ) where
 
 import           Actor              (Actor, isPlayer)
@@ -43,17 +42,15 @@ import           Data.Binary        (Binary)
 import           Data.Foldable      (find)
 import           Dungeon.Identifier (Identifier)
 import qualified Dungeon.Identifier as Identifier
-import           Dungeon.Map.Cell   (CellMap, locateActorAt, locateItemAt,
-                                     positionsAndActors, removeActorAt,
-                                     removeActorIf, updateExploredMap,
-                                     updatePlayerFov, walkableMap,
-                                     widthAndHeight)
+import           Dungeon.Map.Cell   (CellMap, locateActorAt, positionsAndActors,
+                                     removeActorAt, removeActorIf,
+                                     updateExploredMap, updatePlayerFov,
+                                     walkableMap, widthAndHeight)
 import qualified Dungeon.Map.Cell   as Cell
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
 import           Fov                (Fov, calculateFov)
 import           GHC.Generics       (Generic)
-import           Item               (Item)
 import           Linear.V2          (V2 (..))
 
 data Dungeon =
@@ -134,12 +131,6 @@ pushActor p e d =
     case locateActorAt e p (d ^. cellMap) of
         Just x  -> d & cellMap .~ x
         Nothing -> error "Failed to push an actor."
-
-pushItem :: Coord -> Item -> Dungeon -> Dungeon
-pushItem position i d =
-    case locateItemAt i position (d ^. cellMap) of
-        Just x  -> d & cellMap .~ x
-        Nothing -> error "Failed to push an item."
 
 popActorAt :: Coord -> Dungeon -> (Maybe Actor, Dungeon)
 popActorAt c d =
