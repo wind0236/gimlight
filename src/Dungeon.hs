@@ -10,7 +10,6 @@ module Dungeon
     ( Dungeon
     , dungeon
     , getIdentifier
-    , popActorAt
     , pushActor
     , walkableFloor
     , getPlayerActor
@@ -41,9 +40,8 @@ import           Data.Foldable      (find)
 import           Dungeon.Identifier (Identifier)
 import qualified Dungeon.Identifier as Identifier
 import           Dungeon.Map.Cell   (CellMap, locateActorAt, positionsAndActors,
-                                     removeActorAt, updateExploredMap,
-                                     updatePlayerFov, walkableMap,
-                                     widthAndHeight)
+                                     updateExploredMap, updatePlayerFov,
+                                     walkableMap, widthAndHeight)
 import qualified Dungeon.Map.Cell   as Cell
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
@@ -126,12 +124,6 @@ pushActor p e d =
     case locateActorAt e p (d ^. cellMap) of
         Just x  -> d & cellMap .~ x
         Nothing -> error "Failed to push an actor."
-
-popActorAt :: Coord -> Dungeon -> (Maybe Actor, Dungeon)
-popActorAt c d =
-    case removeActorAt c (d ^. cellMap) of
-        Just (a, newMap) -> (Just a, d & cellMap .~ newMap)
-        Nothing          -> (Nothing, d)
 
 stairsPositionCandidates :: TileCollection -> Dungeon -> [Coord]
 stairsPositionCandidates ts d =

@@ -2,31 +2,33 @@ module Action.Melee
     ( meleeAction
     ) where
 
-import           Action    (Action, ActionResult (ActionResult),
-                            ActionResultWithLog, ActionStatus (Failed, Ok))
-import           Actor     (Actor)
-import qualified Actor     as A
-import           Coord     (Coord)
-import           Dungeon   (Dungeon, popActorAt, pushActor)
-import           Linear.V2 (V2)
+import           Action           (Action, ActionResult (ActionResult),
+                                   ActionResultWithLog,
+                                   ActionStatus (Failed, Ok))
+import           Actor            (Actor)
+import qualified Actor            as A
+import           Control.Lens     ((&), (.~), (^.))
+import           Coord            (Coord)
+import           Dungeon          (Dungeon, cellMap, pushActor)
+import           Dungeon.Map.Cell (removeActorAt)
+import           Linear.V2        (V2)
 
 meleeAction :: V2 Int -> Action
 meleeAction offset srcPosition src _ dungeon = result
   where
     dstPosition = srcPosition + offset
-    (target, dungeonWithoutTarget) = popActorAt dstPosition dungeon
     result =
-        case target of
+        case removeActorAt dstPosition (dungeon ^. cellMap) of
             Nothing ->
                 return $
                 ActionResult Failed (pushActor srcPosition src dungeon) []
-            Just defender ->
+            Just (defender, newCellMap) ->
                 attackFromTo
                     srcPosition
                     dstPosition
                     src
                     defender
-                    dungeonWithoutTarget
+                    (dungeon & cellMap .~ newCellMap)
 
 attackFromTo ::
        Coord -> Coord -> Actor -> Actor -> Dungeon -> ActionResultWithLog

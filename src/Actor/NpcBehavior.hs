@@ -17,9 +17,9 @@ import           Data.Array           ((!))
 import           Data.Foldable        (find)
 import           Data.Maybe           (fromMaybe)
 import           Dungeon              (Dungeon, calculateFovAt, cellMap,
-                                       getPositionsAndActors, popActorAt,
-                                       positionsAndNpcs, pushActor)
-import           Dungeon.Map.Cell     (removeActorIf)
+                                       getPositionsAndActors, positionsAndNpcs,
+                                       pushActor)
+import           Dungeon.Map.Cell     (removeActorAt, removeActorIf)
 import           Dungeon.Map.Tile     (TileCollection)
 import           Dungeon.PathFinder   (getPathTo)
 import           Linear.V2            (V2 (V2))
@@ -39,10 +39,11 @@ handleNpcTurn ::
     -> TileCollection
     -> Dungeon
     -> Writer MessageLog (Dungeon, [Actor])
-handleNpcTurn c ts d = maybe (return (d, [])) doAction theActor
-  where
-    (theActor, dungeonWithoutTheActor) = popActorAt c d
-    doAction actor = npcAction c actor ts dungeonWithoutTheActor
+handleNpcTurn c tc d =
+    case removeActorAt c (d ^. cellMap) of
+        Just (theActor, cellMapWithoutTheActor) ->
+            npcAction c theActor tc (d & cellMap .~ cellMapWithoutTheActor)
+        Nothing -> return (d, [])
 
 npcAction ::
        Coord
