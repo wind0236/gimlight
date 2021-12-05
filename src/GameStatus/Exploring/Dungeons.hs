@@ -12,14 +12,15 @@ import           Action                     (Action,
                                              ActionStatus (Failed))
 import           Actor                      (Actor, isPlayer)
 import qualified Actor.NpcBehavior          as NPC
-import           Control.Lens               ((^.))
+import           Control.Lens               ((&), (.~), (^.))
 import           Control.Monad.Trans.Writer (Writer)
 import           Data.Foldable              (find)
 import           Data.Maybe                 (fromMaybe)
-import           Dungeon                    (Dungeon, ascendingStairs,
+import           Dungeon                    (Dungeon, ascendingStairs, cellMap,
                                              descendingStairs,
                                              positionOnParentMap, updateMap)
 import qualified Dungeon                    as D
+import           Dungeon.Map.Cell           (removeActorIf)
 import           Dungeon.Map.Tile           (TileCollection)
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
@@ -128,4 +129,7 @@ popPlayer = popActorIf isPlayer
 
 popActorIf :: (Actor -> Bool) -> Dungeons -> (Maybe Actor, Dungeons)
 popActorIf f z =
-    (fst $ D.popActorIf f $ getFocused z, modify (snd . D.popActorIf f) z)
+    case removeActorIf f (getFocused z ^. cellMap) of
+        Just (actor, newCellMap) ->
+            (Just actor, modify (\x -> x & cellMap .~ newCellMap) z)
+        Nothing -> (Nothing, z)

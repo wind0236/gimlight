@@ -12,7 +12,6 @@ module Dungeon
     , getIdentifier
     , getActors
     , popActorAt
-    , popActorIf
     , pushActor
     , walkableFloor
     , getPlayerActor
@@ -43,9 +42,9 @@ import           Data.Foldable      (find)
 import           Dungeon.Identifier (Identifier)
 import qualified Dungeon.Identifier as Identifier
 import           Dungeon.Map.Cell   (CellMap, locateActorAt, positionsAndActors,
-                                     removeActorAt, removeActorIf,
-                                     updateExploredMap, updatePlayerFov,
-                                     walkableMap, widthAndHeight)
+                                     removeActorAt, updateExploredMap,
+                                     updatePlayerFov, walkableMap,
+                                     widthAndHeight)
 import qualified Dungeon.Map.Cell   as Cell
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
@@ -135,12 +134,6 @@ pushActor p e d =
 popActorAt :: Coord -> Dungeon -> (Maybe Actor, Dungeon)
 popActorAt c d =
     case removeActorAt c (d ^. cellMap) of
-        Just (a, newMap) -> (Just a, d & cellMap .~ newMap)
-        Nothing          -> (Nothing, d)
-
-popActorIf :: (Actor -> Bool) -> Dungeon -> (Maybe Actor, Dungeon)
-popActorIf f d =
-    case removeActorIf f (d ^. cellMap) of
         Just (a, newMap) -> (Just a, d & cellMap .~ newMap)
         Nothing          -> (Nothing, d)
 
