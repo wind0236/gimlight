@@ -10,7 +10,6 @@ module Dungeon
     ( Dungeon
     , dungeon
     , getIdentifier
-    , getActors
     , popActorAt
     , pushActor
     , walkableFloor
@@ -118,9 +117,6 @@ playerPosition d = fst <$> getPlayerActor d
 
 getPlayerActor :: Dungeon -> Maybe (Coord, Actor)
 getPlayerActor = find (isPlayer . snd) . positionsAndActors . (^. cellMap)
-
-getActors :: Dungeon -> [Actor]
-getActors = map snd . getPositionsAndActors
 
 getPositionsAndActors :: Dungeon -> [(Coord, Actor)]
 getPositionsAndActors = positionsAndActors . (^. cellMap)

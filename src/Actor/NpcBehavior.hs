@@ -16,9 +16,10 @@ import           Coord                (Coord)
 import           Data.Array           ((!))
 import           Data.Foldable        (find)
 import           Data.Maybe           (fromMaybe)
-import           Dungeon              (Dungeon, calculateFovAt, getActors,
+import           Dungeon              (Dungeon, calculateFovAt, cellMap,
                                        getPositionsAndActors, popActorAt,
                                        positionsAndNpcs, pushActor)
+import           Dungeon.Map.Cell     (removeActorIf)
 import           Dungeon.Map.Tile     (TileCollection)
 import           Dungeon.PathFinder   (getPathTo)
 import           Linear.V2            (V2 (V2))
@@ -70,7 +71,9 @@ updateTarget srcPosition ts d a
     indexToPosition x =
         fst <$>
         find ((getIndex x ==) . getIndex . snd) (getPositionsAndActors d)
-    currentTarget = find (\x -> a ^. target == Just (getIndex x)) $ getActors d
+    currentTarget =
+        fst <$>
+        removeActorIf (\x -> a ^. target == Just (getIndex x)) (d ^. cellMap)
     nextTarget
         | null otherActorsInFov = Nothing
         | otherwise = Just $ head otherActorsInFov
