@@ -40,6 +40,7 @@ Test-Suite spec
     main-is:            Main.hs
     other-modules:      Action.ConsumeSpec
                       , Action.DropSpec
+                      , Action.MoveSpec
                       , Action.PickUpSpec
                       , Action.WaitSpec
                       , Dungeon.Map.CellSpec
@@ -58,11 +59,13 @@ library
     exposed-modules:    Action
                       , Action.Consume
                       , Action.Drop
+                      , Action.Move
                       , Action.PickUp
                       , Action.Wait
                       , Actor
                       , Actor.Identifier
                       , Actor.Inventory
+                      , Actor.Monsters
                       , Coord
                       , Dungeon
                       , Dungeon.Identifier
@@ -76,11 +79,9 @@ library
                       , Localization.Texts
 
     other-modules:      Action.Melee
-                      , Action.Move
                       , Actor.NpcBehavior
                       , Actor.Friendly
                       , Actor.Friendly.Electria
-                      , Actor.Monsters
                       , Actor.Status
                       , Actor.Status.Hp
                       , Actor.Status.Experience

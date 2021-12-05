@@ -4,6 +4,7 @@ module Main
 
 import qualified Action.ConsumeSpec
 import qualified Action.DropSpec
+import qualified Action.MoveSpec
 import qualified Action.PickUpSpec
 import qualified Action.WaitSpec
 import qualified Dungeon.Map.CellSpec
@@ -18,6 +19,7 @@ spec :: Spec
 spec = do
     describe "Action.Consume" Action.ConsumeSpec.spec
     describe "Action.Drop" Action.DropSpec.spec
+    describe "Action.Move" Action.MoveSpec.spec
     describe "Action.PickUp" Action.PickUpSpec.spec
     describe "Action.Wait" Action.WaitSpec.spec
     describe "Dungeon" DungeonSpec.spec
