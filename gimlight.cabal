@@ -38,7 +38,8 @@ Test-Suite spec
     import:             common
     type:               exitcode-stdio-1.0
     main-is:            Main.hs
-    other-modules:      Action.DropSpec
+    other-modules:      Action.ConsumeSpec
+                      , Action.DropSpec
                       , Action.PickUpSpec
                       , Action.WaitSpec
                       , Dungeon.Map.CellSpec
@@ -55,11 +56,14 @@ Test-Suite spec
 library
     import:             common
     exposed-modules:    Action
+                      , Action.Consume
                       , Action.Drop
                       , Action.PickUp
                       , Action.Wait
                       , Actor
+                      , Actor.Identifier
                       , Actor.Inventory
+                      , Coord
                       , Dungeon
                       , Dungeon.Identifier
                       , Dungeon.Map.Cell
@@ -68,20 +72,18 @@ library
                       , Game
                       , IndexGenerator
                       , Item
+                      , Item.Heal
                       , Localization.Texts
 
-    other-modules:      Action.Consume
-                      , Action.Melee
+    other-modules:      Action.Melee
                       , Action.Move
                       , Actor.NpcBehavior
                       , Actor.Friendly
                       , Actor.Friendly.Electria
-                      , Actor.Identifier
                       , Actor.Monsters
                       , Actor.Status
                       , Actor.Status.Hp
                       , Actor.Status.Experience
-                      , Coord
                       , Dungeon.Generate
                       , Dungeon.Generate.Config
                       , Dungeon.Generate.Room
@@ -105,7 +107,6 @@ library
                       , GameStatus.Talking
                       , GameStatus.Talking.Part
                       , Item.Book
-                      , Item.Heal
                       , Localization
                       , Localization.Texts.Actions
                       , Localization.Texts.Actors

@@ -2,6 +2,7 @@ module Main
     ( main
     ) where
 
+import qualified Action.ConsumeSpec
 import qualified Action.DropSpec
 import qualified Action.PickUpSpec
 import qualified Action.WaitSpec
@@ -15,6 +16,7 @@ main = hspec spec
 
 spec :: Spec
 spec = do
+    describe "Action.Consume" Action.ConsumeSpec.spec
     describe "Action.Drop" Action.DropSpec.spec
     describe "Action.PickUp" Action.PickUpSpec.spec
     describe "Action.Wait" Action.WaitSpec.spec
