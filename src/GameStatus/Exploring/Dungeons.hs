@@ -125,11 +125,8 @@ handleNpcTurns ts ds =
     NPC.handleNpcTurns ts (getFocused ds)
 
 popPlayer :: Dungeons -> (Maybe Actor, Dungeons)
-popPlayer = popActorIf isPlayer
-
-popActorIf :: (Actor -> Bool) -> Dungeons -> (Maybe Actor, Dungeons)
-popActorIf f z =
-    case removeActorIf f (getFocused z ^. cellMap) of
+popPlayer z =
+    case removeActorIf isPlayer (getFocused z ^. cellMap) of
         Just (actor, newCellMap) ->
             (Just actor, modify (\x -> x & cellMap .~ newCellMap) z)
         Nothing -> (Nothing, z)
