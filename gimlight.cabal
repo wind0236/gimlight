@@ -40,6 +40,7 @@ Test-Suite spec
     main-is:            Main.hs
     other-modules:      Action.DropSpec
                       , Action.PickUpSpec
+                      , Action.WaitSpec
                       , Dungeon.Map.CellSpec
                       , DungeonSpec
                       , FovSpec
@@ -56,6 +57,7 @@ library
     exposed-modules:    Action
                       , Action.Drop
                       , Action.PickUp
+                      , Action.Wait
                       , Actor
                       , Actor.Inventory
                       , Dungeon
@@ -71,7 +73,6 @@ library
     other-modules:      Action.Consume
                       , Action.Melee
                       , Action.Move
-                      , Action.Wait
                       , Actor.NpcBehavior
                       , Actor.Friendly
                       , Actor.Friendly.Electria
