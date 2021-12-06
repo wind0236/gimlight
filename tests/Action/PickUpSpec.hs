@@ -33,11 +33,7 @@ testPickUpSuccess =
     result `shouldBe` expected
   where
     result =
-        pickUpAction
-            playerPosition
-            actorWithoutItem
-            initTileCollection
-            initCellMap
+        pickUpAction playerPosition initTileCollection cellMapBeforePickingUp
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
@@ -46,6 +42,8 @@ testPickUpSuccess =
         fromJust $
         removeItemAt playerPosition initCellMap >>=
         locateActorAt actorWithItem playerPosition . snd
+    cellMapBeforePickingUp =
+        fromJust $ locateActorAt actorWithoutItem playerPosition initCellMap
     expectedLog = [T.youGotItem $ getName herb]
     actorWithItem =
         actorWithoutItem & inventoryItems %~ (fromJust . addItem herb)
@@ -57,17 +55,12 @@ testPickUpVoid =
     it "returns a Failed result if there is no item at the player's foot." $
     result `shouldBe` expected
   where
-    result =
-        pickUpAction
-            playerPosition
-            actorWithoutItem
-            initTileCollection
-            initCellMap
+    result = pickUpAction playerPosition initTileCollection cellMapWithPlayer
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
-            {status = Failed, newCellMap = cellMapAfterPickingUp, killed = []}
-    cellMapAfterPickingUp =
+            {status = Failed, newCellMap = cellMapWithPlayer, killed = []}
+    cellMapWithPlayer =
         fromJust $ locateActorAt actorWithoutItem playerPosition initCellMap
     expectedLog = [T.youGotNothing]
     (actorWithoutItem, _) = player generator
@@ -79,16 +72,15 @@ testPickUpWhenInventoryIsFull =
     result `shouldBe` expected
   where
     result =
-        pickUpAction
-            playerPosition
-            actorWithFullItems
-            initTileCollection
-            initCellMap
+        pickUpAction playerPosition initTileCollection cellMapWithFullItemPlayer
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
-            {status = Failed, newCellMap = cellMapAfterPickingUp, killed = []}
-    cellMapAfterPickingUp =
+            { status = Failed
+            , newCellMap = cellMapWithFullItemPlayer
+            , killed = []
+            }
+    cellMapWithFullItemPlayer =
         fromJust $ locateActorAt actorWithFullItems playerPosition initCellMap
     expectedLog = [T.bagIsFull]
     actorWithFullItems =

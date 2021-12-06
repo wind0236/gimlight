@@ -17,9 +17,9 @@ import           Data.Array           ((!))
 import           Data.Foldable        (find)
 import           Data.Maybe           (fromMaybe)
 import           Dungeon              (Dungeon, calculateFovAt, cellMap,
-                                       getPositionsAndActors, positionsAndNpcs,
-                                       pushActor)
-import           Dungeon.Map.Cell     (removeActorAt, removeActorIf)
+                                       getPositionsAndActors, positionsAndNpcs)
+import           Dungeon.Map.Cell     (locateActorAt, removeActorAt,
+                                       removeActorIf)
 import           Dungeon.Map.Tile     (TileCollection)
 import           Dungeon.PathFinder   (getPathTo)
 import           Linear.V2            (V2 (V2))
@@ -31,38 +31,35 @@ handleNpcTurns ts d = foldl foldStep (writer ((d, []), [])) $ positionsAndNpcs d
   where
     foldStep acc (position, _) = do
         (d', l) <- acc
-        (newD, newLog) <- handleNpcTurn position ts d'
+        (newD, newLog) <- npcAction position ts d'
         return (newD, newLog ++ l)
-
-handleNpcTurn ::
-       Coord
-    -> TileCollection
-    -> Dungeon
-    -> Writer MessageLog (Dungeon, [Actor])
-handleNpcTurn c tc d =
-    case removeActorAt c (d ^. cellMap) of
-        Just (theActor, cellMapWithoutTheActor) ->
-            npcAction c theActor tc (d & cellMap .~ cellMapWithoutTheActor)
-        Nothing -> return (d, [])
 
 npcAction ::
        Coord
-    -> Actor
     -> TileCollection
     -> Dungeon
     -> Writer MessageLog (Dungeon, [Actor])
-npcAction position e ts d
-    | isFriendlyNpc e = return (pushActor position e d, [])
-    | otherwise =
-        ((\x -> d & cellMap .~ newCellMap x) &&& killed) <$>
-        action position entityAfterUpdatingMap ts (d ^. cellMap)
+npcAction position ts d =
+    case removeActorAt position (d ^. cellMap) of
+        Just (actor, cellMapWithoutActor) ->
+            npcActionFor actor cellMapWithoutActor
+        Nothing -> return (d, [])
   where
-    action = selectAction position entityAfterUpdatingMap d
-    entityAfterUpdatingMap =
+    npcActionFor a cm
+        | isFriendlyNpc a = return (d, [])
+        | otherwise =
+            ((\x -> d & cellMap .~ newCellMap x) &&& killed) <$>
+            action a position ts (cellMapAfterUpdatingMap a cm)
+    action a = selectAction position (entityAfterUpdatingMap a) d
+    cellMapAfterUpdatingMap a cm =
         fromMaybe
-            entityAfterUpdatingTarget
-            (updatePath position entityAfterUpdatingTarget ts d)
-    entityAfterUpdatingTarget = updateTarget position ts d e
+            (error "Failed to locate an actor.")
+            (locateActorAt (entityAfterUpdatingMap a) position cm)
+    entityAfterUpdatingMap a =
+        fromMaybe
+            (entityAfterUpdatingTarget a)
+            (updatePath position (entityAfterUpdatingTarget a) ts d)
+    entityAfterUpdatingTarget = updateTarget position ts d
 
 updateTarget :: Coord -> TileCollection -> Dungeon -> Actor -> Actor
 updateTarget srcPosition ts d a
@@ -107,12 +104,21 @@ moveOrWait e
     | otherwise = popPathToDestinationAndMove
 
 popPathToDestinationAndMove :: Action
-popPathToDestinationAndMove position e = moveAction offset position e'
-  where
-    offset = next - position
-    (next, remaining) = (head path, tail path)
-    path = e ^. pathToDestination
-    e' = e & pathToDestination .~ remaining
+popPathToDestinationAndMove position tc cm =
+    case removeActorAt position cm of
+        Just (a, ncm) ->
+            let path = a ^. pathToDestination
+                (next, remaining) = (head path, tail path)
+                offset = next - position
+                updatedActor = a & pathToDestination .~ remaining
+             in moveAction
+                    offset
+                    position
+                    tc
+                    (fromMaybe
+                         (error "Failed to locate an actor")
+                         (locateActorAt updatedActor position ncm))
+        Nothing -> error "unreachable."
 
 targetIsNextTo :: Coord -> Actor -> Dungeon -> Bool
 targetIsNextTo position e d =

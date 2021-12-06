@@ -21,7 +21,7 @@ spec =
     describe "WaitAction" $
     it "returns a Ok result." $ result `shouldBe` expected
   where
-    result = waitAction playerPosition p tc cellMapWithoutPlayer
+    result = waitAction playerPosition tc cellMapWithPlayer
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult {status = Ok, newCellMap = cellMapWithPlayer, killed = []}

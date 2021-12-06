@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Action.Melee
     ( meleeAction
     ) where
@@ -13,21 +15,22 @@ import           Dungeon.Map.Cell (CellMap, locateActorAt, removeActorAt)
 import           Linear.V2        (V2)
 
 meleeAction :: V2 Int -> Action
-meleeAction offset srcPosition src _ cm = result
+meleeAction offset srcPosition _ cm = result
   where
     dstPosition = srcPosition + offset
     result =
-        case removeActorAt dstPosition cm of
-            Nothing ->
-                return $
-                ActionResult
-                    Failed
-                    (fromMaybe
-                         (error "Failed to locate an attacker.")
-                         (locateActorAt src srcPosition cm))
-                    []
-            Just (defender, newCellMap) ->
-                attackFromTo srcPosition dstPosition src defender newCellMap
+        case removeResult of
+            Nothing -> return $ ActionResult Failed cm []
+            Just (attacker, (defender, newCellMap)) ->
+                attackFromTo
+                    srcPosition
+                    dstPosition
+                    attacker
+                    defender
+                    newCellMap
+    removeResult =
+        removeActorAt srcPosition cm >>=
+        (\(a, cm') -> (a, ) <$> removeActorAt dstPosition cm')
 
 attackFromTo ::
        Coord -> Coord -> Actor -> Actor -> CellMap -> ActionResultWithLog

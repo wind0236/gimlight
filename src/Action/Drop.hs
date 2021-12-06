@@ -5,44 +5,42 @@ module Action.Drop
 import           Action               (Action, ActionResult (ActionResult),
                                        ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
-import           Actor                (removeNthItem)
+import           Actor                (Actor, removeNthItem)
 import           Control.Monad.Writer (tell)
 import           Data.Maybe           (fromMaybe)
-import           Dungeon.Map.Cell     (CellMap, locateActorAt, locateItemAt)
+import           Dungeon.Map.Cell     (CellMap, locateActorAt, locateItemAt,
+                                       removeActorAt)
 import           Item                 (Item, getName)
 import           Localization         (MultilingualText)
 import qualified Localization.Texts   as T
 
 dropAction :: Int -> Action
-dropAction n position e _ cm =
-    case item of
-        Just x  -> dropItem x
-        Nothing -> failWithReason T.whatToDrop
+dropAction n position _ cm =
+    case removeActorAt position cm of
+        Just (a, ncm) -> dropActionForActor a ncm
+        Nothing       -> return $ ActionResult Failed cm []
   where
-    (item, newActor) = removeNthItem n e
-    dropItem :: Item -> ActionResultWithLog
-    dropItem item' =
-        case locateItemAt item' position cm of
-            Just newCellMap -> successResult newCellMap item'
+    dropActionForActor a ncm =
+        case removeNthItem n a of
+            (Just item, newActor) -> dropItem ncm item newActor
+            (Nothing, _)          -> failWithReason T.whatToDrop
+    dropItem :: CellMap -> Item -> Actor -> ActionResultWithLog
+    dropItem ncm item' a =
+        case locateItemAt item' position ncm of
+            Just newCellMap -> successResult newCellMap item' a
             Nothing         -> failWithReason T.itemExists
-    successResult :: CellMap -> Item -> ActionResultWithLog
-    successResult newCellMap item' = do
+    successResult :: CellMap -> Item -> Actor -> ActionResultWithLog
+    successResult newCellMap item' a = do
         tell [T.youDropped $ getName item']
         return $
             ActionResult
                 Ok
                 (fromMaybe
                      (error "Failed to locate an actor.")
-                     (locateActorAt newActor position newCellMap))
+                     (locateActorAt a position newCellMap))
                 []
     failWithReason :: MultilingualText -> ActionResultWithLog
     failWithReason reason = do
         tell [reason]
         return failedResult
-    failedResult =
-        ActionResult
-            Failed
-            (fromMaybe
-                 (error "Failed to locate an actor.")
-                 (locateActorAt e position cm))
-            []
+    failedResult = ActionResult Failed cm []

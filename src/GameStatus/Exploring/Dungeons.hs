@@ -9,7 +9,7 @@ module GameStatus.Exploring.Dungeons
 
 import           Action                     (Action,
                                              ActionResult (killed, newCellMap, status),
-                                             ActionStatus (Failed))
+                                             ActionStatus)
 import           Actor                      (Actor, isPlayer)
 import qualified Actor.NpcBehavior          as NPC
 import           Control.Lens               ((&), (.~), (^.))
@@ -97,26 +97,13 @@ doPlayerAction ::
     -> Writer MessageLog (ActionStatus, Dungeons, [Actor])
 doPlayerAction action ts ds = result
   where
-    (player, zipperWithoutPlayer) = popPlayer ds
-    currentDungeonWithoutPlayer = getFocused zipperWithoutPlayer
-    result =
-        case player of
-            Just p -> do
-                actionResult <-
-                    action
-                        playerPos
-                        p
-                        ts
-                        (currentDungeonWithoutPlayer ^. cellMap)
-                let statusAndNewDungeon =
-                        (status actionResult, newCellMap actionResult)
-                return $
-                    (\(a, cm) ->
-                         ( a
-                         , modify (\d -> d & cellMap .~ cm) zipperWithoutPlayer
-                         , killed actionResult))
-                        statusAndNewDungeon
-            Nothing -> return (Failed, ds, [])
+    result = do
+        actionResult <- action playerPos ts (getFocused ds ^. cellMap)
+        let statusAndNewDungeon = (status actionResult, newCellMap actionResult)
+        return $
+            (\(a, cm) ->
+                 (a, modify (\d -> d & cellMap .~ cm) ds, killed actionResult))
+                statusAndNewDungeon
     playerPos =
         fromMaybe
             (error "Failed to get the player position")

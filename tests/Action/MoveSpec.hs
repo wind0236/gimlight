@@ -6,14 +6,14 @@ import           Action               (ActionResult (ActionResult, killed, newCe
                                        ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
 import           Action.Move          (moveAction)
-import           Actor                (Actor, player)
+import           Actor                (player)
 import           Actor.Monsters       (orc)
 import           Control.Monad.Writer (writer)
 import           Coord                (Coord)
 import           Data.Array           (array)
 import           Data.Maybe           (fromJust)
 import           Dungeon.Map.Cell     (CellMap, TileIdLayer (TileIdLayer),
-                                       cellMap, locateActorAt)
+                                       cellMap, locateActorAt, removeActorAt)
 import           Dungeon.Map.Tile     (TileCollection, tile)
 import           IndexGenerator       (generator)
 import           Linear.V2            (V2 (V2))
@@ -48,39 +48,40 @@ succeed offset = writer (result, [])
   where
     result =
         ActionResult {status = Ok, newCellMap = cellMapWithPlayer, killed = []}
-    cellMapWithPlayer = fromJust $ locateActorAt p (playerPosition + offset) cm
-    (p, cm) = initCellMapAndPlayer
+    cellMapWithPlayer =
+        fromJust $
+        removeActorAt playerPosition initCellMapAndPlayer >>=
+        (\(p, ncm) -> locateActorAt p (playerPosition + offset) ncm)
 
 failed :: ActionResultWithLog
 failed = writer (result, l)
   where
     result =
         ActionResult
-            {status = Failed, newCellMap = cellMapWithPlayer, killed = []}
+            {status = Failed, newCellMap = initCellMapAndPlayer, killed = []}
     l = [T.youCannotMoveThere]
-    cellMapWithPlayer = fromJust $ locateActorAt p playerPosition cm
-    (p, cm) = initCellMapAndPlayer
 
 resultWhenMoveOffsetTo :: V2 Int -> ActionResultWithLog
 resultWhenMoveOffsetTo offset =
-    moveAction offset playerPosition p initTileCollection d
-  where
-    (p, d) = initCellMapAndPlayer
+    moveAction offset playerPosition initTileCollection initCellMapAndPlayer
 
-initCellMapAndPlayer :: (Actor, CellMap)
-initCellMapAndPlayer = (p, cm)
+initCellMapAndPlayer :: CellMap
+initCellMapAndPlayer = cm
   where
     cm =
         fromJust $
-        locateActorAt (fst $ orc g') (V2 1 1) $
-        cellMap $
-        array
-            (V2 0 0, V2 1 1)
-            [ (V2 0 0, walkable)
-            , (V2 1 0, walkable)
-            , (V2 0 1, unwalkable)
-            , (V2 1 1, walkable)
-            ]
+        locateActorAt
+            (fst $ orc g')
+            (V2 1 1)
+            (cellMap $
+             array
+                 (V2 0 0, V2 1 1)
+                 [ (V2 0 0, walkable)
+                 , (V2 1 0, walkable)
+                 , (V2 0 1, unwalkable)
+                 , (V2 1 1, walkable)
+                 ]) >>=
+        locateActorAt p playerPosition
     (p, g') = player generator
     walkable = TileIdLayer (Just 0) (Just 0)
     unwalkable = TileIdLayer (Just 1) (Just 0)

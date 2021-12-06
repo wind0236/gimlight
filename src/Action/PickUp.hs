@@ -5,27 +5,34 @@ module Action.PickUp
 import           Action               (Action, ActionResult (ActionResult),
                                        ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
-import           Actor                (inventoryItems)
+import           Actor                (Actor, inventoryItems)
 import           Actor.Inventory      (Inventory, addItem)
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)
 import           Data.Maybe           (fromMaybe)
-import           Dungeon.Map.Cell     (CellMap, locateActorAt, removeItemAt)
+import           Dungeon.Map.Cell     (CellMap, locateActorAt, removeActorAt,
+                                       removeItemAt)
 import           Item                 (Item, getName)
 import qualified Localization.Texts   as T
 
 pickUpAction :: Action
-pickUpAction position e _ cm =
-    case removeResult of
-        Just (item, cellMapWithoutItem) -> pickUpItem item cellMapWithoutItem
-        Nothing                         -> youGotNothing
+pickUpAction position _ cm =
+    case removeActorAt position cm of
+        Just (a, ncm) -> pickUpForActor a ncm
+        Nothing       -> return failedResult
   where
-    pickUpItem i dungeonWithoutItem =
-        case addItem i (e ^. inventoryItems) of
-            Just xs -> pickUpSucceed i xs dungeonWithoutItem
+    pickUpForActor a ncm =
+        case removeItemAt position ncm of
+            Just (item, cellMapWithoutItem) ->
+                pickUpItem item a cellMapWithoutItem
+            Nothing -> youGotNothing
+    pickUpItem i a dungeonWithoutItem =
+        case addItem i (a ^. inventoryItems) of
+            Just xs -> pickUpSucceed a i xs dungeonWithoutItem
             Nothing -> bagIsFull
-    pickUpSucceed :: Item -> Inventory -> CellMap -> ActionResultWithLog
-    pickUpSucceed i newInventory cellMapAfterPickingUp = do
+    pickUpSucceed ::
+           Actor -> Item -> Inventory -> CellMap -> ActionResultWithLog
+    pickUpSucceed a i newInventory cellMapAfterPickingUp = do
         tell [T.youGotItem $ getName i]
         return $
             ActionResult
@@ -33,18 +40,14 @@ pickUpAction position e _ cm =
                 (fromMaybe
                      (error "Failed to locate an actor.")
                      (locateActorAt
-                          (e & inventoryItems .~ newInventory)
+                          (a & inventoryItems .~ newInventory)
                           position
                           cellMapAfterPickingUp))
                 []
     bagIsFull = do
         tell [T.bagIsFull]
-        return $ ActionResult Failed failedCellMap []
+        return failedResult
     youGotNothing = do
         tell [T.youGotNothing]
-        return $ ActionResult Failed failedCellMap []
-    failedCellMap =
-        fromMaybe
-            (error "Failed to locate an actor.")
-            (locateActorAt e position cm)
-    removeResult = removeItemAt position cm
+        return failedResult
+    failedResult = ActionResult Failed cm []

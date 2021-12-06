@@ -3,56 +3,55 @@ module Action.Consume
     ) where
 
 import           Action               (Action, ActionResult (ActionResult),
+                                       ActionResultWithLog,
                                        ActionStatus (Failed, Ok, ReadingStarted))
-import           Actor                (getIdentifier, healHp, removeNthItem)
+import           Actor                (Actor, getIdentifier, healHp,
+                                       removeNthItem)
 import           Actor.Identifier     (toName)
 import           Control.Monad.Writer (tell)
 import           Data.Maybe           (fromMaybe)
-import           Dungeon.Map.Cell     (locateActorAt)
+import           Dungeon.Map.Cell     (CellMap, locateActorAt, removeActorAt)
 import           Item                 (Effect (Book, Heal), getEffect,
                                        isUsableManyTimes)
 import           Item.Heal            (getHealAmount)
 import qualified Localization.Texts   as T
 
 consumeAction :: Int -> Action
-consumeAction n position e tiles cm =
-    case item of
-        Just x -> useItem x
-        Nothing -> do
-            tell [T.whatToUse]
-            return $
-                ActionResult
-                    Failed
-                    (fromMaybe
-                         (error "Failed to locate an actor.")
-                         (locateActorAt e position cm))
-                    []
+consumeAction n position _ cm =
+    case removeActorAt position cm of
+        Just (a, ncm) -> consumeActionForActor a ncm
+        Nothing       -> return $ ActionResult Failed cm []
   where
-    useItem x =
+    consumeActionForActor actorWithItem ncm =
+        case removeNthItem n actorWithItem of
+            (Just x, actorWithoutItem) ->
+                useItem x actorWithoutItem actorWithItem ncm
+            (Nothing, _) -> do
+                tell [T.whatToUse]
+                return $ ActionResult Failed cm []
+    useItem x actorWithoutItem actorWithItem ncm =
         let actor =
                 if isUsableManyTimes x
-                    then e
-                    else newActor
-         in doItemEffect (getEffect x) position actor tiles cm
-    (item, newActor) = removeNthItem n e
-
-doItemEffect :: Effect -> Action
-doItemEffect (Heal handler) position actor _ cm = do
-    tell [T.healed (toName $ getIdentifier actor) amount]
-    return $
+                    then actorWithItem
+                    else actorWithoutItem
+         in doItemEffect (getEffect x) actor ncm
+    doItemEffect :: Effect -> Actor -> CellMap -> ActionResultWithLog
+    doItemEffect (Heal handler) a ncm = do
+        tell [T.healed (toName $ getIdentifier a) amount]
+        return $
+            ActionResult
+                Ok
+                (fromMaybe
+                     (error "Failed to locate an actor.")
+                     (locateActorAt (healHp amount a) position ncm))
+                []
+      where
+        amount = getHealAmount handler
+    doItemEffect (Book handler) a ncm =
+        return $
         ActionResult
-            Ok
+            (ReadingStarted handler)
             (fromMaybe
                  (error "Failed to locate an actor.")
-                 (locateActorAt (healHp amount actor) position cm))
+                 (locateActorAt a position ncm))
             []
-  where
-    amount = getHealAmount handler
-doItemEffect (Book handler) position actor _ cm =
-    return $
-    ActionResult
-        (ReadingStarted handler)
-        (fromMaybe
-             (error "Failed to locate an actor.")
-             (locateActorAt actor position cm))
-        []

@@ -34,7 +34,7 @@ testStartReadingBook =
     it "returns a ReadingStarted result if an actor uses a book" $
     result `shouldBe` expected
   where
-    result = consumeAction 0 playerPosition p initTileCollection initCellMap
+    result = consumeAction 0 playerPosition initTileCollection cellMapWithPlayer
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
@@ -56,12 +56,7 @@ testConsumeHerb =
     result `shouldBe` expected
   where
     result =
-        consumeAction
-            0
-            playerPosition
-            playerWithItem
-            initTileCollection
-            initCellMap
+        consumeAction 0 playerPosition initTileCollection cellMapBeforeAction
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult {status = Ok, newCellMap = cellMapWithPlayer, killed = []}
@@ -71,6 +66,8 @@ testConsumeHerb =
         ]
     cellMapWithPlayer =
         fromJust $ locateActorAt playerWithoutItem playerPosition initCellMap
+    cellMapBeforeAction =
+        fromJust $ locateActorAt playerWithItem playerPosition initCellMap
     playerWithItem =
         playerWithoutItem & inventoryItems %~ (fromJust . addItem herb)
     playerWithoutItem = fst $ player generator

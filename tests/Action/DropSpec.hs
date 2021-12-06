@@ -34,7 +34,7 @@ testDropItemSuccessfully =
     result `shouldBe` expected
   where
     result =
-        dropAction 0 playerPosition actorWithItem initTileCollection initCellMap
+        dropAction 0 playerPosition initTileCollection cellMapBeforeDropping
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
@@ -43,6 +43,8 @@ testDropItemSuccessfully =
         fromJust $
         locateActorAt actorWithoutItem playerPosition initCellMap >>=
         locateItemAt herb playerPosition
+    cellMapBeforeDropping =
+        fromJust $ locateActorAt actorWithItem playerPosition initCellMap
     expectedLog = [T.youDropped $ getName herb]
     (actorWithoutItem, actorWithItem) = playerWithoutAndWithItem
     playerPosition = V2 1 0
@@ -52,13 +54,12 @@ testItemAlreadyExists =
     it "returns a Failed result if there is already an item at the player's foot." $
     result `shouldBe` expected
   where
-    result =
-        dropAction 0 playerPosition actorWithItem initTileCollection initCellMap
+    result = dropAction 0 playerPosition initTileCollection cellMapWithPlayer
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
-            {status = Failed, newCellMap = cellMapAfterAction, killed = []}
-    cellMapAfterAction =
+            {status = Failed, newCellMap = cellMapWithPlayer, killed = []}
+    cellMapWithPlayer =
         fromJust $ locateActorAt actorWithItem playerPosition initCellMap
     expectedLog = [T.itemExists]
     (_, actorWithItem) = playerWithoutAndWithItem

@@ -27,6 +27,6 @@ data ActionResult =
         }
     deriving (Show, Eq)
 
-type Action = Coord -> Actor -> TileCollection -> CellMap -> ActionResultWithLog
+type Action = Coord -> TileCollection -> CellMap -> ActionResultWithLog
 
 type ActionResultWithLog = Writer MessageLog ActionResult
