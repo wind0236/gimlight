@@ -4,6 +4,7 @@ module Main
 
 import qualified Action.ConsumeSpec
 import qualified Action.DropSpec
+import qualified Action.MeleeSpec
 import qualified Action.MoveSpec
 import qualified Action.PickUpSpec
 import qualified Action.WaitSpec
@@ -19,6 +20,7 @@ spec :: Spec
 spec = do
     describe "Action.Consume" Action.ConsumeSpec.spec
     describe "Action.Drop" Action.DropSpec.spec
+    describe "Action.Melee" Action.MeleeSpec.spec
     describe "Action.Move" Action.MoveSpec.spec
     describe "Action.PickUp" Action.PickUpSpec.spec
     describe "Action.Wait" Action.WaitSpec.spec
