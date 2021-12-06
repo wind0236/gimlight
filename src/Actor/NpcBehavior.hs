@@ -3,7 +3,7 @@ module Actor.NpcBehavior
     ) where
 
 import           Action               (Action, ActionResult (killed),
-                                       newDungeon)
+                                       newCellMap)
 import           Action.Melee         (meleeAction)
 import           Action.Move          (moveAction)
 import           Action.Wait          (waitAction)
@@ -54,7 +54,8 @@ npcAction ::
 npcAction position e ts d
     | isFriendlyNpc e = return (pushActor position e d, [])
     | otherwise =
-        (newDungeon &&& killed) <$> action position entityAfterUpdatingMap ts d
+        ((\x -> d & cellMap .~ newCellMap x) &&& killed) <$>
+        action position entityAfterUpdatingMap ts (d ^. cellMap)
   where
     action = selectAction position entityAfterUpdatingMap d
     entityAfterUpdatingMap =

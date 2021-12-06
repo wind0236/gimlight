@@ -8,7 +8,7 @@ module Action
 import           Actor                      (Actor)
 import           Control.Monad.Trans.Writer (Writer)
 import           Coord                      (Coord)
-import           Dungeon                    (Dungeon)
+import           Dungeon.Map.Cell           (CellMap)
 import           Dungeon.Map.Tile           (TileCollection)
 import           Item.Book                  (Book)
 import           Log                        (MessageLog)
@@ -22,11 +22,11 @@ data ActionStatus
 data ActionResult =
     ActionResult
         { status     :: ActionStatus
-        , newDungeon :: Dungeon
+        , newCellMap :: CellMap
         , killed     :: [Actor]
         }
     deriving (Show, Eq)
 
-type Action = Coord -> Actor -> TileCollection -> Dungeon -> ActionResultWithLog
+type Action = Coord -> Actor -> TileCollection -> CellMap -> ActionResultWithLog
 
 type ActionResultWithLog = Writer MessageLog ActionResult

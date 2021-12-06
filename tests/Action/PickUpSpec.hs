@@ -2,7 +2,7 @@ module Action.PickUpSpec
     ( spec
     ) where
 
-import           Action               (ActionResult (ActionResult, killed, newDungeon, status),
+import           Action               (ActionResult (ActionResult, killed, newCellMap, status),
                                        ActionStatus (Failed, Ok))
 import           Action.PickUp        (pickUpAction)
 import           Actor                (inventoryItems, player)
@@ -11,11 +11,9 @@ import           Control.Lens         ((%~), (&))
 import           Control.Monad.Writer (writer)
 import           Data.Array           (array)
 import           Data.Maybe           (fromJust)
-import           Dungeon              (Dungeon, dungeon, pushActor)
-import qualified Dungeon              as D
-import           Dungeon.Identifier   (Identifier (Beaeve))
-import           Dungeon.Map.Cell     (TileIdLayer (TileIdLayer), cellMap,
-                                       locateItemAt, removeItemAt)
+import           Dungeon.Map.Cell     (CellMap, TileIdLayer (TileIdLayer),
+                                       cellMap, locateActorAt, locateItemAt,
+                                       removeItemAt)
 import           Dungeon.Map.Tile     (TileCollection, tile)
 import           IndexGenerator       (generator)
 import           Item                 (getName, herb)
@@ -39,15 +37,15 @@ testPickUpSuccess =
             playerPosition
             actorWithoutItem
             initTileCollection
-            initDungeon
+            initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
-            {status = Ok, newDungeon = dungeonAfterPickingUp, killed = []}
-    dungeonAfterPickingUp =
-        pushActor playerPosition actorWithItem $
-        initDungeon &
-        D.cellMap %~ (snd . fromJust . removeItemAt playerPosition)
+            {status = Ok, newCellMap = cellMapAfterPickingUp, killed = []}
+    cellMapAfterPickingUp =
+        fromJust $
+        removeItemAt playerPosition initCellMap >>=
+        locateActorAt actorWithItem playerPosition . snd
     expectedLog = [T.youGotItem $ getName herb]
     actorWithItem =
         actorWithoutItem & inventoryItems %~ (fromJust . addItem herb)
@@ -64,13 +62,13 @@ testPickUpVoid =
             playerPosition
             actorWithoutItem
             initTileCollection
-            initDungeon
+            initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
-            {status = Failed, newDungeon = dungeonAfterPickingUp, killed = []}
-    dungeonAfterPickingUp =
-        pushActor playerPosition actorWithoutItem initDungeon
+            {status = Failed, newCellMap = cellMapAfterPickingUp, killed = []}
+    cellMapAfterPickingUp =
+        fromJust $ locateActorAt actorWithoutItem playerPosition initCellMap
     expectedLog = [T.youGotNothing]
     (actorWithoutItem, _) = player generator
     playerPosition = V2 1 0
@@ -85,13 +83,13 @@ testPickUpWhenInventoryIsFull =
             playerPosition
             actorWithFullItems
             initTileCollection
-            initDungeon
+            initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
-            {status = Failed, newDungeon = dungeonAfterPickingUp, killed = []}
-    dungeonAfterPickingUp =
-        pushActor playerPosition actorWithFullItems initDungeon
+            {status = Failed, newCellMap = cellMapAfterPickingUp, killed = []}
+    cellMapAfterPickingUp =
+        fromJust $ locateActorAt actorWithFullItems playerPosition initCellMap
     expectedLog = [T.bagIsFull]
     actorWithFullItems =
         iterate
@@ -100,9 +98,8 @@ testPickUpWhenInventoryIsFull =
         5
     playerPosition = V2 0 0
 
-initDungeon :: Dungeon
-initDungeon =
-    dungeon cm Beaeve & D.cellMap %~ (fromJust . locateItemAt herb (V2 0 0))
+initCellMap :: CellMap
+initCellMap = fromJust $ locateItemAt herb (V2 0 0) cm
   where
     cm =
         cellMap $

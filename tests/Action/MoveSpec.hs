@@ -2,7 +2,7 @@ module Action.MoveSpec
     ( spec
     ) where
 
-import           Action               (ActionResult (ActionResult, killed, newDungeon, status),
+import           Action               (ActionResult (ActionResult, killed, newCellMap, status),
                                        ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
 import           Action.Move          (moveAction)
@@ -12,10 +12,8 @@ import           Control.Monad.Writer (writer)
 import           Coord                (Coord)
 import           Data.Array           (array)
 import           Data.Maybe           (fromJust)
-import           Dungeon              (Dungeon, dungeon, pushActor)
-import           Dungeon.Identifier   (Identifier (Beaeve))
-import           Dungeon.Map.Cell     (TileIdLayer (TileIdLayer), cellMap,
-                                       locateActorAt)
+import           Dungeon.Map.Cell     (CellMap, TileIdLayer (TileIdLayer),
+                                       cellMap, locateActorAt)
 import           Dungeon.Map.Tile     (TileCollection, tile)
 import           IndexGenerator       (generator)
 import           Linear.V2            (V2 (V2))
@@ -49,28 +47,28 @@ succeed :: V2 Int -> ActionResultWithLog
 succeed offset = writer (result, [])
   where
     result =
-        ActionResult {status = Ok, newDungeon = dungeonWithPlayer, killed = []}
-    dungeonWithPlayer = pushActor (playerPosition + offset) p d
-    (p, d) = initDungeonAndPlayer
+        ActionResult {status = Ok, newCellMap = cellMapWithPlayer, killed = []}
+    cellMapWithPlayer = fromJust $ locateActorAt p (playerPosition + offset) cm
+    (p, cm) = initCellMapAndPlayer
 
 failed :: ActionResultWithLog
 failed = writer (result, l)
   where
     result =
         ActionResult
-            {status = Failed, newDungeon = dungeonWithPlayer, killed = []}
+            {status = Failed, newCellMap = cellMapWithPlayer, killed = []}
     l = [T.youCannotMoveThere]
-    dungeonWithPlayer = pushActor playerPosition p d
-    (p, d) = initDungeonAndPlayer
+    cellMapWithPlayer = fromJust $ locateActorAt p playerPosition cm
+    (p, cm) = initCellMapAndPlayer
 
 resultWhenMoveOffsetTo :: V2 Int -> ActionResultWithLog
 resultWhenMoveOffsetTo offset =
     moveAction offset playerPosition p initTileCollection d
   where
-    (p, d) = initDungeonAndPlayer
+    (p, d) = initCellMapAndPlayer
 
-initDungeonAndPlayer :: (Actor, Dungeon)
-initDungeonAndPlayer = (p, dungeon cm Beaeve)
+initCellMapAndPlayer :: (Actor, CellMap)
+initCellMapAndPlayer = (p, cm)
   where
     cm =
         fromJust $

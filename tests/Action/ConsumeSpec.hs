@@ -2,7 +2,7 @@ module Action.ConsumeSpec
     ( spec
     ) where
 
-import           Action               (ActionResult (ActionResult, killed, newDungeon, status),
+import           Action               (ActionResult (ActionResult, killed, newCellMap, status),
                                        ActionStatus (Ok, ReadingStarted))
 import           Action.Consume       (consumeAction)
 import           Actor                (getIdentifier, inventoryItems, player)
@@ -13,9 +13,6 @@ import           Control.Monad.Writer (writer)
 import           Coord                (Coord)
 import           Data.Array           (array)
 import           Data.Maybe           (fromJust)
-import           Dungeon              (dungeon, pushActor)
-import qualified Dungeon              as D
-import           Dungeon.Identifier   (Identifier (Beaeve))
 import           Dungeon.Map.Cell     (CellMap, TileIdLayer (TileIdLayer),
                                        cellMap, locateActorAt)
 import           Dungeon.Map.Tile     (TileCollection, tile)
@@ -37,18 +34,16 @@ testStartReadingBook =
     it "returns a ReadingStarted result if an actor uses a book" $
     result `shouldBe` expected
   where
-    result =
-        consumeAction 0 playerPosition p initTileCollection dungeonWithoutPlayer
+    result = consumeAction 0 playerPosition p initTileCollection initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
             { status = ReadingStarted $ bookContent $ getEffect sampleBook
-            , newDungeon = dungeonWithPlayer
+            , newCellMap = cellMapWithPlayer
             , killed = []
             }
     expectedLog = []
-    dungeonWithPlayer = pushActor playerPosition p dungeonWithoutPlayer
-    dungeonWithoutPlayer = dungeon initCellMap Beaeve
+    cellMapWithPlayer = fromJust $ locateActorAt p playerPosition initCellMap
     bookContent (Book c) = c
     bookContent _        = error "Not a book."
     p =
@@ -66,18 +61,16 @@ testConsumeHerb =
             playerPosition
             playerWithItem
             initTileCollection
-            dungeonWithoutPlayer
+            initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
-        ActionResult {status = Ok, newDungeon = dungeonWithPlayer, killed = []}
+        ActionResult {status = Ok, newCellMap = cellMapWithPlayer, killed = []}
     expectedLog =
         [ T.healed (toName $ getIdentifier playerWithItem) $
           healAmount $ getEffect herb
         ]
-    dungeonWithPlayer =
-        dungeonWithoutPlayer &
-        D.cellMap %~ (fromJust . locateActorAt playerWithoutItem playerPosition)
-    dungeonWithoutPlayer = dungeon initCellMap Beaeve
+    cellMapWithPlayer =
+        fromJust $ locateActorAt playerWithoutItem playerPosition initCellMap
     playerWithItem =
         playerWithoutItem & inventoryItems %~ (fromJust . addItem herb)
     playerWithoutItem = fst $ player generator

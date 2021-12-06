@@ -8,7 +8,7 @@ module GameStatus.Exploring.Dungeons
     ) where
 
 import           Action                     (Action,
-                                             ActionResult (killed, newDungeon, status),
+                                             ActionResult (killed, newCellMap, status),
                                              ActionStatus (Failed))
 import           Actor                      (Actor, isPlayer)
 import qualified Actor.NpcBehavior          as NPC
@@ -103,13 +103,17 @@ doPlayerAction action ts ds = result
         case player of
             Just p -> do
                 actionResult <-
-                    action playerPos p ts currentDungeonWithoutPlayer
+                    action
+                        playerPos
+                        p
+                        ts
+                        (currentDungeonWithoutPlayer ^. cellMap)
                 let statusAndNewDungeon =
-                        (status actionResult, newDungeon actionResult)
+                        (status actionResult, newCellMap actionResult)
                 return $
-                    (\(a, d) ->
+                    (\(a, cm) ->
                          ( a
-                         , modify (const d) zipperWithoutPlayer
+                         , modify (\d -> d & cellMap .~ cm) zipperWithoutPlayer
                          , killed actionResult))
                         statusAndNewDungeon
             Nothing -> return (Failed, ds, [])
@@ -127,6 +131,5 @@ handleNpcTurns ts ds =
 popPlayer :: Dungeons -> (Maybe Actor, Dungeons)
 popPlayer z =
     case removeActorIf isPlayer (getFocused z ^. cellMap) of
-        Just (actor, newCellMap) ->
-            (Just actor, modify (\x -> x & cellMap .~ newCellMap) z)
-        Nothing -> (Nothing, z)
+        Just (actor, ncm) -> (Just actor, modify (\x -> x & cellMap .~ ncm) z)
+        Nothing           -> (Nothing, z)

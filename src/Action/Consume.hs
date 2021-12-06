@@ -7,35 +7,52 @@ import           Action               (Action, ActionResult (ActionResult),
 import           Actor                (getIdentifier, healHp, removeNthItem)
 import           Actor.Identifier     (toName)
 import           Control.Monad.Writer (tell)
-import           Dungeon              (pushActor)
+import           Data.Maybe           (fromMaybe)
+import           Dungeon.Map.Cell     (locateActorAt)
 import           Item                 (Effect (Book, Heal), getEffect,
                                        isUsableManyTimes)
 import           Item.Heal            (getHealAmount)
 import qualified Localization.Texts   as T
 
 consumeAction :: Int -> Action
-consumeAction n position e tiles d =
+consumeAction n position e tiles cm =
     case item of
         Just x -> useItem x
         Nothing -> do
             tell [T.whatToUse]
-            return $ ActionResult Failed (pushActor position e d) []
+            return $
+                ActionResult
+                    Failed
+                    (fromMaybe
+                         (error "Failed to locate an actor.")
+                         (locateActorAt e position cm))
+                    []
   where
     useItem x =
         let actor =
                 if isUsableManyTimes x
                     then e
                     else newActor
-         in doItemEffect (getEffect x) position actor tiles d
+         in doItemEffect (getEffect x) position actor tiles cm
     (item, newActor) = removeNthItem n e
 
 doItemEffect :: Effect -> Action
-doItemEffect (Heal handler) position actor _ dungeon = do
+doItemEffect (Heal handler) position actor _ cm = do
     tell [T.healed (toName $ getIdentifier actor) amount]
     return $
-        ActionResult Ok (pushActor position (healHp amount actor) dungeon) []
+        ActionResult
+            Ok
+            (fromMaybe
+                 (error "Failed to locate an actor.")
+                 (locateActorAt (healHp amount actor) position cm))
+            []
   where
     amount = getHealAmount handler
-doItemEffect (Book handler) position actor _ dungeon =
+doItemEffect (Book handler) position actor _ cm =
     return $
-    ActionResult (ReadingStarted handler) (pushActor position actor dungeon) []
+    ActionResult
+        (ReadingStarted handler)
+        (fromMaybe
+             (error "Failed to locate an actor.")
+             (locateActorAt actor position cm))
+        []

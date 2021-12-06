@@ -4,22 +4,18 @@ module Action.MeleeSpec
     ( spec
     ) where
 
-import           Action               (ActionResult (ActionResult, killed, newDungeon, status),
+import           Action               (ActionResult (ActionResult, killed, newCellMap, status),
                                        ActionStatus (Ok))
 import           Action.Melee         (meleeAction)
 import           Actor                (Actor, attackFromTo, monster)
 import           Actor.Identifier     (Identifier (Orc))
 import qualified Actor.Status         as S
 import           Actor.Status.Hp      (hp)
-import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (runWriter, writer)
 import           Data.Array           (array)
 import           Data.Maybe           (fromJust)
-import           Dungeon              (Dungeon, dungeon, pushActor)
-import qualified Dungeon              as D
-import           Dungeon.Identifier   (Identifier (Beaeve))
-import           Dungeon.Map.Cell     (TileIdLayer (TileIdLayer), cellMap,
-                                       removeActorAt)
+import           Dungeon.Map.Cell     (CellMap, TileIdLayer (TileIdLayer),
+                                       cellMap, locateActorAt, removeActorAt)
 import           Dungeon.Map.Tile     (TileCollection, tile)
 import           IndexGenerator       (IndexGenerator, generator)
 import           Linear.V2            (V2 (V2))
@@ -36,56 +32,56 @@ testKill =
         it "kills the weakest orc" $ result `shouldBe` expected
         it "returns a Nothing defender" $ newDefender `shouldBe` Nothing
   where
-    result = meleeAction (V2 1 1) (V2 0 0) s initTileCollection d
+    result = meleeAction (V2 1 1) (V2 0 0) s initTileCollection cm
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
             { status = Ok
-            , newDungeon = pushActor (V2 0 0) newAttacker dungeonWithoutDefender
+            , newCellMap =
+                  fromJust $
+                  locateActorAt newAttacker (V2 0 0) cellMapWithoutDefender
             , killed = [defender]
             }
     ((newAttacker, newDefender), expectedLog) =
         runWriter $ attackFromTo s defender
-    (defender, dungeonWithoutDefender) =
-        case removeActorAt (V2 1 1) (d ^. D.cellMap) of
-            Just (a, newCellMap) -> (a, d & D.cellMap .~ newCellMap)
-            Nothing              -> error "unreachable."
+    (defender, cellMapWithoutDefender) =
+        case removeActorAt (V2 1 1) cm of
+            Just (a, ncm) -> (a, ncm)
+            Nothing       -> error "unreachable."
     s = fst $ strongest g
-    (d, g) = initDungeon
+    (cm, g) = initCellMap
 
 testDamage :: Spec
 testDamage =
     describe "Strongest orc" $
     it "attacks to the intermediate orc" $ result `shouldBe` expected
   where
-    result = meleeAction (V2 0 1) (V2 0 0) s initTileCollection d
+    result = meleeAction (V2 0 1) (V2 0 0) s initTileCollection cm
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
             { status = Ok
-            , newDungeon =
-                  pushActor (V2 0 0) newAttacker $
-                  pushActor
-                      (V2 0 1)
-                      (fromJust newDefender)
-                      dungeonWithoutDefender
+            , newCellMap =
+                  fromJust $
+                  locateActorAt newAttacker (V2 0 0) cellMapWithoutDefender >>=
+                  locateActorAt (fromJust newDefender) (V2 0 1)
             , killed = []
             }
     ((newAttacker, newDefender), expectedLog) =
         runWriter $ attackFromTo s defender
-    (defender, dungeonWithoutDefender) =
-        case removeActorAt (V2 0 1) (d ^. D.cellMap) of
-            Just (a, newCellMap) -> (a, d & D.cellMap .~ newCellMap)
-            Nothing              -> error "unreachable"
+    (defender, cellMapWithoutDefender) =
+        case removeActorAt (V2 0 1) cm of
+            Just (a, ncm) -> (a, ncm)
+            Nothing       -> error "unreachable"
     s = fst $ strongest g
-    (d, g) = initDungeon
+    (cm, g) = initCellMap
 
-initDungeon :: (Dungeon, IndexGenerator)
-initDungeon =
-    ( pushActor (V2 1 1) w $
-      pushActor (V2 0 1) i $ pushActor (V2 1 0) s $ dungeon cm Beaeve
-    , g''')
+initCellMap :: (CellMap, IndexGenerator)
+initCellMap = (fromJust afterLocating, g''')
   where
+    afterLocating =
+        locateActorAt w (V2 1 1) cm >>= locateActorAt i (V2 0 1) >>=
+        locateActorAt s (V2 1 0)
     cm =
         cellMap $
         array (V2 0 0, V2 1 1) [(V2 x y, walkable) | x <- [0, 1], y <- [0, 1]]

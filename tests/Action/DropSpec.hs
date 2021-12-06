@@ -4,19 +4,17 @@ module Action.DropSpec
     ( spec
     ) where
 
-import           Action                     (ActionResult (ActionResult, killed, newDungeon, status),
+import           Action                     (ActionResult (ActionResult, killed, newCellMap, status),
                                              ActionStatus (Failed, Ok))
 import           Action.Drop                (dropAction)
 import           Actor                      (Actor, inventoryItems, player)
 import           Actor.Inventory            (addItem)
-import           Control.Lens               ((%~), (&), (.~), (^.))
+import           Control.Lens               ((&), (.~), (^.))
 import           Control.Monad.Trans.Writer (writer)
 import           Data.Array                 (array)
 import           Data.Maybe                 (fromJust)
-import           Dungeon                    (Dungeon, dungeon, pushActor)
-import qualified Dungeon                    as D
-import           Dungeon.Identifier         (Identifier (Beaeve))
-import           Dungeon.Map.Cell           (TileIdLayer (TileIdLayer), cellMap,
+import           Dungeon.Map.Cell           (CellMap, TileIdLayer (TileIdLayer),
+                                             cellMap, locateActorAt,
                                              locateItemAt)
 import           Dungeon.Map.Tile           (TileCollection, tile)
 import           IndexGenerator             (generator)
@@ -36,14 +34,15 @@ testDropItemSuccessfully =
     result `shouldBe` expected
   where
     result =
-        dropAction 0 playerPosition actorWithItem initTileCollection initDungeon
+        dropAction 0 playerPosition actorWithItem initTileCollection initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
-            {status = Ok, newDungeon = dungeonAfterDropping, killed = []}
-    dungeonAfterDropping =
-        pushActor playerPosition actorWithoutItem initDungeon &
-        D.cellMap %~ (fromJust . locateItemAt herb playerPosition)
+            {status = Ok, newCellMap = cellMapAfterDropping, killed = []}
+    cellMapAfterDropping =
+        fromJust $
+        locateActorAt actorWithoutItem playerPosition initCellMap >>=
+        locateItemAt herb playerPosition
     expectedLog = [T.youDropped $ getName herb]
     (actorWithoutItem, actorWithItem) = playerWithoutAndWithItem
     playerPosition = V2 1 0
@@ -54,19 +53,19 @@ testItemAlreadyExists =
     result `shouldBe` expected
   where
     result =
-        dropAction 0 playerPosition actorWithItem initTileCollection initDungeon
+        dropAction 0 playerPosition actorWithItem initTileCollection initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
-            {status = Failed, newDungeon = dungeonAfterAction, killed = []}
-    dungeonAfterAction = pushActor playerPosition actorWithItem initDungeon
+            {status = Failed, newCellMap = cellMapAfterAction, killed = []}
+    cellMapAfterAction =
+        fromJust $ locateActorAt actorWithItem playerPosition initCellMap
     expectedLog = [T.itemExists]
     (_, actorWithItem) = playerWithoutAndWithItem
     playerPosition = V2 0 0
 
-initDungeon :: Dungeon
-initDungeon =
-    dungeon cm Beaeve & D.cellMap %~ (fromJust . locateItemAt herb (V2 0 0))
+initCellMap :: CellMap
+initCellMap = fromJust $ locateItemAt herb (V2 0 0) cm
   where
     cm =
         cellMap $

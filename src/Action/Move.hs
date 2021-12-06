@@ -4,17 +4,28 @@ module Action.Move
 
 import           Action               (Action, ActionResult (ActionResult),
                                        ActionStatus (Failed, Ok))
-import           Control.Lens         ((^.))
 import           Control.Monad.Writer (tell)
-import           Dungeon              (cellMap, pushActor)
-import           Dungeon.Map.Cell     (isWalkableAt)
+import           Data.Maybe           (fromMaybe)
+import           Dungeon.Map.Cell     (isWalkableAt, locateActorAt)
 import           Linear.V2            (V2)
 import qualified Localization.Texts   as T
 
 moveAction :: V2 Int -> Action
-moveAction offset position src tiles d
-    | isWalkableAt (position + offset) tiles (d ^. cellMap) =
-        return $ ActionResult Ok (pushActor (position + offset) src d) []
+moveAction offset position src tiles cm
+    | isWalkableAt (position + offset) tiles cm =
+        return $
+        ActionResult
+            Ok
+            (fromMaybe
+                 (error "Failed to locate an actor.")
+                 (locateActorAt src (position + offset) cm))
+            []
     | otherwise = do
         tell [T.youCannotMoveThere]
-        return $ ActionResult Failed (pushActor position src d) []
+        return $
+            ActionResult
+                Failed
+                (fromMaybe
+                     (error "Failed to locate an actor.")
+                     (locateActorAt src position cm))
+                []
