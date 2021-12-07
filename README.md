@@ -2,6 +2,10 @@
 
 ## Running
 
+### Windows
+
+I think we can build and run this project on Windows, but I don't know how. So, if you find the way please tell me the instructions.
+
 ### Linux
 
 You need to install `libsdl2` and `libglew`. For Ubuntu you need to run this command:
