@@ -14,7 +14,6 @@ module SetUp
 
 import           Actor            (Actor, inventoryItems, monster, player)
 import           Actor.Identifier (Identifier (Orc))
-import           Actor.Inventory  (addItem)
 import           Actor.Monsters   (orc)
 import           Actor.Status     (status)
 import           Actor.Status.Hp  (hp)
@@ -27,6 +26,7 @@ import           Dungeon.Map.Cell (CellMap, TileIdLayer (TileIdLayer), cellMap,
                                    locateActorAt, locateItemAt)
 import           Dungeon.Map.Tile (TileCollection, tile)
 import           IndexGenerator   (IndexGenerator, generator)
+import           Inventory        (addItem)
 import           Item             (herb, sampleBook)
 import           Linear.V2        (V2 (V2))
 

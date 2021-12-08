@@ -8,12 +8,12 @@ import           Action                     (ActionResult (ActionResult, killed,
                                              ActionStatus (Failed, Ok))
 import           Action.Drop                (dropAction)
 import           Actor                      (inventoryItems)
-import           Actor.Inventory            (removeNthItem)
 import           Control.Lens               ((%~), (&))
 import           Control.Monad.Trans.Writer (writer)
 import           Data.Maybe                 (fromJust)
 import           Dungeon.Map.Cell           (locateActorAt, locateItemAt,
                                              removeActorAt)
+import           Inventory                  (removeNthItem)
 import           Item                       (getName, herb)
 import qualified Localization.Texts         as T
 import           SetUp                      (initCellMap, initTileCollection,

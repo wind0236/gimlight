@@ -6,12 +6,12 @@ import           Action               (Action, ActionResult (ActionResult),
                                        ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
 import           Actor                (Actor, inventoryItems)
-import           Actor.Inventory      (Inventory, addItem)
 import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)
 import           Data.Maybe           (fromMaybe)
 import           Dungeon.Map.Cell     (CellMap, locateActorAt, removeActorAt,
                                        removeItemAt)
+import           Inventory            (Inventory, addItem)
 import           Item                 (Item, getName)
 import qualified Localization.Texts   as T
 

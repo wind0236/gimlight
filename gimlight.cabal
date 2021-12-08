@@ -67,7 +67,6 @@ library
                       , Action.Wait
                       , Actor
                       , Actor.Identifier
-                      , Actor.Inventory
                       , Actor.Monsters
                       , Actor.Status
                       , Actor.Status.Hp
@@ -79,6 +78,7 @@ library
                       , Fov
                       , Game
                       , IndexGenerator
+                      , Inventory
                       , Item
                       , Item.Heal
                       , Localization.Texts

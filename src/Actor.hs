@@ -34,8 +34,6 @@ module Actor
 
 import           Actor.Identifier        (Identifier, toName)
 import qualified Actor.Identifier        as Identifier
-import           Actor.Inventory         (Inventory, inventory)
-import qualified Actor.Inventory         as I
 import           Actor.Status            (Status)
 import qualified Actor.Status            as S
 import           Actor.Status.Hp         (hp)
@@ -47,6 +45,8 @@ import           Data.Text               (Text)
 import           GHC.Generics            (Generic)
 import           GameStatus.Talking.Part (TalkingPart)
 import           IndexGenerator          (Index, IndexGenerator, generate)
+import           Inventory               (Inventory, inventory)
+import qualified Inventory               as I
 import           Item                    (Item)
 import           Log                     (MessageLog)
 
