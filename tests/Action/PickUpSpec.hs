@@ -5,20 +5,18 @@ module Action.PickUpSpec
 import           Action               (ActionResult (ActionResult, killed, newCellMap, status),
                                        ActionStatus (Failed, Ok))
 import           Action.PickUp        (pickUpAction)
-import           Actor                (inventoryItems, player)
+import           Actor                (inventoryItems)
 import           Actor.Inventory      (addItem)
 import           Control.Lens         ((%~), (&))
 import           Control.Monad.Writer (writer)
-import           Data.Array           (array)
 import           Data.Maybe           (fromJust)
-import           Dungeon.Map.Cell     (CellMap, TileIdLayer (TileIdLayer),
-                                       cellMap, locateActorAt, locateItemAt,
+import           Dungeon.Map.Cell     (locateActorAt, removeActorAt,
                                        removeItemAt)
-import           Dungeon.Map.Tile     (TileCollection, tile)
-import           IndexGenerator       (generator)
 import           Item                 (getName, herb)
-import           Linear.V2            (V2 (V2))
 import qualified Localization.Texts   as T
+import           SetUp                (initCellMap, initTileCollection,
+                                       orcWithFullItemsPosition,
+                                       orcWithoutItemsPosition, playerPosition)
 import           Test.Hspec           (Spec, it, shouldBe)
 
 spec :: Spec
@@ -29,11 +27,10 @@ spec = do
 
 testPickUpSuccess :: Spec
 testPickUpSuccess =
-    it "returns a Ok result if there is an item at the player's foot, and player's inventory is not full." $
+    it "returns a Ok result if there is an item at the actor's foot, and player's inventory is not full." $
     result `shouldBe` expected
   where
-    result =
-        pickUpAction playerPosition initTileCollection cellMapBeforePickingUp
+    result = pickUpAction playerPosition initTileCollection initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
@@ -41,62 +38,32 @@ testPickUpSuccess =
     cellMapAfterPickingUp =
         fromJust $
         removeItemAt playerPosition initCellMap >>=
+        removeActorAt playerPosition . snd >>=
         locateActorAt actorWithItem playerPosition . snd
-    cellMapBeforePickingUp =
-        fromJust $ locateActorAt actorWithoutItem playerPosition initCellMap
     expectedLog = [T.youGotItem $ getName herb]
     actorWithItem =
-        actorWithoutItem & inventoryItems %~ (fromJust . addItem herb)
-    (actorWithoutItem, _) = player generator
-    playerPosition = V2 0 0
+        (\(x, _) -> x & inventoryItems %~ (fromJust . addItem herb))
+            (fromJust (removeActorAt playerPosition initCellMap))
 
 testPickUpVoid :: Spec
 testPickUpVoid =
-    it "returns a Failed result if there is no item at the player's foot." $
+    it "returns a Failed result if there is no item at the actor's foot." $
     result `shouldBe` expected
   where
-    result = pickUpAction playerPosition initTileCollection cellMapWithPlayer
+    result = pickUpAction orcWithoutItemsPosition initTileCollection initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
-        ActionResult
-            {status = Failed, newCellMap = cellMapWithPlayer, killed = []}
-    cellMapWithPlayer =
-        fromJust $ locateActorAt actorWithoutItem playerPosition initCellMap
+        ActionResult {status = Failed, newCellMap = initCellMap, killed = []}
     expectedLog = [T.youGotNothing]
-    (actorWithoutItem, _) = player generator
-    playerPosition = V2 1 0
 
 testPickUpWhenInventoryIsFull :: Spec
 testPickUpWhenInventoryIsFull =
-    it "returns a Failed result if the player's inventory is full." $
+    it "returns a Failed result if the actor's inventory is full." $
     result `shouldBe` expected
   where
     result =
-        pickUpAction playerPosition initTileCollection cellMapWithFullItemPlayer
+        pickUpAction orcWithFullItemsPosition initTileCollection initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
-        ActionResult
-            { status = Failed
-            , newCellMap = cellMapWithFullItemPlayer
-            , killed = []
-            }
-    cellMapWithFullItemPlayer =
-        fromJust $ locateActorAt actorWithFullItems playerPosition initCellMap
+        ActionResult {status = Failed, newCellMap = initCellMap, killed = []}
     expectedLog = [T.bagIsFull]
-    actorWithFullItems =
-        iterate
-            (\x -> x & inventoryItems %~ (fromJust . addItem herb))
-            (fst $ player generator) !!
-        5
-    playerPosition = V2 0 0
-
-initCellMap :: CellMap
-initCellMap = fromJust $ locateItemAt herb (V2 0 0) cm
-  where
-    cm =
-        cellMap $
-        array (V2 0 0, V2 1 0) [(V2 0 0, emptyTile), (V2 1 0, emptyTile)]
-    emptyTile = TileIdLayer Nothing Nothing
-
-initTileCollection :: TileCollection
-initTileCollection = array (0, 0) [(0, tile True True)]

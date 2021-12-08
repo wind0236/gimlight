@@ -5,23 +5,17 @@ module Action.ConsumeSpec
 import           Action               (ActionResult (ActionResult, killed, newCellMap, status),
                                        ActionStatus (Ok, ReadingStarted))
 import           Action.Consume       (consumeAction)
-import           Actor                (getIdentifier, inventoryItems, player)
+import           Actor                (getIdentifier, removeNthItem)
 import           Actor.Identifier     (toName)
-import           Actor.Inventory      (addItem)
-import           Control.Lens         ((%~), (&))
 import           Control.Monad.Writer (writer)
-import           Coord                (Coord)
-import           Data.Array           (array)
 import           Data.Maybe           (fromJust)
-import           Dungeon.Map.Cell     (CellMap, TileIdLayer (TileIdLayer),
-                                       cellMap, locateActorAt)
-import           Dungeon.Map.Tile     (TileCollection, tile)
-import           IndexGenerator       (generator)
+import           Dungeon.Map.Cell     (locateActorAt, removeActorAt)
 import           Item                 (Effect (Book, Heal), getEffect, herb,
                                        sampleBook)
 import           Item.Heal            (getHealAmount)
-import           Linear.V2            (V2 (V2))
 import qualified Localization.Texts   as T
+import           SetUp                (initCellMap, initTileCollection,
+                                       orcWithHerbPosition, playerPosition)
 import           Test.Hspec           (Spec, it, shouldBe)
 
 spec :: Spec
@@ -34,52 +28,37 @@ testStartReadingBook =
     it "returns a ReadingStarted result if an actor uses a book" $
     result `shouldBe` expected
   where
-    result = consumeAction 0 playerPosition initTileCollection cellMapWithPlayer
+    result = consumeAction 0 playerPosition initTileCollection initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
         ActionResult
             { status = ReadingStarted $ bookContent $ getEffect sampleBook
-            , newCellMap = cellMapWithPlayer
+            , newCellMap = initCellMap
             , killed = []
             }
     expectedLog = []
-    cellMapWithPlayer = fromJust $ locateActorAt p playerPosition initCellMap
     bookContent (Book c) = c
     bookContent _        = error "Not a book."
-    p =
-        fst (player generator) &
-        inventoryItems %~ (fromJust . addItem sampleBook)
 
 testConsumeHerb :: Spec
 testConsumeHerb =
     it "returns a Ok result if an actor uses a herb" $
     result `shouldBe` expected
   where
-    result =
-        consumeAction 0 playerPosition initTileCollection cellMapBeforeAction
+    result = consumeAction 0 orcWithHerbPosition initTileCollection initCellMap
     expected = writer (expectedResult, expectedLog)
     expectedResult =
-        ActionResult {status = Ok, newCellMap = cellMapWithPlayer, killed = []}
+        ActionResult
+            {status = Ok, newCellMap = cellMapAfterConsuming, killed = []}
     expectedLog =
-        [ T.healed (toName $ getIdentifier playerWithItem) $
+        [ T.healed (toName $ getIdentifier orcWithItem) $
           healAmount $ getEffect herb
         ]
-    cellMapWithPlayer =
-        fromJust $ locateActorAt playerWithoutItem playerPosition initCellMap
-    cellMapBeforeAction =
-        fromJust $ locateActorAt playerWithItem playerPosition initCellMap
-    playerWithItem =
-        playerWithoutItem & inventoryItems %~ (fromJust . addItem herb)
-    playerWithoutItem = fst $ player generator
+    cellMapAfterConsuming =
+        fromJust $
+        removeActorAt orcWithHerbPosition initCellMap >>=
+        (\(a, cm) ->
+             locateActorAt (snd $ removeNthItem 0 a) orcWithHerbPosition cm)
+    orcWithItem = fst $ fromJust $ removeActorAt orcWithHerbPosition initCellMap
     healAmount (Heal h) = getHealAmount h
     healAmount _        = error "Not a healer."
-
-initCellMap :: CellMap
-initCellMap =
-    cellMap $ array (V2 0 0, V2 0 0) [(V2 0 0, TileIdLayer Nothing Nothing)]
-
-initTileCollection :: TileCollection
-initTileCollection = array (0, 0) [(0, tile True True)]
-
-playerPosition :: Coord
-playerPosition = V2 0 0
