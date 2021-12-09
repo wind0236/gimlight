@@ -5,11 +5,13 @@ module Action.ConsumeSpec
 import           Action               (ActionResult (ActionResult, killed, newCellMap, status),
                                        ActionStatus (Ok, ReadingStarted))
 import           Action.Consume       (consumeAction)
-import           Actor                (getIdentifier, removeNthItem)
+import           Actor                (getIdentifier, inventoryItems)
 import           Actor.Identifier     (toName)
+import           Control.Lens         ((%~), (&))
 import           Control.Monad.Writer (writer)
 import           Data.Maybe           (fromJust)
 import           Dungeon.Map.Cell     (locateActorAt, removeActorAt)
+import           Inventory            (removeNthItem)
 import           Item                 (Effect (Book, Heal), getEffect, herb,
                                        sampleBook)
 import           Item.Heal            (getHealAmount)
@@ -58,7 +60,10 @@ testConsumeHerb =
         fromJust $
         removeActorAt orcWithHerbPosition initCellMap >>=
         (\(a, cm) ->
-             locateActorAt (snd $ removeNthItem 0 a) orcWithHerbPosition cm)
+             locateActorAt
+                 (a & inventoryItems %~ (snd . removeNthItem 0))
+                 orcWithHerbPosition
+                 cm)
     orcWithItem = fst $ fromJust $ removeActorAt orcWithHerbPosition initCellMap
     healAmount (Heal h) = getHealAmount h
     healAmount _        = error "Not a healer."

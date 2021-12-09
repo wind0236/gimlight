@@ -28,7 +28,6 @@ module Actor
     , healHp
     , inventoryItems
     , getItems
-    , removeNthItem
     , target
     ) where
 
@@ -186,8 +185,3 @@ getDefence a = S.getDefence $ a ^. status
 
 getItems :: Actor -> [Item]
 getItems a = I.getItems $ a ^. inventoryItems
-
-removeNthItem :: Int -> Actor -> (Maybe Item, Actor)
-removeNthItem n a = (removed, a & inventoryItems .~ newItems)
-  where
-    (removed, newItems) = I.removeNthItem n $ a ^. inventoryItems

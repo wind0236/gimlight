@@ -5,11 +5,13 @@ module Action.Drop
 import           Action               (Action, ActionResult (ActionResult),
                                        ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
-import           Actor                (Actor, removeNthItem)
+import           Actor                (Actor, inventoryItems)
+import           Control.Lens         ((&), (.~), (^.))
 import           Control.Monad.Writer (tell)
 import           Data.Maybe           (fromMaybe)
 import           Dungeon.Map.Cell     (CellMap, locateActorAt, locateItemAt,
                                        removeActorAt)
+import           Inventory            (removeNthItem)
 import           Item                 (Item, getName)
 import           Localization         (MultilingualText)
 import qualified Localization.Texts   as T
@@ -21,9 +23,10 @@ dropAction n position _ cm =
         Nothing       -> return $ ActionResult Failed cm []
   where
     dropActionForActor a ncm =
-        case removeNthItem n a of
-            (Just item, newActor) -> dropItem ncm item newActor
-            (Nothing, _)          -> failWithReason T.whatToDrop
+        case removeNthItem n (a ^. inventoryItems) of
+            (Just item, newInventory) ->
+                dropItem ncm item (a & inventoryItems .~ newInventory)
+            (Nothing, _) -> failWithReason T.whatToDrop
     dropItem :: CellMap -> Item -> Actor -> ActionResultWithLog
     dropItem ncm item' a =
         case locateItemAt item' position ncm of
