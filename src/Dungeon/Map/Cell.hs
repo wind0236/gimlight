@@ -101,6 +101,9 @@ removeItem c =
         Just i  -> Just (i, c & item .~ Nothing)
         Nothing -> Nothing
 
+-- We define `CellMap` as a newtype rather than an alias to define
+-- functions that return `Nothing` on index-out-of-bounds error. Error
+-- messages from `Array` are super unhelpful.
 newtype CellMap =
     CellMap (Array (V2 Int) Cell)
     deriving (Show, Ord, Eq, Generic)
