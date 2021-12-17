@@ -31,7 +31,8 @@ module Dungeon.Map.Cell
     ) where
 
 import           Actor            (Actor, isPlayer)
-import           Control.Lens     (makeLenses, (%~), (&), (.~), (?~), (^.))
+import           Control.Lens     (Ixed (ix), makeLenses, (%~), (&), (.~), (?~),
+                                   (^.), (^?))
 import           Coord            (Coord)
 import           Data.Array       (Array, array, assocs, bounds, (!), (//))
 import           Data.Binary      (Binary)
@@ -229,9 +230,7 @@ tileIdLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
 tileIdLayerAt c t = fmap (^. tileIdLayer) (cellAt c t)
 
 cellAt :: Coord -> CellMap -> Maybe Cell
-cellAt c (CellMap m)
-    | coordIsInRange c (CellMap m) = Just $ m ! c
-    | otherwise = Nothing
+cellAt c (CellMap m) = m ^? ix c
 
 coordIsInRange :: Coord -> CellMap -> Bool
 coordIsInRange c (CellMap m) = c >= lowerBound && c <= upperBound
