@@ -12,7 +12,7 @@ import           Action                     (Action,
                                              ActionStatus)
 import           Actor                      (Actor, isPlayer)
 import qualified Actor.NpcBehavior          as NPC
-import           Control.Lens               ((&), (.~), (^.))
+import           Control.Lens               ((%%~), (&), (.~), (^.))
 import           Control.Monad.Trans.Writer (Writer)
 import           Data.Foldable              (find)
 import           Data.Maybe                 (fromMaybe)
@@ -20,7 +20,7 @@ import           Dungeon                    (Dungeon, ascendingStairs, cellMap,
                                              descendingStairs,
                                              positionOnParentMap, updateMap)
 import qualified Dungeon                    as D
-import           Dungeon.Map.Cell           (removeActorIf)
+import           Dungeon.Map.Cell           (locateActorAt, removeActorIf)
 import           Dungeon.Map.Tile           (TileCollection)
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
@@ -48,7 +48,7 @@ ascendStairsAtPlayerPosition ts ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (updateMap ts $ D.pushActor pos p d))
+                     (d & cellMap %%~ locateActorAt p pos >>= updateMap ts))
             g
 
 descendStairsAtPlayerPosition :: TileCollection -> Dungeons -> Maybe Dungeons
@@ -75,7 +75,7 @@ descendStairsAtPlayerPosition ts ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (updateMap ts $ D.pushActor pos p d))
+                     (d & cellMap %%~ locateActorAt p pos >>= updateMap ts))
             g
 
 exitDungeon :: Dungeons -> Maybe Dungeons
@@ -87,8 +87,15 @@ exitDungeon ds = newZipper
     zipperFocusingGlobalMap = goUp zipperWithoutPlayer
     newZipper =
         case (zipperFocusingGlobalMap, newPosition, player) of
-            (Just g, Just pos, Just p) -> Just $ modify (D.pushActor pos p) g
-            _                          -> Nothing
+            (Just g, Just pos, Just p) ->
+                Just $
+                modify
+                    (\d ->
+                         fromMaybe
+                             (error "Failed to update the map.")
+                             (d & cellMap %%~ locateActorAt p pos))
+                    g
+            _ -> Nothing
 
 doPlayerAction ::
        Action
