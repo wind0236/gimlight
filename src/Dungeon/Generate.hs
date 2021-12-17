@@ -4,7 +4,7 @@ module Dungeon.Generate
 
 import           Actor                   (Actor)
 import           Actor.Monsters          (orc, troll)
-import           Control.Lens            ((%~), (&), (.~), (?~), (^.))
+import           Control.Lens            (Ixed (ix), (&), (.~), (?~), (^.))
 import           Coord                   (Coord)
 import           Data.Maybe              (fromMaybe)
 import           Data.Tree               (Tree (Node, rootLabel, subForest))
@@ -17,8 +17,8 @@ import           Dungeon.Generate.Room   (Room (..), center,
                                           roomFromTwoPositionInclusive,
                                           roomFromWidthHeight, roomOverlaps)
 import           Dungeon.Identifier      (Identifier)
-import           Dungeon.Map.Cell        (CellMap, allWallTiles, changeTileAt,
-                                          locateActorAt, locateItemAt, upper,
+import           Dungeon.Map.Cell        (CellMap, allWallTiles, locateActorAt,
+                                          locateItemAt, tileIdLayer, upper,
                                           widthAndHeight)
 import           Dungeon.Map.Tile        (TileCollection, downStairs, upStairs)
 import           Dungeon.Size            (maxSize, minSize)
@@ -74,12 +74,8 @@ generateDungeonAndAppend zipper g ig ts cfg ident =
         appendNode newLowerDungeon $
         modify
             (\x ->
-                 x &
-                 cellMap %~
-                 (fromMaybe (error "Failed to change the tile.") .
-                  changeTileAt
-                      (\tile -> tile & upper ?~ downStairs)
-                      upperStairsPosition)) $
+                 x & (cellMap . ix upperStairsPosition . tileIdLayer . upper) ?~
+                 downStairs) $
         modify (const newUpperDungeon) zipper
     zipperFocusingNext =
         fromMaybe
@@ -99,10 +95,7 @@ generateDungeon ::
     -> Identifier
     -> (Dungeon, Coord, StdGen, IndexGenerator)
 generateDungeon g ig cfg ident =
-    ( dungeon
-          (fromMaybe (error "Failed to change the tile.") $
-           changeTileAt (\tile -> tile & upper ?~ upStairs) enterPosition tiles)
-          ident
+    ( dungeon (tiles & ix enterPosition . tileIdLayer . upper ?~ upStairs) ident
     , enterPosition
     , g'''
     , ig')
@@ -160,10 +153,7 @@ generateDungeonAccum acc tileMap playerPos g ig cfg
 createRoom :: Room -> CellMap -> CellMap
 createRoom room r =
     foldl
-        (\acc x ->
-             fromMaybe
-                 (error "Failed to change a tile.")
-                 (changeTileAt (\tile -> tile & upper .~ Nothing) x acc))
+        (\acc x -> acc & ix x . tileIdLayer . upper .~ Nothing)
         r
         [V2 x y | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 

@@ -10,7 +10,6 @@ module Dungeon.Map.Cell
     , cellMap
     , tileIdLayer
     , allWallTiles
-    , changeTileAt
     , updateExploredMap
     , updatePlayerFov
     , playerFov
@@ -31,8 +30,8 @@ module Dungeon.Map.Cell
     ) where
 
 import           Actor            (Actor, isPlayer)
-import           Control.Lens     (Ixed (ix), makeLenses, (%~), (&), (.~), (?~),
-                                   (^.), (^?))
+import           Control.Lens     (Ixed (ix), makeLenses, (&), (.~), (?~), (^.),
+                                   (^?))
 import           Coord            (Coord)
 import           Data.Array       (Array, array, assocs, bounds, (!), (//))
 import           Data.Binary      (Binary)
@@ -126,14 +125,6 @@ allWallTiles (V2 width height) =
 
 widthAndHeight :: CellMap -> V2 Int
 widthAndHeight m = snd (bounds m) + V2 1 1
-
-changeTileAt ::
-       (TileIdLayer -> TileIdLayer) -> Coord -> CellMap -> Maybe CellMap
-changeTileAt f c m
-    | isJust $ tileIdLayerAt c m = Just $ m // [(c, newTile)]
-    | otherwise = Nothing
-  where
-    newTile = m ! c & tileIdLayer %~ f
 
 walkableMap :: TileCollection -> CellMap -> Array (V2 Int) Bool
 walkableMap tc cm = isWalkable tc <$> cm
