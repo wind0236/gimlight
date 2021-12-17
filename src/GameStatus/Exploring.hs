@@ -63,13 +63,11 @@ exploringHandler = ExploringHandler
 
 ascendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 ascendStairsAtPlayerPosition eh =
-    (\x -> eh & dungeons .~ x) <$>
-    DS.ascendStairsAtPlayerPosition (eh ^. tileCollection) (eh ^. dungeons)
+    eh & dungeons %%~ DS.ascendStairsAtPlayerPosition (eh ^. tileCollection)
 
 descendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 descendStairsAtPlayerPosition eh =
-    (\x -> eh & dungeons .~ x) <$>
-    DS.descendStairsAtPlayerPosition (eh ^. tileCollection) (eh ^. dungeons)
+    eh & dungeons %%~ DS.descendStairsAtPlayerPosition (eh ^. tileCollection)
 
 exitDungeon :: ExploringHandler -> Maybe ExploringHandler
 exitDungeon eh = (\x -> eh & dungeons .~ x) <$> DS.exitDungeon (eh ^. dungeons)
