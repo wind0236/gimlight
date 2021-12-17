@@ -30,8 +30,8 @@ module Dungeon.Map.Cell
     ) where
 
 import           Actor            (Actor, isPlayer)
-import           Control.Lens     (Ixed (ix), makeLenses, (%~), (&), (.~), (?~),
-                                   (^.), (^?))
+import           Control.Lens     (Ixed (ix), makeLenses, (%%~), (%~), (&),
+                                   (.~), (?~), (^.), (^?))
 import           Coord            (Coord)
 import           Data.Array       (Array, array, assocs, bounds, (!), (//))
 import           Data.Binary      (Binary)
@@ -189,20 +189,10 @@ positionsAndItems (CellMap cm) = mapMaybe mapStep $ assocs cm
     mapStep (coord, cell) = (coord, ) <$> cell ^. item
 
 locateActorAt :: Actor -> Coord -> CellMap -> Maybe CellMap
-locateActorAt a c (CellMap cm)
-    | coordIsInRange c (CellMap cm) =
-        (\x -> CellMap (cm // [(c, x)])) <$> newCell
-    | otherwise = Nothing
-  where
-    newCell = locateActor a (cm ! c)
+locateActorAt a c (CellMap cm) = fmap CellMap $ cm & ix c %%~ locateActor a
 
 locateItemAt :: Item -> Coord -> CellMap -> Maybe CellMap
-locateItemAt i c (CellMap cm)
-    | coordIsInRange c (CellMap cm) =
-        (\x -> CellMap (cm // [(c, x)])) <$> newCell
-    | otherwise = Nothing
-  where
-    newCell = locateItem i (cm ! c)
+locateItemAt i c (CellMap cm) = fmap CellMap $ cm & ix c %%~ locateItem i
 
 removeActorAt :: Coord -> CellMap -> Maybe (Actor, CellMap)
 removeActorAt c (CellMap cm) =
@@ -223,8 +213,3 @@ removeActorIf f cm = position >>= flip removeActorAt cm
 
 tileIdLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
 tileIdLayerAt c (CellMap cm) = cm ^? ix c . tileIdLayer
-
-coordIsInRange :: Coord -> CellMap -> Bool
-coordIsInRange c (CellMap m) = c >= lowerBound && c <= upperBound
-  where
-    (lowerBound, upperBound) = bounds m
