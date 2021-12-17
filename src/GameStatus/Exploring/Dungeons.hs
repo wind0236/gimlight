@@ -18,9 +18,10 @@ import           Data.Foldable              (find)
 import           Data.Maybe                 (fromMaybe)
 import           Dungeon                    (Dungeon, ascendingStairs, cellMap,
                                              descendingStairs,
-                                             positionOnParentMap, updateMap)
+                                             positionOnParentMap)
 import qualified Dungeon                    as D
-import           Dungeon.Map.Cell           (locateActorAt, removeActorIf)
+import           Dungeon.Map.Cell           (locateActorAt, removeActorIf,
+                                             updateExploredMap, updatePlayerFov)
 import           Dungeon.Map.Tile           (TileCollection)
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
@@ -48,7 +49,11 @@ ascendStairsAtPlayerPosition ts ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (d & cellMap %%~ locateActorAt p pos >>= updateMap ts))
+                     (d &
+                      cellMap %%~
+                      (\x ->
+                           locateActorAt p pos x >>= updatePlayerFov ts >>=
+                           Just . updateExploredMap)))
             g
 
 descendStairsAtPlayerPosition :: TileCollection -> Dungeons -> Maybe Dungeons
@@ -75,7 +80,11 @@ descendStairsAtPlayerPosition ts ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (d & cellMap %%~ locateActorAt p pos >>= updateMap ts))
+                     (d &
+                      cellMap %%~
+                      (\x ->
+                           locateActorAt p pos x >>= updatePlayerFov ts >>=
+                           Just . updateExploredMap)))
             g
 
 exitDungeon :: Dungeons -> Maybe Dungeons

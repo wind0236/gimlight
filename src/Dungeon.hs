@@ -15,7 +15,6 @@ module Dungeon
     , mapWidthAndHeight
     , playerPosition
     , stairsPositionCandidates
-    , updateMap
     , calculateFovAt
     , isTown
     , isPositionInDungeon
@@ -30,7 +29,7 @@ module Dungeon
     ) where
 
 import           Actor              (Actor, isPlayer)
-import           Control.Lens       (makeLenses, (%~), (&), (.~), (^.))
+import           Control.Lens       (makeLenses, (^.))
 import           Coord              (Coord)
 import           Data.Array         (Array)
 import           Data.Array.Base    (assocs)
@@ -38,9 +37,8 @@ import           Data.Binary        (Binary)
 import           Data.Foldable      (find)
 import           Dungeon.Identifier (Identifier)
 import qualified Dungeon.Identifier as Identifier
-import           Dungeon.Map.Cell   (CellMap, positionsAndActors,
-                                     updateExploredMap, updatePlayerFov,
-                                     walkableMap, widthAndHeight)
+import           Dungeon.Map.Cell   (CellMap, positionsAndActors, walkableMap,
+                                     widthAndHeight)
 import qualified Dungeon.Map.Cell   as Cell
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
@@ -95,16 +93,6 @@ addDescendingStairs sp@(StairsPair upper _) (parent@Dungeon {_descendingStairs =
     , child {_positionOnParentMap = Just upper})
 addDescendingStairs _ _ =
     error "The child's position in the parent map is already set."
-
-updateMap :: TileCollection -> Dungeon -> Maybe Dungeon
-updateMap ts = updateFov ts . updateExplored
-
-updateExplored :: Dungeon -> Dungeon
-updateExplored d = d & cellMap %~ updateExploredMap
-
-updateFov :: TileCollection -> Dungeon -> Maybe Dungeon
-updateFov ts d =
-    (\newMap -> d & cellMap .~ newMap) <$> updatePlayerFov ts (d ^. cellMap)
 
 calculateFovAt :: Coord -> TileCollection -> Dungeon -> Fov
 calculateFovAt c ts d = calculateFov c (transparentMap ts d)

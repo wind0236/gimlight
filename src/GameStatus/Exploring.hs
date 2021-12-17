@@ -20,13 +20,16 @@ module GameStatus.Exploring
 
 import           Action                        (Action, ActionStatus)
 import           Actor                         (Actor, getIdentifier)
-import           Control.Lens                  (makeLenses, (%~), (&), (.~),
-                                                (^.))
+import           Control.Lens                  (makeLenses, (%%~), (%~), (&),
+                                                (.~), (^.))
+import           Control.Monad                 ((>=>))
 import           Control.Monad.Trans.Writer    (runWriter)
 import           Coord                         (Coord)
 import           Data.Binary                   (Binary)
-import           Dungeon                       (Dungeon)
+import           Dungeon                       (Dungeon, cellMap)
 import qualified Dungeon                       as D
+import           Dungeon.Map.Cell              (updateExploredMap,
+                                                updatePlayerFov)
 import           Dungeon.Map.Tile              (TileCollection)
 import           GHC.Generics                  (Generic)
 import           GameStatus.Exploring.Dungeons (Dungeons)
@@ -94,8 +97,9 @@ processAfterPlayerTurn eh =
   where
     updateQuestsForResult d = handleWithTurnResult d $ map getIdentifier killed
     newCurrentDungeon =
-        D.updateMap (eh ^. tileCollection) $
-        getFocused $ handlerAfterNpcTurns ^. dungeons
+        getFocused (handlerAfterNpcTurns ^. dungeons) &
+        cellMap %%~
+        (updatePlayerFov (eh ^. tileCollection) >=> (Just . updateExploredMap))
     (handlerAfterNpcTurns, killed) = handleNpcTurns eh
 
 handleNpcTurns :: ExploringHandler -> (ExploringHandler, [Actor])
