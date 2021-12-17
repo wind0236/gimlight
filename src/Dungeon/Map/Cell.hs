@@ -30,6 +30,7 @@ module Dungeon.Map.Cell
     ) where
 
 import           Actor            (Actor, isPlayer)
+import           Control.Arrow    (Arrow (second))
 import           Control.Lens     (Ixed (ix), makeLenses, (%%~), (%~), (&),
                                    (.~), (?~), (^.), (^?))
 import           Coord            (Coord)
@@ -196,15 +197,11 @@ locateItemAt i c (CellMap cm) = fmap CellMap $ cm & ix c %%~ locateItem i
 
 removeActorAt :: Coord -> CellMap -> Maybe (Actor, CellMap)
 removeActorAt c (CellMap cm) =
-    case cm ^? ix c >>= removeActor of
-        Just (a, newCell) -> Just (a, CellMap $ cm // [(c, newCell)])
-        Nothing           -> Nothing
+    fmap (second $ \x -> CellMap $ cm // [(c, x)]) $ cm ^? ix c >>= removeActor
 
 removeItemAt :: Coord -> CellMap -> Maybe (Item, CellMap)
 removeItemAt c (CellMap cm) =
-    case cm ^? ix c >>= removeItem of
-        Just (a, newCell) -> Just (a, CellMap $ cm // [(c, newCell)])
-        Nothing           -> Nothing
+    fmap (second $ \x -> CellMap $ cm // [(c, x)]) $ cm ^? ix c >>= removeItem
 
 removeActorIf :: (Actor -> Bool) -> CellMap -> Maybe (Actor, CellMap)
 removeActorIf f cm = position >>= flip removeActorAt cm
