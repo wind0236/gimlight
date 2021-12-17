@@ -27,7 +27,6 @@ module Dungeon.Map.Cell
     , positionsAndActors
     , positionsAndItems
     , tileIdLayerAt
-    , cellAt
     ) where
 
 import           Actor            (Actor, isPlayer)
@@ -163,8 +162,7 @@ updatePlayerFov :: TileCollection -> CellMap -> Maybe CellMap
 updatePlayerFov tc (CellMap cm) =
     fmap
         (\xs ->
-             CellMap $
-             cm //
+             CellMap $ cm //
              [ (pos, cm ! pos & visibleFromPlayer .~ isVisible)
              | (pos, isVisible) <- xs
              ])
@@ -178,10 +176,7 @@ updatePlayerFov tc (CellMap cm) =
         fmap fst $ find (isPlayer . snd) $ positionsAndActors $ CellMap cm
 
 isWalkableAt :: Coord -> TileCollection -> CellMap -> Bool
-isWalkableAt c tc t =
-    case cellAt c t of
-        Just x  -> isWalkable tc x
-        Nothing -> False
+isWalkableAt c tc (CellMap cm) = maybe False (isWalkable tc) (cm ^? ix c)
 
 positionsAndActors :: CellMap -> [(Coord, Actor)]
 positionsAndActors (CellMap cm) = mapMaybe mapStep $ assocs cm
@@ -211,13 +206,13 @@ locateItemAt i c (CellMap cm)
 
 removeActorAt :: Coord -> CellMap -> Maybe (Actor, CellMap)
 removeActorAt c (CellMap cm) =
-    case cellAt c (CellMap cm) >>= removeActor of
+    case cm ^? ix c >>= removeActor of
         Just (a, newCell) -> Just (a, CellMap $ cm // [(c, newCell)])
         Nothing           -> Nothing
 
 removeItemAt :: Coord -> CellMap -> Maybe (Item, CellMap)
 removeItemAt c (CellMap cm) =
-    case cellAt c (CellMap cm) >>= removeItem of
+    case cm ^? ix c >>= removeItem of
         Just (a, newCell) -> Just (a, CellMap $ cm // [(c, newCell)])
         Nothing           -> Nothing
 
@@ -227,10 +222,7 @@ removeActorIf f cm = position >>= flip removeActorAt cm
     position = fst <$> find (f . snd) (positionsAndActors cm)
 
 tileIdLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
-tileIdLayerAt c t = fmap (^. tileIdLayer) (cellAt c t)
-
-cellAt :: Coord -> CellMap -> Maybe Cell
-cellAt c (CellMap m) = m ^? ix c
+tileIdLayerAt c (CellMap cm) = cm ^? ix c . tileIdLayer
 
 coordIsInRange :: Coord -> CellMap -> Bool
 coordIsInRange c (CellMap m) = c >= lowerBound && c <= upperBound
