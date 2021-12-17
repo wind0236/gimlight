@@ -10,8 +10,9 @@ import           Actor                           (getCurrentExperiencePoint,
                                                   getHp, getLevel, getMaxHp,
                                                   getPower, walkingImagePath)
 import           Codec.Picture                   (Image (imageData, imageHeight, imageWidth))
-import           Control.Lens                    ((&), (.~), (^.))
-import           Control.Monad                   (guard)
+import           Control.Lens                    (Ixed (ix), (&), (.~), (^.),
+                                                  (^?))
+import           Control.Monad                   (guard, join)
 import           Coord                           (Coord)
 import           Data.Array                      ((!))
 import           Data.Maybe                      (catMaybes, mapMaybe)
@@ -22,7 +23,7 @@ import           Dungeon                         (Dungeon, cellMap,
                                                   playerPosition)
 import           Dungeon.Map.Cell                (exploredMap, lower, playerFov,
                                                   positionsAndItems,
-                                                  tileIdLayerAt, upper)
+                                                  tileIdLayer, upper)
 import           GameConfig                      (GameConfig)
 import           GameStatus.Exploring            (ExploringHandler,
                                                   getCurrentDungeon,
@@ -63,9 +64,9 @@ drawExploring tileGraphics eh c =
 
 messageLogArea :: ExploringHandler -> GameConfig -> GameWidgetNode
 messageLogArea eh c =
-    vstack $
-    fmap (\x -> label_ (getLocalizedText c x) [multiline]) $
-    take logRows $ getMessageLog eh
+    vstack $ fmap (\x -> label_ (getLocalizedText c x) [multiline]) $
+    take logRows $
+    getMessageLog eh
 
 mapGrid :: MapTiles -> ExploringHandler -> GameWidgetNode
 mapGrid tileGraphics eh =
@@ -82,11 +83,9 @@ statusGrid eh c =
         (\x ->
              [ label "Player"
              , label $ lvl <> ": " <> showt (getLevel x)
-             , label $
-               experience <>
-               ": " <>
-               showt (getCurrentExperiencePoint x) <>
-               " / " <> showt (getExperiencePointForNextLevel x)
+             , label $ experience <> ": " <> showt (getCurrentExperiencePoint x) <>
+               " / " <>
+               showt (getExperiencePointForNextLevel x)
              , label $ "HP: " <> showt (getHp x) <> " / " <> showt (getMaxHp x)
              , label $ atk <> ": " <> showt (getPower x)
              , label $ defence <> ": " <> showt (getDefence x)
@@ -128,8 +127,8 @@ mapWidget tiles eh = vstack rows
         | otherwise = 1
     isVisible c = playerFov (d ^. cellMap) ! c
     isExplored c = exploredMap (d ^. cellMap) ! c
-    getTileIdOfLayerAt which c = tileIdLayer c >>= (^. which)
-    tileIdLayer c = tileIdLayerAt c $ d ^. cellMap
+    getTileIdOfLayerAt which c =
+        join $ d ^? cellMap . ix c . tileIdLayer . which
     V2 topLeftCoordX topLeftCoordY = topLeftCoord d
     d = getCurrentDungeon eh
 
@@ -142,8 +141,9 @@ mapItems eh = mapMaybe itemToImage $ positionsAndItems $ d ^. cellMap
     isItemDrawed position =
         let displayPosition = itemPositionOnDisplay position
             isVisible = playerFov (d ^. cellMap) ! position
-         in V2 0 0 <= displayPosition &&
-            displayPosition < V2 tileColumns tileRows && isVisible
+         in V2 0 0 <= displayPosition && displayPosition <
+            V2 tileColumns tileRows &&
+            isVisible
     d = getCurrentDungeon eh
     leftPadding position =
         fromIntegral $ itemPositionOnDisplay position ^. _x * tileWidth
@@ -167,8 +167,9 @@ mapActors eh = mapMaybe actorToImage $ getPositionsAndActors d
     isActorDrawed position =
         let displayPosition = actorPositionOnDisplay position
             isVisible = playerFov (d ^. cellMap) ! position
-         in V2 0 0 <= displayPosition &&
-            displayPosition < V2 tileColumns tileRows && isVisible
+         in V2 0 0 <= displayPosition && displayPosition <
+            V2 tileColumns tileRows &&
+            isVisible
     actorToImage (position, actor) =
         guard (isActorDrawed position) >>
         return (image (actor ^. walkingImagePath) `styleBasic` style position)

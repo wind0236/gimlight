@@ -25,7 +25,6 @@ module Dungeon.Map.Cell
     , removeActorIf
     , positionsAndActors
     , positionsAndItems
-    , tileIdLayerAt
     , cellAt
     ) where
 
@@ -204,9 +203,6 @@ removeActorIf :: (Actor -> Bool) -> CellMap -> Maybe (Actor, CellMap)
 removeActorIf f cm = position >>= flip removeActorAt cm
   where
     position = fst <$> find (f . snd) (positionsAndActors cm)
-
-tileIdLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
-tileIdLayerAt c t = fmap (^. tileIdLayer) (cellAt c t)
 
 cellAt :: Coord -> CellMap -> Maybe Cell
 cellAt c m = m ^? ix c
