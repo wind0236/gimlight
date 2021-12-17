@@ -9,6 +9,7 @@ module Dungeon.Map.Cell
     , lower
     , cellMap
     , tileIdLayer
+    , isWalkable
     , allWallTiles
     , updateExploredMap
     , updatePlayerFov
@@ -17,7 +18,6 @@ module Dungeon.Map.Cell
     , transparentMap
     , exploredMap
     , widthAndHeight
-    , isWalkableAt
     , locateActorAt
     , locateItemAt
     , removeActorAt
@@ -156,12 +156,6 @@ updatePlayerFov tc cm =
     visibilityList = fmap assocs fov
     fov = (\x -> calculateFov x (transparentMap tc cm)) <$> playerPosition
     playerPosition = fmap fst $ find (isPlayer . snd) $ positionsAndActors cm
-
-isWalkableAt :: Coord -> TileCollection -> CellMap -> Bool
-isWalkableAt c tc t =
-    case cellAt c t of
-        Just x  -> isWalkable tc x
-        Nothing -> False
 
 positionsAndActors :: CellMap -> [(Coord, Actor)]
 positionsAndActors cm = mapMaybe mapStep $ assocs cm

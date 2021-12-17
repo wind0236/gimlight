@@ -4,16 +4,16 @@ module Action.Move
 
 import           Action               (Action, ActionResult (ActionResult),
                                        ActionStatus (Failed, Ok))
+import           Control.Lens         (Ixed (ix), (^?))
 import           Control.Monad.Writer (tell)
 import           Data.Maybe           (fromMaybe)
-import           Dungeon.Map.Cell     (isWalkableAt, locateActorAt,
-                                       removeActorAt)
+import           Dungeon.Map.Cell     (isWalkable, locateActorAt, removeActorAt)
 import           Linear.V2            (V2)
 import qualified Localization.Texts   as T
 
 moveAction :: V2 Int -> Action
 moveAction offset position tiles cm
-    | isWalkableAt (position + offset) tiles cm =
+    | maybe False (isWalkable tiles) $ cm ^? ix (position + offset) =
         case removeActorAt position cm of
             Just (src, ncm) ->
                 return $
