@@ -105,18 +105,13 @@ removeItem c =
 -- We define `CellMap` as a newtype rather than an alias to define
 -- functions that return `Nothing` on index-out-of-bounds error. Error
 -- messages from `Array` are super unhelpful.
-newtype CellMap =
-    CellMap (Array (V2 Int) Cell)
-    deriving (Show, Ord, Eq, Generic)
-
-instance Binary CellMap
+type CellMap = Array (V2 Int) Cell
 
 cellMap :: Array (V2 Int) TileIdLayer -> CellMap
-cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False False)
+cellMap = fmap (\x -> Cell x Nothing Nothing False False)
 
 allWallTiles :: V2 Int -> CellMap
 allWallTiles (V2 width height) =
-    CellMap $
     array
         (V2 0 0, V2 width height - V2 1 1)
         [(V2 x y, cell) | x <- [0 .. width - 1], y <- [0 .. height - 1]]
@@ -130,40 +125,38 @@ allWallTiles (V2 width height) =
             False
 
 widthAndHeight :: CellMap -> V2 Int
-widthAndHeight (CellMap m) = snd (bounds m) + V2 1 1
+widthAndHeight m = snd (bounds m) + V2 1 1
 
 changeTileAt ::
        (TileIdLayer -> TileIdLayer) -> Coord -> CellMap -> Maybe CellMap
-changeTileAt f c (CellMap m)
-    | isJust $ tileIdLayerAt c (CellMap m) =
-        Just $ CellMap $ m // [(c, newTile)]
+changeTileAt f c m
+    | isJust $ tileIdLayerAt c m = Just $ m // [(c, newTile)]
     | otherwise = Nothing
   where
     newTile = m ! c & tileIdLayer %~ f
 
 walkableMap :: TileCollection -> CellMap -> Array (V2 Int) Bool
-walkableMap tc (CellMap cm) = isWalkable tc <$> cm
+walkableMap tc cm = isWalkable tc <$> cm
 
 exploredMap :: CellMap -> Array (V2 Int) Bool
-exploredMap (CellMap cm) = (^. explored) <$> cm
+exploredMap cm = (^. explored) <$> cm
 
 playerFov :: CellMap -> Array (V2 Int) Bool
-playerFov (CellMap cm) = (^. visibleFromPlayer) <$> cm
+playerFov cm = (^. visibleFromPlayer) <$> cm
 
 transparentMap :: TileCollection -> CellMap -> Array (V2 Int) Bool
-transparentMap tc (CellMap cm) = isTransparent tc <$> cm
+transparentMap tc cm = isTransparent tc <$> cm
 
 updateExploredMap :: CellMap -> CellMap
-updateExploredMap (CellMap cm) =
-    CellMap $ cm // [(pos, cm ! pos & explored .~ True) | pos <- visibleList]
+updateExploredMap cm =
+    cm // [(pos, cm ! pos & explored .~ True) | pos <- visibleList]
   where
-    visibleList = map fst $ filter snd $ assocs $ playerFov $ CellMap cm
+    visibleList = map fst $ filter snd $ assocs $ playerFov cm
 
 updatePlayerFov :: TileCollection -> CellMap -> Maybe CellMap
-updatePlayerFov tc (CellMap cm) =
+updatePlayerFov tc cm =
     fmap
         (\xs ->
-             CellMap $
              cm //
              [ (pos, cm ! pos & visibleFromPlayer .~ isVisible)
              | (pos, isVisible) <- xs
@@ -171,11 +164,8 @@ updatePlayerFov tc (CellMap cm) =
         visibilityList
   where
     visibilityList = fmap assocs fov
-    fov =
-        (\x -> calculateFov x (transparentMap tc (CellMap cm))) <$>
-        playerPosition
-    playerPosition =
-        fmap fst $ find (isPlayer . snd) $ positionsAndActors $ CellMap cm
+    fov = (\x -> calculateFov x (transparentMap tc cm)) <$> playerPosition
+    playerPosition = fmap fst $ find (isPlayer . snd) $ positionsAndActors cm
 
 isWalkableAt :: Coord -> TileCollection -> CellMap -> Bool
 isWalkableAt c tc t =
@@ -184,41 +174,39 @@ isWalkableAt c tc t =
         Nothing -> False
 
 positionsAndActors :: CellMap -> [(Coord, Actor)]
-positionsAndActors (CellMap cm) = mapMaybe mapStep $ assocs cm
+positionsAndActors cm = mapMaybe mapStep $ assocs cm
   where
     mapStep (coord, cell) = (coord, ) <$> cell ^. actor
 
 positionsAndItems :: CellMap -> [(Coord, Item)]
-positionsAndItems (CellMap cm) = mapMaybe mapStep $ assocs cm
+positionsAndItems cm = mapMaybe mapStep $ assocs cm
   where
     mapStep (coord, cell) = (coord, ) <$> cell ^. item
 
 locateActorAt :: Actor -> Coord -> CellMap -> Maybe CellMap
-locateActorAt a c (CellMap cm)
-    | coordIsInRange c (CellMap cm) =
-        (\x -> CellMap (cm // [(c, x)])) <$> newCell
+locateActorAt a c cm
+    | coordIsInRange c cm = (\x -> cm // [(c, x)]) <$> newCell
     | otherwise = Nothing
   where
     newCell = locateActor a (cm ! c)
 
 locateItemAt :: Item -> Coord -> CellMap -> Maybe CellMap
-locateItemAt i c (CellMap cm)
-    | coordIsInRange c (CellMap cm) =
-        (\x -> CellMap (cm // [(c, x)])) <$> newCell
+locateItemAt i c cm
+    | coordIsInRange c cm = (\x -> cm // [(c, x)]) <$> newCell
     | otherwise = Nothing
   where
     newCell = locateItem i (cm ! c)
 
 removeActorAt :: Coord -> CellMap -> Maybe (Actor, CellMap)
-removeActorAt c (CellMap cm) =
-    case cellAt c (CellMap cm) >>= removeActor of
-        Just (a, newCell) -> Just (a, CellMap $ cm // [(c, newCell)])
+removeActorAt c cm =
+    case cellAt c cm >>= removeActor of
+        Just (a, newCell) -> Just (a, cm // [(c, newCell)])
         Nothing           -> Nothing
 
 removeItemAt :: Coord -> CellMap -> Maybe (Item, CellMap)
-removeItemAt c (CellMap cm) =
-    case cellAt c (CellMap cm) >>= removeItem of
-        Just (a, newCell) -> Just (a, CellMap $ cm // [(c, newCell)])
+removeItemAt c cm =
+    case cellAt c cm >>= removeItem of
+        Just (a, newCell) -> Just (a, cm // [(c, newCell)])
         Nothing           -> Nothing
 
 removeActorIf :: (Actor -> Bool) -> CellMap -> Maybe (Actor, CellMap)
@@ -230,9 +218,9 @@ tileIdLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
 tileIdLayerAt c t = fmap (^. tileIdLayer) (cellAt c t)
 
 cellAt :: Coord -> CellMap -> Maybe Cell
-cellAt c (CellMap m) = m ^? ix c
+cellAt c m = m ^? ix c
 
 coordIsInRange :: Coord -> CellMap -> Bool
-coordIsInRange c (CellMap m) = c >= lowerBound && c <= upperBound
+coordIsInRange c m = c >= lowerBound && c <= upperBound
   where
     (lowerBound, upperBound) = bounds m
