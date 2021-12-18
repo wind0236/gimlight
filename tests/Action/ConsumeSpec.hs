@@ -61,6 +61,7 @@ testConsumeHerb =
         removeActorAt orcWithHerbPosition initCellMap >>=
         (\(a, cm) ->
              locateActorAt
+                 initTileCollection
                  (a & inventoryItems %~ (snd . removeNthItem 0))
                  orcWithHerbPosition
                  cm)

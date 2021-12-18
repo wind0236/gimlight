@@ -42,7 +42,7 @@ generateMultipleFloorsDungeon g ig ts cfg ident =
     (goToRootAndGetTree dungeonZipper, ascendingStairsInFirstFloor, g'', ig'')
   where
     (firstFloor, ascendingStairsInFirstFloor, g', ig') =
-        generateDungeon g ig cfg ident
+        generateDungeon g ts ig cfg ident
     treeWithFirstFloor = Node {rootLabel = firstFloor, subForest = []}
     zipperWithFirstFloor = treeZipper treeWithFirstFloor
     (dungeonZipper, g'', ig'') =
@@ -64,7 +64,7 @@ generateDungeonAndAppend zipper g ig ts cfg ident =
     (zipperFocusingNext, g'', ig')
   where
     (generatedDungeon, lowerStairsPosition, g', ig') =
-        generateDungeon g ig cfg ident
+        generateDungeon g ts ig cfg ident
     (upperStairsPosition, g'') = newStairsPosition g' ts $ getFocused zipper
     (newUpperDungeon, newLowerDungeon) =
         addAscendingAndDescendingStiars
@@ -94,11 +94,12 @@ newStairsPosition g ts d = (candidates !! index, g')
 
 generateDungeon ::
        StdGen
+    -> TileCollection
     -> IndexGenerator
     -> Config
     -> Identifier
     -> (Dungeon, Coord, StdGen, IndexGenerator)
-generateDungeon g ig cfg ident =
+generateDungeon g tc ig cfg ident =
     ( dungeon
           (fromMaybe (error "Failed to change the tile.") $
            changeTileAt (\tile -> tile & upper ?~ upStairs) enterPosition tiles)
@@ -110,6 +111,7 @@ generateDungeon g ig cfg ident =
     (tiles, enterPosition, g''', ig') =
         generateDungeonAccum
             []
+            tc
             (allWallTiles (V2 width height))
             (V2 0 0)
             g''
@@ -120,17 +122,19 @@ generateDungeon g ig cfg ident =
 
 generateDungeonAccum ::
        [Room]
+    -> TileCollection
     -> CellMap
     -> Coord
     -> StdGen
     -> IndexGenerator
     -> Config
     -> (CellMap, V2 Int, StdGen, IndexGenerator)
-generateDungeonAccum acc tileMap playerPos g ig cfg
+generateDungeonAccum acc tc tileMap playerPos g ig cfg
     | maxRooms cfg == 0 = (tileMap, playerPos, g, ig)
     | otherwise =
         generateDungeonAccum
             newAcc
+            tc
             newMap
             newPlayerPos
             g''''''
@@ -152,9 +156,9 @@ generateDungeonAccum acc tileMap playerPos g ig cfg
     (y, g'''') = randomR (0, height - roomHeight - 1) g'''
     room = roomFromWidthHeight (V2 x y) (V2 roomWidth roomHeight)
     (mapWithNewEnemies, ig', g''''') =
-        placeEnemies appendRoom g'''' ig room maxMonstersPerRoom
+        placeEnemies tc appendRoom g'''' ig room maxMonstersPerRoom
     (mapWithItems, g'''''') =
-        placeItems mapWithNewEnemies g''''' room maxItemsPerRoom
+        placeItems mapWithNewEnemies tc g''''' room maxItemsPerRoom
     V2 width height = widthAndHeight tileMap
 
 createRoom :: Room -> CellMap -> CellMap
@@ -175,28 +179,31 @@ tunnelBetween start end d = createRoom path1 $ createRoom path2 d
     corner = V2 (start ^. _x) (end ^. _y)
 
 placeEnemies ::
-       CellMap
+       TileCollection
+    -> CellMap
     -> StdGen
     -> IndexGenerator
     -> Room
     -> Int
     -> (CellMap, IndexGenerator, StdGen)
-placeEnemies cm g ig _ 0 = (cm, ig, g)
-placeEnemies cm g ig r n = placeEnemies newMap g''' ig' r (n - 1)
+placeEnemies _ cm g ig _ 0 = (cm, ig, g)
+placeEnemies tc cm g ig r n = placeEnemies tc newMap g''' ig' r (n - 1)
   where
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
     ((enemy, ig'), g''') = newMonster g'' ig
-    newMap = fromMaybe cm (locateActorAt enemy (V2 x y) cm)
+    newMap = fromMaybe cm (locateActorAt tc enemy (V2 x y) cm)
 
-placeItems :: CellMap -> StdGen -> Room -> Int -> (CellMap, StdGen)
+placeItems ::
+       CellMap -> TileCollection -> StdGen -> Room -> Int -> (CellMap, StdGen)
 placeItems = placeItemsAccum
 
-placeItemsAccum :: CellMap -> StdGen -> Room -> Int -> (CellMap, StdGen)
-placeItemsAccum cm g _ 0 = (cm, g)
-placeItemsAccum cm g r n = placeItemsAccum newMap g''' r (n - 1)
+placeItemsAccum ::
+       CellMap -> TileCollection -> StdGen -> Room -> Int -> (CellMap, StdGen)
+placeItemsAccum cm _ g _ 0 = (cm, g)
+placeItemsAccum cm tc g r n = placeItemsAccum newMap tc g''' r (n - 1)
   where
-    newMap = fromMaybe cm (locateItemAt newItem (V2 x y) cm)
+    newMap = fromMaybe cm (locateItemAt tc newItem (V2 x y) cm)
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
     (prob, g''') = random g'' :: (Float, StdGen)

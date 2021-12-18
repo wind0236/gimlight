@@ -52,7 +52,7 @@ ascendStairsAtPlayerPosition ts ds = newZipper
                      (d &
                       cellMap %%~
                       (\x ->
-                           locateActorAt p pos x >>= updatePlayerFov ts >>=
+                           locateActorAt ts p pos x >>= updatePlayerFov ts >>=
                            Just . updateExploredMap)))
             g
 
@@ -83,12 +83,12 @@ descendStairsAtPlayerPosition ts ds = newZipper
                      (d &
                       cellMap %%~
                       (\x ->
-                           locateActorAt p pos x >>= updatePlayerFov ts >>=
+                           locateActorAt ts p pos x >>= updatePlayerFov ts >>=
                            Just . updateExploredMap)))
             g
 
-exitDungeon :: Dungeons -> Maybe Dungeons
-exitDungeon ds = newZipper
+exitDungeon :: TileCollection -> Dungeons -> Maybe Dungeons
+exitDungeon ts ds = newZipper
   where
     (player, zipperWithoutPlayer) = popPlayer ds
     currentDungeon = getFocused ds
@@ -102,7 +102,7 @@ exitDungeon ds = newZipper
                     (\d ->
                          fromMaybe
                              (error "Failed to update the map.")
-                             (d & cellMap %%~ locateActorAt p pos))
+                             (d & cellMap %%~ locateActorAt ts p pos))
                     g
             _ -> Nothing
 

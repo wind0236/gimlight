@@ -21,7 +21,7 @@ moveAction offset position tiles cm
                     Ok
                     (fromMaybe
                          (error "Failed to locate an actor.")
-                         (locateActorAt src (position + offset) ncm))
+                         (locateActorAt tiles src (position + offset) ncm))
                     []
             Nothing -> return $ ActionResult Failed cm []
     | otherwise = do

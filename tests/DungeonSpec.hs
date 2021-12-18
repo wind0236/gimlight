@@ -13,6 +13,7 @@ import           Dungeon.Map.Cell   (TileIdLayer (TileIdLayer), cellMap,
                                      locateActorAt)
 import           IndexGenerator     (generator)
 import           Linear.V2          (V2 (V2))
+import           SetUp              (initTileCollection)
 import           Test.Hspec         (Spec, describe, it, shouldBe)
 
 spec :: Spec
@@ -25,7 +26,8 @@ testPushActor =
     ((V2 0 0, p) `elem` getPositionsAndActors afterPushing) `shouldBe`
     True
   where
-    afterPushing = d & D.cellMap %~ fromJust . locateActorAt p (V2 0 0)
+    afterPushing =
+        d & D.cellMap %~ fromJust . locateActorAt initTileCollection p (V2 0 0)
     d = dungeon cm Beaeve
     (p, _) = player ig
     ig = generator

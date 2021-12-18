@@ -16,7 +16,7 @@ import           Item                 (Item, getName)
 import qualified Localization.Texts   as T
 
 pickUpAction :: Action
-pickUpAction position _ cm =
+pickUpAction position tc cm =
     case removeActorAt position cm of
         Just (a, ncm) -> pickUpForActor a ncm
         Nothing       -> return failedResult
@@ -40,6 +40,7 @@ pickUpAction position _ cm =
                 (fromMaybe
                      (error "Failed to locate an actor.")
                      (locateActorAt
+                          tc
                           (a & inventoryItems .~ newInventory)
                           position
                           cellMapAfterPickingUp))

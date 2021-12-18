@@ -54,7 +54,7 @@ npcAction position ts d =
     cellMapAfterUpdatingMap a cm =
         fromMaybe
             (error "Failed to locate an actor.")
-            (locateActorAt (entityAfterUpdatingMap a) position cm)
+            (locateActorAt ts (entityAfterUpdatingMap a) position cm)
     entityAfterUpdatingMap a =
         fromMaybe
             (entityAfterUpdatingTarget a)
@@ -117,7 +117,7 @@ popPathToDestinationAndMove position tc cm =
                     tc
                     (fromMaybe
                          (error "Failed to locate an actor")
-                         (locateActorAt updatedActor position ncm))
+                         (locateActorAt tc updatedActor position ncm))
         Nothing -> error "unreachable."
 
 targetIsNextTo :: Coord -> Actor -> Dungeon -> Bool

@@ -15,14 +15,14 @@ import           Linear.V2                 (V2 (V2))
 
 initDungeon :: IndexGenerator -> TileCollection -> IO (Dungeon, IndexGenerator)
 initDungeon ig ts = do
-    (beaeve', ig'') <- beaeve ig'
+    (beaeve', ig'') <- beaeve ts ig'
     let d =
             fromMaybe
                 (error "Failed to generate an initial dungeon.")
                 (beaeve' &
                  cellMap %%~
                  (\x ->
-                      locateActorAt player' (V2 5 5) x >>= updatePlayerFov ts >>=
+                      locateActorAt ts player' (V2 5 5) x >>= updatePlayerFov ts >>=
                       Just . updateExploredMap))
     return (d, ig'')
   where

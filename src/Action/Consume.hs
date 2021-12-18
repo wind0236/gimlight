@@ -19,7 +19,7 @@ import           Item.Heal            (getHealAmount)
 import qualified Localization.Texts   as T
 
 consumeAction :: Int -> Action
-consumeAction n position _ cm =
+consumeAction n position tc cm =
     case removeActorAt position cm of
         Just (a, ncm) -> consumeActionForActor a ncm
         Nothing       -> return $ ActionResult Failed cm []
@@ -49,7 +49,7 @@ consumeAction n position _ cm =
                 Ok
                 (fromMaybe
                      (error "Failed to locate an actor.")
-                     (locateActorAt (healHp amount a) position ncm))
+                     (locateActorAt tc (healHp amount a) position ncm))
                 []
       where
         amount = getHealAmount handler
@@ -59,5 +59,5 @@ consumeAction n position _ cm =
             (ReadingStarted handler)
             (fromMaybe
                  (error "Failed to locate an actor.")
-                 (locateActorAt a position ncm))
+                 (locateActorAt tc a position ncm))
             []

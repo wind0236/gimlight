@@ -12,10 +12,11 @@ import qualified Actor            as A
 import           Coord            (Coord)
 import           Data.Maybe       (fromMaybe)
 import           Dungeon.Map.Cell (CellMap, locateActorAt, removeActorAt)
+import           Dungeon.Map.Tile (TileCollection)
 import           Linear.V2        (V2)
 
 meleeAction :: V2 Int -> Action
-meleeAction offset srcPosition _ cm = result
+meleeAction offset srcPosition tc cm = result
   where
     dstPosition = srcPosition + offset
     result =
@@ -23,6 +24,7 @@ meleeAction offset srcPosition _ cm = result
             Nothing -> return $ ActionResult Failed cm []
             Just (attacker, (defender, newCellMap)) ->
                 attackFromTo
+                    tc
                     srcPosition
                     dstPosition
                     attacker
@@ -33,20 +35,26 @@ meleeAction offset srcPosition _ cm = result
         (\(a, cm') -> (a, ) <$> removeActorAt dstPosition cm')
 
 attackFromTo ::
-       Coord -> Coord -> Actor -> Actor -> CellMap -> ActionResultWithLog
-attackFromTo attackerPosition defenderPosition attacker defender cm = do
+       TileCollection
+    -> Coord
+    -> Coord
+    -> Actor
+    -> Actor
+    -> CellMap
+    -> ActionResultWithLog
+attackFromTo tc attackerPosition defenderPosition attacker defender cm = do
     (newAttacker, newDefender) <- A.attackFromTo attacker defender
     let (newDungeon, killed) =
             case newDefender of
                 Just x ->
                     ( fromMaybe
                           (error "Failed to locate actors.")
-                          (locateActorAt newAttacker attackerPosition cm >>=
-                           locateActorAt x defenderPosition)
+                          (locateActorAt tc newAttacker attackerPosition cm >>=
+                           locateActorAt tc x defenderPosition)
                     , [])
                 Nothing ->
                     ( fromMaybe
                           (error "Failed to locate an actor.")
-                          (locateActorAt newAttacker attackerPosition cm)
+                          (locateActorAt tc newAttacker attackerPosition cm)
                     , [defender])
     return $ ActionResult Ok newDungeon killed

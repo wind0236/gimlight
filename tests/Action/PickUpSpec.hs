@@ -39,7 +39,7 @@ testPickUpSuccess =
         fromJust $
         removeItemAt playerPosition initCellMap >>=
         removeActorAt playerPosition . snd >>=
-        locateActorAt actorWithItem playerPosition . snd
+        locateActorAt initTileCollection actorWithItem playerPosition . snd
     expectedLog = [T.youGotItem $ getName herb]
     actorWithItem =
         (\(x, _) -> x & inventoryItems %~ (fromJust . addItem herb))

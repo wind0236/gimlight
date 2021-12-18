@@ -46,7 +46,8 @@ succeed offset = writer (result, [])
     cellMapWithPlayer =
         fromJust $
         removeActorAt playerPosition initCellMap >>=
-        (\(p, ncm) -> locateActorAt p (playerPosition + offset) ncm)
+        (\(p, ncm) ->
+             locateActorAt initTileCollection p (playerPosition + offset) ncm)
 
 failed :: ActionResultWithLog
 failed = writer (result, l)

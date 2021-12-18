@@ -56,6 +56,7 @@ testDamage =
             , newCellMap =
                   fromJust $
                   locateActorAt
+                      initTileCollection
                       (fromJust newDefender)
                       intermediateOrcPosition
                       cellMapWithoutDefender

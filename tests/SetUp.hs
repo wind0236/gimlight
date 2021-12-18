@@ -34,6 +34,7 @@ initCellMap :: CellMap
 initCellMap =
     fromJust $
     locateActorAt
+        initTileCollection
         p
         playerPosition
         (cellMap $
@@ -44,14 +45,14 @@ initCellMap =
              , y <- [0 .. mapHeight - 1]
              ] //
          [(V2 0 1, unwalkable)]) >>=
-    locateItemAt herb playerPosition >>=
-    locateItemAt herb orcWithFullItemsPosition >>=
-    locateActorAt orcWithoutItems orcWithoutItemsPosition >>=
-    locateActorAt orcWithFullItems orcWithFullItemsPosition >>=
-    locateActorAt s strongestOrcPosition >>=
-    locateActorAt i intermediateOrcPosition >>=
-    locateActorAt w weakestOrcPosition >>=
-    locateActorAt orcWithHerb orcWithHerbPosition
+    locateItemAt initTileCollection herb playerPosition >>=
+    locateItemAt initTileCollection herb orcWithFullItemsPosition >>=
+    locateActorAt initTileCollection orcWithoutItems orcWithoutItemsPosition >>=
+    locateActorAt initTileCollection orcWithFullItems orcWithFullItemsPosition >>=
+    locateActorAt initTileCollection s strongestOrcPosition >>=
+    locateActorAt initTileCollection i intermediateOrcPosition >>=
+    locateActorAt initTileCollection w weakestOrcPosition >>=
+    locateActorAt initTileCollection orcWithHerb orcWithHerbPosition
   where
     (p, g) =
         first (inventoryItems %~ (fromJust . addItem sampleBook)) $

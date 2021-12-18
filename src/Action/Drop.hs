@@ -17,7 +17,7 @@ import           Localization         (MultilingualText)
 import qualified Localization.Texts   as T
 
 dropAction :: Int -> Action
-dropAction n position _ cm =
+dropAction n position tc cm =
     case removeActorAt position cm of
         Just (a, ncm) -> dropActionForActor a ncm
         Nothing       -> return $ ActionResult Failed cm []
@@ -29,7 +29,7 @@ dropAction n position _ cm =
             (Nothing, _) -> failWithReason T.whatToDrop
     dropItem :: CellMap -> Item -> Actor -> ActionResultWithLog
     dropItem ncm item' a =
-        case locateItemAt item' position ncm of
+        case locateItemAt tc item' position ncm of
             Just newCellMap -> successResult newCellMap item' a
             Nothing         -> failWithReason T.itemExists
     successResult :: CellMap -> Item -> Actor -> ActionResultWithLog
@@ -40,7 +40,7 @@ dropAction n position _ cm =
                 Ok
                 (fromMaybe
                      (error "Failed to locate an actor.")
-                     (locateActorAt a position newCellMap))
+                     (locateActorAt tc a position newCellMap))
                 []
     failWithReason :: MultilingualText -> ActionResultWithLog
     failWithReason reason = do

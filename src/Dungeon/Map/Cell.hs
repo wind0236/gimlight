@@ -75,20 +75,25 @@ isWalkable tc c =
     fmap (Tile.isWalkable . (tc !)) (c ^. (tileIdLayer . upper)) /= Just False &&
     isNothing (c ^. actor)
 
+isItemLocatable :: TileCollection -> Cell -> Bool
+isItemLocatable tc c =
+    fmap (Tile.isWalkable . (tc !)) (c ^. (tileIdLayer . upper)) /= Just False &&
+    isNothing (c ^. item)
+
 isTransparent :: TileCollection -> Cell -> Bool
 isTransparent tc c =
     fmap (Tile.isTransparent . (tc !)) (c ^. (tileIdLayer . upper)) /=
     Just False
 
-locateActor :: Actor -> Cell -> Maybe Cell
-locateActor a c
-    | isJust (c ^. actor) = Nothing
-    | otherwise = Just $ c & actor ?~ a
+locateActor :: TileCollection -> Actor -> Cell -> Maybe Cell
+locateActor tc a c
+    | isWalkable tc c = Just $ c & actor ?~ a
+    | otherwise = Nothing
 
-locateItem :: Item -> Cell -> Maybe Cell
-locateItem i c
-    | isJust (c ^. item) = Nothing
-    | otherwise = Just $ c & item ?~ i
+locateItem :: TileCollection -> Item -> Cell -> Maybe Cell
+locateItem tc i c
+    | isItemLocatable tc c = Just $ c & item ?~ i
+    | otherwise = Nothing
 
 removeActor :: Cell -> Maybe (Actor, Cell)
 removeActor c =
@@ -189,11 +194,12 @@ positionsAndItems (CellMap cm) = mapMaybe mapStep $ assocs cm
   where
     mapStep (coord, cell) = (coord, ) <$> cell ^. item
 
-locateActorAt :: Actor -> Coord -> CellMap -> Maybe CellMap
-locateActorAt a c (CellMap cm) = fmap CellMap $ cm & ix c %%~ locateActor a
+locateActorAt :: TileCollection -> Actor -> Coord -> CellMap -> Maybe CellMap
+locateActorAt tc a c (CellMap cm) =
+    fmap CellMap $ cm & ix c %%~ locateActor tc a
 
-locateItemAt :: Item -> Coord -> CellMap -> Maybe CellMap
-locateItemAt i c (CellMap cm) = fmap CellMap $ cm & ix c %%~ locateItem i
+locateItemAt :: TileCollection -> Item -> Coord -> CellMap -> Maybe CellMap
+locateItemAt tc i c (CellMap cm) = fmap CellMap $ cm & ix c %%~ locateItem tc i
 
 removeActorAt :: Coord -> CellMap -> Maybe (Actor, CellMap)
 removeActorAt c (CellMap cm) =

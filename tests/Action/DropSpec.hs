@@ -41,10 +41,11 @@ testDropItemSuccessfully =
         removeActorAt orcWithHerbPosition initCellMap >>=
         (\(a, cm) ->
              locateActorAt
+                 initTileCollection
                  (a & inventoryItems %~ (snd . removeNthItem 0))
                  orcWithHerbPosition
                  cm) >>=
-        locateItemAt herb orcWithHerbPosition
+        locateItemAt initTileCollection herb orcWithHerbPosition
     expectedLog = [T.youDropped $ getName herb]
 
 testItemAlreadyExists :: Spec
