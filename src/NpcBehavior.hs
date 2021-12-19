@@ -1,4 +1,4 @@
-module Actor.NpcBehavior
+module NpcBehavior
     ( handleNpcTurns
     ) where
 

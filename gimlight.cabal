@@ -83,8 +83,7 @@ library
                       , Item.Heal
                       , Localization.Texts
 
-    other-modules:      Actor.NpcBehavior
-                      , Actor.Friendly
+    other-modules:      Actor.Friendly
                       , Actor.Friendly.Electria
                       , Actor.Status.Experience
                       , Dungeon.Generate
@@ -120,6 +119,7 @@ library
                       , Localization.Texts.Status
                       , Localization.Texts.Title
                       , Log
+                      , NpcBehavior
                       , Player
                       , Quest
                       , Quest.KillBats

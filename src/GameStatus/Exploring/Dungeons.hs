@@ -11,7 +11,6 @@ import           Action                     (Action,
                                              ActionResult (killed, newCellMap, status),
                                              ActionStatus)
 import           Actor                      (Actor, isPlayer)
-import qualified Actor.NpcBehavior          as NPC
 import           Control.Lens               ((%%~), (&), (.~), (^.))
 import           Control.Monad.Trans.Writer (Writer)
 import           Data.Foldable              (find)
@@ -25,6 +24,7 @@ import           Dungeon.Map.Cell           (locateActorAt, removeActorIf,
 import           Dungeon.Map.Tile           (TileCollection)
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
+import qualified NpcBehavior                as NPC
 import           TreeZipper                 (TreeZipper, getFocused, goDownBy,
                                              goUp, modify)
 
