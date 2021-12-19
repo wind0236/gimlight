@@ -18,7 +18,8 @@ import           Data.Foldable        (find)
 import           Data.Maybe           (fromMaybe)
 import           Dungeon              (Dungeon, calculateFovAt, cellMap,
                                        getPositionsAndActors, positionsAndNpcs)
-import           Dungeon.Map.Cell     (locateActorAt, removeActorAt,
+import           Dungeon.Map.Cell     (CellMap, locateActorAt,
+                                       positionsAndActors, removeActorAt,
                                        removeActorIf)
 import           Dungeon.Map.Tile     (TileCollection)
 import           Dungeon.PathFinder   (getPathTo)
@@ -88,7 +89,7 @@ updatePath src e ts d
     | otherwise = Nothing
   where
     newPath = fromMaybe [] $ dst >>= getPathTo ts d src
-    dst = getTargetPosition e d
+    dst = getTargetPosition e (d ^. cellMap)
 
 selectAction :: Coord -> Actor -> Dungeon -> Action
 selectAction position e d
@@ -130,16 +131,16 @@ targetIsNextTo position e d =
         (\(V2 x y) -> max (abs x) (abs y)) <$> offsetToTarget position e d
 
 offsetToTarget :: Coord -> Actor -> Dungeon -> Maybe (V2 Int)
-offsetToTarget position e d = subtract position <$> getTargetPosition e d
+offsetToTarget position e d =
+    subtract position <$> getTargetPosition e (d ^. cellMap)
 
 isTargetInFov :: Coord -> TileCollection -> Dungeon -> Actor -> Bool
 isTargetInFov position ts d actor =
-    ((calculateFovAt position ts d !) <$> getTargetPosition actor d) ==
+    ((calculateFovAt position ts d !) <$> getTargetPosition actor (d ^. cellMap)) ==
     Just True
 
-getTargetPosition :: Actor -> Dungeon -> Maybe Coord
-getTargetPosition actor d =
-    fst <$>
-    find
-        (\(_, other) -> actor ^. target == Just (getIndex other))
-        (getPositionsAndActors d)
+getTargetPosition :: Actor -> CellMap -> Maybe Coord
+getTargetPosition actor =
+    fmap fst .
+    find (\(_, other) -> actor ^. target == Just (getIndex other)) .
+    positionsAndActors
