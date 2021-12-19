@@ -128,8 +128,8 @@ doPlayerAction action ts ds = result
 handleNpcTurns ::
        TileCollection -> Dungeons -> Writer MessageLog (Dungeons, [Actor])
 handleNpcTurns ts ds =
-    (\(x, ks) -> (modify (const x) ds, ks)) <$>
-    NPC.handleNpcTurns ts (getFocused ds)
+    (\(x, ks) -> (modify (\d -> d & cellMap .~ x) ds, ks)) <$>
+    NPC.handleNpcTurns ts (getFocused ds ^. cellMap)
 
 popPlayer :: Dungeons -> (Maybe Actor, Dungeons)
 popPlayer z =

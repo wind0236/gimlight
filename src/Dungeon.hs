@@ -15,10 +15,8 @@ module Dungeon
     , mapWidthAndHeight
     , playerPosition
     , stairsPositionCandidates
-    , calculateFovAt
     , isTown
     , isPositionInDungeon
-    , positionsAndNpcs
     , getPositionsAndActors
     , positionOnParentMap
     , cellMap
@@ -39,10 +37,8 @@ import           Dungeon.Identifier (Identifier)
 import qualified Dungeon.Identifier as Identifier
 import           Dungeon.Map.Cell   (CellMap, positionsAndActors, walkableMap,
                                      widthAndHeight)
-import qualified Dungeon.Map.Cell   as Cell
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
-import           Fov                (Fov, calculateFov)
 import           GHC.Generics       (Generic)
 import           Linear.V2          (V2 (..))
 
@@ -94,9 +90,6 @@ addDescendingStairs sp@(StairsPair upper _) (parent@Dungeon {_descendingStairs =
 addDescendingStairs _ _ =
     error "The child's position in the parent map is already set."
 
-calculateFovAt :: Coord -> TileCollection -> Dungeon -> Fov
-calculateFovAt c ts d = calculateFov c (transparentMap ts d)
-
 playerPosition :: Dungeon -> Maybe Coord
 playerPosition d = fst <$> getPlayerActor d
 
@@ -117,13 +110,6 @@ stairsPositionCandidates ts d =
 
 walkableFloor :: TileCollection -> Dungeon -> Array (V2 Int) Bool
 walkableFloor ts d = walkableMap ts (d ^. cellMap)
-
-transparentMap :: TileCollection -> Dungeon -> Array (V2 Int) Bool
-transparentMap ts d = Cell.transparentMap ts (d ^. cellMap)
-
-positionsAndNpcs :: Dungeon -> [(Coord, Actor)]
-positionsAndNpcs =
-    filter (not . isPlayer . snd) . positionsAndActors . (^. cellMap)
 
 mapWidthAndHeight :: Dungeon -> V2 Int
 mapWidthAndHeight d = widthAndHeight (d ^. cellMap)

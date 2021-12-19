@@ -7,7 +7,7 @@ import           Action               (Action, ActionResult (killed),
 import           Action.Melee         (meleeAction)
 import           Action.Move          (moveAction)
 import           Action.Wait          (waitAction)
-import           Actor                (Actor, getIndex, isFriendlyNpc,
+import           Actor                (Actor, getIndex, isFriendlyNpc, isPlayer,
                                        pathToDestination, target)
 import           Control.Arrow        ((&&&))
 import           Control.Lens         ((&), (.~), (^.))
@@ -16,19 +16,20 @@ import           Coord                (Coord)
 import           Data.Array           ((!))
 import           Data.Foldable        (find)
 import           Data.Maybe           (fromMaybe)
-import           Dungeon              (Dungeon, calculateFovAt, cellMap,
-                                       getPositionsAndActors, positionsAndNpcs)
 import           Dungeon.Map.Cell     (CellMap, locateActorAt,
                                        positionsAndActors, removeActorAt,
-                                       removeActorIf)
+                                       removeActorIf, transparentMap)
 import           Dungeon.Map.Tile     (TileCollection)
 import           Dungeon.PathFinder   (getPathTo)
+import           Fov                  (calculateFov)
 import           Linear.V2            (V2 (V2))
 import           Log                  (MessageLog)
 
 handleNpcTurns ::
-       TileCollection -> Dungeon -> Writer MessageLog (Dungeon, [Actor])
-handleNpcTurns ts d = foldl foldStep (writer ((d, []), [])) $ positionsAndNpcs d
+       TileCollection -> CellMap -> Writer MessageLog (CellMap, [Actor])
+handleNpcTurns ts cm =
+    foldl foldStep (writer ((cm, []), [])) . filter (not . isPlayer . snd) $
+    positionsAndActors cm
   where
     foldStep acc (position, _) = do
         (d', l) <- acc
@@ -38,63 +39,65 @@ handleNpcTurns ts d = foldl foldStep (writer ((d, []), [])) $ positionsAndNpcs d
 npcAction ::
        Coord
     -> TileCollection
-    -> Dungeon
-    -> Writer MessageLog (Dungeon, [Actor])
-npcAction position ts d =
-    case removeActorAt position (d ^. cellMap) of
+    -> CellMap
+    -> Writer MessageLog (CellMap, [Actor])
+npcAction position ts cm =
+    case removeActorAt position cm of
         Just (actor, cellMapWithoutActor) ->
             npcActionFor actor cellMapWithoutActor
-        Nothing -> return (d, [])
+        Nothing -> return (cm, [])
   where
-    npcActionFor a cm
-        | isFriendlyNpc a = return (d, [])
+    npcActionFor a cellMapWithoutActor
+        | isFriendlyNpc a = return (cm, [])
         | otherwise =
-            ((\x -> d & cellMap .~ newCellMap x) &&& killed) <$>
-            action a position ts (cellMapAfterUpdatingMap a cm)
-    action a = selectAction position (entityAfterUpdatingMap a) d
-    cellMapAfterUpdatingMap a cm =
+            (newCellMap &&& killed) <$>
+            action a position ts (cellMapAfterUpdatingMap a cellMapWithoutActor)
+    action a = selectAction position (entityAfterUpdatingMap a) cm
+    cellMapAfterUpdatingMap a cellMapBeforeUpdating =
         fromMaybe
             (error "Failed to locate an actor.")
-            (locateActorAt ts (entityAfterUpdatingMap a) position cm)
+            (locateActorAt
+                 ts
+                 (entityAfterUpdatingMap a)
+                 position
+                 cellMapBeforeUpdating)
     entityAfterUpdatingMap a =
         fromMaybe
             (entityAfterUpdatingTarget a)
-            (updatePath position (entityAfterUpdatingTarget a) ts d)
-    entityAfterUpdatingTarget = updateTarget position ts d
+            (updatePath position (entityAfterUpdatingTarget a) ts cm)
+    entityAfterUpdatingTarget = updateTarget position ts cm
 
-updateTarget :: Coord -> TileCollection -> Dungeon -> Actor -> Actor
-updateTarget srcPosition ts d a
+updateTarget :: Coord -> TileCollection -> CellMap -> Actor -> Actor
+updateTarget srcPosition ts cm a
     | currentTargetIsInFov = a
     | otherwise = a & target .~ (getIndex <$> nextTarget)
   where
     currentTargetIsInFov = maybe False isInFov currentTarget
     indexToPosition x =
-        fst <$>
-        find ((getIndex x ==) . getIndex . snd) (getPositionsAndActors d)
+        fst <$> find ((getIndex x ==) . getIndex . snd) (positionsAndActors cm)
     currentTarget =
-        fst <$>
-        removeActorIf (\x -> a ^. target == Just (getIndex x)) (d ^. cellMap)
+        fst <$> removeActorIf (\x -> a ^. target == Just (getIndex x)) cm
     nextTarget
         | null otherActorsInFov = Nothing
         | otherwise = Just $ head otherActorsInFov
     otherActorsInFov = filter isInFov otherActors
-    fov = calculateFovAt srcPosition ts d
+    fov = calculateFov srcPosition (transparentMap ts cm)
     isInFov x = maybe False (fov !) (indexToPosition x)
     otherActors =
-        map snd $ filter (\(x, _) -> x /= srcPosition) $ getPositionsAndActors d
+        map snd $ filter (\(x, _) -> x /= srcPosition) $ positionsAndActors cm
 
-updatePath :: Coord -> Actor -> TileCollection -> Dungeon -> Maybe Actor
-updatePath src e ts d
-    | isTargetInFov src ts d e = Just $ e & pathToDestination .~ newPath
+updatePath :: Coord -> Actor -> TileCollection -> CellMap -> Maybe Actor
+updatePath src e ts cm
+    | isTargetInFov src ts cm e = Just $ e & pathToDestination .~ newPath
     | otherwise = Nothing
   where
-    newPath = fromMaybe [] $ dst >>= getPathTo ts d src
-    dst = getTargetPosition e (d ^. cellMap)
+    newPath = fromMaybe [] $ dst >>= getPathTo ts cm src
+    dst = getTargetPosition e cm
 
-selectAction :: Coord -> Actor -> Dungeon -> Action
-selectAction position e d
-    | targetIsNextTo position e d =
-        case offsetToTarget position e d of
+selectAction :: Coord -> Actor -> CellMap -> Action
+selectAction position e cm
+    | targetIsNextTo position e cm =
+        case offsetToTarget position e cm of
             Just offset -> meleeAction offset
             Nothing     -> moveOrWait e
     | otherwise = moveOrWait e
@@ -121,22 +124,22 @@ popPathToDestinationAndMove position tc cm =
                          (locateActorAt tc updatedActor position ncm))
         Nothing -> error "unreachable."
 
-targetIsNextTo :: Coord -> Actor -> Dungeon -> Bool
-targetIsNextTo position e d =
+targetIsNextTo :: Coord -> Actor -> CellMap -> Bool
+targetIsNextTo position e cm =
     case distance of
         Just d' -> d' <= 1
         Nothing -> False
   where
     distance =
-        (\(V2 x y) -> max (abs x) (abs y)) <$> offsetToTarget position e d
+        (\(V2 x y) -> max (abs x) (abs y)) <$> offsetToTarget position e cm
 
-offsetToTarget :: Coord -> Actor -> Dungeon -> Maybe (V2 Int)
-offsetToTarget position e d =
-    subtract position <$> getTargetPosition e (d ^. cellMap)
+offsetToTarget :: Coord -> Actor -> CellMap -> Maybe (V2 Int)
+offsetToTarget position e cm = subtract position <$> getTargetPosition e cm
 
-isTargetInFov :: Coord -> TileCollection -> Dungeon -> Actor -> Bool
-isTargetInFov position ts d actor =
-    ((calculateFovAt position ts d !) <$> getTargetPosition actor (d ^. cellMap)) ==
+isTargetInFov :: Coord -> TileCollection -> CellMap -> Actor -> Bool
+isTargetInFov position ts cm actor =
+    ((calculateFov position (transparentMap ts cm) !) <$>
+     getTargetPosition actor cm) ==
     Just True
 
 getTargetPosition :: Actor -> CellMap -> Maybe Coord
