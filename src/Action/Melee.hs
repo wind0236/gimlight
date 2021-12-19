@@ -1,60 +1,33 @@
-{-# LANGUAGE TupleSections #-}
-
 module Action.Melee
     ( meleeAction
     ) where
 
-import           Action           (Action, ActionResult (ActionResult),
-                                   ActionResultWithLog,
-                                   ActionStatus (Failed, Ok))
-import           Actor            (Actor)
-import qualified Actor            as A
-import           Coord            (Coord)
-import           Data.Maybe       (fromMaybe)
-import           Dungeon.Map.Cell (CellMap, locateActorAt, removeActorAt)
-import           Dungeon.Map.Tile (TileCollection)
-import           Linear.V2        (V2)
+import           Action               (Action, ActionResult (ActionResult),
+                                       ActionStatus (Ok))
+import qualified Actor                as A
+import           Control.Monad.State  (StateT (runStateT))
+import           Control.Monad.Writer (runWriter, tell)
+import           Dungeon.Map.Cell     (locateActorAt, removeActorAt)
+import           Linear.V2            (V2)
 
 meleeAction :: V2 Int -> Action
-meleeAction offset srcPosition tc cm = result
+meleeAction offset srcPosition tc cm =
+    case result of
+        Right ((l, killed), newMap) -> do
+            tell l
+            return $ ActionResult Ok newMap killed
+        _ -> error "Unreachable"
   where
-    dstPosition = srcPosition + offset
     result =
-        case removeResult of
-            Nothing -> return $ ActionResult Failed cm []
-            Just (attacker, (defender, newCellMap)) ->
-                attackFromTo
-                    tc
-                    srcPosition
-                    dstPosition
-                    attacker
-                    defender
-                    newCellMap
-    removeResult =
-        removeActorAt srcPosition cm >>=
-        (\(a, cm') -> (a, ) <$> removeActorAt dstPosition cm')
-
-attackFromTo ::
-       TileCollection
-    -> Coord
-    -> Coord
-    -> Actor
-    -> Actor
-    -> CellMap
-    -> ActionResultWithLog
-attackFromTo tc attackerPosition defenderPosition attacker defender cm = do
-    (newAttacker, newDefender) <- A.attackFromTo attacker defender
-    let (newDungeon, killed) =
+        flip runStateT cm $ do
+            attacker <- removeActorAt srcPosition
+            defender <- removeActorAt dstPosition
+            let ((newAttacker, newDefender), l') =
+                    runWriter $ A.attackFromTo attacker defender
+            locateActorAt tc newAttacker srcPosition
             case newDefender of
-                Just x ->
-                    ( fromMaybe
-                          (error "Failed to locate actors.")
-                          (locateActorAt tc newAttacker attackerPosition cm >>=
-                           locateActorAt tc x defenderPosition)
-                    , [])
-                Nothing ->
-                    ( fromMaybe
-                          (error "Failed to locate an actor.")
-                          (locateActorAt tc newAttacker attackerPosition cm)
-                    , [defender])
-    return $ ActionResult Ok newDungeon killed
+                Just x -> do
+                    locateActorAt tc x dstPosition
+                    return (l', [])
+                Nothing -> return (l', [defender])
+    dstPosition = srcPosition + offset

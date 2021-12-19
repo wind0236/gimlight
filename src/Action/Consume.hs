@@ -9,8 +9,8 @@ import           Actor                (Actor, getIdentifier, healHp,
                                        inventoryItems)
 import           Actor.Identifier     (toName)
 import           Control.Lens         ((&), (.~), (^.))
+import           Control.Monad.State  (StateT (runStateT), execStateT)
 import           Control.Monad.Writer (tell)
-import           Data.Maybe           (fromMaybe)
 import           Dungeon.Map.Cell     (CellMap, locateActorAt, removeActorAt)
 import           Inventory            (removeNthItem)
 import           Item                 (Effect (Book, Heal), getEffect,
@@ -20,9 +20,9 @@ import qualified Localization.Texts   as T
 
 consumeAction :: Int -> Action
 consumeAction n position tc cm =
-    case removeActorAt position cm of
-        Just (a, ncm) -> consumeActionForActor a ncm
-        Nothing       -> return $ ActionResult Failed cm []
+    case flip runStateT cm $ removeActorAt position of
+        Right (a, ncm) -> consumeActionForActor a ncm
+        _              -> error "No such actor."
   where
     consumeActionForActor actorWithItem ncm =
         case removeNthItem n (actorWithItem ^. inventoryItems) of
@@ -44,20 +44,18 @@ consumeAction n position tc cm =
     doItemEffect :: Effect -> Actor -> CellMap -> ActionResultWithLog
     doItemEffect (Heal handler) a ncm = do
         tell [T.healed (toName $ getIdentifier a) amount]
-        return $
-            ActionResult
-                Ok
-                (fromMaybe
-                     (error "Failed to locate an actor.")
-                     (locateActorAt tc (healHp amount a) position ncm))
-                []
+        return $ ActionResult Ok cmAfterHealing []
       where
         amount = getHealAmount handler
+        cmAfterHealing =
+            case flip execStateT ncm $
+                 locateActorAt tc (healHp amount a) position of
+                Right x -> x
+                Left e  -> error $ "Failed to locate an actor." <> show e
     doItemEffect (Book handler) a ncm =
-        return $
-        ActionResult
-            (ReadingStarted handler)
-            (fromMaybe
-                 (error "Failed to locate an actor.")
-                 (locateActorAt tc a position ncm))
-            []
+        return $ ActionResult (ReadingStarted handler) cmAfterReading []
+      where
+        cmAfterReading =
+            case flip execStateT ncm $ locateActorAt tc a position of
+                Right x -> x
+                Left e  -> error $ "Failed to locate an actor." <> show e

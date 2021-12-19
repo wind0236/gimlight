@@ -5,6 +5,7 @@
 module Dungeon.Map.Cell
     ( CellMap
     , TileIdLayer(..)
+    , Error(..)
     , upper
     , lower
     , cellMap
@@ -18,7 +19,6 @@ module Dungeon.Map.Cell
     , transparentMap
     , exploredMap
     , widthAndHeight
-    , isWalkableAt
     , locateActorAt
     , locateItemAt
     , removeActorAt
@@ -29,21 +29,31 @@ module Dungeon.Map.Cell
     , tileIdLayerAt
     ) where
 
-import           Actor            (Actor, isPlayer)
-import           Control.Arrow    (Arrow (second))
-import           Control.Lens     (Ixed (ix), makeLenses, (%%~), (%~), (&),
-                                   (.~), (?~), (^.), (^?))
-import           Coord            (Coord)
-import           Data.Array       (Array, array, assocs, bounds, (!), (//))
-import           Data.Binary      (Binary)
-import           Data.Foldable    (find)
-import           Data.Maybe       (isJust, isNothing, mapMaybe)
-import           Dungeon.Map.Tile (TileCollection, TileId, floorTile, wallTile)
-import qualified Dungeon.Map.Tile as Tile
-import           Fov              (calculateFov)
-import           GHC.Generics     (Generic)
-import           Item             (Item)
-import           Linear.V2        (V2 (V2))
+import           Actor               (Actor, isPlayer)
+import           Control.Lens        (Ixed (ix), makeLenses, (%%~), (%~), (&),
+                                      (.~), (?~), (^.), (^?))
+import           Control.Monad.State (StateT (StateT), gets)
+import           Coord               (Coord)
+import           Data.Array          (Array, array, assocs, bounds, (!), (//))
+import           Data.Binary         (Binary)
+import           Data.Foldable       (find)
+import           Data.Maybe          (isJust, isNothing, mapMaybe)
+import           Dungeon.Map.Tile    (TileCollection, TileId, floorTile,
+                                      wallTile)
+import qualified Dungeon.Map.Tile    as Tile
+import           Fov                 (calculateFov)
+import           GHC.Generics        (Generic)
+import           Item                (Item)
+import           Linear.V2           (V2 (V2))
+
+data Error
+    = OutOfRange
+    | ActorNotFound
+    | ActorAlreadyExists Actor
+    | ItemNotFound
+    | ItemAlreadyExists Item
+    | TileIsNotWalkable
+    deriving (Show)
 
 data TileIdLayer =
     TileIdLayer
@@ -75,37 +85,42 @@ isWalkable tc c =
     fmap (Tile.isWalkable . (tc !)) (c ^. (tileIdLayer . upper)) /= Just False &&
     isNothing (c ^. actor)
 
-isItemLocatable :: TileCollection -> Cell -> Bool
-isItemLocatable tc c =
-    fmap (Tile.isWalkable . (tc !)) (c ^. (tileIdLayer . upper)) /= Just False &&
-    isNothing (c ^. item)
-
 isTransparent :: TileCollection -> Cell -> Bool
 isTransparent tc c =
     fmap (Tile.isTransparent . (tc !)) (c ^. (tileIdLayer . upper)) /=
     Just False
 
-locateActor :: TileCollection -> Actor -> Cell -> Maybe Cell
+isTileWalkable :: TileCollection -> Cell -> Bool
+isTileWalkable tc c =
+    fmap (Tile.isWalkable . (tc !)) (c ^. tileIdLayer . upper) /= Just False
+
+locateActor :: TileCollection -> Actor -> Cell -> Either Error Cell
 locateActor tc a c
-    | isWalkable tc c = Just $ c & actor ?~ a
-    | otherwise = Nothing
+    | not $ isTileWalkable tc c = Left TileIsNotWalkable
+    | otherwise =
+        case c ^. actor of
+            Just x  -> Left $ ActorAlreadyExists x
+            Nothing -> Right $ c & actor ?~ a
 
-locateItem :: TileCollection -> Item -> Cell -> Maybe Cell
+locateItem :: TileCollection -> Item -> Cell -> Either Error Cell
 locateItem tc i c
-    | isItemLocatable tc c = Just $ c & item ?~ i
-    | otherwise = Nothing
+    | not $ isTileWalkable tc c = Left TileIsNotWalkable
+    | otherwise =
+        case c ^. item of
+            Just x  -> Left $ ItemAlreadyExists x
+            Nothing -> Right $ c & item ?~ i
 
-removeActor :: Cell -> Maybe (Actor, Cell)
+removeActor :: Cell -> (Either Error Actor, Cell)
 removeActor c =
     case c ^. actor of
-        Just a  -> Just (a, c & actor .~ Nothing)
-        Nothing -> Nothing
+        Just a  -> (Right a, c & actor .~ Nothing)
+        Nothing -> (Left ActorNotFound, c)
 
-removeItem :: Cell -> Maybe (Item, Cell)
+removeItem :: Cell -> (Either Error Item, Cell)
 removeItem c =
     case c ^. item of
-        Just i  -> Just (i, c & item .~ Nothing)
-        Nothing -> Nothing
+        Just i  -> (Right i, c & item .~ Nothing)
+        Nothing -> (Left ItemNotFound, c)
 
 -- We define `CellMap` as a newtype rather than an alias to define
 -- functions that return `Nothing` on index-out-of-bounds error. Error
@@ -181,9 +196,6 @@ updatePlayerFov tc (CellMap cm) =
     playerPosition =
         fmap fst $ find (isPlayer . snd) $ positionsAndActors $ CellMap cm
 
-isWalkableAt :: Coord -> TileCollection -> CellMap -> Bool
-isWalkableAt c tc (CellMap cm) = maybe False (isWalkable tc) (cm ^? ix c)
-
 positionsAndActors :: CellMap -> [(Coord, Actor)]
 positionsAndActors (CellMap cm) = mapMaybe mapStep $ assocs cm
   where
@@ -194,25 +206,46 @@ positionsAndItems (CellMap cm) = mapMaybe mapStep $ assocs cm
   where
     mapStep (coord, cell) = (coord, ) <$> cell ^. item
 
-locateActorAt :: TileCollection -> Actor -> Coord -> CellMap -> Maybe CellMap
-locateActorAt tc a c (CellMap cm) =
-    fmap CellMap $ cm & ix c %%~ locateActor tc a
+locateActorAt ::
+       TileCollection -> Actor -> Coord -> StateT CellMap (Either Error) ()
+locateActorAt tc a c =
+    StateT $ \(CellMap cm) ->
+        fmap (((), ) . CellMap) $ cm & ix c %%~ locateActor tc a
 
-locateItemAt :: TileCollection -> Item -> Coord -> CellMap -> Maybe CellMap
-locateItemAt tc i c (CellMap cm) = fmap CellMap $ cm & ix c %%~ locateItem tc i
+locateItemAt ::
+       TileCollection -> Item -> Coord -> StateT CellMap (Either Error) ()
+locateItemAt tc i c =
+    StateT $ \(CellMap cm) ->
+        fmap (((), ) . CellMap) $ cm & ix c %%~ locateItem tc i
 
-removeActorAt :: Coord -> CellMap -> Maybe (Actor, CellMap)
-removeActorAt c (CellMap cm) =
-    fmap (second $ \x -> CellMap $ cm // [(c, x)]) $ cm ^? ix c >>= removeActor
+removeActorAt :: Coord -> StateT CellMap (Either Error) Actor
+removeActorAt c =
+    StateT $ \(CellMap cm) ->
+        case cm ^? ix c of
+            Just x ->
+                case removeActor x of
+                    (Right removed, newCell) ->
+                        Right (removed, CellMap $ cm // [(c, newCell)])
+                    (Left e, _) -> Left e
+            Nothing -> Left ActorNotFound
 
-removeItemAt :: Coord -> CellMap -> Maybe (Item, CellMap)
-removeItemAt c (CellMap cm) =
-    fmap (second $ \x -> CellMap $ cm // [(c, x)]) $ cm ^? ix c >>= removeItem
+removeItemAt :: Coord -> StateT CellMap (Either Error) Item
+removeItemAt c =
+    StateT $ \(CellMap cm) ->
+        case cm ^? ix c of
+            Just x ->
+                case removeItem x of
+                    (Right removed, newCell) ->
+                        Right (removed, CellMap $ cm // [(c, newCell)])
+                    (Left e, _) -> Left e
+            Nothing -> Left ItemNotFound
 
-removeActorIf :: (Actor -> Bool) -> CellMap -> Maybe (Actor, CellMap)
-removeActorIf f cm = position >>= flip removeActorAt cm
-  where
-    position = fst <$> find (f . snd) (positionsAndActors cm)
+removeActorIf :: (Actor -> Bool) -> StateT CellMap (Either Error) Actor
+removeActorIf f = do
+    position <- gets $ fmap fst . find (f . snd) . positionsAndActors
+    case position of
+        Just x  -> removeActorAt x
+        Nothing -> StateT $ const $ Left ActorNotFound
 
 tileIdLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
 tileIdLayerAt c (CellMap cm) = cm ^? ix c . tileIdLayer

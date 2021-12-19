@@ -3,47 +3,36 @@ module Action.Drop
     ) where
 
 import           Action               (Action, ActionResult (ActionResult),
-                                       ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
-import           Actor                (Actor, inventoryItems)
+import           Actor                (inventoryItems)
+import           Control.Arrow        (Arrow (first))
 import           Control.Lens         ((&), (.~), (^.))
+import           Control.Monad.State  (runStateT)
 import           Control.Monad.Writer (tell)
 import           Data.Maybe           (fromMaybe)
-import           Dungeon.Map.Cell     (CellMap, locateActorAt, locateItemAt,
-                                       removeActorAt)
+import           Dungeon.Map.Cell     (Error (ItemAlreadyExists), locateActorAt,
+                                       locateItemAt, removeActorAt)
 import           Inventory            (removeNthItem)
-import           Item                 (Item, getName)
-import           Localization         (MultilingualText)
+import           Item                 (getName)
 import qualified Localization.Texts   as T
 
 dropAction :: Int -> Action
 dropAction n position tc cm =
-    case removeActorAt position cm of
-        Just (a, ncm) -> dropActionForActor a ncm
-        Nothing       -> return $ ActionResult Failed cm []
+    case result of
+        Right (dropped, newMap) -> do
+            tell [T.youDropped $ getName dropped]
+            return $ ActionResult Ok newMap []
+        Left (ItemAlreadyExists _) -> do
+            tell [T.itemExists]
+            return $ ActionResult Failed cm []
+        e -> error $ "Unexpected error: " <> show e
   where
-    dropActionForActor a ncm =
-        case removeNthItem n (a ^. inventoryItems) of
-            (Just item, newInventory) ->
-                dropItem ncm item (a & inventoryItems .~ newInventory)
-            (Nothing, _) -> failWithReason T.whatToDrop
-    dropItem :: CellMap -> Item -> Actor -> ActionResultWithLog
-    dropItem ncm item' a =
-        case locateItemAt tc item' position ncm of
-            Just newCellMap -> successResult newCellMap item' a
-            Nothing         -> failWithReason T.itemExists
-    successResult :: CellMap -> Item -> Actor -> ActionResultWithLog
-    successResult newCellMap item' a = do
-        tell [T.youDropped $ getName item']
-        return $
-            ActionResult
-                Ok
-                (fromMaybe
-                     (error "Failed to locate an actor.")
-                     (locateActorAt tc a position newCellMap))
-                []
-    failWithReason :: MultilingualText -> ActionResultWithLog
-    failWithReason reason = do
-        tell [reason]
-        return failedResult
-    failedResult = ActionResult Failed cm []
+    result =
+        flip runStateT cm $ do
+            a <- removeActorAt position
+            let (item, newInventory) =
+                    first (fromMaybe (error "Index out of bounds.")) $
+                    removeNthItem n (a ^. inventoryItems)
+            locateActorAt tc (a & inventoryItems .~ newInventory) position
+            locateItemAt tc item position
+            return item

@@ -12,7 +12,9 @@ import           Action                     (Action,
                                              ActionStatus)
 import           Actor                      (Actor, isPlayer)
 import           Control.Lens               ((%%~), (&), (.~), (^.))
+import           Control.Monad.State        (execStateT, runStateT)
 import           Control.Monad.Trans.Writer (Writer)
+import           Data.Either.Combinators    (rightToMaybe)
 import           Data.Foldable              (find)
 import           Data.Maybe                 (fromMaybe)
 import           Dungeon                    (Dungeon, ascendingStairs, cellMap,
@@ -49,11 +51,12 @@ ascendStairsAtPlayerPosition ts ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (d &
-                      cellMap %%~
+                     (d & cellMap %%~
                       (\x ->
-                           locateActorAt ts p pos x >>= updatePlayerFov ts >>=
-                           Just . updateExploredMap)))
+                           rightToMaybe (execStateT (locateActorAt ts p pos) x) >>=
+                           updatePlayerFov ts >>=
+                           Just .
+                           updateExploredMap)))
             g
 
 descendStairsAtPlayerPosition :: TileCollection -> Dungeons -> Maybe Dungeons
@@ -80,11 +83,12 @@ descendStairsAtPlayerPosition ts ds = newZipper
             (\d ->
                  fromMaybe
                      (error "Failed to update the map.")
-                     (d &
-                      cellMap %%~
+                     (d & cellMap %%~
                       (\x ->
-                           locateActorAt ts p pos x >>= updatePlayerFov ts >>=
-                           Just . updateExploredMap)))
+                           rightToMaybe (execStateT (locateActorAt ts p pos) x) >>=
+                           updatePlayerFov ts >>=
+                           Just .
+                           updateExploredMap)))
             g
 
 exitDungeon :: TileCollection -> Dungeons -> Maybe Dungeons
@@ -102,7 +106,8 @@ exitDungeon ts ds = newZipper
                     (\d ->
                          fromMaybe
                              (error "Failed to update the map.")
-                             (d & cellMap %%~ locateActorAt ts p pos))
+                             (d & cellMap %%~ rightToMaybe .
+                              execStateT (locateActorAt ts p pos)))
                     g
             _ -> Nothing
 
@@ -133,6 +138,6 @@ handleNpcTurns ts ds =
 
 popPlayer :: Dungeons -> (Maybe Actor, Dungeons)
 popPlayer z =
-    case removeActorIf isPlayer (getFocused z ^. cellMap) of
-        Just (actor, ncm) -> (Just actor, modify (\x -> x & cellMap .~ ncm) z)
-        Nothing           -> (Nothing, z)
+    case flip runStateT (getFocused z ^. cellMap) $ removeActorIf isPlayer of
+        Right (actor, ncm) -> (Just actor, modify (\x -> x & cellMap .~ ncm) z)
+        _                  -> (Nothing, z)

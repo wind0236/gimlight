@@ -6,8 +6,9 @@ import           Action               (ActionResult (ActionResult, killed, newCe
                                        ActionResultWithLog,
                                        ActionStatus (Failed, Ok))
 import           Action.Move          (moveAction)
+import           Control.Monad.State  (execStateT)
 import           Control.Monad.Writer (writer)
-import           Data.Maybe           (fromJust)
+import           Data.Either          (fromRight)
 import           Dungeon.Map.Cell     (locateActorAt, removeActorAt)
 import           Linear.V2            (V2 (V2))
 import qualified Localization.Texts   as T
@@ -44,10 +45,10 @@ succeed offset = writer (result, [])
     result =
         ActionResult {status = Ok, newCellMap = cellMapWithPlayer, killed = []}
     cellMapWithPlayer =
-        fromJust $
-        removeActorAt playerPosition initCellMap >>=
-        (\(p, ncm) ->
-             locateActorAt initTileCollection p (playerPosition + offset) ncm)
+        fromRight undefined $
+        flip execStateT initCellMap $ do
+            a <- removeActorAt playerPosition
+            locateActorAt initTileCollection a (playerPosition + offset)
 
 failed :: ActionResultWithLog
 failed = writer (result, l)

@@ -7,7 +7,9 @@ import           Action               (ActionResult (ActionResult, killed, newCe
 import           Action.PickUp        (pickUpAction)
 import           Actor                (inventoryItems)
 import           Control.Lens         ((%~), (&))
+import           Control.Monad.State  (StateT (runStateT), execStateT)
 import           Control.Monad.Writer (writer)
+import           Data.Either          (fromRight)
 import           Data.Maybe           (fromJust)
 import           Dungeon.Map.Cell     (locateActorAt, removeActorAt,
                                        removeItemAt)
@@ -36,14 +38,17 @@ testPickUpSuccess =
         ActionResult
             {status = Ok, newCellMap = cellMapAfterPickingUp, killed = []}
     cellMapAfterPickingUp =
-        fromJust $
-        removeItemAt playerPosition initCellMap >>=
-        removeActorAt playerPosition . snd >>=
-        locateActorAt initTileCollection actorWithItem playerPosition . snd
+        fromRight (error "Failed to pick up.") $
+        flip execStateT initCellMap $ do
+            _ <- removeItemAt playerPosition
+            _ <- removeActorAt playerPosition
+            locateActorAt initTileCollection actorWithItem playerPosition
     expectedLog = [T.youGotItem $ getName herb]
     actorWithItem =
         (\(x, _) -> x & inventoryItems %~ (fromJust . addItem herb))
-            (fromJust (removeActorAt playerPosition initCellMap))
+            (fromRight
+                 (error "Failed to add an item.")
+                 (flip runStateT initCellMap $ removeActorAt playerPosition))
 
 testPickUpVoid :: Spec
 testPickUpVoid =

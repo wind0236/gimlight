@@ -4,6 +4,8 @@ module Dungeon.Init
 
 import           Actor                     (player)
 import           Control.Lens              ((%%~), (&))
+import           Control.Monad.State       (execStateT)
+import           Data.Either.Combinators   (rightToMaybe)
 import           Data.Maybe                (fromMaybe)
 import           Dungeon                   (Dungeon, cellMap)
 import           Dungeon.Map.Cell          (locateActorAt, updateExploredMap,
@@ -22,7 +24,9 @@ initDungeon ig ts = do
                 (beaeve' &
                  cellMap %%~
                  (\x ->
-                      locateActorAt ts player' (V2 5 5) x >>= updatePlayerFov ts >>=
+                      rightToMaybe
+                          (execStateT (locateActorAt ts player' (V2 5 5)) x) >>=
+                      updatePlayerFov ts >>=
                       Just . updateExploredMap))
     return (d, ig'')
   where

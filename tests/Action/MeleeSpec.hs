@@ -8,7 +8,10 @@ import           Action               (ActionResult (ActionResult, killed, newCe
                                        ActionStatus (Ok))
 import           Action.Melee         (meleeAction)
 import           Actor                (attackFromTo)
+import           Control.Monad.State  (StateT (runStateT), evalStateT,
+                                       execStateT)
 import           Control.Monad.Writer (runWriter, writer)
+import           Data.Either          (fromRight)
 import           Data.Maybe           (fromJust)
 import           Dungeon.Map.Cell     (locateActorAt, removeActorAt)
 import           SetUp                (initCellMap, initTileCollection,
@@ -38,8 +41,11 @@ testKill =
             }
     ((_, newDefender), expectedLog) = runWriter $ attackFromTo attacker defender
     (defender, cellMapWithoutDefender) =
-        fromJust $ removeActorAt weakestOrcPosition initCellMap
-    attacker = fst $ fromJust $ removeActorAt strongestOrcPosition initCellMap
+        fromRight undefined $
+        flip runStateT initCellMap $ removeActorAt weakestOrcPosition
+    attacker =
+        fromRight undefined $
+        flip evalStateT initCellMap $ removeActorAt strongestOrcPosition
     offset = weakestOrcPosition - strongestOrcPosition
 
 testDamage :: Spec
@@ -54,16 +60,19 @@ testDamage =
         ActionResult
             { status = Ok
             , newCellMap =
-                  fromJust $
+                  fromRight undefined $
+                  flip execStateT cellMapWithoutDefender $
                   locateActorAt
                       initTileCollection
                       (fromJust newDefender)
                       intermediateOrcPosition
-                      cellMapWithoutDefender
             , killed = []
             }
     ((_, newDefender), expectedLog) = runWriter $ attackFromTo attacker defender
     (defender, cellMapWithoutDefender) =
-        fromJust $ removeActorAt intermediateOrcPosition initCellMap
-    attacker = fst $ fromJust $ removeActorAt strongestOrcPosition initCellMap
+        fromRight undefined $
+        flip runStateT initCellMap $ removeActorAt intermediateOrcPosition
+    attacker =
+        fromRight undefined $
+        flip evalStateT initCellMap $ removeActorAt strongestOrcPosition
     offset = intermediateOrcPosition - strongestOrcPosition

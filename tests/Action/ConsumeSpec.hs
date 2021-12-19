@@ -8,8 +8,9 @@ import           Action.Consume       (consumeAction)
 import           Actor                (getIdentifier, inventoryItems)
 import           Actor.Identifier     (toName)
 import           Control.Lens         ((%~), (&))
+import           Control.Monad.State  (evalStateT, execStateT)
 import           Control.Monad.Writer (writer)
-import           Data.Maybe           (fromJust)
+import           Data.Either          (fromRight)
 import           Dungeon.Map.Cell     (locateActorAt, removeActorAt)
 import           Inventory            (removeNthItem)
 import           Item                 (Effect (Book, Heal), getEffect, herb,
@@ -57,14 +58,15 @@ testConsumeHerb =
           healAmount $ getEffect herb
         ]
     cellMapAfterConsuming =
-        fromJust $
-        removeActorAt orcWithHerbPosition initCellMap >>=
-        (\(a, cm) ->
-             locateActorAt
-                 initTileCollection
-                 (a & inventoryItems %~ (snd . removeNthItem 0))
-                 orcWithHerbPosition
-                 cm)
-    orcWithItem = fst $ fromJust $ removeActorAt orcWithHerbPosition initCellMap
+        fromRight undefined $
+        flip execStateT initCellMap $ do
+            a <- removeActorAt orcWithHerbPosition
+            locateActorAt
+                initTileCollection
+                (a & inventoryItems %~ (snd . removeNthItem 0))
+                orcWithHerbPosition
+    orcWithItem =
+        fromRight undefined $
+        flip evalStateT initCellMap $ removeActorAt orcWithHerbPosition
     healAmount (Heal h) = getHealAmount h
     healAmount _        = error "Not a healer."

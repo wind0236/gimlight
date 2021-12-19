@@ -5,7 +5,9 @@ module Dungeon.Generate
 import           Actor                   (Actor)
 import           Actor.Monsters          (orc, troll)
 import           Control.Lens            ((%~), (&), (.~), (?~), (^.))
+import           Control.Monad.State     (execStateT)
 import           Coord                   (Coord)
+import           Data.Either             (fromRight)
 import           Data.Maybe              (fromMaybe)
 import           Data.Tree               (Tree (Node, rootLabel, subForest))
 import           Dungeon                 (Dungeon,
@@ -192,7 +194,7 @@ placeEnemies tc cm g ig r n = placeEnemies tc newMap g''' ig' r (n - 1)
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
     ((enemy, ig'), g''') = newMonster g'' ig
-    newMap = fromMaybe cm (locateActorAt tc enemy (V2 x y) cm)
+    newMap = fromRight cm $ flip execStateT cm $ locateActorAt tc enemy (V2 x y)
 
 placeItems ::
        CellMap -> TileCollection -> StdGen -> Room -> Int -> (CellMap, StdGen)
@@ -203,7 +205,8 @@ placeItemsAccum ::
 placeItemsAccum cm _ g _ 0 = (cm, g)
 placeItemsAccum cm tc g r n = placeItemsAccum newMap tc g''' r (n - 1)
   where
-    newMap = fromMaybe cm (locateItemAt tc newItem (V2 x y) cm)
+    newMap =
+        fromRight cm $ flip execStateT cm $ locateItemAt tc newItem (V2 x y)
     (x, g') = randomR (x1 r, x2 r - 1) g
     (y, g'') = randomR (y1 r, y2 r - 1) g'
     (prob, g''') = random g'' :: (Float, StdGen)

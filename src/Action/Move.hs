@@ -4,26 +4,25 @@ module Action.Move
 
 import           Action               (Action, ActionResult (ActionResult),
                                        ActionStatus (Failed, Ok))
+import           Control.Monad.State  (execStateT)
 import           Control.Monad.Writer (tell)
-import           Data.Maybe           (fromMaybe)
-import           Dungeon.Map.Cell     (isWalkableAt, locateActorAt,
-                                       removeActorAt)
+import           Dungeon.Map.Cell     (Error (ActorAlreadyExists, TileIsNotWalkable),
+                                       locateActorAt, removeActorAt)
 import           Linear.V2            (V2)
 import qualified Localization.Texts   as T
 
 moveAction :: V2 Int -> Action
-moveAction offset position tiles cm
-    | isWalkableAt (position + offset) tiles cm =
-        case removeActorAt position cm of
-            Just (src, ncm) ->
-                return $
-                ActionResult
-                    Ok
-                    (fromMaybe
-                         (error "Failed to locate an actor.")
-                         (locateActorAt tiles src (position + offset) ncm))
-                    []
-            Nothing -> return $ ActionResult Failed cm []
-    | otherwise = do
+moveAction offset position tiles cm =
+    case result of
+        Right x                     -> return $ ActionResult Ok x []
+        Left (ActorAlreadyExists _) -> cannotMove
+        Left TileIsNotWalkable      -> cannotMove
+        _                           -> error "Unreachable."
+  where
+    result =
+        flip execStateT cm $ do
+            a <- removeActorAt position
+            locateActorAt tiles a (position + offset)
+    cannotMove = do
         tell [T.youCannotMoveThere]
         return $ ActionResult Failed cm []

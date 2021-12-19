@@ -11,9 +11,12 @@ import           Actor                (Actor, getIndex, isFriendlyNpc, isPlayer,
                                        pathToDestination, target)
 import           Control.Arrow        ((&&&))
 import           Control.Lens         ((&), (.~), (^.))
+import           Control.Monad.State  (StateT (runStateT), evalStateT,
+                                       execStateT)
 import           Control.Monad.Writer (MonadWriter (writer), Writer)
 import           Coord                (Coord)
 import           Data.Array           ((!))
+import           Data.Either          (fromRight)
 import           Data.Foldable        (find)
 import           Data.Maybe           (fromMaybe)
 import           Dungeon.Map.Cell     (CellMap, locateActorAt,
@@ -42,10 +45,10 @@ npcAction ::
     -> CellMap
     -> Writer MessageLog (CellMap, [Actor])
 npcAction position ts cm =
-    case removeActorAt position cm of
-        Just (actor, cellMapWithoutActor) ->
+    case flip runStateT cm $ removeActorAt position of
+        Right (actor, cellMapWithoutActor) ->
             npcActionFor actor cellMapWithoutActor
-        Nothing -> return (cm, [])
+        _ -> return (cm, [])
   where
     npcActionFor a cellMapWithoutActor
         | isFriendlyNpc a = return (cm, [])
@@ -54,13 +57,10 @@ npcAction position ts cm =
             action a position ts (cellMapAfterUpdatingMap a cellMapWithoutActor)
     action a = selectAction position (entityAfterUpdatingMap a) cm
     cellMapAfterUpdatingMap a cellMapBeforeUpdating =
-        fromMaybe
-            (error "Failed to locate an actor.")
-            (locateActorAt
-                 ts
-                 (entityAfterUpdatingMap a)
-                 position
-                 cellMapBeforeUpdating)
+        case flip execStateT cellMapBeforeUpdating $
+             locateActorAt ts (entityAfterUpdatingMap a) position of
+            Right x -> x
+            Left e  -> error $ "Failed to locate an actor: " <> show e
     entityAfterUpdatingMap a =
         fromMaybe
             (entityAfterUpdatingTarget a)
@@ -72,11 +72,15 @@ updateTarget srcPosition ts cm a
     | currentTargetIsInFov = a
     | otherwise = a & target .~ (getIndex <$> nextTarget)
   where
-    currentTargetIsInFov = maybe False isInFov currentTarget
+    currentTargetIsInFov =
+        case currentTarget of
+            Right x -> isInFov x
+            _       -> False
     indexToPosition x =
         fst <$> find ((getIndex x ==) . getIndex . snd) (positionsAndActors cm)
     currentTarget =
-        fst <$> removeActorIf (\x -> a ^. target == Just (getIndex x)) cm
+        flip evalStateT cm $
+        removeActorIf (\x -> a ^. target == Just (getIndex x))
     nextTarget
         | null otherActorsInFov = Nothing
         | otherwise = Just $ head otherActorsInFov
@@ -109,20 +113,18 @@ moveOrWait e
 
 popPathToDestinationAndMove :: Action
 popPathToDestinationAndMove position tc cm =
-    case removeActorAt position cm of
-        Just (a, ncm) ->
+    moveAction moveTo position tc newMap
+  where
+    (moveTo, newMap) =
+        fromRight (error "No such actor.") $
+        flip runStateT cm $ do
+            a <- removeActorAt position
             let path = a ^. pathToDestination
                 (next, remaining) = (head path, tail path)
                 offset = next - position
                 updatedActor = a & pathToDestination .~ remaining
-             in moveAction
-                    offset
-                    position
-                    tc
-                    (fromMaybe
-                         (error "Failed to locate an actor")
-                         (locateActorAt tc updatedActor position ncm))
-        Nothing -> error "unreachable."
+            locateActorAt tc updatedActor position
+            return offset
 
 targetIsNextTo :: Coord -> Actor -> CellMap -> Bool
 targetIsNextTo position e cm =

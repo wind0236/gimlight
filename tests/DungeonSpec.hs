@@ -2,19 +2,20 @@ module DungeonSpec
     ( spec
     ) where
 
-import           Actor              (player)
-import           Control.Lens       ((%~), (&))
-import           Data.Array         (array)
-import           Data.Maybe         (fromJust)
-import           Dungeon            (dungeon, getPositionsAndActors)
-import qualified Dungeon            as D
-import           Dungeon.Identifier (Identifier (Beaeve))
-import           Dungeon.Map.Cell   (TileIdLayer (TileIdLayer), cellMap,
-                                     locateActorAt)
-import           IndexGenerator     (generator)
-import           Linear.V2          (V2 (V2))
-import           SetUp              (initTileCollection)
-import           Test.Hspec         (Spec, describe, it, shouldBe)
+import           Actor               (player)
+import           Control.Lens        ((%~), (&))
+import           Control.Monad.State (execStateT)
+import           Data.Array          (array)
+import           Data.Either         (fromRight)
+import           Dungeon             (dungeon, getPositionsAndActors)
+import qualified Dungeon             as D
+import           Dungeon.Identifier  (Identifier (Beaeve))
+import           Dungeon.Map.Cell    (TileIdLayer (TileIdLayer), cellMap,
+                                      locateActorAt)
+import           IndexGenerator      (generator)
+import           Linear.V2           (V2 (V2))
+import           SetUp               (initTileCollection)
+import           Test.Hspec          (Spec, describe, it, shouldBe)
 
 spec :: Spec
 spec = testPushActor
@@ -27,7 +28,8 @@ testPushActor =
     True
   where
     afterPushing =
-        d & D.cellMap %~ fromJust . locateActorAt initTileCollection p (V2 0 0)
+        d & D.cellMap %~ fromRight (error "Failed to push an actor.") .
+        execStateT (locateActorAt initTileCollection p (V2 0 0))
     d = dungeon cm Beaeve
     (p, _) = player ig
     ig = generator

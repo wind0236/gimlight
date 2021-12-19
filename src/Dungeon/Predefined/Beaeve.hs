@@ -3,6 +3,7 @@ module Dungeon.Predefined.Beaeve
     ) where
 
 import           Actor.Friendly.Electria (electria)
+import           Control.Monad.State     (execStateT)
 import           Data.Maybe              (fromMaybe)
 import           Dungeon                 (Dungeon, dungeon)
 import           Dungeon.Identifier      (Identifier (Beaeve))
@@ -16,9 +17,10 @@ beaeve :: TileCollection -> IndexGenerator -> IO (Dungeon, IndexGenerator)
 beaeve tc ig = do
     tileMap <- readMapFile
     let tileMap' =
-            fromMaybe
-                (error "Failed to locate an actor.")
-                (locateActorAt tc electria' (V2 4 5) tileMap)
+            case flip execStateT tileMap $ locateActorAt tc electria' (V2 4 5) of
+                Right x -> x
+                Left e ->
+                    error $ "Failed to generate the Beaeve map: " <> show e
     return (dungeon tileMap' Beaeve, ig')
   where
     (electria', ig') = electria ig

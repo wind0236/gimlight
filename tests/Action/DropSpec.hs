@@ -9,8 +9,9 @@ import           Action                     (ActionResult (ActionResult, killed,
 import           Action.Drop                (dropAction)
 import           Actor                      (inventoryItems)
 import           Control.Lens               ((%~), (&))
+import           Control.Monad.State        (execStateT)
 import           Control.Monad.Trans.Writer (writer)
-import           Data.Maybe                 (fromJust)
+import           Data.Either                (fromRight)
 import           Dungeon.Map.Cell           (locateActorAt, locateItemAt,
                                              removeActorAt)
 import           Inventory                  (removeNthItem)
@@ -37,15 +38,14 @@ testDropItemSuccessfully =
         ActionResult
             {status = Ok, newCellMap = cellMapAfterDropping, killed = []}
     cellMapAfterDropping =
-        fromJust $
-        removeActorAt orcWithHerbPosition initCellMap >>=
-        (\(a, cm) ->
-             locateActorAt
-                 initTileCollection
-                 (a & inventoryItems %~ (snd . removeNthItem 0))
-                 orcWithHerbPosition
-                 cm) >>=
-        locateItemAt initTileCollection herb orcWithHerbPosition
+        fromRight undefined $
+        flip execStateT initCellMap $ do
+            a <- removeActorAt orcWithHerbPosition
+            locateActorAt
+                initTileCollection
+                (a & inventoryItems %~ (snd . removeNthItem 0))
+                orcWithHerbPosition
+            locateItemAt initTileCollection herb orcWithHerbPosition
     expectedLog = [T.youDropped $ getName herb]
 
 testItemAlreadyExists :: Spec

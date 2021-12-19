@@ -12,48 +12,52 @@ module SetUp
     , orcWithHerbPosition
     ) where
 
-import           Actor            (Actor, inventoryItems, monster, player)
-import           Actor.Identifier (Identifier (Orc))
-import           Actor.Monsters   (orc)
-import           Actor.Status     (status)
-import           Actor.Status.Hp  (hp)
-import           Control.Lens     ((%~))
-import           Coord            (Coord)
-import           Data.Array       (array, (//))
-import           Data.Bifunctor   (Bifunctor (first))
-import           Data.Maybe       (fromJust)
-import           Dungeon.Map.Cell (CellMap, TileIdLayer (TileIdLayer), cellMap,
-                                   locateActorAt, locateItemAt)
-import           Dungeon.Map.Tile (TileCollection, tile)
-import           IndexGenerator   (IndexGenerator, generator)
-import           Inventory        (addItem)
-import           Item             (herb, sampleBook)
-import           Linear.V2        (V2 (V2))
+import           Actor               (Actor, inventoryItems, monster, player)
+import           Actor.Identifier    (Identifier (Orc))
+import           Actor.Monsters      (orc)
+import           Actor.Status        (status)
+import           Actor.Status.Hp     (hp)
+import           Control.Lens        ((%~))
+import           Control.Monad.State (execStateT)
+import           Coord               (Coord)
+import           Data.Array          (array, (//))
+import           Data.Bifunctor      (Bifunctor (first))
+import           Data.Either         (fromRight)
+import           Data.Maybe          (fromJust)
+import           Dungeon.Map.Cell    (CellMap, TileIdLayer (TileIdLayer),
+                                      cellMap, locateActorAt, locateItemAt)
+import           Dungeon.Map.Tile    (TileCollection, tile)
+import           IndexGenerator      (IndexGenerator, generator)
+import           Inventory           (addItem)
+import           Item                (herb, sampleBook)
+import           Linear.V2           (V2 (V2))
 
 initCellMap :: CellMap
 initCellMap =
-    fromJust $
-    locateActorAt
-        initTileCollection
-        p
-        playerPosition
-        (cellMap $
-         array
-             (V2 0 0, V2 (mapWidth - 1) (mapHeight - 1))
-             [ (V2 x y, emptyTile)
-             | x <- [0 .. mapWidth - 1]
-             , y <- [0 .. mapHeight - 1]
-             ] //
-         [(V2 0 1, unwalkable)]) >>=
-    locateItemAt initTileCollection herb playerPosition >>=
-    locateItemAt initTileCollection herb orcWithFullItemsPosition >>=
-    locateActorAt initTileCollection orcWithoutItems orcWithoutItemsPosition >>=
-    locateActorAt initTileCollection orcWithFullItems orcWithFullItemsPosition >>=
-    locateActorAt initTileCollection s strongestOrcPosition >>=
-    locateActorAt initTileCollection i intermediateOrcPosition >>=
-    locateActorAt initTileCollection w weakestOrcPosition >>=
-    locateActorAt initTileCollection orcWithHerb orcWithHerbPosition
+    fromRight (error "Failed to set up the test environment.") $
+    flip execStateT emptyMap $ do
+        locateActorAt initTileCollection p playerPosition
+        locateItemAt initTileCollection herb playerPosition
+        locateItemAt initTileCollection herb orcWithFullItemsPosition
+        locateActorAt initTileCollection orcWithoutItems orcWithoutItemsPosition
+        locateActorAt
+            initTileCollection
+            orcWithFullItems
+            orcWithFullItemsPosition
+        locateActorAt initTileCollection s strongestOrcPosition
+        locateActorAt initTileCollection i intermediateOrcPosition
+        locateActorAt initTileCollection w weakestOrcPosition
+        locateActorAt initTileCollection orcWithHerb orcWithHerbPosition
   where
+    emptyMap =
+        cellMap $
+        array
+            (V2 0 0, V2 (mapWidth - 1) (mapHeight - 1))
+            [ (V2 x y, emptyTile)
+            | x <- [0 .. mapWidth - 1]
+            , y <- [0 .. mapHeight - 1]
+            ] //
+        [(V2 0 1, unwalkable)]
     (p, g) =
         first (inventoryItems %~ (fromJust . addItem sampleBook)) $
         player generator
