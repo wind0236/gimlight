@@ -6,7 +6,7 @@ import           Coord            (Coord)
 import           Data.Array       (Array, bounds, (!))
 import           Data.Graph.AStar (aStar)
 import           Data.HashSet     (HashSet, fromList)
-import           Dungeon.Map.Cell (CellMap, walkableMap)
+import           Dungeon.Map.Cell (CellMap, walkableFloors)
 import           Dungeon.Map.Tile (TileCollection)
 import           Linear.V2        (V2 (..))
 
@@ -20,7 +20,7 @@ getPathTo ts cm src dst =
         src
 
 neighbors :: TileCollection -> CellMap -> Coord -> Coord -> HashSet Coord
-neighbors ts cm dst = fromList . candidate (walkableMap ts cm) dst
+neighbors ts cm dst = fromList . candidate (walkableFloors ts cm) dst
 
 distanceBetween :: Coord -> Coord -> Int
 distanceBetween p0 p1 =

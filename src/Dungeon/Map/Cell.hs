@@ -15,7 +15,7 @@ module Dungeon.Map.Cell
     , updateExploredMap
     , updatePlayerFov
     , playerFov
-    , walkableMap
+    , walkableFloors
     , transparentMap
     , exploredMap
     , widthAndHeight
@@ -167,8 +167,8 @@ changeTileAt f c (CellMap m)
   where
     newTile = m ! c & tileIdLayer %~ f
 
-walkableMap :: TileCollection -> CellMap -> Array (V2 Int) Bool
-walkableMap tc (CellMap cm) = isWalkable tc <$> cm
+walkableFloors :: TileCollection -> CellMap -> Array (V2 Int) Bool
+walkableFloors tc (CellMap cm) = isWalkable tc <$> cm
 
 exploredMap :: CellMap -> Array (V2 Int) Bool
 exploredMap (CellMap cm) = (^. explored) <$> cm
