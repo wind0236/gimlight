@@ -3,15 +3,15 @@ module DungeonSpec
     ) where
 
 import           Actor               (player)
-import           Control.Lens        ((%~), (&))
+import           Control.Lens        ((%~), (&), (^.))
 import           Control.Monad.State (execStateT)
 import           Data.Array          (array)
 import           Data.Either         (fromRight)
-import           Dungeon             (dungeon, getPositionsAndActors)
+import           Dungeon             (dungeon)
 import qualified Dungeon             as D
 import           Dungeon.Identifier  (Identifier (Beaeve))
 import           Dungeon.Map.Cell    (TileIdLayer (TileIdLayer), cellMap,
-                                      locateActorAt)
+                                      locateActorAt, positionsAndActors)
 import           IndexGenerator      (generator)
 import           Linear.V2           (V2 (V2))
 import           SetUp               (initTileCollection)
@@ -24,7 +24,7 @@ testPushActor :: Spec
 testPushActor =
     describe "pushActor" $
     it "pushes an actor on an empty coordinate successfully" $
-    ((V2 0 0, p) `elem` getPositionsAndActors afterPushing) `shouldBe`
+    ((V2 0 0, p) `elem` positionsAndActors (afterPushing ^. D.cellMap)) `shouldBe`
     True
   where
     afterPushing =

@@ -13,7 +13,6 @@ module Dungeon
     , getPlayerActor
     , stairsPositionCandidates
     , isTown
-    , getPositionsAndActors
     , positionOnParentMap
     , cellMap
     , descendingStairs
@@ -86,9 +85,6 @@ addDescendingStairs _ _ =
 
 getPlayerActor :: Dungeon -> Maybe (Coord, Actor)
 getPlayerActor = find (isPlayer . snd) . positionsAndActors . (^. cellMap)
-
-getPositionsAndActors :: Dungeon -> [(Coord, Actor)]
-getPositionsAndActors = positionsAndActors . (^. cellMap)
 
 stairsPositionCandidates :: TileCollection -> Dungeon -> [Coord]
 stairsPositionCandidates ts d =

@@ -17,9 +17,8 @@ import qualified Actor                    as A
 import           Control.Lens             ((^.))
 import           Data.Foldable            (find)
 import           Data.Maybe               (fromMaybe)
-import           Dungeon                  (cellMap, getPositionsAndActors,
-                                           isTown)
-import           Dungeon.Map.Cell         (isPositionInMap)
+import           Dungeon                  (cellMap, isTown)
+import           Dungeon.Map.Cell         (isPositionInMap, positionsAndActors)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, SelectingItem, Talking))
 import           GameStatus.Exploring     (ExploringHandler, doPlayerAction,
                                            getCurrentDungeon, getPlayerActor,
@@ -93,7 +92,7 @@ playerBumpAction offset eh = action eh
         snd <$>
         find
             (\(x, _) -> x == destination)
-            (getPositionsAndActors $ getCurrentDungeon eh)
+            (positionsAndActors $ getCurrentDungeon eh ^. cellMap)
     destination =
         case getPlayerPosition eh of
             Just p  -> p + offset

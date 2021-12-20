@@ -16,10 +16,10 @@ import           Coord                           (Coord)
 import           Data.Array                      ((!))
 import           Data.Maybe                      (catMaybes, mapMaybe)
 import           Data.Vector.Storable.ByteString (vectorToByteString)
-import           Dungeon                         (Dungeon, cellMap,
-                                                  getPositionsAndActors)
+import           Dungeon                         (Dungeon, cellMap)
 import qualified Dungeon                         as D
 import           Dungeon.Map.Cell                (exploredMap, lower, playerFov,
+                                                  positionsAndActors,
                                                   positionsAndItems,
                                                   tileIdLayerAt, upper,
                                                   widthAndHeight)
@@ -154,7 +154,7 @@ mapItems eh = mapMaybe itemToImage $ positionsAndItems $ d ^. cellMap
     itemPositionOnDisplay position = position - topLeftCoord d
 
 mapActors :: ExploringHandler -> [GameWidgetNode]
-mapActors eh = mapMaybe actorToImage $ getPositionsAndActors d
+mapActors eh = mapMaybe actorToImage . positionsAndActors $ d ^. cellMap
   where
     d = getCurrentDungeon eh
     leftPadding actor =
