@@ -29,6 +29,8 @@ import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics       (Generic)
 
+-- We do not store the positions of stairs in `CellMap` because it is
+-- difficult to guarantee that there is only one upstairs on the map.
 data Dungeon =
     Dungeon
         { _cellMap             :: CellMap
