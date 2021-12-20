@@ -17,8 +17,8 @@ import           Data.Array                      ((!))
 import           Data.Maybe                      (catMaybes, mapMaybe)
 import           Data.Vector.Storable.ByteString (vectorToByteString)
 import           Dungeon                         (Dungeon, cellMap,
-                                                  getPositionsAndActors,
-                                                  playerPosition)
+                                                  getPositionsAndActors)
+import qualified Dungeon                         as D
 import           Dungeon.Map.Cell                (exploredMap, lower, playerFov,
                                                   positionsAndItems,
                                                   tileIdLayerAt, upper,
@@ -179,8 +179,8 @@ topLeftCoord d = V2 x y
     V2 unadjustedX unadjestedY =
         maybe
             (V2 0 0)
-            (\pos -> pos - V2 (tileColumns `div` 2) (tileRows `div` 2))
-            (playerPosition d)
+            ((\pos -> pos - V2 (tileColumns `div` 2) (tileRows `div` 2)) . fst)
+            (D.getPlayerActor d)
     V2 maxX maxY = widthAndHeight (d ^. cellMap) - V2 tileColumns tileRows
     x = max 0 $ min maxX unadjustedX
     y = max 0 $ min maxY unadjestedY

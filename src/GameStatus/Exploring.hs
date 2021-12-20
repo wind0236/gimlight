@@ -120,7 +120,7 @@ getPlayerActor :: ExploringHandler -> Maybe Actor
 getPlayerActor = fmap snd . D.getPlayerActor . getCurrentDungeon
 
 getPlayerPosition :: ExploringHandler -> Maybe Coord
-getPlayerPosition = D.playerPosition . getCurrentDungeon
+getPlayerPosition = fmap fst . D.getPlayerActor . getCurrentDungeon
 
 getCurrentDungeon :: ExploringHandler -> Dungeon
 getCurrentDungeon eh = getFocused $ eh ^. dungeons

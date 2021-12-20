@@ -11,7 +11,6 @@ module Dungeon
     , dungeon
     , getIdentifier
     , getPlayerActor
-    , playerPosition
     , stairsPositionCandidates
     , isTown
     , getPositionsAndActors
@@ -84,9 +83,6 @@ addDescendingStairs sp@(StairsPair upper _) (parent@Dungeon {_descendingStairs =
     , child {_positionOnParentMap = Just upper})
 addDescendingStairs _ _ =
     error "The child's position in the parent map is already set."
-
-playerPosition :: Dungeon -> Maybe Coord
-playerPosition d = fst <$> getPlayerActor d
 
 getPlayerActor :: Dungeon -> Maybe (Coord, Actor)
 getPlayerActor = find (isPlayer . snd) . positionsAndActors . (^. cellMap)

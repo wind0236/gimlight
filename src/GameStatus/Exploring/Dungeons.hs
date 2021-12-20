@@ -38,7 +38,7 @@ ascendStairsAtPlayerPosition ts ds = newZipper
     (player, zipperWithoutPlayer) = popPlayer ds
     ascendable =
         (downStairs <$> getFocused ds ^. ascendingStairs) ==
-        D.playerPosition (getFocused ds)
+        (fst <$> D.getPlayerActor (getFocused ds))
     zipperFocusingNextDungeon = goUp zipperWithoutPlayer
     newPosition = upStairs <$> getFocused ds ^. ascendingStairs
     newZipper =
@@ -72,7 +72,7 @@ descendStairsAtPlayerPosition ts ds = newZipper
         find
             (\(StairsPair from _) -> Just from == currentPosition)
             (getFocused ds ^. descendingStairs)
-    currentPosition = D.playerPosition $ getFocused ds
+    currentPosition = fmap fst . D.getPlayerActor $ getFocused ds
     newZipper =
         case (zipperFocusingNextDungeon, newPosition, player) of
             (Just g, Just pos, Just p) -> updateMapOrError g pos p
@@ -126,9 +126,10 @@ doPlayerAction action ts ds = result
                  (a, modify (\d -> d & cellMap .~ cm) ds, killed actionResult))
                 statusAndNewDungeon
     playerPos =
-        fromMaybe
+        maybe
             (error "Failed to get the player position")
-            (D.playerPosition $ getFocused ds)
+            fst
+            (D.getPlayerActor $ getFocused ds)
 
 handleNpcTurns ::
        TileCollection -> Dungeons -> Writer MessageLog (Dungeons, [Actor])
