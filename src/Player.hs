@@ -16,12 +16,12 @@ import           Actor                    (Actor, getTalkingPart, isMonster)
 import qualified Actor                    as A
 import           Data.Foldable            (find)
 import           Data.Maybe               (fromMaybe)
-import           Dungeon                  (getPositionsAndActors, isTown)
+import           Dungeon                  (getPositionsAndActors,
+                                           isPositionInDungeon, isTown)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, SelectingItem, Talking))
 import           GameStatus.Exploring     (ExploringHandler, doPlayerAction,
                                            getCurrentDungeon, getPlayerActor,
                                            getPlayerPosition,
-                                           isPositionInDungeon,
                                            processAfterPlayerTurn)
 import qualified GameStatus.Exploring     as GSE
 import           GameStatus.ReadingBook   (readingBookHandler)
@@ -113,7 +113,8 @@ meleeOrTalk offset target eh
 
 moveOrExitMap :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 moveOrExitMap offset eh
-    | isPositionInDungeon destination eh || not (isTown (getCurrentDungeon eh)) =
+    | isPositionInDungeon destination (getCurrentDungeon eh) ||
+          not (isTown (getCurrentDungeon eh)) =
         case status of
             Ok               -> (True, Exploring newHandler)
             ReadingStarted _ -> error "Unreachable."

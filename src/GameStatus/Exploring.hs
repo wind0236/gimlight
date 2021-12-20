@@ -13,7 +13,6 @@ module GameStatus.Exploring
     , getQuests
     , getPlayerActor
     , getPlayerPosition
-    , isPositionInDungeon
     , getCurrentDungeon
     , getMessageLog
     ) where
@@ -122,9 +121,6 @@ getPlayerActor = fmap snd . D.getPlayerActor . getCurrentDungeon
 
 getPlayerPosition :: ExploringHandler -> Maybe Coord
 getPlayerPosition = D.playerPosition . getCurrentDungeon
-
-isPositionInDungeon :: Coord -> ExploringHandler -> Bool
-isPositionInDungeon c = D.isPositionInDungeon c . getCurrentDungeon
 
 getCurrentDungeon :: ExploringHandler -> Dungeon
 getCurrentDungeon eh = getFocused $ eh ^. dungeons
