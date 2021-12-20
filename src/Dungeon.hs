@@ -10,7 +10,6 @@ module Dungeon
     ( Dungeon
     , dungeon
     , getIdentifier
-    , getPlayerActor
     , stairsPositionCandidates
     , positionOnParentMap
     , cellMap
@@ -20,15 +19,12 @@ module Dungeon
     , ascendingStairs
     ) where
 
-import           Actor              (Actor, isPlayer)
 import           Control.Lens       (makeLenses, (^.))
 import           Coord              (Coord)
 import           Data.Array.Base    (assocs)
 import           Data.Binary        (Binary)
-import           Data.Foldable      (find)
 import           Dungeon.Identifier (Identifier)
-import           Dungeon.Map.Cell   (CellMap, positionsAndActors,
-                                     walkableFloors)
+import           Dungeon.Map.Cell   (CellMap, walkableFloors)
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics       (Generic)
@@ -80,9 +76,6 @@ addDescendingStairs sp@(StairsPair upper _) (parent@Dungeon {_descendingStairs =
     , child {_positionOnParentMap = Just upper})
 addDescendingStairs _ _ =
     error "The child's position in the parent map is already set."
-
-getPlayerActor :: Dungeon -> Maybe (Coord, Actor)
-getPlayerActor = find (isPlayer . snd) . positionsAndActors . (^. cellMap)
 
 stairsPositionCandidates :: TileCollection -> Dungeon -> [Coord]
 stairsPositionCandidates ts d =

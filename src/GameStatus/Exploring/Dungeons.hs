@@ -20,9 +20,9 @@ import           Data.Maybe                 (fromMaybe)
 import           Dungeon                    (Dungeon, ascendingStairs, cellMap,
                                              descendingStairs,
                                              positionOnParentMap)
-import qualified Dungeon                    as D
-import           Dungeon.Map.Cell           (locateActorAt, removeActorIf,
-                                             updateExploredMap, updatePlayerFov)
+import           Dungeon.Map.Cell           (locateActorAt, playerActor,
+                                             removeActorIf, updateExploredMap,
+                                             updatePlayerFov)
 import           Dungeon.Map.Tile           (TileCollection)
 import           Dungeon.Stairs             (StairsPair (StairsPair, downStairs, upStairs))
 import           Log                        (MessageLog)
@@ -38,7 +38,7 @@ ascendStairsAtPlayerPosition ts ds = newZipper
     (player, zipperWithoutPlayer) = popPlayer ds
     ascendable =
         (downStairs <$> getFocused ds ^. ascendingStairs) ==
-        (fst <$> D.getPlayerActor (getFocused ds))
+        (fst <$> playerActor (getFocused ds ^. cellMap))
     zipperFocusingNextDungeon = goUp zipperWithoutPlayer
     newPosition = upStairs <$> getFocused ds ^. ascendingStairs
     newZipper =
@@ -72,7 +72,7 @@ descendStairsAtPlayerPosition ts ds = newZipper
         find
             (\(StairsPair from _) -> Just from == currentPosition)
             (getFocused ds ^. descendingStairs)
-    currentPosition = fmap fst . D.getPlayerActor $ getFocused ds
+    currentPosition = fmap fst . playerActor $ getFocused ds ^. cellMap
     newZipper =
         case (zipperFocusingNextDungeon, newPosition, player) of
             (Just g, Just pos, Just p) -> updateMapOrError g pos p
@@ -129,7 +129,7 @@ doPlayerAction action ts ds = result
         maybe
             (error "Failed to get the player position")
             fst
-            (D.getPlayerActor $ getFocused ds)
+            (playerActor $ getFocused ds ^. cellMap)
 
 handleNpcTurns ::
        TileCollection -> Dungeons -> Writer MessageLog (Dungeons, [Actor])

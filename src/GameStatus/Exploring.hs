@@ -27,7 +27,7 @@ import           Coord                         (Coord)
 import           Data.Binary                   (Binary)
 import           Dungeon                       (Dungeon, cellMap)
 import qualified Dungeon                       as D
-import           Dungeon.Map.Cell              (updateExploredMap,
+import           Dungeon.Map.Cell              (playerActor, updateExploredMap,
                                                 updatePlayerFov)
 import           Dungeon.Map.Tile              (TileCollection)
 import           GHC.Generics                  (Generic)
@@ -117,10 +117,10 @@ getQuests :: ExploringHandler -> QuestCollection
 getQuests e = e ^. quests
 
 getPlayerActor :: ExploringHandler -> Maybe Actor
-getPlayerActor = fmap snd . D.getPlayerActor . getCurrentDungeon
+getPlayerActor = fmap snd . playerActor . (^. cellMap) . getCurrentDungeon
 
 getPlayerPosition :: ExploringHandler -> Maybe Coord
-getPlayerPosition = fmap fst . D.getPlayerActor . getCurrentDungeon
+getPlayerPosition = fmap fst . playerActor . (^. cellMap) . getCurrentDungeon
 
 getCurrentDungeon :: ExploringHandler -> Dungeon
 getCurrentDungeon eh = getFocused $ eh ^. dungeons

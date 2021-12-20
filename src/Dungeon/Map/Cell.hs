@@ -15,6 +15,7 @@ module Dungeon.Map.Cell
     , updateExploredMap
     , updatePlayerFov
     , playerFov
+    , playerActor
     , walkableFloors
     , transparentMap
     , exploredMap
@@ -176,6 +177,9 @@ exploredMap (CellMap cm) = (^. explored) <$> cm
 playerFov :: CellMap -> Array (V2 Int) Bool
 playerFov (CellMap cm) = (^. visibleFromPlayer) <$> cm
 
+playerActor :: CellMap -> Maybe (Coord, Actor)
+playerActor = find (isPlayer . snd) . positionsAndActors
+
 transparentMap :: TileCollection -> CellMap -> Array (V2 Int) Bool
 transparentMap tc (CellMap cm) = isTransparent tc <$> cm
 
@@ -199,8 +203,7 @@ updatePlayerFov tc (CellMap cm) =
     fov =
         (\x -> calculateFov x (transparentMap tc (CellMap cm))) <$>
         playerPosition
-    playerPosition =
-        fmap fst $ find (isPlayer . snd) $ positionsAndActors $ CellMap cm
+    playerPosition = fst <$> playerActor (CellMap cm)
 
 positionsAndActors :: CellMap -> [(Coord, Actor)]
 positionsAndActors (CellMap cm) = mapMaybe mapStep $ assocs cm
