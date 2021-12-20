@@ -46,7 +46,6 @@ Test-Suite spec
                       , Action.PickUpSpec
                       , Action.WaitSpec
                       , Dungeon.Map.CellSpec
-                      , DungeonSpec
                       , FovSpec
                       , SetUp
 
