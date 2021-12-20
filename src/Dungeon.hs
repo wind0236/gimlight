@@ -12,7 +12,6 @@ module Dungeon
     , getIdentifier
     , walkableFloor
     , getPlayerActor
-    , mapWidthAndHeight
     , playerPosition
     , stairsPositionCandidates
     , isTown
@@ -34,8 +33,7 @@ import           Data.Binary        (Binary)
 import           Data.Foldable      (find)
 import           Dungeon.Identifier (Identifier)
 import qualified Dungeon.Identifier as Identifier
-import           Dungeon.Map.Cell   (CellMap, positionsAndActors, walkableMap,
-                                     widthAndHeight)
+import           Dungeon.Map.Cell   (CellMap, positionsAndActors, walkableMap)
 import           Dungeon.Map.Tile   (TileCollection)
 import           Dungeon.Stairs     (StairsPair (StairsPair, downStairs, upStairs))
 import           GHC.Generics       (Generic)
@@ -109,9 +107,6 @@ stairsPositionCandidates ts d =
 
 walkableFloor :: TileCollection -> Dungeon -> Array (V2 Int) Bool
 walkableFloor ts d = walkableMap ts (d ^. cellMap)
-
-mapWidthAndHeight :: Dungeon -> V2 Int
-mapWidthAndHeight d = widthAndHeight (d ^. cellMap)
 
 isTown :: Dungeon -> Bool
 isTown d = Identifier.isTown $ d ^. identifier
