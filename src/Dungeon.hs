@@ -12,7 +12,6 @@ module Dungeon
     , getIdentifier
     , getPlayerActor
     , stairsPositionCandidates
-    , isTown
     , positionOnParentMap
     , cellMap
     , descendingStairs
@@ -28,7 +27,6 @@ import           Data.Array.Base    (assocs)
 import           Data.Binary        (Binary)
 import           Data.Foldable      (find)
 import           Dungeon.Identifier (Identifier)
-import qualified Dungeon.Identifier as Identifier
 import           Dungeon.Map.Cell   (CellMap, positionsAndActors,
                                      walkableFloors)
 import           Dungeon.Map.Tile   (TileCollection)
@@ -94,6 +92,3 @@ stairsPositionCandidates ts d =
     isStairsOnPosition c = isUpStairsPosition c || isDownStairsPosition c
     isUpStairsPosition c = (downStairs <$> d ^. ascendingStairs) == Just c
     isDownStairsPosition c = c `elem` map upStairs (d ^. descendingStairs)
-
-isTown :: Dungeon -> Bool
-isTown d = Identifier.isTown $ d ^. identifier

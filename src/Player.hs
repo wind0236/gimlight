@@ -17,7 +17,8 @@ import qualified Actor                    as A
 import           Control.Lens             ((^.))
 import           Data.Foldable            (find)
 import           Data.Maybe               (fromMaybe)
-import           Dungeon                  (cellMap, isTown)
+import           Dungeon                  (cellMap, getIdentifier)
+import           Dungeon.Identifier       (isTown)
 import           Dungeon.Map.Cell         (isPositionInMap, positionsAndActors)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, SelectingItem, Talking))
 import           GameStatus.Exploring     (ExploringHandler, doPlayerAction,
@@ -115,7 +116,7 @@ meleeOrTalk offset target eh
 moveOrExitMap :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 moveOrExitMap offset eh
     | isPositionInMap destination (getCurrentDungeon eh ^. cellMap) ||
-          not (isTown (getCurrentDungeon eh)) =
+          not (isTown . getIdentifier $ getCurrentDungeon eh) =
         case status of
             Ok               -> (True, Exploring newHandler)
             ReadingStarted _ -> error "Unreachable."
