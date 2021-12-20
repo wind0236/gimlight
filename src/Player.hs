@@ -14,10 +14,12 @@ import           Action.Move              (moveAction)
 import           Action.PickUp            (pickUpAction)
 import           Actor                    (Actor, getTalkingPart, isMonster)
 import qualified Actor                    as A
+import           Control.Lens             ((^.))
 import           Data.Foldable            (find)
 import           Data.Maybe               (fromMaybe)
-import           Dungeon                  (getPositionsAndActors,
-                                           isPositionInDungeon, isTown)
+import           Dungeon                  (cellMap, getPositionsAndActors,
+                                           isTown)
+import           Dungeon.Map.Cell         (isPositionInMap)
 import           GameStatus               (GameStatus (Exploring, GameOver, ReadingBook, SelectingItem, Talking))
 import           GameStatus.Exploring     (ExploringHandler, doPlayerAction,
                                            getCurrentDungeon, getPlayerActor,
@@ -113,7 +115,7 @@ meleeOrTalk offset target eh
 
 moveOrExitMap :: V2 Int -> ExploringHandler -> (Bool, GameStatus)
 moveOrExitMap offset eh
-    | isPositionInDungeon destination (getCurrentDungeon eh) ||
+    | isPositionInMap destination (getCurrentDungeon eh ^. cellMap) ||
           not (isTown (getCurrentDungeon eh)) =
         case status of
             Ok               -> (True, Exploring newHandler)

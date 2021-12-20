@@ -19,6 +19,7 @@ module Dungeon.Map.Cell
     , transparentMap
     , exploredMap
     , widthAndHeight
+    , isPositionInMap
     , locateActorAt
     , locateItemAt
     , removeActorAt
@@ -151,6 +152,11 @@ allWallTiles (V2 width height) =
 
 widthAndHeight :: CellMap -> V2 Int
 widthAndHeight (CellMap m) = snd (bounds m) + V2 1 1
+
+isPositionInMap :: Coord -> CellMap -> Bool
+isPositionInMap (V2 x y) cm = x >= 0 && x < w && y >= 0 && y < h
+  where
+    V2 w h = widthAndHeight cm
 
 changeTileAt ::
        (TileIdLayer -> TileIdLayer) -> Coord -> CellMap -> Maybe CellMap

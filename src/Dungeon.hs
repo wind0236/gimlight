@@ -16,7 +16,6 @@ module Dungeon
     , playerPosition
     , stairsPositionCandidates
     , isTown
-    , isPositionInDungeon
     , getPositionsAndActors
     , positionOnParentMap
     , cellMap
@@ -116,9 +115,3 @@ mapWidthAndHeight d = widthAndHeight (d ^. cellMap)
 
 isTown :: Dungeon -> Bool
 isTown d = Identifier.isTown $ d ^. identifier
-
-isPositionInDungeon :: Coord -> Dungeon -> Bool
-isPositionInDungeon c d = x >= 0 && x < width && y >= 0 && y < height
-  where
-    V2 width height = mapWidthAndHeight d
-    V2 x y = c
