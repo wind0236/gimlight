@@ -4,7 +4,7 @@
 
 ### Windows
 
-I think we can build and run this project on Windows, but I don't know how. So, if you find the way please tell me the instructions.
+I think we can build and run this project on Windows, but I don't know how. So, if you succeed in building it please let me know how.
 
 ### Linux
 
@@ -24,4 +24,4 @@ LANG=C cabal run
 
 ## License
 
-All files **EXCEPT** any materials in the `third_party` directory are licensed under BSD 3-Clause License. For the licenses of the contents in the `third_party` directory, see the LICENSE files in each directory.
+All files in this repository **EXCEPT** any materials in the `third_party` directory are licensed under BSD 3-Clause License. For the licenses of the contents in the `third_party` directory, see the LICENSE files in each directory.
