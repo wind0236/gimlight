@@ -11,16 +11,16 @@ import           UI.Draw.Config      (tileHeight, tileWidth)
 
 type MapTiles = Array Int (Image PixelRGBA8)
 
-mapTiles :: IO (Maybe MapTiles)
-mapTiles = fmap (cutTileMapToArray . cutTileMap) <$> readTileMapFile
+mapTiles :: FilePath -> IO (Maybe MapTiles)
+mapTiles path = fmap (cutTileMapToArray . cutTileMap) <$> readTileMapFile path
   where
     cutTileMapToArray tiles = listArray (0, len - 1) tiles
       where
         len = length tiles
 
-readTileMapFile :: IO (Maybe (Image PixelRGBA8))
-readTileMapFile = do
-    tileFile <- readImage tileFileName
+readTileMapFile :: FilePath -> IO (Maybe (Image PixelRGBA8))
+readTileMapFile path = do
+    tileFile <- readImage path
     case tileFile of
         Right x -> return $ convertAndCheck x
         Left _  -> error "Failed to read a tile image file."
@@ -45,6 +45,3 @@ cutTileMap img =
   where
     columnsOfTilesInImage = imageWidth img `div` tileWidth
     rowsOfTilesInImage = imageHeight img `div` tileHeight
-
-tileFileName :: FilePath
-tileFileName = "images/map_tiles.png"

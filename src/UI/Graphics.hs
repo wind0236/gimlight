@@ -13,7 +13,7 @@ newtype Graphics =
 
 graphics :: IO (Maybe Graphics)
 graphics = do
-    mt <- MapTiles.mapTiles
+    mt <- MapTiles.mapTiles "images/map_tiles.png"
     return $ Graphics <$> mt
 
 getMapTiles :: Graphics -> MapTiles
