@@ -15,11 +15,10 @@ import           Dungeon.Map.Tile (Tile, TileCollection, tile)
 readTileFile :: FilePath -> IO (Maybe TileCollection)
 readTileFile path = do
     json <- readFile path
-    return $
-        (\l ->
-             array (0, l - 1) (zip [0 ..] $ replicate l $ tile False False) //
-             indexAndTile json) <$>
-        getTileCount json
+    return $ (\l -> emptyArray l // indexAndTile json) <$> getTileCount json
+  where
+    emptyArray l =
+        array (0, l - 1) . zip [0 ..] . replicate l $ tile False False
 
 getTileCount :: String -> Maybe Int
 getTileCount json = fromInteger <$> json ^? key "tilecount" . _Integer
