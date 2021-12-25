@@ -14,9 +14,7 @@ type MapTiles = Array Int (Image PixelRGBA8)
 mapTiles :: FilePath -> IO (Maybe MapTiles)
 mapTiles path = fmap (cutTileMapToArray . cutTileMap) <$> readTileMapFile path
   where
-    cutTileMapToArray tiles = listArray (0, len - 1) tiles
-      where
-        len = length tiles
+    cutTileMapToArray tiles = listArray (0, length tiles - 1) tiles
 
 readTileMapFile :: FilePath -> IO (Maybe (Image PixelRGBA8))
 readTileMapFile path = do
