@@ -9,8 +9,9 @@ import qualified Action.MoveSpec
 import qualified Action.PickUpSpec
 import qualified Action.WaitSpec
 import qualified Dungeon.Map.CellSpec
+import qualified Dungeon.Map.Tile.JSONReaderSpec
 import qualified FovSpec
-import           Test.Hspec           (Spec, describe, hspec)
+import           Test.Hspec                      (Spec, describe, hspec)
 
 main :: IO ()
 main = hspec spec
@@ -24,4 +25,5 @@ spec = do
     describe "Action.PickUp" Action.PickUpSpec.spec
     describe "Action.Wait" Action.WaitSpec.spec
     describe "Dungeon.Map.Cell" Dungeon.Map.CellSpec.spec
+    describe "Dungeon.Map.Tile.JSONReader" Dungeon.Map.Tile.JSONReaderSpec.spec
     describe "Fov" FovSpec.spec

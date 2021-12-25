@@ -50,7 +50,7 @@ newGameStatus :: IO GameStatus
 newGameStatus = do
     g <- getStdGen
     tileCollection <-
-        fromMaybe (error "Failed to read the tile file.") <$>
+        fst . fromMaybe (error "Failed to read the tile file.") <$>
         readTileFile "maps/tiles.json"
     gm <- globalMap
     (beaeve, ig) <- initDungeon generator tileCollection
