@@ -4,7 +4,7 @@ module Dungeon.Map.JSONReader
     ( readMapFile
     ) where
 
-import           Control.Lens     ((^..), (^?))
+import           Control.Lens     (Ixed (ix), (^..), (^?))
 import           Control.Monad    (guard)
 import           Data.Aeson.Lens  (_Array, _Integer, key, values)
 import           Data.Array       (array)
@@ -45,13 +45,7 @@ getTileIdOfNthLayer n json = fmap rawIdToMaybe <$> getDataOfNthLayer n json
     rawIdToMaybe x = Just $ x - 1
 
 getDataOfNthLayer :: Int -> String -> Maybe (Vector Int)
-getDataOfNthLayer n json =
-    case getDataOfAllLayer json of
-        Just x ->
-            if length x > n
-                then Just $ x !! n
-                else Nothing
-        Nothing -> Nothing
+getDataOfNthLayer n json = getDataOfAllLayer json >>= (^? ix n)
 
 getDataOfAllLayer :: String -> Maybe [Vector Int]
 getDataOfAllLayer json =
