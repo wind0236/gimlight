@@ -12,7 +12,7 @@ import           Data.Either          (fromRight)
 import           Dungeon.Map.Cell     (locateActorAt, removeActorAt)
 import           Linear.V2            (V2 (V2))
 import qualified Localization.Texts   as T
-import           SetUp                (initCellMap, initTileCollection,
+import           SetUp.Dungeon        (initCellMap, initTileCollection,
                                        playerPosition)
 import           Test.Hspec           (Spec, it, shouldBe)
 

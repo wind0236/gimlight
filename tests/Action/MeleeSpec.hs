@@ -14,7 +14,7 @@ import           Control.Monad.Writer (runWriter, writer)
 import           Data.Either          (fromRight)
 import           Data.Maybe           (fromJust)
 import           Dungeon.Map.Cell     (locateActorAt, removeActorAt)
-import           SetUp                (initCellMap, initTileCollection,
+import           SetUp.Dungeon        (initCellMap, initTileCollection,
                                        intermediateOrcPosition,
                                        strongestOrcPosition, weakestOrcPosition)
 import           Test.Hspec           (Spec, describe, it, shouldBe)

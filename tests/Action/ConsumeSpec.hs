@@ -17,7 +17,7 @@ import           Item                 (Effect (Book, Heal), getEffect, herb,
                                        sampleBook)
 import           Item.Heal            (getHealAmount)
 import qualified Localization.Texts   as T
-import           SetUp                (initCellMap, initTileCollection,
+import           SetUp.Dungeon        (initCellMap, initTileCollection,
                                        orcWithHerbPosition, playerPosition)
 import           Test.Hspec           (Spec, it, shouldBe)
 

@@ -6,7 +6,7 @@ import           Action               (ActionResult (ActionResult, killed, newCe
                                        ActionStatus (Ok))
 import           Action.Wait          (waitAction)
 import           Control.Monad.Writer (writer)
-import           SetUp                (initCellMap, initTileCollection,
+import           SetUp.Dungeon        (initCellMap, initTileCollection,
                                        playerPosition)
 import           Test.Hspec           (Spec, describe, it, shouldBe)
 

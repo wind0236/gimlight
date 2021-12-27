@@ -49,7 +49,7 @@ Test-Suite spec
                       , Dungeon.Map.CellSpec
                       , Dungeon.Map.Tile.JSONReaderSpec
                       , FovSpec
-                      , SetUp
+                      , SetUp.Dungeon
 
     build-depends:      gimlight
                       , hspec >= 2.9.1 && < 2.10
