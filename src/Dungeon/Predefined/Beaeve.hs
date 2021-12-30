@@ -4,28 +4,24 @@ module Dungeon.Predefined.Beaeve
 
 import           Actor.Friendly.Electria (electria)
 import           Control.Monad.State     (execStateT)
-import           Data.Maybe              (fromMaybe)
+import           Data.Either.Combinators (fromRight)
 import           Dungeon                 (Dungeon, dungeon)
 import           Dungeon.Identifier      (Identifier (Beaeve))
-import           Dungeon.Map.Cell        (CellMap, locateActorAt)
-import qualified Dungeon.Map.JSONReader  as JSONReader
+import           Dungeon.Map.Cell        (locateActorAt)
+import           Dungeon.Map.JSONReader  (readMapTileImage)
 import           Dungeon.Map.Tile        (TileCollection)
 import           IndexGenerator          (IndexGenerator)
 import           Linear.V2               (V2 (V2))
 
-beaeve :: TileCollection -> IndexGenerator -> IO (Dungeon, IndexGenerator)
+beaeve ::
+       TileCollection
+    -> IndexGenerator
+    -> IO (Dungeon, TileCollection, IndexGenerator)
 beaeve tc ig = do
-    tileMap <- readMapFile
-    let tileMap' =
-            case flip execStateT tileMap $ locateActorAt tc electria' (V2 4 5) of
-                Right x -> x
-                Left e ->
-                    error $ "Failed to generate the Beaeve map: " <> show e
-    return (dungeon tileMap' Beaeve, ig')
+    (cm, tc') <- readMapTileImage tc "maps/beaeve.json"
+    let cm' =
+            fromRight (error "Failed to place a NPC.") . flip execStateT cm $
+            locateActorAt tc' electria' (V2 4 5)
+    return (dungeon cm' Beaeve, tc', ig')
   where
     (electria', ig') = electria ig
-
-readMapFile :: IO CellMap
-readMapFile = do
-    tileMap <- JSONReader.readMapFile "maps/beaeve.json"
-    return $ fromMaybe (error "Failed to read the map file of Beaeve") tileMap

@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Game
@@ -6,7 +5,7 @@ module Game
     ) where
 
 import           GameConfig     (getLocale, readConfigOrDefault)
-import           GameModel      (GameModel (GameModel, config, graphics, status))
+import           GameModel      (GameModel (GameModel, config, status))
 import           GameStatus     (GameStatus (SelectingLocale, Title))
 import           Monomer        (MainWindowState (MainWindowNormal), appFontDef,
                                  appInitEvent, appTheme, appWindowResizable,
@@ -15,7 +14,6 @@ import           Monomer        (MainWindowState (MainWindowNormal), appFontDef,
 import           UI.Draw        (drawUI)
 import           UI.Draw.Config (windowHeight, windowWidth)
 import qualified UI.Event       as E
-import qualified UI.Graphics    as Graphics
 import           UI.Types       (AppEvent (..))
 
 start :: IO ()
@@ -25,17 +23,11 @@ start = do
   where
     createModel = do
         initConfig <- readConfigOrDefault
-        gr <-
-            (\case
-                 Just x  -> x
-                 Nothing -> error "Failed to load the image files.") <$>
-            Graphics.graphics
         let initStatus =
                 case getLocale initConfig of
                     Just _  -> Title
                     Nothing -> SelectingLocale
-        return
-            GameModel {status = initStatus, config = initConfig, graphics = gr}
+        return GameModel {status = initStatus, config = initConfig}
     handleEvent = E.handleEvent
     buildUI = drawUI
     initUIConfig =

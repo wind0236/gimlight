@@ -5,14 +5,12 @@ module GameModel
     ( GameModel(..)
     ) where
 
-import           GameConfig  (GameConfig)
-import           GameStatus  (GameStatus)
-import           UI.Graphics (Graphics)
+import           GameConfig (GameConfig)
+import           GameStatus (GameStatus)
 
 data GameModel =
     GameModel
-        { status   :: GameStatus
-        , config   :: GameConfig
-        , graphics :: Graphics
+        { status :: GameStatus
+        , config :: GameConfig
         }
     deriving (Eq)

@@ -47,9 +47,13 @@ Test-Suite spec
                       , Action.PickUpSpec
                       , Action.WaitSpec
                       , Dungeon.Map.CellSpec
+                      , Dungeon.Map.JSONReaderSpec
                       , Dungeon.Map.Tile.JSONReaderSpec
                       , FovSpec
                       , SetUp.Dungeon
+                      , SetUp.ImageFile
+                      , SetUp.MapFile
+                      , SetUp.TileFile
 
     build-depends:      gimlight
                       , hspec >= 2.9.1 && < 2.10
@@ -76,6 +80,7 @@ library
                       , Dungeon
                       , Dungeon.Identifier
                       , Dungeon.Map.Cell
+                      , Dungeon.Map.JSONReader
                       , Dungeon.Map.Tile
                       , Dungeon.Map.Tile.JSONReader
                       , Fov
@@ -85,6 +90,7 @@ library
                       , Item
                       , Item.Heal
                       , Localization.Texts
+                      , UI.Draw.Config
 
     other-modules:      Actor.Friendly
                       , Actor.Friendly.Electria
@@ -93,7 +99,6 @@ library
                       , Dungeon.Generate.Config
                       , Dungeon.Generate.Room
                       , Dungeon.Init
-                      , Dungeon.Map.JSONReader
                       , Dungeon.PathFinder
                       , Dungeon.Predefined.BatsCave
                       , Dungeon.Predefined.Beaeve
@@ -128,7 +133,6 @@ library
                       , Save
                       , TreeZipper
                       , UI.Draw
-                      , UI.Draw.Config
                       , UI.Draw.Exploring
                       , UI.Draw.GameOver
                       , UI.Draw.KeyEvent
@@ -138,8 +142,6 @@ library
                       , UI.Draw.SelectingItem
                       , UI.Draw.Talking
                       , UI.Draw.Title
-                      , UI.Graphics
-                      , UI.Graphics.MapTiles
                       , UI.Event
                       , UI.Types
 

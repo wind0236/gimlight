@@ -4,12 +4,12 @@
 
 module Dungeon.Map.Cell
     ( CellMap
-    , TileIdLayer(..)
+    , TileIdentifierLayer(..)
     , Error(..)
     , upper
     , lower
     , cellMap
-    , tileIdLayer
+    , tileIdentifierLayer
     , allWallTiles
     , changeTileAt
     , updateExploredMap
@@ -28,7 +28,7 @@ module Dungeon.Map.Cell
     , removeActorIf
     , positionsAndActors
     , positionsAndItems
-    , tileIdLayerAt
+    , tileIdentifierLayerAt
     ) where
 
 import           Actor               (Actor, isPlayer)
@@ -39,8 +39,9 @@ import           Coord               (Coord)
 import           Data.Array          (Array, array, assocs, bounds, (!), (//))
 import           Data.Binary         (Binary)
 import           Data.Foldable       (find)
+import qualified Data.Map            as M
 import           Data.Maybe          (isJust, isNothing, mapMaybe)
-import           Dungeon.Map.Tile    (TileCollection, TileId, floorTile,
+import           Dungeon.Map.Tile    (TileCollection, TileIdentifier, floorTile,
                                       wallTile)
 import qualified Dungeon.Map.Tile    as Tile
 import           Fov                 (calculateFov)
@@ -57,24 +58,24 @@ data Error
     | TileIsNotWalkable
     deriving (Show)
 
-data TileIdLayer =
-    TileIdLayer
-        { _upper :: Maybe TileId
-        , _lower :: Maybe TileId
+data TileIdentifierLayer =
+    TileIdentifierLayer
+        { _upper :: Maybe TileIdentifier
+        , _lower :: Maybe TileIdentifier
         }
     deriving (Show, Ord, Eq, Generic)
 
-makeLenses ''TileIdLayer
+makeLenses ''TileIdentifierLayer
 
-instance Binary TileIdLayer
+instance Binary TileIdentifierLayer
 
 data Cell =
     Cell
-        { _tileIdLayer       :: TileIdLayer
-        , _actor             :: Maybe Actor
-        , _item              :: Maybe Item
-        , _explored          :: Bool
-        , _visibleFromPlayer :: Bool
+        { _tileIdentifierLayer :: TileIdentifierLayer
+        , _actor               :: Maybe Actor
+        , _item                :: Maybe Item
+        , _explored            :: Bool
+        , _visibleFromPlayer   :: Bool
         }
     deriving (Show, Ord, Eq, Generic)
 
@@ -84,17 +85,19 @@ instance Binary Cell
 
 isWalkable :: TileCollection -> Cell -> Bool
 isWalkable tc c =
-    fmap (Tile.isWalkable . (tc !)) (c ^. (tileIdLayer . upper)) /= Just False &&
+    fmap (Tile.isWalkable . (tc M.!)) (c ^. (tileIdentifierLayer . upper)) /=
+    Just False &&
     isNothing (c ^. actor)
 
 isTransparent :: TileCollection -> Cell -> Bool
 isTransparent tc c =
-    fmap (Tile.isTransparent . (tc !)) (c ^. (tileIdLayer . upper)) /=
+    fmap (Tile.isTransparent . (tc M.!)) (c ^. (tileIdentifierLayer . upper)) /=
     Just False
 
 isTileWalkable :: TileCollection -> Cell -> Bool
 isTileWalkable tc c =
-    fmap (Tile.isWalkable . (tc !)) (c ^. tileIdLayer . upper) /= Just False
+    fmap (Tile.isWalkable . (tc M.!)) (c ^. tileIdentifierLayer . upper) /=
+    Just False
 
 locateActor :: TileCollection -> Actor -> Cell -> Either Error Cell
 locateActor tc a c
@@ -133,7 +136,7 @@ newtype CellMap =
 
 instance Binary CellMap
 
-cellMap :: Array (V2 Int) TileIdLayer -> CellMap
+cellMap :: Array (V2 Int) TileIdentifierLayer -> CellMap
 cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False False)
 
 allWallTiles :: V2 Int -> CellMap
@@ -145,7 +148,7 @@ allWallTiles (V2 width height) =
   where
     cell =
         Cell
-            (TileIdLayer (Just wallTile) (Just floorTile))
+            (TileIdentifierLayer (Just wallTile) (Just floorTile))
             Nothing
             Nothing
             False
@@ -160,13 +163,16 @@ isPositionInMap (V2 x y) cm = x >= 0 && x < w && y >= 0 && y < h
     V2 w h = widthAndHeight cm
 
 changeTileAt ::
-       (TileIdLayer -> TileIdLayer) -> Coord -> CellMap -> Maybe CellMap
+       (TileIdentifierLayer -> TileIdentifierLayer)
+    -> Coord
+    -> CellMap
+    -> Maybe CellMap
 changeTileAt f c (CellMap m)
-    | isJust $ tileIdLayerAt c (CellMap m) =
+    | isJust $ tileIdentifierLayerAt c (CellMap m) =
         Just $ CellMap $ m // [(c, newTile)]
     | otherwise = Nothing
   where
-    newTile = m ! c & tileIdLayer %~ f
+    newTile = m ! c & tileIdentifierLayer %~ f
 
 walkableFloors :: TileCollection -> CellMap -> Array (V2 Int) Bool
 walkableFloors tc (CellMap cm) = isWalkable tc <$> cm
@@ -256,5 +262,5 @@ removeActorIf f = do
         Just x  -> removeActorAt x
         Nothing -> StateT $ const $ Left ActorNotFound
 
-tileIdLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
-tileIdLayerAt c (CellMap cm) = cm ^? ix c . tileIdLayer
+tileIdentifierLayerAt :: Coord -> CellMap -> Maybe TileIdentifierLayer
+tileIdentifierLayerAt c (CellMap cm) = cm ^? ix c . tileIdentifierLayer

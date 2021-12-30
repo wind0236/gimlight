@@ -4,6 +4,7 @@
 module GameStatus.Exploring
     ( ExploringHandler
     , exploringHandler
+    , getTileCollection
     , ascendStairsAtPlayerPosition
     , descendStairsAtPlayerPosition
     , exitDungeon
@@ -59,6 +60,9 @@ exploringHandler ::
     -> TileCollection
     -> ExploringHandler
 exploringHandler = ExploringHandler
+
+getTileCollection :: ExploringHandler -> TileCollection
+getTileCollection eh = eh ^. tileCollection
 
 ascendStairsAtPlayerPosition :: ExploringHandler -> Maybe ExploringHandler
 ascendStairsAtPlayerPosition eh =

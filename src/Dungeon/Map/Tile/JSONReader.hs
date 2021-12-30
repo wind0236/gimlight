@@ -1,39 +1,52 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Dungeon.Map.Tile.JSONReader
-    ( readTileFile
+    ( addTileFile
     ) where
 
-import           Control.Lens     (filtered, has, only, (^..), (^?))
-import           Data.Aeson.Lens  (_Bool, _Integer, _String, key, values)
-import           Data.Array       (array, (//))
-import           Data.Text        (Text, unpack)
-import           Dungeon.Map.Tile (Tile, TileCollection, tile)
-import           System.FilePath  (dropFileName, (</>))
+import           Codec.Picture       (Image (imageHeight, imageWidth),
+                                      PixelRGBA8, convertRGBA8, readImage)
+import           Codec.Picture.Extra (crop)
+import           Control.Applicative (ZipList (ZipList, getZipList))
+import           Control.Lens        (filtered, has, only, (^..), (^?))
+import           Control.Monad       (guard, (>=>))
+import           Data.Aeson.Lens     (_Bool, _Integer, _String, key, values)
+import           Data.Either         (fromRight)
+import           Data.Map            (insert)
+import           Data.Maybe          (fromMaybe)
+import           Data.Text           (Text, unpack)
+import           Dungeon.Map.Tile    (Tile, TileCollection, tile)
+import           System.Directory    (canonicalizePath,
+                                      makeRelativeToCurrentDirectory)
+import           System.FilePath     (dropFileName, (</>))
+import           UI.Draw.Config      (tileHeight, tileWidth)
 
--- We set the initial values to prevent an `undefined element` panic on
--- comparisons.
-readTileFile :: FilePath -> IO (Maybe (TileCollection, FilePath))
-readTileFile path = do
-    json <- readFile path
-    return $ do
-        numTiles <- getTileCount json
-        let tc = emptyArray numTiles // indexAndTile json
-        imagePath <- unpack <$> getImagePath json
-        return (tc, dropFileName path </> imagePath)
+addTileFile :: FilePath -> TileCollection -> IO TileCollection
+addTileFile path tc = do
+    canonicalizedPathToJson <- canonicalizeAsRelative path
+    foldl (\acc (idx, t) -> insert (canonicalizedPathToJson, idx) t acc) tc <$>
+        indexAndTile path
   where
-    emptyArray l =
-        array (0, l - 1) . zip [0 ..] . replicate l $ tile False False
+    canonicalizeAsRelative = canonicalizePath >=> makeRelativeToCurrentDirectory
 
-getImagePath :: String -> Maybe Text
-getImagePath json = json ^? key "image" . _String
+getImagePath :: String -> Text
+getImagePath json =
+    fromMaybe
+        (error "A tile file must associate with an image file.")
+        (json ^? key "image" . _String)
 
-getTileCount :: String -> Maybe Int
-getTileCount json = fromInteger <$> json ^? key "tilecount" . _Integer
-
-indexAndTile :: String -> [(Int, Tile)]
-indexAndTile json =
-    zip (getIds json) $ zipWith tile (getWalkable json) (getTransparent json)
+indexAndTile :: FilePath -> IO [(Int, Tile)]
+indexAndTile path = do
+    json <- readFile path
+    let imagePath = dropFileName path </> unpack (getImagePath json)
+    fmap
+        (zip (getIds json) . getZipList .
+         (tile <$> walkables json <*> transparents json <*>))
+        (images imagePath)
+  where
+    images = fmap ZipList . readAndCutTileImageFile
+    transparents = ZipList . getTransparent
+    walkables = ZipList . getWalkable
 
 getIds :: String -> [Int]
 getIds json =
@@ -51,3 +64,28 @@ getBoolProperty property json =
     filtered (has (key "name" . _String . only property)) .
     key "value" .
     _Bool
+
+readAndCutTileImageFile :: FilePath -> IO [Image PixelRGBA8]
+readAndCutTileImageFile = fmap cutTileMap . readTileImageFile
+
+readTileImageFile :: FilePath -> IO (Image PixelRGBA8)
+readTileImageFile path = do
+    tileFile <- convertRGBA8 . fromRight (error noSuchImage) <$> readImage path
+    guard $ isValidTileMapFile tileFile
+    return tileFile
+  where
+    noSuchImage = path ++ " not found."
+
+isValidTileMapFile :: Image PixelRGBA8 -> Bool
+isValidTileMapFile img =
+    imageWidth img `mod` tileWidth == 0 && imageHeight img `mod` tileHeight == 0
+
+cutTileMap :: Image PixelRGBA8 -> [Image PixelRGBA8]
+cutTileMap img =
+    [ crop (col * tileWidth) (row * tileHeight) tileWidth tileHeight img
+    | row <- [0 .. rowsOfTilesInImage - 1]
+    , col <- [0 .. columnsOfTilesInImage - 1]
+    ]
+  where
+    columnsOfTilesInImage = imageWidth img `div` tileWidth
+    rowsOfTilesInImage = imageHeight img `div` tileHeight

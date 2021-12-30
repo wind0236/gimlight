@@ -23,14 +23,13 @@ import           Monomer                 (CmbAlignCenter (alignCenter),
 import qualified Monomer.Lens            as L
 import           UI.Draw.Exploring       (drawExploring)
 import           UI.Draw.KeyEvent        (withKeyEvents)
-import           UI.Graphics.MapTiles    (MapTiles)
 import           UI.Types                (GameWidgetNode)
 
-drawTalking :: MapTiles -> TalkingHandler -> GameConfig -> GameWidgetNode
-drawTalking tileGraphics th c =
+drawTalking :: TalkingHandler -> GameConfig -> GameWidgetNode
+drawTalking th c =
     withKeyEvents $
     zstack
-        [ drawExploring tileGraphics afterGameStatus c `styleBasic`
+        [ drawExploring afterGameStatus c `styleBasic`
           [bgColor $ gray & L.a .~ 0.5]
         , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
         , talkingWindow c partner (getTalkingPart th)

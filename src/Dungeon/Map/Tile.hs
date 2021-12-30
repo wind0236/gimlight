@@ -3,35 +3,68 @@
 module Dungeon.Map.Tile
     ( Tile
     , TileCollection
+    , TileIdentifier
     , TileId
     , tile
     , isWalkable
     , isTransparent
+    , getImage
     , wallTile
     , floorTile
     , upStairs
     , downStairs
     ) where
 
-import           Data.Array   (Array)
-import           Data.Binary  (Binary)
-import           GHC.Generics (Generic)
-
-type TileId = Int
+import           Codec.Picture        (Image (Image, imageData, imageHeight, imageWidth),
+                                       PixelRGBA8)
+import           Data.Binary          (Binary (get, put))
+import           Data.Map             (Map)
+import           Data.Vector.Storable (fromList, toList)
+import           GHC.Generics         (Generic)
 
 data Tile =
     Tile
         { walkable    :: Bool
         , transparent :: Bool
+        , image       :: Image PixelRGBA8
         }
-    deriving (Show, Ord, Eq, Generic)
+    deriving (Eq, Generic)
 
-instance Binary Tile
+instance Show Tile where
+    show t =
+        "Tile {walkable = " ++
+        show (walkable t) ++
+        ", transparent = " ++ show (transparent t) ++ ", ...}"
 
-type TileCollection = Array Int Tile
+instance Ord Tile where
+    a <= b =
+        walkable a <= walkable a &&
+        transparent a <= transparent b &&
+        imageWidth (image a) <= imageWidth (image b) &&
+        imageHeight (image a) <= imageHeight (image b) &&
+        imageData (image a) <= imageData (image b)
 
-tile :: Bool -> Bool -> Tile
+instance Binary Tile where
+    put t = do
+        put $ walkable t
+        put $ transparent t
+        put . imageWidth $ image t
+        put . imageHeight $ image t
+        put . toList . imageData $ image t
+    get =
+        Tile <$> get <*> get <*> (Image <$> get <*> get <*> (fromList <$> get))
+
+type TileCollection = Map TileIdentifier Tile
+
+type TileIdentifier = (FilePath, Int)
+
+type TileId = Int
+
+tile :: Bool -> Bool -> Image PixelRGBA8 -> Tile
 tile = Tile
+
+getImage :: Tile -> Image PixelRGBA8
+getImage = image
 
 isWalkable :: Tile -> Bool
 isWalkable = walkable
@@ -39,14 +72,14 @@ isWalkable = walkable
 isTransparent :: Tile -> Bool
 isTransparent = transparent
 
-floorTile :: TileId
-floorTile = 0
+floorTile :: TileIdentifier
+floorTile = ("maps/tiles.json", 0)
 
-wallTile :: TileId
-wallTile = 1
+wallTile :: TileIdentifier
+wallTile = ("maps/tiles.json", 1)
 
-upStairs :: TileId
-upStairs = 3
+upStairs :: TileIdentifier
+upStairs = ("maps/tiles.json", 3)
 
-downStairs :: TileId
-downStairs = 4
+downStairs :: TileIdentifier
+downStairs = ("maps/tiles.json", 4)

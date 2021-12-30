@@ -7,13 +7,14 @@ module GameStatus
     , newGameStatus
     ) where
 
+import           Control.Lens                 ()
 import           Data.Binary                  (Binary)
+import           Data.Map                     (empty)
 import           Data.Maybe                   (fromMaybe)
 import           Data.Tree                    (Tree (Node, rootLabel, subForest))
 import           Dungeon                      (addAscendingAndDescendingStiars,
                                                addDescendingStairs)
 import           Dungeon.Init                 (initDungeon)
-import           Dungeon.Map.Tile.JSONReader  (readTileFile)
 import           Dungeon.Predefined.BatsCave  (batsDungeon)
 import           Dungeon.Predefined.GlobalMap (globalMap)
 import           Dungeon.Stairs               (StairsPair (StairsPair))
@@ -27,7 +28,7 @@ import           GameStatus.SelectingItem     (SelectingItemHandler)
 import           GameStatus.Talking           (TalkingHandler)
 import           IndexGenerator               (generator)
 import           Linear.V2                    (V2 (V2))
-import qualified Localization.Texts           as T
+import qualified Localization.Texts.Scene     as T (title1, title2, welcome)
 import qualified Log                          as L
 import           Quest                        (questCollection)
 import           System.Random                (getStdGen)
@@ -49,12 +50,9 @@ instance Binary GameStatus
 newGameStatus :: IO GameStatus
 newGameStatus = do
     g <- getStdGen
-    tileCollection <-
-        fst . fromMaybe (error "Failed to read the tile file.") <$>
-        readTileFile "maps/tiles.json"
-    gm <- globalMap
-    (beaeve, ig) <- initDungeon generator tileCollection
-    let (stairsPosition, bats, _, _) = batsDungeon g ig tileCollection
+    (gm, tc) <- globalMap empty
+    (beaeve, tc', ig) <- initDungeon tc generator
+    let (stairsPosition, bats, _, _) = batsDungeon g ig tc'
         (gmWithBatsStairs, batsRootMapWithParentMap) =
             addAscendingAndDescendingStiars
                 (StairsPair (V2 9 6) stairsPosition)
@@ -80,9 +78,8 @@ newGameStatus = do
                 initZipper
                 (foldr (L.addMessage . L.message) L.emptyLog [T.welcome])
                 questCollection
-                tileCollection
-    return $
-        Scene $
+                tc'
+    return . Scene $
         sceneHandler
             "images/game_opening.png"
             [withoutSpeaker T.title1, withoutSpeaker T.title2]

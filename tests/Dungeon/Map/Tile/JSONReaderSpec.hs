@@ -2,20 +2,37 @@ module Dungeon.Map.Tile.JSONReaderSpec
     ( spec
     ) where
 
-import           Data.Maybe                  (fromJust)
-import           Dungeon.Map.Tile.JSONReader (readTileFile)
-import           System.FilePath             (equalFilePath)
+import           Data.Map                    (empty, union)
+import           Dungeon.Map.Tile.JSONReader (addTileFile)
+import           SetUp.TileFile              (singleTileFile,
+                                              tilesInSingleTileFile,
+                                              tilesInUnitedTileFile,
+                                              tilesInUnwalkableTileFile,
+                                              unitedTileFile,
+                                              unwalkableTileFile)
 import           Test.Hspec                  (Spec, describe, it, runIO,
-                                              shouldSatisfy)
+                                              shouldBe)
 
 spec :: Spec
-spec = testReadTileFileReturnsImagePath
+spec = do
+    testAddTileFile
+    testAddUnwalkableTileFile
 
-testReadTileFileReturnsImagePath :: Spec
-testReadTileFileReturnsImagePath = do
-    result <- runIO $ readTileFile "maps/tiles.json"
-    describe "readTileFile" $
-        it "returns the path to the corresponding image file." $
-        snd (fromJust result) `shouldSatisfy` (`equalFilePath` expected)
-  where
-    expected = "maps/../images/map_tiles.png"
+testAddTileFile :: Spec
+testAddTileFile = do
+    expected <-
+        runIO $ union <$> tilesInSingleTileFile <*> tilesInUnitedTileFile
+    result <-
+        runIO $ addTileFile unitedTileFile empty >>= addTileFile singleTileFile
+    describe "addTileFile" $
+        it "loads tile information from files and returns the image paths." $
+        result `shouldBe` expected
+
+testAddUnwalkableTileFile :: Spec
+testAddUnwalkableTileFile = do
+    expected <- runIO tilesInUnwalkableTileFile
+    result <- runIO $ addTileFile unwalkableTileFile empty
+    describe "addTileFile" $
+        it
+            "loads tile information from files and returns the image paths. The tile is unwalkable but transparent." $
+        result `shouldBe` expected
