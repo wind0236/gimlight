@@ -3,19 +3,34 @@ module Dungeon.Map.JSONReaderSpec
     ) where
 
 import           Data.Map               (empty)
+import           Dungeon.Map.Cell       (CellMap)
 import           Dungeon.Map.JSONReader (readMapTileImage)
-import           SetUp.MapFile          (cellMapOfSingleTileMap, singleTileMap)
+import           Dungeon.Map.Tile       (TileCollection)
+import           SetUp.MapFile          (cellMapOfSingleTileMap,
+                                         rectangleButNotSquareCellMap,
+                                         rectangleButNotSquareMap,
+                                         singleTileMap)
 import           SetUp.TileFile         (tilesInSingleTileFile)
 import           Test.Hspec             (Spec, describe, it, runIO, shouldBe)
 
 spec :: Spec
-spec = testReadMapTileImage
+spec = do
+    testSingleTileMap
+    testReadRectangleButNotSquareMap
 
-testReadMapTileImage :: Spec
-testReadMapTileImage = do
-    (resultCellMap, resultTile) <- runIO $ readMapTileImage empty singleTileMap
-    expectedTile <- runIO tilesInSingleTileFile
+testSingleTileMap :: Spec
+testSingleTileMap =
+    runIO tilesInSingleTileFile >>=
+    testReadMapTileImage singleTileMap cellMapOfSingleTileMap
+
+testReadRectangleButNotSquareMap :: Spec
+testReadRectangleButNotSquareMap =
+    runIO tilesInSingleTileFile >>=
+    testReadMapTileImage rectangleButNotSquareMap rectangleButNotSquareCellMap
+
+testReadMapTileImage :: FilePath -> CellMap -> TileCollection -> Spec
+testReadMapTileImage path cm tc = do
+    (resultCellMap, resultTile) <- runIO $ readMapTileImage empty path
     describe "readMapTileImage" $ do
-        it "loads the map file" $
-            resultCellMap `shouldBe` cellMapOfSingleTileMap
-        it "loads the tile file" $ resultTile `shouldBe` expectedTile
+        it "loads the map file" $ resultCellMap `shouldBe` cm
+        it "loads the tile file" $ resultTile `shouldBe` tc

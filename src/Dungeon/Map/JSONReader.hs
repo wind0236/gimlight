@@ -51,7 +51,7 @@ readMapFile path = do
         ExceptT . fmap return $ canonicalizePath (dropFileName path </> rawPath) >>=
             makeRelativeToCurrentDirectory
     parseFile json canonicalizedPath = do
-        V2 height width <- maybeToRight noWidthOrHeight $ getMapSize json
+        V2 width height <- maybeToRight noWidthOrHeight $ getMapSize json
         tiles <- getTiles json canonicalizedPath
         unless (height * width == length tiles) $ Left invalidWidthHeight
         Right
