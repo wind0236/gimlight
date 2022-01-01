@@ -2,31 +2,46 @@ module Dungeon.Map.JSONReaderSpec
     ( spec
     ) where
 
-import           Data.Map               (empty)
+import           Data.Map               (empty, union)
 import           Dungeon.Map.Cell       (CellMap)
 import           Dungeon.Map.JSONReader (readMapTileImage)
 import           Dungeon.Map.Tile       (TileCollection)
-import           SetUp.MapFile          (cellMapOfSingleTileMap,
+import           SetUp.MapFile          (cellMapContainingMultipleFilesTile,
+                                         cellMapOfSingleTileMap,
+                                         mapUsingMultipleTileFiles,
                                          rectangleButNotSquareCellMap,
                                          rectangleButNotSquareMap,
                                          singleTileMap)
-import           SetUp.TileFile         (tilesInSingleTileFile)
-import           Test.Hspec             (Spec, describe, it, runIO, shouldBe)
+import           SetUp.TileFile         (tilesInSingleTileFile,
+                                         tilesInUnitedTileFile)
+import           Test.Hspec             (Spec, context, describe, it, runIO,
+                                         shouldBe)
 
 spec :: Spec
 spec = do
     testSingleTileMap
     testReadRectangleButNotSquareMap
+    testReadMapUsingMultipleTileFiles
 
 testSingleTileMap :: Spec
 testSingleTileMap =
+    context "Single tile map" $
     runIO tilesInSingleTileFile >>=
     testReadMapTileImage singleTileMap cellMapOfSingleTileMap
 
 testReadRectangleButNotSquareMap :: Spec
 testReadRectangleButNotSquareMap =
+    context "Not square map" $
     runIO tilesInSingleTileFile >>=
     testReadMapTileImage rectangleButNotSquareMap rectangleButNotSquareCellMap
+
+testReadMapUsingMultipleTileFiles :: Spec
+testReadMapUsingMultipleTileFiles =
+    context "Map using multiple tile files." $
+    runIO (union <$> tilesInSingleTileFile <*> tilesInUnitedTileFile) >>=
+    testReadMapTileImage
+        mapUsingMultipleTileFiles
+        cellMapContainingMultipleFilesTile
 
 testReadMapTileImage :: FilePath -> CellMap -> TileCollection -> Spec
 testReadMapTileImage path cm tc = do
