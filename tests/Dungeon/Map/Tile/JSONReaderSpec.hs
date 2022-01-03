@@ -5,18 +5,20 @@ module Dungeon.Map.Tile.JSONReaderSpec
 import           Data.Map                    (empty, union)
 import           Dungeon.Map.Tile.JSONReader (addTileFile)
 import           SetUp.TileFile              (singleTileFile,
+                                              tileWithoutProperties,
                                               tilesInSingleTileFile,
                                               tilesInUnitedTileFile,
                                               tilesInUnwalkableTileFile,
                                               unitedTileFile,
                                               unwalkableTileFile)
-import           Test.Hspec                  (Spec, describe, it, runIO,
-                                              shouldBe)
+import           Test.Hspec                  (Spec, describe, errorCall, it,
+                                              runIO, shouldBe, shouldThrow)
 
 spec :: Spec
 spec = do
     testAddTileFile
     testAddUnwalkableTileFile
+    testErrorOnReadingTileWithoutProperties
 
 testAddTileFile :: Spec
 testAddTileFile = do
@@ -36,3 +38,10 @@ testAddUnwalkableTileFile = do
         it
             "loads tile information from files and returns the image paths. The tile is unwalkable but transparent." $
         result `shouldBe` expected
+
+testErrorOnReadingTileWithoutProperties :: Spec
+testErrorOnReadingTileWithoutProperties = do
+    describe "addTileFile" $
+        it "panics if it tries to read a tile that misses necessary proeprties." $
+        addTileFile tileWithoutProperties empty `shouldThrow`
+        errorCall "Some tiles miss necessary properties."

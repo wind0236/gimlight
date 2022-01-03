@@ -7,6 +7,7 @@ module SetUp.TileFile
     , singleTileFile
     , unwalkableTileFile
     , haskellTilePath
+    , tileWithoutProperties
     ) where
 
 import           Codec.Picture        (Image (imageData), PixelRGBA8)
@@ -61,6 +62,9 @@ unwalkableTileFile = "tests/tiles/unwalkable.json"
 
 haskellTilePath :: FilePath
 haskellTilePath = "tests/tiles/haskell.json"
+
+tileWithoutProperties :: FilePath
+tileWithoutProperties = "tests/tiles/no_properties.json"
 
 -- Transformation order is important. Tiled's specification says
 --

@@ -8,8 +8,8 @@ import           Codec.Picture        (Image (imageData, imageHeight, imageWidth
                                        PixelRGBA8, convertRGBA8, readImage)
 import           Codec.Picture.Extra  (crop, flipHorizontally, flipVertically)
 import           Control.Applicative  (ZipList (ZipList, getZipList))
-import           Control.Lens         (filtered, has, only, (^..), (^?))
-import           Control.Monad        (guard, (>=>))
+import           Control.Lens         (filtered, has, only, (&), (^..), (^?))
+import           Control.Monad        (guard, unless, (>=>))
 import           Data.Aeson.Lens      (_Bool, _Integer, _String, key, values)
 import           Data.Bits            (Bits (bit), (.|.))
 import           Data.Either          (fromRight)
@@ -76,6 +76,8 @@ indexAndTile :: FilePath -> IO [(Int, Tile)]
 indexAndTile path = do
     json <- readFile path
     let imagePath = dropFileName path </> unpack (getImagePath json)
+    unless (allTilesHaveNecessaryProperties json) $
+        error "Some tiles miss necessary properties."
     fmap
         (zip (getIds json) . getZipList .
          (tile <$> walkables json <*> transparents json <*>))
@@ -84,6 +86,18 @@ indexAndTile path = do
     images = fmap ZipList . readAndCutTileImageFile
     transparents = ZipList . getTransparent
     walkables = ZipList . getWalkable
+
+allTilesHaveNecessaryProperties :: String -> Bool
+allTilesHaveNecessaryProperties json =
+    all ((== tileCount) . length . (json &)) [getTransparent, getWalkable]
+  where
+    tileCount = getTileCount json
+
+getTileCount :: String -> Int
+getTileCount json =
+    fromInteger $ fromMaybe (error "No tilecount entry.") $ json ^?
+    key "tilecount" .
+    _Integer
 
 getIds :: String -> [Int]
 getIds json =
