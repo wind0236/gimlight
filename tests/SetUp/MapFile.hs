@@ -3,10 +3,12 @@ module SetUp.MapFile
     , cellMapOfSingleTileMap
     , rectangleButNotSquareCellMap
     , cellMapUsingRotatedTiles
+    , cellMapUsingMultipleTileFilesAndTransformation
     , mapUsingMultipleTileFiles
     , singleTileMap
     , rectangleButNotSquareMap
     , mapUsingRotatedTiles
+    , mapUsingTilesFromMultipleTileFilesAndTransformation
     ) where
 
 import           Data.Array       (array)
@@ -61,6 +63,15 @@ cellMapUsingRotatedTiles =
         (,,) <$> [False, True] <*> [False, True] <*> [False, True]
     mapWidth = 8
 
+cellMapUsingMultipleTileFilesAndTransformation :: CellMap
+cellMapUsingMultipleTileFilesAndTransformation =
+    cellMap $
+    array
+        (V2 0 0, V2 1 0)
+        [ (V2 0 0, TileIdentifierLayer Nothing $ Just (haskellTilePath, bit 31))
+        , (V2 1 0, TileIdentifierLayer Nothing $ Just (singleTileFile, bit 31))
+        ]
+
 mapUsingMultipleTileFiles :: FilePath
 mapUsingMultipleTileFiles = "tests/maps/multiple_tile_files.json"
 
@@ -72,3 +83,7 @@ rectangleButNotSquareMap = "tests/maps/not_square.json"
 
 mapUsingRotatedTiles :: FilePath
 mapUsingRotatedTiles = "tests/maps/rotation.json"
+
+mapUsingTilesFromMultipleTileFilesAndTransformation :: FilePath
+mapUsingTilesFromMultipleTileFilesAndTransformation =
+    "tests/maps/transform_and_rotation.json"

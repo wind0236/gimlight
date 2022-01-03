@@ -14,6 +14,7 @@ import           Data.Aeson.Lens             (_Array, _Integer, _String, key,
                                               values)
 import           Data.Array                  (array)
 import           Data.Bifunctor              (Bifunctor (second))
+import           Data.Bits                   (Bits (clearBit))
 import           Data.Either.Combinators     (maybeToRight)
 import           Data.Foldable               (foldlM)
 import           Data.List                   (find, sortBy)
@@ -105,11 +106,11 @@ getTileIdOfNthLayer n json pathToMap =
         second (ident -) $
         fromMaybe
             (error ("Invalid tile GID: " ++ show ident))
-            (find ((ident >=) . snd) sourceAndGid)
+            (find ((clearAllFlags ident >=) . snd) $ getSourceAndFirstGid json)
     canonicalizeIdentifier path =
         canonicalizePath (dropFileName pathToMap </> path) >>=
         makeRelativeToCurrentDirectory
-    sourceAndGid = getSourceAndFirstGid json
+    clearAllFlags = (`clearBit` 29) . (`clearBit` 30) . (`clearBit` 31)
 
 getSourceAndFirstGid :: String -> [(FilePath, Int)]
 getSourceAndFirstGid json =
