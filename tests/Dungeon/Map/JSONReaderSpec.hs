@@ -8,11 +8,13 @@ import           Dungeon.Map.JSONReader (readMapTileImage)
 import           Dungeon.Map.Tile       (TileCollection)
 import           SetUp.MapFile          (cellMapContainingMultipleFilesTile,
                                          cellMapOfSingleTileMap,
+                                         cellMapUsingRotatedTiles,
                                          mapUsingMultipleTileFiles,
+                                         mapUsingRotatedTiles,
                                          rectangleButNotSquareCellMap,
                                          rectangleButNotSquareMap,
                                          singleTileMap)
-import           SetUp.TileFile         (tilesInSingleTileFile,
+import           SetUp.TileFile         (haskellTile, tilesInSingleTileFile,
                                          tilesInUnitedTileFile)
 import           Test.Hspec             (Spec, context, describe, it, runIO,
                                          shouldBe)
@@ -22,6 +24,7 @@ spec = do
     testSingleTileMap
     testReadRectangleButNotSquareMap
     testReadMapUsingMultipleTileFiles
+    testReadMapUsingRotatedTiles
 
 testSingleTileMap :: Spec
 testSingleTileMap =
@@ -42,6 +45,12 @@ testReadMapUsingMultipleTileFiles =
     testReadMapTileImage
         mapUsingMultipleTileFiles
         cellMapContainingMultipleFilesTile
+
+testReadMapUsingRotatedTiles :: Spec
+testReadMapUsingRotatedTiles =
+    context "Map using rotated tiles" $
+    runIO haskellTile >>=
+    testReadMapTileImage mapUsingRotatedTiles cellMapUsingRotatedTiles
 
 testReadMapTileImage :: FilePath -> CellMap -> TileCollection -> Spec
 testReadMapTileImage path cm tc = do

@@ -1,0 +1,44 @@
+{ "compressionlevel":-1,
+ "height":1,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[1, 2147483649, 1073741825, 3221225473, 536870913, 2684354561, 1610612737, 3758096385],
+         "height":1,
+         "id":1,
+         "name":"lower",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0],
+         "height":1,
+         "id":2,
+         "name":"upper",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":3,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.7.2",
+ "tileheight":48,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"..\/tiles\/haskell.json"
+        }],
+ "tilewidth":48,
+ "type":"map",
+ "version":"1.6",
+ "width":8
+}
