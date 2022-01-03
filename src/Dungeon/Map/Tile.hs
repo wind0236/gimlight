@@ -73,13 +73,13 @@ isTransparent :: Tile -> Bool
 isTransparent = transparent
 
 floorTile :: TileIdentifier
-floorTile = ("maps/tiles.json", 0)
+floorTile = ("tiles/tiles.json", 0)
 
 wallTile :: TileIdentifier
-wallTile = ("maps/tiles.json", 1)
+wallTile = ("tiles/tiles.json", 1)
 
 upStairs :: TileIdentifier
-upStairs = ("maps/tiles.json", 3)
+upStairs = ("tiles/tiles.json", 3)
 
 downStairs :: TileIdentifier
-downStairs = ("maps/tiles.json", 4)
+downStairs = ("tiles/tiles.json", 4)
