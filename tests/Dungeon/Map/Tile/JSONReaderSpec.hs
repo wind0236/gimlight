@@ -44,4 +44,5 @@ testErrorOnReadingTileWithoutProperties = do
     describe "addTileFile" $
         it "panics if it tries to read a tile that misses necessary proeprties." $
         addTileFile tileWithoutProperties empty `shouldThrow`
-        errorCall "Some tiles miss necessary properties."
+        errorCall
+            (tileWithoutProperties ++ ": Some tiles miss necessary properties.")

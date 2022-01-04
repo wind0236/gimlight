@@ -76,8 +76,8 @@ indexAndTile :: FilePath -> IO [(Int, Tile)]
 indexAndTile path = do
     json <- readFile path
     let imagePath = dropFileName path </> unpack (getImagePath json)
-    unless (allTilesHaveNecessaryProperties json) $
-        error "Some tiles miss necessary properties."
+    unless (allTilesHaveNecessaryProperties json) $ error $ path ++
+        ": Some tiles miss necessary properties."
     fmap
         (zip (getIds json) . getZipList .
          (tile <$> walkables json <*> transparents json <*>))
