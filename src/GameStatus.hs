@@ -60,7 +60,7 @@ newGameStatus = do
         batsTreeWithParentMap = bats {rootLabel = batsRootMapWithParentMap}
         (initGm, beaeveWithParentMap) =
             addDescendingStairs
-                (StairsPair (V2 3 16) (V2 5 5))
+                (StairsPair (V2 3 16) (V2 7 0))
                 (gmWithBatsStairs, beaeve)
         dungeonTree =
             Node

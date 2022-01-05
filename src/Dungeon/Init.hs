@@ -28,5 +28,5 @@ initDungeon tc ig = do
         updateExploredMap .
         fromMaybe (error "Failed to update the player FoV.") .
         updatePlayerFov tc' . fromRight (error "Failed to locate the player.") $
-        execStateT (locateActorAt tc' player' (V2 5 5)) cm'
+        execStateT (locateActorAt tc' player' (V2 10 10)) cm'
     (player', ig') = player ig
