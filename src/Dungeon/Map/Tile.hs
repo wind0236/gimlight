@@ -78,8 +78,8 @@ floorTile = ("tiles/tiles.json", 0)
 wallTile :: TileIdentifier
 wallTile = ("tiles/tiles.json", 1)
 
-upStairs :: TileIdentifier
-upStairs = ("tiles/tiles.json", 3)
-
 downStairs :: TileIdentifier
-downStairs = ("tiles/tiles.json", 4)
+downStairs = ("tiles/stairs.json", 0)
+
+upStairs :: TileIdentifier
+upStairs = ("tiles/stairs.json", 1)

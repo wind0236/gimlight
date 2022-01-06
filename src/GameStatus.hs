@@ -15,6 +15,7 @@ import           Data.Tree                    (Tree (Node, rootLabel, subForest)
 import           Dungeon                      (addAscendingAndDescendingStiars,
                                                addDescendingStairs)
 import           Dungeon.Init                 (initDungeon)
+import           Dungeon.Map.Tile.JSONReader  (addTileFile)
 import           Dungeon.Predefined.BatsCave  (batsDungeon)
 import           Dungeon.Predefined.GlobalMap (globalMap)
 import           Dungeon.Stairs               (StairsPair (StairsPair))
@@ -52,7 +53,8 @@ newGameStatus = do
     g <- getStdGen
     (gm, tc) <- globalMap empty
     (beaeve, tc', ig) <- initDungeon tc generator
-    let (stairsPosition, bats, _, _) = batsDungeon g ig tc'
+    tc'' <- addTileFile "tiles/stairs.json" tc'
+    let (stairsPosition, bats, _, _) = batsDungeon g ig tc''
         (gmWithBatsStairs, batsRootMapWithParentMap) =
             addAscendingAndDescendingStiars
                 (StairsPair (V2 9 6) stairsPosition)
@@ -78,7 +80,7 @@ newGameStatus = do
                 initZipper
                 (foldr (L.addMessage . L.message) L.emptyLog [T.welcome])
                 questCollection
-                tc'
+                tc''
     return . Scene $
         sceneHandler
             "images/game_opening.png"
