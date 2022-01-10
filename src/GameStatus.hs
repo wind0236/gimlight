@@ -54,7 +54,8 @@ newGameStatus = do
     (gm, tc) <- globalMap empty
     (beaeve, tc', ig) <- initDungeon tc generator
     tc'' <- addTileFile "tiles/stairs.json" tc'
-    let (stairsPosition, bats, _, _) = batsDungeon g ig tc''
+    tc''' <- addTileFile "tiles/cave_floor.json" tc''
+    let (stairsPosition, bats, _, _) = batsDungeon g ig tc'''
         (gmWithBatsStairs, batsRootMapWithParentMap) =
             addAscendingAndDescendingStiars
                 (StairsPair (V2 9 6) stairsPosition)
@@ -80,7 +81,7 @@ newGameStatus = do
                 initZipper
                 (foldr (L.addMessage . L.message) L.emptyLog [T.welcome])
                 questCollection
-                tc''
+                tc'''
     return . Scene $
         sceneHandler
             "images/game_opening.png"
