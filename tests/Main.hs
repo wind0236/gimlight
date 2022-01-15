@@ -8,6 +8,7 @@ import qualified Action.MeleeSpec
 import qualified Action.MoveSpec
 import qualified Action.PickUpSpec
 import qualified Action.WaitSpec
+import qualified Dungeon.GenerateSpec
 import qualified Dungeon.Map.CellSpec
 import qualified Dungeon.Map.JSONReaderSpec
 import qualified Dungeon.Map.Tile.JSONReaderSpec
@@ -25,6 +26,7 @@ spec = do
     describe "Action.Move" Action.MoveSpec.spec
     describe "Action.PickUp" Action.PickUpSpec.spec
     describe "Action.Wait" Action.WaitSpec.spec
+    describe "Dungeon.Generate" Dungeon.GenerateSpec.spec
     describe "Dungeon.Map.Cell" Dungeon.Map.CellSpec.spec
     describe "Dungeon.Map.JSONReader" Dungeon.Map.JSONReaderSpec.spec
     describe "Dungeon.Map.Tile.JSONReader" Dungeon.Map.Tile.JSONReaderSpec.spec

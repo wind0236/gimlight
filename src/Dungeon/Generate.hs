@@ -14,7 +14,7 @@ import           Dungeon                 (Dungeon,
                                           addAscendingAndDescendingStiars,
                                           cellMap, dungeon,
                                           stairsPositionCandidates)
-import           Dungeon.Generate.Config (Config (maxRooms, numOfFloors, roomMaxSize, roomMinSize))
+import           Dungeon.Generate.Config (Config (mapSize, maxRooms, numOfFloors, roomMaxSize, roomMinSize))
 import           Dungeon.Generate.Room   (Room (..), center,
                                           roomFromTwoPositionInclusive,
                                           roomFromWidthHeight, roomOverlaps)
@@ -23,7 +23,6 @@ import           Dungeon.Map.Cell        (CellMap, allWallTiles, changeTileAt,
                                           locateActorAt, locateItemAt, upper,
                                           widthAndHeight)
 import           Dungeon.Map.Tile        (TileCollection, downStairs, upStairs)
-import           Dungeon.Size            (maxSize, minSize)
 import           Dungeon.Stairs          (StairsPair (StairsPair))
 import           IndexGenerator          (IndexGenerator)
 import           Item                    (herb, sampleBook)
@@ -107,20 +106,18 @@ generateDungeon g tc ig cfg ident =
            changeTileAt (\tile -> tile & upper ?~ upStairs) enterPosition tiles)
           ident
     , enterPosition
-    , g'''
+    , g'
     , ig')
   where
-    (tiles, enterPosition, g''', ig') =
+    (tiles, enterPosition, g', ig') =
         generateDungeonAccum
             []
             tc
-            (allWallTiles (V2 width height))
+            (allWallTiles $ mapSize cfg)
             (V2 0 0)
-            g''
+            g
             ig
             cfg
-    (width, g') = randomR (minSize, maxSize) g
-    (height, g'') = randomR (minSize, maxSize) g'
 
 generateDungeonAccum ::
        [Room]

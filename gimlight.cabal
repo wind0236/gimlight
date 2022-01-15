@@ -46,6 +46,7 @@ Test-Suite spec
                       , Action.MoveSpec
                       , Action.PickUpSpec
                       , Action.WaitSpec
+                      , Dungeon.GenerateSpec
                       , Dungeon.Map.CellSpec
                       , Dungeon.Map.JSONReaderSpec
                       , Dungeon.Map.Tile.JSONReaderSpec
@@ -78,6 +79,8 @@ library
                       , Actor.Status.Hp
                       , Coord
                       , Dungeon
+                      , Dungeon.Generate
+                      , Dungeon.Generate.Config
                       , Dungeon.Identifier
                       , Dungeon.Map.Cell
                       , Dungeon.Map.JSONReader
@@ -95,15 +98,12 @@ library
     other-modules:      Actor.Friendly
                       , Actor.Friendly.Electria
                       , Actor.Status.Experience
-                      , Dungeon.Generate
-                      , Dungeon.Generate.Config
                       , Dungeon.Generate.Room
                       , Dungeon.Init
                       , Dungeon.PathFinder
                       , Dungeon.Predefined.BatsCave
                       , Dungeon.Predefined.Beaeve
                       , Dungeon.Predefined.GlobalMap
-                      , Dungeon.Size
                       , Dungeon.Stairs
                       , GameConfig
                       , GameModel
