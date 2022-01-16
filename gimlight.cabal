@@ -47,6 +47,7 @@ Test-Suite spec
                       , Action.PickUpSpec
                       , Action.WaitSpec
                       , Dungeon.GenerateSpec
+                      , Dungeon.Generate.ConfigSpec
                       , Dungeon.Map.CellSpec
                       , Dungeon.Map.JSONReaderSpec
                       , Dungeon.Map.Tile.JSONReaderSpec

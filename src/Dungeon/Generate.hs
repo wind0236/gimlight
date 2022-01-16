@@ -14,7 +14,9 @@ import           Dungeon                 (Dungeon,
                                           addAscendingAndDescendingStiars,
                                           cellMap, dungeon,
                                           stairsPositionCandidates)
-import           Dungeon.Generate.Config (Config (mapSize, maxRooms, numOfFloors, roomMaxSize, roomMinSize))
+import           Dungeon.Generate.Config (Config, getMapSize, getMaxRooms,
+                                          getNumOfFloors, getRoomMaxSize,
+                                          getRoomMinSize)
 import           Dungeon.Generate.Room   (Room (..), center,
                                           roomFromTwoPositionInclusive,
                                           roomFromWidthHeight, roomOverlaps)
@@ -51,7 +53,7 @@ generateMultipleFloorsDungeon g ig ts cfg ident =
             (\(dacc, gacc, igacc) _ ->
                  generateDungeonAndAppend dacc gacc igacc ts cfg ident)
             (zipperWithFirstFloor, g', ig')
-            [1 .. numOfFloors cfg - 1]
+            [1 .. getNumOfFloors cfg - 1]
 
 generateDungeonAndAppend ::
        TreeZipper Dungeon
@@ -113,11 +115,12 @@ generateDungeon g tc ig cfg ident =
         generateDungeonAccum
             []
             tc
-            (allWallTiles $ mapSize cfg)
+            (allWallTiles $ getMapSize cfg)
             (V2 0 0)
             g
             ig
             cfg
+            (getMaxRooms cfg)
 
 generateDungeonAccum ::
        [Room]
@@ -127,18 +130,20 @@ generateDungeonAccum ::
     -> StdGen
     -> IndexGenerator
     -> Config
+    -> Int
     -> (CellMap, V2 Int, StdGen, IndexGenerator)
-generateDungeonAccum acc tc tileMap playerPos g ig cfg
-    | maxRooms cfg == 0 = (tileMap, playerPos, g, ig)
-    | otherwise =
-        generateDungeonAccum
-            newAcc
-            tc
-            newMap
-            newPlayerPos
-            g''''''
-            ig'
-            cfg {maxRooms = maxRooms cfg - 1}
+generateDungeonAccum _ _ tileMap playerPos g ig _ 0 =
+    (tileMap, playerPos, g, ig)
+generateDungeonAccum acc tc tileMap playerPos g ig cfg rooms =
+    generateDungeonAccum
+        newAcc
+        tc
+        newMap
+        newPlayerPos
+        g''''''
+        ig'
+        cfg
+        (rooms - 1)
   where
     (newMap, newAcc, newPlayerPos)
         | usable = (mapWithItems, room : acc, center room)
@@ -149,8 +154,8 @@ generateDungeonAccum acc tc tileMap playerPos g ig cfg
         | otherwise =
             tunnelBetween (center room) (center $ head acc) $
             createRoom room tileMap
-    (roomWidth, g') = randomR (roomMinSize cfg, roomMaxSize cfg) g
-    (roomHeight, g'') = randomR (roomMinSize cfg, roomMaxSize cfg) g'
+    (roomWidth, g') = randomR (getRoomMinSize cfg, getRoomMaxSize cfg) g
+    (roomHeight, g'') = randomR (getRoomMinSize cfg, getRoomMaxSize cfg) g'
     (x, g''') = randomR (0, width - roomWidth - 1) g''
     (y, g'''') = randomR (0, height - roomHeight - 1) g'''
     room = roomFromWidthHeight (V2 x y) (V2 roomWidth roomHeight)

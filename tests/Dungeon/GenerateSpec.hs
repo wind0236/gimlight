@@ -7,7 +7,7 @@ import           Data.Map                    (empty)
 import           Data.Tree                   (Tree (Node))
 import qualified Dungeon                     as D
 import           Dungeon.Generate            (generateMultipleFloorsDungeon)
-import           Dungeon.Generate.Config     (Config (Config, mapSize, maxRooms, numOfFloors, roomMaxSize, roomMinSize))
+import           Dungeon.Generate.Config     (config)
 import           Dungeon.Identifier          (Identifier (Beaeve))
 import           Dungeon.Map.Cell            (widthAndHeight)
 import           Dungeon.Map.Tile.JSONReader (addTileFile)
@@ -37,12 +37,5 @@ testSizeIsCorrect = do
                     Beaeve ^.
                 _1
          in widthAndHeight $ d ^. D.cellMap
-    cfg =
-        Config
-            { numOfFloors = 1
-            , maxRooms = 3
-            , roomMinSize = 2
-            , roomMaxSize = 3
-            , mapSize = sz
-            }
-    sz = V2 10 10
+    cfg = config 1 3 2 3 sz
+    sz = V2 100 100
