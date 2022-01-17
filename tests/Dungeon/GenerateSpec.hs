@@ -14,8 +14,9 @@ import           Dungeon.Map.Tile.JSONReader (addTileFile)
 import           IndexGenerator              (generator)
 import           Linear.V2                   (V2 (V2))
 import           System.Random               (mkStdGen)
-import           Test.Hspec                  (Spec, describe, it, runIO,
-                                              shouldBe)
+import           Test.Hspec                  (Spec, describe, it, runIO)
+import           Test.QuickCheck             (Testable (property), chooseInt)
+import           UI.Draw.Config              (tileColumns, tileRows)
 
 spec :: Spec
 spec = testSizeIsCorrect
@@ -25,17 +26,20 @@ testSizeIsCorrect = do
     tc <- runIO $ addTileFile "tiles/tiles.json" empty
     describe "generateMultipleFloorsDungeon" $
         it "generates a dungeon with the specified map size" $
-        result tc `shouldBe` sz
+        property $ propertyFunc tc
   where
-    result tc =
+    propertyFunc tc = do
+        width <- chooseInt (tileColumns, 100)
+        height <- chooseInt (tileRows, 100)
+        return $ dungeonSize tc (V2 width height) == V2 width height
+    dungeonSize tc sz =
         let Node d _ =
                 generateMultipleFloorsDungeon
                     (mkStdGen 0)
                     generator
                     tc
-                    cfg
+                    (cfg sz)
                     Beaeve ^.
                 _1
          in widthAndHeight $ d ^. D.cellMap
-    cfg = config 1 3 2 3 sz
-    sz = V2 100 100
+    cfg = config 1 3 2 3
