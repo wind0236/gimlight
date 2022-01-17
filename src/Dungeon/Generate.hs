@@ -200,12 +200,8 @@ placeEnemies tc cm g ig r n = placeEnemies tc newMap g''' ig' r (n - 1)
 
 placeItems ::
        CellMap -> TileCollection -> StdGen -> Room -> Int -> (CellMap, StdGen)
-placeItems = placeItemsAccum
-
-placeItemsAccum ::
-       CellMap -> TileCollection -> StdGen -> Room -> Int -> (CellMap, StdGen)
-placeItemsAccum cm _ g _ 0 = (cm, g)
-placeItemsAccum cm tc g r n = placeItemsAccum newMap tc g''' r (n - 1)
+placeItems cm _ g _ 0 = (cm, g)
+placeItems cm tc g r n = placeItems newMap tc g''' r (n - 1)
   where
     newMap =
         fromRight cm $ flip execStateT cm $ locateItemAt tc newItem (V2 x y)
