@@ -3,6 +3,7 @@ module Dungeon.GenerateSpec
     ) where
 
 import           Control.Lens                (_1, (^.))
+import           Control.Monad.State         (runState)
 import           Data.Map                    (empty)
 import           Data.Tree                   (Tree (Node))
 import qualified Dungeon                     as D
@@ -26,7 +27,8 @@ testSizeIsCorrect = do
     tc <- runIO $ addTileFile "tiles/tiles.json" empty
     describe "generateMultipleFloorsDungeon" $
         it "generates a dungeon with the specified map size" $
-        property $ propertyFunc tc
+        property $
+        propertyFunc tc
   where
     propertyFunc tc = do
         width <- chooseInt (tileColumns, 100)
@@ -34,12 +36,10 @@ testSizeIsCorrect = do
         return $ dungeonSize tc (V2 width height) == V2 width height
     dungeonSize tc sz =
         let Node d _ =
-                generateMultipleFloorsDungeon
-                    (mkStdGen 0)
-                    generator
-                    tc
-                    (cfg sz)
-                    Beaeve ^.
+                runState
+                    (generateMultipleFloorsDungeon generator tc (cfg sz) Beaeve)
+                    (mkStdGen 0) ^.
+                _1 .
                 _1
          in widthAndHeight $ d ^. D.cellMap
     cfg = config 1 3 2 3

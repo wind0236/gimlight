@@ -2,6 +2,7 @@ module Dungeon.Predefined.BatsCave
     ( batsDungeon
     ) where
 
+import           Control.Monad.State     (State)
 import           Coord                   (Coord)
 import           Data.Tree               (Tree)
 import           Dungeon                 (Dungeon)
@@ -14,11 +15,9 @@ import           Linear.V2               (V2 (V2))
 import           System.Random           (StdGen)
 
 batsDungeon ::
-       StdGen
-    -> IndexGenerator
+       IndexGenerator
     -> TileCollection
-    -> (Coord, Tree Dungeon, StdGen, IndexGenerator)
-batsDungeon g ig ts = (pos, d, g', ig')
+    -> State StdGen (Tree Dungeon, Coord, IndexGenerator)
+batsDungeon ig ts = generateMultipleFloorsDungeon ig ts cfg BatsCave
   where
-    (d, pos, g', ig') = generateMultipleFloorsDungeon g ig ts cfg BatsCave
     cfg = config 3 10 5 8 (V2 50 50)

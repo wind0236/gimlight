@@ -8,6 +8,7 @@ module GameStatus
     ) where
 
 import           Control.Lens                 ()
+import           Control.Monad.State          (runState)
 import           Data.Binary                  (Binary)
 import           Data.Map                     (empty)
 import           Data.Maybe                   (fromMaybe)
@@ -55,7 +56,7 @@ newGameStatus = do
     (beaeve, tc', ig) <- initDungeon tc generator
     tc'' <- addTileFile "tiles/stairs.json" tc'
     tc''' <- addTileFile "tiles/cave_floor.json" tc''
-    let (stairsPosition, bats, _, _) = batsDungeon g ig tc'''
+    let ((bats, stairsPosition, _), _) = flip runState g $ batsDungeon ig tc'''
         (gmWithBatsStairs, batsRootMapWithParentMap) =
             addAscendingAndDescendingStiars
                 (StairsPair (V2 9 6) stairsPosition)
