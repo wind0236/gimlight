@@ -68,7 +68,7 @@ mapWidthIsTooSmall w =
 mapHeightIsTooSmall :: Int -> String
 mapHeightIsTooSmall h =
     "Map height is expected to be larger than or equal to " ++
-    show tileColumns ++ " but the actual value is " ++ show h ++ "."
+    show tileRows ++ " but the actual value is " ++ show h ++ "."
 
 roomMinIsLargerThanRoomMax :: Int -> Int -> String
 roomMinIsLargerThanRoomMax rmin rmax =
