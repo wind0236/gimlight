@@ -3,7 +3,7 @@ module Dungeon.GenerateSpec
     ) where
 
 import           Control.Lens                (_1, (^.))
-import           Control.Monad.State         (runState)
+import           Control.Monad.State         (evalStateT, runState)
 import           Data.Map                    (empty)
 import           Data.Tree                   (Tree (Node))
 import qualified Dungeon                     as D
@@ -37,7 +37,9 @@ testSizeIsCorrect = do
     dungeonSize tc sz =
         let Node d _ =
                 runState
-                    (generateMultipleFloorsDungeon generator tc (cfg sz) Beaeve)
+                    (evalStateT
+                         (generateMultipleFloorsDungeon tc (cfg sz) Beaeve)
+                         generator)
                     (mkStdGen 0) ^.
                 _1 .
                 _1

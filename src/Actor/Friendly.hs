@@ -5,16 +5,16 @@ module Actor.Friendly
 import           Actor                   (Actor, ActorKind (FriendlyNpc), actor)
 import           Actor.Identifier        (Identifier)
 import           Actor.Status            (Status)
+import           Control.Monad.State     (State)
 import           Data.Text               (Text)
 import           GameStatus.Talking.Part (TalkingPart)
 import           IndexGenerator          (IndexGenerator)
 
 friendly ::
-       IndexGenerator
-    -> Identifier
+       Identifier
     -> Status
     -> TalkingPart
     -> Text
     -> Text
-    -> (Actor, IndexGenerator)
-friendly ig name st p = actor ig name st FriendlyNpc (Just p)
+    -> State IndexGenerator Actor
+friendly name st p = actor name st FriendlyNpc (Just p)

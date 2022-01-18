@@ -5,6 +5,8 @@ module IndexGenerator
     , generate
     ) where
 
+import           Control.Monad.State (MonadState (state), State)
+
 type IndexGenerator = Int
 
 type Index = Int
@@ -14,5 +16,5 @@ generator = 0
 
 -- I assume that the number of actors in the game that exist in the same
 -- time will not exceed 0xffff_ffff.
-generate :: IndexGenerator -> (Index, IndexGenerator)
-generate n = (n, n + 1)
+generate :: State IndexGenerator Index
+generate = state $ \n -> (n, n + 1)

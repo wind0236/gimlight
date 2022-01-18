@@ -9,6 +9,7 @@ import           Actor.Friendly          (friendly)
 import           Actor.Identifier        (Identifier (Electria))
 import           Actor.Status            (status)
 import           Actor.Status.Hp         (hp)
+import           Control.Monad.State     (State)
 import           Data.List.NonEmpty      (fromList)
 import           GameStatus.Talking.Part (TalkingPart (QuestInquiry, Selection, UpdateQuest),
                                           questInquiryHandler, selectionHandler,
@@ -18,10 +19,9 @@ import qualified Localization.Texts      as T
 import           Quest                   (Inquiry (IsEnoughBatsKilled, IsKillBatsCompleted, IsKillBatsStarted),
                                           Updater (CompleteKillBats, StartKillBats))
 
-electria :: IndexGenerator -> (Actor, IndexGenerator)
-electria ig =
+electria :: State IndexGenerator Actor
+electria =
     friendly
-        ig
         Electria
         st
         talking

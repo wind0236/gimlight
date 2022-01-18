@@ -5,7 +5,9 @@ module Dungeon.Generate
 import           Actor                   (Actor)
 import           Actor.Monsters          (orc, troll)
 import           Control.Lens            ((%~), (&), (.~), (?~), (^.))
-import           Control.Monad.State     (MonadState (get, put), State,
+import           Control.Monad.Morph     (MFunctor (hoist), generalize)
+import           Control.Monad.State     (MonadState (get, put),
+                                          MonadTrans (lift), State, StateT,
                                           execStateT)
 import           Coord                   (Coord)
 import           Data.Either             (fromRight)
@@ -38,35 +40,30 @@ import           TreeZipper              (TreeZipper, appendNode, getFocused,
                                           treeZipper)
 
 generateMultipleFloorsDungeon ::
-       IndexGenerator
-    -> TileCollection
+       TileCollection
     -> Config
     -> Identifier
-    -> State StdGen (Tree Dungeon, Coord, IndexGenerator)
-generateMultipleFloorsDungeon ig ts cfg ident = do
-    (firstFloor, ascendingStairsInFirstFloor, ig') <-
-        generateDungeon ts ig cfg ident
+    -> StateT IndexGenerator (State StdGen) (Tree Dungeon, Coord)
+generateMultipleFloorsDungeon ts cfg ident = do
+    (firstFloor, ascendingStairsInFirstFloor) <- generateDungeon ts cfg ident
     let treeWithFirstFloor = Node {rootLabel = firstFloor, subForest = []}
         zipperWithFirstFloor = treeZipper treeWithFirstFloor
-    (dungeonZipper, ig'') <-
+    dungeonZipper <-
         foldlM
-            (\(dacc, igacc) _ ->
-                 generateDungeonAndAppend dacc igacc ts cfg ident)
-            (zipperWithFirstFloor, ig')
+            (\dacc _ -> generateDungeonAndAppend dacc ts cfg ident)
+            zipperWithFirstFloor
             [1 .. getNumOfFloors cfg - 1]
-    return (goToRootAndGetTree dungeonZipper, ascendingStairsInFirstFloor, ig'')
+    return (goToRootAndGetTree dungeonZipper, ascendingStairsInFirstFloor)
 
 generateDungeonAndAppend ::
        TreeZipper Dungeon
-    -> IndexGenerator
     -> TileCollection
     -> Config
     -> Identifier
-    -> State StdGen (TreeZipper Dungeon, IndexGenerator)
-generateDungeonAndAppend zipper ig ts cfg ident = do
-    (generatedDungeon, lowerStairsPosition, ig') <-
-        generateDungeon ts ig cfg ident
-    upperStairsPosition <- newStairsPosition ts $ getFocused zipper
+    -> StateT IndexGenerator (State StdGen) (TreeZipper Dungeon)
+generateDungeonAndAppend zipper ts cfg ident = do
+    (generatedDungeon, lowerStairsPosition) <- generateDungeon ts cfg ident
+    upperStairsPosition <- lift $ newStairsPosition ts $ getFocused zipper
     let (newUpperDungeon, newLowerDungeon) =
             addAscendingAndDescendingStiars
                 (StairsPair upperStairsPosition lowerStairsPosition)
@@ -86,7 +83,7 @@ generateDungeonAndAppend zipper ig ts cfg ident = do
             fromMaybe
                 (error "unreachable.")
                 (goDownBy (== newLowerDungeon) newZipper)
-    return (zipperFocusingNext, ig')
+    return zipperFocusingNext
 
 newStairsPosition :: TileCollection -> Dungeon -> State StdGen Coord
 newStairsPosition ts d = do
@@ -97,18 +94,16 @@ newStairsPosition ts d = do
 
 generateDungeon ::
        TileCollection
-    -> IndexGenerator
     -> Config
     -> Identifier
-    -> State StdGen (Dungeon, Coord, IndexGenerator)
-generateDungeon tc ig cfg ident = do
-    (tiles, enterPosition, ig') <-
+    -> StateT IndexGenerator (State StdGen) (Dungeon, Coord)
+generateDungeon tc cfg ident = do
+    (tiles, enterPosition) <-
         generateDungeonAccum
             []
             tc
             (allWallTiles $ getMapSize cfg)
             (V2 0 0)
-            ig
             cfg
             (getMaxRooms cfg)
     return
@@ -119,40 +114,36 @@ generateDungeon tc ig cfg ident = do
                    enterPosition
                    tiles)
               ident
-        , enterPosition
-        , ig')
+        , enterPosition)
 
 generateDungeonAccum ::
        [Room]
     -> TileCollection
     -> CellMap
     -> Coord
-    -> IndexGenerator
     -> Config
     -> Int
-    -> State StdGen (CellMap, V2 Int, IndexGenerator)
-generateDungeonAccum _ _ tileMap playerPos ig _ 0 =
-    return (tileMap, playerPos, ig)
-generateDungeonAccum acc tc tileMap playerPos ig cfg rooms = do
-    roomWidth <- randomRST (getRoomMinSize cfg, getRoomMaxSize cfg)
-    roomHeight <- randomRST (getRoomMinSize cfg, getRoomMaxSize cfg)
-    x <- randomRST (0, width - roomWidth - 1)
-    y <- randomRST (0, height - roomHeight - 1)
+    -> StateT IndexGenerator (State StdGen) (CellMap, V2 Int)
+generateDungeonAccum _ _ tileMap playerPos _ 0 = return (tileMap, playerPos)
+generateDungeonAccum acc tc tileMap playerPos cfg rooms = do
+    roomWidth <- lift $ randomRST (getRoomMinSize cfg, getRoomMaxSize cfg)
+    roomHeight <- lift $ randomRST (getRoomMinSize cfg, getRoomMaxSize cfg)
+    x <- lift $ randomRST (0, width - roomWidth - 1)
+    y <- lift $ randomRST (0, height - roomHeight - 1)
     let room = roomFromWidthHeight (V2 x y) (V2 roomWidth roomHeight)
         appendRoom =
             if null acc
                 then createRoom room tileMap
                 else tunnelBetween (center room) (center $ head acc) $
                      createRoom room tileMap
-    (mapWithNewEnemies, ig') <-
-        placeEnemies tc appendRoom ig room maxMonstersPerRoom
-    mapWithItems <- placeItems mapWithNewEnemies tc room maxItemsPerRoom
+    mapWithNewEnemies <- placeEnemies tc appendRoom room maxMonstersPerRoom
+    mapWithItems <- lift $ placeItems mapWithNewEnemies tc room maxItemsPerRoom
     let usable = not $ any (roomOverlaps room) acc
         (newMap, newAcc, newPlayerPos) =
             if usable
                 then (mapWithItems, room : acc, center room)
                 else (tileMap, acc, playerPos)
-    generateDungeonAccum newAcc tc newMap newPlayerPos ig' cfg (rooms - 1)
+    generateDungeonAccum newAcc tc newMap newPlayerPos cfg (rooms - 1)
   where
     V2 width height = widthAndHeight tileMap
 
@@ -176,18 +167,17 @@ tunnelBetween start end d = createRoom path1 $ createRoom path2 d
 placeEnemies ::
        TileCollection
     -> CellMap
-    -> IndexGenerator
     -> Room
     -> Int
-    -> State StdGen (CellMap, IndexGenerator)
-placeEnemies _ cm ig _ 0 = return (cm, ig)
-placeEnemies tc cm ig r n = do
-    x <- randomRST (x1 r, x2 r - 1)
-    y <- randomRST (y1 r, y2 r - 1)
-    (enemy, ig') <- newMonster ig
+    -> StateT IndexGenerator (State StdGen) CellMap
+placeEnemies _ cm _ 0 = return cm
+placeEnemies tc cm r n = do
+    x <- lift $ randomRST (x1 r, x2 r - 1)
+    y <- lift $ randomRST (y1 r, y2 r - 1)
+    enemy <- newMonster
     let newMap =
             fromRight cm $ flip execStateT cm $ locateActorAt tc enemy (V2 x y)
-    placeEnemies tc newMap ig' r (n - 1)
+    placeEnemies tc newMap r (n - 1)
 
 placeItems :: CellMap -> TileCollection -> Room -> Int -> State StdGen CellMap
 placeItems cm _ _ 0 = return cm
@@ -203,13 +193,13 @@ placeItems cm tc r n = do
             fromRight cm $ flip execStateT cm $ locateItemAt tc newItem (V2 x y)
     placeItems newMap tc r (n - 1)
 
-newMonster :: IndexGenerator -> State StdGen (Actor, IndexGenerator)
-newMonster ig = do
-    r <- randomST :: State StdGen Float
-    return $
+newMonster :: StateT IndexGenerator (State StdGen) Actor
+newMonster = do
+    r <- lift randomST :: StateT IndexGenerator (State StdGen) Float
+    hoist generalize $
         if r < 0.8
-            then orc ig
-            else troll ig
+            then orc
+            else troll
 
 randomRST :: (Random a, RandomGen g) => (a, a) -> State g a
 randomRST range = do

@@ -19,10 +19,9 @@ import           Actor.Status        (status)
 import           Actor.Status.Hp     (hp)
 import           Codec.Picture       (PixelRGBA8 (PixelRGBA8), generateImage)
 import           Control.Lens        ((%~))
-import           Control.Monad.State (execStateT)
+import           Control.Monad.State (State, evalState, execStateT)
 import           Coord               (Coord)
 import           Data.Array          (array, (//))
-import           Data.Bifunctor      (Bifunctor (first))
 import           Data.Either         (fromRight)
 import           Data.Map            (fromList)
 import           Data.Maybe          (fromJust)
@@ -62,20 +61,17 @@ initCellMap =
             , y <- [0 .. mapHeight - 1]
             ] //
         [(V2 0 1, unwalkable)]
-    (p, g) =
-        first (inventoryItems %~ (fromJust . addItem sampleBook)) $
-        player generator
-    (w, g') = weakestOrc g
-    (i, g'') = intermediateOrc g'
-    (s, g''') = strongestOrc g''
-    (orcWithoutItems, g'''') = orc g'''
-    (orcWithFullItems, g''''') =
-        iterate
-            (first (inventoryItems %~ (fromJust . addItem herb)))
-            (orc g'''') !!
-        5
-    (orcWithHerb, _) =
-        first (inventoryItems %~ (fromJust . addItem herb)) $ orc g'''''
+    (p, w, i, s, orcWithoutItems, orcWithFullItems, orcWithHerb) =
+        flip evalState generator $ do
+            (,,,,,,) <$>
+                ((inventoryItems %~ fromJust . addItem sampleBook) <$> player) <*>
+                weakestOrc <*>
+                intermediateOrc <*>
+                strongestOrc <*>
+                orc <*>
+                ((!! 5) . iterate (inventoryItems %~ (fromJust . addItem herb)) <$>
+                 orc) <*>
+                ((inventoryItems %~ fromJust . addItem herb) <$> orc)
     emptyTile = TileIdentifierLayer Nothing Nothing
     unwalkable = TileIdentifierLayer (Just (dummyTileFile, 1)) Nothing
     mapWidth = 3
@@ -90,14 +86,14 @@ initTileCollection =
   where
     emptyImage = generateImage (\_ _ -> PixelRGBA8 0 0 0 0) tileWidth tileHeight
 
-strongestOrc :: IndexGenerator -> (Actor, IndexGenerator)
-strongestOrc g = monster g Orc (status (hp 100) 100 100) ""
+strongestOrc :: State IndexGenerator Actor
+strongestOrc = monster Orc (status (hp 100) 100 100) ""
 
-intermediateOrc :: IndexGenerator -> (Actor, IndexGenerator)
-intermediateOrc g = monster g Orc (status (hp 100) 50 50) ""
+intermediateOrc :: State IndexGenerator Actor
+intermediateOrc = monster Orc (status (hp 100) 50 50) ""
 
-weakestOrc :: IndexGenerator -> (Actor, IndexGenerator)
-weakestOrc g = monster g Orc (status (hp 1) 0 0) ""
+weakestOrc :: State IndexGenerator Actor
+weakestOrc = monster Orc (status (hp 1) 0 0) ""
 
 playerPosition :: Coord
 playerPosition = V2 0 0

@@ -37,6 +37,7 @@ import           Actor.Status            (Status)
 import qualified Actor.Status            as S
 import           Actor.Status.Hp         (hp)
 import           Control.Lens            (makeLenses, (%~), (&), (.~), (^.))
+import           Control.Monad.State     (State)
 import           Control.Monad.Writer    (MonadWriter (writer), Writer)
 import           Coord                   (Coord)
 import           Data.Binary             (Binary)
@@ -77,18 +78,16 @@ makeLenses ''Actor
 instance Binary Actor
 
 actor ::
-       IndexGenerator
-    -> Identifier
+       Identifier
     -> Status
     -> ActorKind
     -> Maybe TalkingPart
     -> Text
     -> Text
-    -> (Actor, IndexGenerator)
-actor ig id' st ak talkMessage' walkingImagePath' standingImagePath' =
-    (a, newGenerator)
-  where
-    a =
+    -> State IndexGenerator Actor
+actor id' st ak talkMessage' walkingImagePath' standingImagePath' = do
+    idx <- generate
+    return
         Actor
             { _index = idx
             , _identifier = id'
@@ -101,24 +100,14 @@ actor ig id' st ak talkMessage' walkingImagePath' standingImagePath' =
             , _inventoryItems = inventory 5
             , _target = Nothing
             }
-    (idx, newGenerator) = generate ig
 
-monster ::
-       IndexGenerator -> Identifier -> Status -> Text -> (Actor, IndexGenerator)
-monster ig name' st walking =
-    actor
-        ig
-        name'
-        st
-        Monster
-        Nothing
-        walking
-        "images/sample_standing_picture.png"
+monster :: Identifier -> Status -> Text -> State IndexGenerator Actor
+monster name' st walking =
+    actor name' st Monster Nothing walking "images/sample_standing_picture.png"
 
-player :: IndexGenerator -> (Actor, IndexGenerator)
-player ig =
+player :: State IndexGenerator Actor
+player =
     actor
-        ig
         Identifier.Player
         st
         Player
