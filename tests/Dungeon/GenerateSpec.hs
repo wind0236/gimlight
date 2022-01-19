@@ -10,7 +10,8 @@ import qualified Dungeon                     as D
 import           Dungeon.Generate            (generateMultipleFloorsDungeon)
 import           Dungeon.Generate.Config     (config)
 import           Dungeon.Identifier          (Identifier (Beaeve))
-import           Dungeon.Map.Cell            (widthAndHeight)
+import           Dungeon.Map.Cell            (CellMap, widthAndHeight)
+import           Dungeon.Map.Tile            (TileCollection)
 import           Dungeon.Map.Tile.JSONReader (addTileFile)
 import           IndexGenerator              (generator)
 import           Linear.V2                   (V2 (V2))
@@ -33,13 +34,16 @@ testSizeIsCorrect = do
         width <- chooseInt (tileColumns, 100)
         height <- chooseInt (tileRows, 100)
         return $ dungeonSize tc (V2 width height) == V2 width height
-    dungeonSize tc sz =
-        let Node d _ =
-                evalState
-                    (evalStateT
-                         (generateMultipleFloorsDungeon tc (cfg sz) Beaeve)
-                         generator)
-                    (mkStdGen 0) ^.
-                _1
-         in widthAndHeight $ d ^. D.cellMap
+    dungeonSize tc = widthAndHeight . generateMap tc
+
+generateMap :: TileCollection -> V2 Int -> CellMap
+generateMap tc sz = d ^. D.cellMap
+  where
+    Node d _ =
+        evalState
+            (evalStateT
+                 (generateMultipleFloorsDungeon tc (cfg sz) Beaeve)
+                 generator)
+            (mkStdGen 0) ^.
+        _1
     cfg = config 1 3 2 3
