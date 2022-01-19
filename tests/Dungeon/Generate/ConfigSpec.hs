@@ -3,9 +3,7 @@ module Dungeon.Generate.ConfigSpec
     ) where
 
 import           Control.Exception       (evaluate)
-import           Dungeon.Generate.Config (config, mapHeightIsTooSmall,
-                                          mapWidthIsTooSmall,
-                                          maxRoomMustBePositive,
+import           Dungeon.Generate.Config (config, maxRoomMustBePositive,
                                           numOfFloorsMustBePositive,
                                           roomMinIsLargerThanRoomMax,
                                           roomMinSizeMustBePositive)
@@ -19,8 +17,6 @@ spec =
         testPanicIfNumOfFloorsIsNotPositive
         testPanicIfMaxRoomsIsNotPositive
         testPanicIfRoomMinSizeIsNotPositive
-        testPanicIfWidthIsTooSmall
-        testPanicIfHeightIsTooSmall
         testPanicIfRoomMinSizeIsLargerThanRoomMaxSize
 
 testPanicIfNumOfFloorsIsNotPositive :: Spec
@@ -40,22 +36,6 @@ testPanicIfRoomMinSizeIsNotPositive =
     it "panics if the given number of minimum room size is not positive." $
     evaluate (config 1 1 0 1 (V2 100 100)) `shouldThrow`
     errorCall roomMinSizeMustBePositive
-
-testPanicIfWidthIsTooSmall :: Spec
-testPanicIfWidthIsTooSmall =
-    it "panics if the given map width is too small" $
-    evaluate (config 1 1 1 1 (V2 width 1)) `shouldThrow`
-    errorCall (mapWidthIsTooSmall width)
-  where
-    width = 1
-
-testPanicIfHeightIsTooSmall :: Spec
-testPanicIfHeightIsTooSmall =
-    it "panics if the given map height is too small" $
-    evaluate (config 1 1 1 1 (V2 100 height)) `shouldThrow`
-    errorCall (mapHeightIsTooSmall height)
-  where
-    height = 1
 
 testPanicIfRoomMinSizeIsLargerThanRoomMaxSize :: Spec
 testPanicIfRoomMinSizeIsLargerThanRoomMaxSize =

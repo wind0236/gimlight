@@ -10,12 +10,14 @@ import           Actor                           (getCurrentExperiencePoint,
                                                   getHp, getLevel, getMaxHp,
                                                   getPower, walkingImagePath)
 import           Codec.Picture                   (Image (imageData, imageHeight, imageWidth))
-import           Control.Lens                    ((&), (.~), (^.))
+import           Control.Lens                    (Ixed (ix), (&), (.~), (^.),
+                                                  (^?))
 import           Control.Monad                   (guard)
 import           Coord                           (Coord)
 import           Data.Array                      ((!))
 import qualified Data.Map                        as Map
-import           Data.Maybe                      (catMaybes, mapMaybe)
+import           Data.Maybe                      (catMaybes, fromMaybe,
+                                                  mapMaybe)
 import           Data.Vector.Storable.ByteString (vectorToByteString)
 import           Dungeon                         (Dungeon, cellMap)
 import           Dungeon.Map.Cell                (exploredMap, lower,
@@ -110,7 +112,8 @@ mapWidget eh = vstack rows
         | x <- [topLeftCoordX .. topLeftCoordX + tileColumns - 1]
         ]
     cell c =
-        zstack $ catMaybes [lowerLayerAt c, upperLayerAt c, Just $ shadowAt c]
+        zstack (catMaybes [lowerLayerAt c, upperLayerAt c, Just $ shadowAt c]) `styleBasic`
+        [width $ fromIntegral tileWidth, height $ fromIntegral tileHeight]
     lowerLayerAt = layerOfAt lower
     upperLayerAt = layerOfAt upper
     layerOfAt which c = tileIdToImageMem <$> getTileIdentifierOfLayerAt which c
@@ -128,8 +131,8 @@ mapWidget eh = vstack rows
         | isVisible c = 0
         | isExplored c = 0.5
         | otherwise = 1
-    isVisible c = playerFov (d ^. cellMap) ! c
-    isExplored c = exploredMap (d ^. cellMap) ! c
+    isVisible c = fromMaybe False $ playerFov (d ^. cellMap) ^? ix c
+    isExplored c = fromMaybe False $ exploredMap (d ^. cellMap) ^? ix c
     getTileIdentifierOfLayerAt which c = tileIdentifierLayer c >>= (^. which)
     tileIdentifierLayer c = tileIdentifierLayerAt c $ d ^. cellMap
     V2 topLeftCoordX topLeftCoordY = topLeftCoord d
