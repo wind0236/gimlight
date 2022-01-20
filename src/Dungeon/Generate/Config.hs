@@ -43,7 +43,7 @@ config nf mr rmin rmax ms
     | nf <= 0 = error numOfFloorsMustBePositive
     | mr <= 0 = error maxRoomMustBePositive
     | rmin <= 0 = error roomMinSizeMustBePositive
-    | rmin > rmax = error $ roomMinIsLargerThanRoomMax rmin rmax -- No need to check if `rmin <= 0` as this ensures that `0 < rmin < rmax`.
+    | rmin > rmax = error $ roomMinIsLargerThanRoomMax rmin rmax -- No need to check if `rmax <= 0` as this ensures that `0 < rmin <= rmax`.
     | otherwise = Config nf mr rmin rmax ms
 
 numOfFloorsMustBePositive :: String
