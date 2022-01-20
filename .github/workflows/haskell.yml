@@ -28,7 +28,8 @@ jobs:
           ~/.cabal/packages
           ~/.cabal/store
           dist-newstyle
-        key: ${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}
+        key: ${{ runner.os }}-${{ hashFiles('cabal.project.freeze') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-${{ hashFiles('cabal.project.freeze') }}
 
     - name: Install dependencies
       run: |
