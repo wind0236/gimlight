@@ -24,6 +24,7 @@ data Config =
         , roomMaxSize :: Int
         , mapSize     :: V2 Int
         }
+    deriving (Show)
 
 getNumOfFloors :: Config -> Int
 getNumOfFloors = numOfFloors
