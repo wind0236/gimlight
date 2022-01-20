@@ -6,6 +6,8 @@ import           Control.Exception       (evaluate)
 import           Dungeon.Generate.Config (config, maxRoomMustBePositive,
                                           numOfFloorsMustBePositive,
                                           roomMinIsLargerThanRoomMax,
+                                          roomMinSizeIsLargerThanRoomHeight,
+                                          roomMinSizeIsLargerThanRoomWidth,
                                           roomMinSizeMustBePositive)
 import           Generator               (generateNonPositive,
                                           generatePositiveBigSmallNumbers)
@@ -21,6 +23,8 @@ spec =
         testPanicIfMaxRoomsIsNotPositive
         testPanicIfRoomMinSizeIsNotPositive
         testPanicIfRoomMinSizeIsLargerThanRoomMaxSize
+        testPanicIfRoomMinSizeIsLargerThanMapWidth
+        testPanicIfRoomMinSizeIsLargerThanMapHeight
 
 testPanicIfNumOfFloorsIsNotPositive :: Spec
 testPanicIfNumOfFloorsIsNotPositive =
@@ -49,3 +53,21 @@ testPanicIfRoomMinSizeIsLargerThanRoomMaxSize =
     forAll generatePositiveBigSmallNumbers $ \(rmin, rmax) ->
         evaluate (config 1 1 rmin rmax (V2 100 100)) `shouldThrow`
         errorCall (roomMinIsLargerThanRoomMax rmin rmax)
+
+testPanicIfRoomMinSizeIsLargerThanMapWidth :: Spec
+testPanicIfRoomMinSizeIsLargerThanMapWidth =
+    it "panics if the given room minimum size is larger than the room width" $
+    evaluate (config 1 1 rmin 5 (V2 width 6)) `shouldThrow`
+    errorCall (roomMinSizeIsLargerThanRoomWidth rmin width)
+  where
+    rmin = 5
+    width = 4
+
+testPanicIfRoomMinSizeIsLargerThanMapHeight :: Spec
+testPanicIfRoomMinSizeIsLargerThanMapHeight =
+    it "panics if the given room minimum size is larger than the room height" $
+    evaluate (config 1 1 rmin 5 (V2 6 height)) `shouldThrow`
+    errorCall (roomMinSizeIsLargerThanRoomHeight rmin height)
+  where
+    rmin = 5
+    height = 4
