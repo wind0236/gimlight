@@ -48,7 +48,7 @@ config nf mr rmin rmax ms@(V2 width height)
     | rmin <= 0 = error roomMinSizeMustBePositive
     | rmin > rmax = error $ roomMinIsLargerThanRoomMax rmin rmax -- No need to check if `rmax <= 0` as this ensures that `0 < rmin <= rmax`.
     | rmax > width = error $ roomMaxSizeIsLargerThanRoomWidth rmax width
-    | rmax > height = error $ roomMaxSizeIsLargerThanRoomHeight rmax height
+    | rmax > height = error $ roomMaxSizeIsLargerThanRoomHeight rmax height -- No need to check if `width` or `height` are negative as `(width or height) >= rmax >= rmin > 0`
     | otherwise = Config nf mr rmin rmax ms
 
 numOfFloorsMustBePositive :: String
