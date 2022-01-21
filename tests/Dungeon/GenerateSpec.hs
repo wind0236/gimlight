@@ -5,7 +5,7 @@ module Dungeon.GenerateSpec
 import           Control.Lens                (_1, (^.))
 import           Control.Monad.State         (evalState, evalStateT)
 import           Data.Map                    (empty)
-import           Data.Tree                   (Tree (Node))
+import           Data.Tree                   (Tree)
 import qualified Dungeon                     as D
 import           Dungeon.Generate            (generateMultipleFloorsDungeon)
 import           Dungeon.Generate.Config     (Config, config, getMapSize)
@@ -35,13 +35,14 @@ testSizeIsCorrect = do
         it "generates a dungeon with the specified map size" $
         forAll ((,) <$> generateConfig <*> arbitrary) $ propertyFunc tc
   where
-    propertyFunc tc (cfg, g) = dungeonSize tc cfg g `shouldBe` getMapSize cfg
-    dungeonSize tc cfg = widthAndHeight . generateMap tc cfg
+    propertyFunc tc (cfg, g) =
+        mapM_ (`shouldBe` getMapSize cfg) $ dungeonSize tc cfg g
+    dungeonSize tc cfg = fmap widthAndHeight . generateMap tc cfg
 
-generateMap :: TileCollection -> Config -> Int -> CellMap
-generateMap tc cfg g = d ^. D.cellMap
+generateMap :: TileCollection -> Config -> Int -> Tree CellMap
+generateMap tc cfg g = fmap (^. D.cellMap) tree
   where
-    Node d _ =
+    tree =
         evalState
             (evalStateT (generateMultipleFloorsDungeon tc cfg Beaeve) generator)
             (mkStdGen g) ^.
