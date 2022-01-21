@@ -16,7 +16,8 @@ import           Dungeon.Map.Tile.JSONReader (addTileFile)
 import           IndexGenerator              (generator)
 import           Linear.V2                   (V2 (V2))
 import           System.Random               (mkStdGen)
-import           Test.Hspec                  (Spec, describe, it, runIO)
+import           Test.Hspec                  (Spec, describe, it, runIO,
+                                              shouldBe)
 import           Test.Hspec.QuickCheck       (modifyMaxSuccess)
 import           Test.QuickCheck             (Arbitrary (arbitrary), Gen,
                                               forAll, suchThat)
@@ -34,7 +35,7 @@ testSizeIsCorrect = do
         it "generates a dungeon with the specified map size" $
         forAll ((,) <$> generateConfig <*> arbitrary) $ propertyFunc tc
   where
-    propertyFunc tc (cfg, g) = dungeonSize tc cfg g == getMapSize cfg
+    propertyFunc tc (cfg, g) = dungeonSize tc cfg g `shouldBe` getMapSize cfg
     dungeonSize tc cfg = widthAndHeight . generateMap tc cfg
 
 generateMap :: TileCollection -> Config -> Int -> CellMap
