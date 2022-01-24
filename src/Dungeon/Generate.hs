@@ -71,13 +71,15 @@ generateDungeonAndAppend zipper ts cfg ident = do
         newZipper =
             appendNode newLowerDungeon $
             modify
-                (over
+                (const $
+                 over
                      cellMap
                      (fromMaybe (error "Failed to change the tile.") .
                       changeTileAt
                           (set upper (Just downStairs))
-                          upperStairsPosition)) $
-            modify (const newUpperDungeon) zipper
+                          upperStairsPosition)
+                     newUpperDungeon)
+                zipper
         zipperFocusingNext =
             fromMaybe
                 (error "unreachable.")
