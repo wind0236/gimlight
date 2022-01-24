@@ -4,7 +4,7 @@ module Dungeon.Generate
 
 import           Actor                   (Actor)
 import           Actor.Monsters          (orc, troll)
-import           Control.Lens            ((%~), (&), (.~), (?~), (^.))
+import           Control.Lens            (set, (%~), (&), (.~), (?~), (^.))
 import           Control.Monad.Morph     (MFunctor (hoist), generalize)
 import           Control.Monad.State     (MonadState (get, put),
                                           MonadTrans (lift), State, StateT,
@@ -76,7 +76,7 @@ generateDungeonAndAppend zipper ts cfg ident = do
                      cellMap %~
                      (fromMaybe (error "Failed to change the tile.") .
                       changeTileAt
-                          (\tile -> tile & upper ?~ downStairs)
+                          (set upper (Just downStairs))
                           upperStairsPosition)) $
             modify (const newUpperDungeon) zipper
         zipperFocusingNext =
