@@ -4,7 +4,7 @@ module Dungeon.Generate
 
 import           Actor                   (Actor)
 import           Actor.Monsters          (orc, troll)
-import           Control.Lens            (over, set, (&), (.~), (?~), (^.))
+import           Control.Lens            (over, set, (&), (.~), (^.))
 import           Control.Monad.Morph     (MFunctor (hoist), generalize)
 import           Control.Monad.State     (MonadState (get, put),
                                           MonadTrans (lift), State, StateT,
@@ -110,10 +110,7 @@ generateDungeon tc cfg ident = do
     return
         ( dungeon
               (fromMaybe (error "Failed to change the tile.") $
-               changeTileAt
-                   (\tile -> tile & upper ?~ upStairs)
-                   enterPosition
-                   tiles)
+               changeTileAt (set upper (Just upStairs)) enterPosition tiles)
               ident
         , enterPosition)
 
