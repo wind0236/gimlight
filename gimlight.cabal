@@ -47,6 +47,7 @@ Test-Suite spec
                       , Action.MoveSpec
                       , Action.PickUpSpec
                       , Action.WaitSpec
+                      , DungeonSpec
                       , Dungeon.GenerateSpec
                       , Dungeon.Generate.ConfigSpec
                       , Dungeon.Map.CellSpec
