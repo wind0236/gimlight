@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections   #-}
 
@@ -31,24 +32,28 @@ module Dungeon.Map.Cell
     , tileIdentifierLayerAt
     ) where
 
-import           Actor               (Actor, isPlayer)
-import           Control.Lens        (Ixed (ix), makeLenses, preview, view,
-                                      (%%~), (%~), (&), (.~), (?~), (^.), (^?))
-import           Control.Monad.State (StateT (StateT), gets)
-import           Coord               (Coord)
-import           Data.Array          (Array, assocs, bounds, listArray, (!),
-                                      (//))
-import           Data.Binary         (Binary)
-import           Data.Foldable       (find)
-import qualified Data.Map            as M
-import           Data.Maybe          (isJust, isNothing, mapMaybe)
-import           Dungeon.Map.Tile    (TileCollection, TileIdentifier, floorTile,
-                                      wallTile)
-import qualified Dungeon.Map.Tile    as Tile
-import           Fov                 (calculateFov)
-import           GHC.Generics        (Generic)
-import           Item                (Item)
-import           Linear.V2           (V2 (V2))
+import           Actor                   (Actor, isPlayer)
+import           Control.Lens            (Ixed (ix), makeLenses, over, preview,
+                                          view, (%%~), (%~), (&), (.~), (<&>),
+                                          (?~), (^.), (^?))
+import           Control.Monad.State     (MonadTrans (lift), StateT (StateT),
+                                          gets)
+import           Coord                   (Coord)
+import           Data.Array              (Array, assocs, bounds, listArray, (!),
+                                          (//))
+import           Data.Bifunctor          (Bifunctor (second))
+import           Data.Binary             (Binary)
+import           Data.Either.Combinators (maybeToRight)
+import           Data.Foldable           (find)
+import qualified Data.Map                as M
+import           Data.Maybe              (isJust, isNothing, mapMaybe)
+import           Dungeon.Map.Tile        (TileCollection, TileIdentifier,
+                                          floorTile, wallTile)
+import qualified Dungeon.Map.Tile        as Tile
+import           Fov                     (calculateFov)
+import           GHC.Generics            (Generic)
+import           Item                    (Item)
+import           Linear.V2               (V2 (V2))
 
 data Error
     = OutOfRange
@@ -118,17 +123,13 @@ locateItem tc i c
             Just x  -> Left $ ItemAlreadyExists x
             Nothing -> Right $ c & item ?~ i
 
-removeActor :: Cell -> (Either Error Actor, Cell)
+removeActor :: Cell -> Either Error (Actor, Cell)
 removeActor c =
-    case c ^. actor of
-        Just a  -> (Right a, c & actor .~ Nothing)
-        Nothing -> (Left ActorNotFound, c)
+    fmap (, c & actor .~ Nothing) . maybeToRight ActorNotFound $ c ^. actor
 
-removeItem :: Cell -> (Either Error Item, Cell)
+removeItem :: Cell -> Either Error (Item, Cell)
 removeItem c =
-    case c ^. item of
-        Just i  -> (Right i, c & item .~ Nothing)
-        Nothing -> (Left ItemNotFound, c)
+    fmap (, c & item .~ Nothing) . maybeToRight ItemNotFound $ c ^. item
 
 newtype CellMap =
     CellMap
@@ -236,31 +237,20 @@ locateItemAt tc i c =
 removeActorAt :: Coord -> StateT CellMap (Either Error) Actor
 removeActorAt c =
     StateT $ \cm ->
-        case cm ^? rawCellMap . ix c of
-            Just x ->
-                case removeActor x of
-                    (Right removed, newCell) ->
-                        Right (removed, cm & rawCellMap %~ (// [(c, newCell)]))
-                    (Left e, _) -> Left e
-            Nothing -> Left ActorNotFound
+        (maybeToRight OutOfRange (cm ^? rawCellMap . ix c) >>= removeActor) <&>
+        second (\cell -> over rawCellMap (// [(c, cell)]) cm)
 
 removeItemAt :: Coord -> StateT CellMap (Either Error) Item
 removeItemAt c =
     StateT $ \cm ->
-        case cm ^? rawCellMap . ix c of
-            Just x ->
-                case removeItem x of
-                    (Right removed, newCell) ->
-                        Right (removed, cm & rawCellMap %~ (// [(c, newCell)]))
-                    (Left e, _) -> Left e
-            Nothing -> Left ItemNotFound
+        (maybeToRight OutOfRange (cm ^? rawCellMap . ix c) >>= removeItem) <&>
+        second (\cell -> cm & rawCellMap %~ (// [(c, cell)]))
 
 removeActorIf :: (Actor -> Bool) -> StateT CellMap (Either Error) Actor
-removeActorIf f = do
-    position <- gets $ fmap fst . find (f . snd) . positionsAndActors
-    case position of
-        Just x  -> removeActorAt x
-        Nothing -> StateT $ const $ Left ActorNotFound
+removeActorIf f =
+    gets (fmap fst . find (f . snd) . positionsAndActors) >>= lift .
+    maybeToRight ActorNotFound >>=
+    removeActorAt
 
 tileIdentifierLayerAt :: Coord -> CellMap -> Maybe TileIdentifierLayer
 tileIdentifierLayerAt c = preview (rawCellMap . ix c . tileIdentifierLayer)
