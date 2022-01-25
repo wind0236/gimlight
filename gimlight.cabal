@@ -54,7 +54,7 @@ Test-Suite spec
                       , Dungeon.Map.Tile.JSONReaderSpec
                       , FovSpec
                       , Generator
-                      , SetUp.Dungeon
+                      , SetUp.CellMap
                       , SetUp.ImageFile
                       , SetUp.MapFile
                       , SetUp.TileFile

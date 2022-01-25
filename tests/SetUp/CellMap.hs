@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module SetUp.Dungeon
+module SetUp.CellMap
     ( initCellMap
     , initTileCollection
     , playerPosition

@@ -17,7 +17,7 @@ import           Dungeon.Map.Cell           (locateActorAt, locateItemAt,
 import           Inventory                  (removeNthItem)
 import           Item                       (getName, herb)
 import qualified Localization.Texts         as T
-import           SetUp.Dungeon              (initCellMap, initTileCollection,
+import           SetUp.CellMap              (initCellMap, initTileCollection,
                                              orcWithFullItemsPosition,
                                              orcWithHerbPosition)
 import           Test.Hspec                 (Spec, it, shouldBe)
