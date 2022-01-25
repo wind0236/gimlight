@@ -2,9 +2,7 @@ module Dungeon.Map.CellSpec
     ( spec
     ) where
 
-import           Control.Lens     (ix, (^.), (^?))
-import           Data.Array       (array)
-import           Data.Maybe       (isNothing)
+import           Control.Lens     ((^.))
 import           Dungeon.Map.Cell (allWallTiles, tileIdentifierLayerAt, upper)
 import           Dungeon.Map.Tile (wallTile)
 import           Linear.V2        (V2 (V2))
@@ -12,9 +10,7 @@ import           Test.Hspec       (Spec, describe, it)
 import           Test.QuickCheck  (property)
 
 spec :: Spec
-spec = do
-    testAllWallTiles
-    testArrayAccessingOutOfBounds
+spec = testAllWallTiles
 
 testAllWallTiles :: Spec
 testAllWallTiles =
@@ -32,12 +28,3 @@ testAllWallTiles =
             False
             ((== Just wallTile) . (^. upper))
             (tileIdentifierLayerAt c cellMap)
-
-testArrayAccessingOutOfBounds :: Spec
-testArrayAccessingOutOfBounds =
-    describe "Data.Array" $
-    it "returns a `Nothing` if we try to access to an index which does not exist with `^?`" $
-    isNothing $ arr ^? ix (u + 1)
-  where
-    arr = array (0, u) [(x, 0 :: Int) | x <- [0 :: Int .. u]]
-    u = 3

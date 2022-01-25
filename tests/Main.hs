@@ -8,6 +8,7 @@ import qualified Action.MeleeSpec
 import qualified Action.MoveSpec
 import qualified Action.PickUpSpec
 import qualified Action.WaitSpec
+import qualified Data.ArraySpec
 import qualified Dungeon.Generate.ConfigSpec
 import qualified Dungeon.GenerateSpec
 import qualified Dungeon.Map.CellSpec
@@ -27,6 +28,7 @@ spec = do
     describe "Action.Move" Action.MoveSpec.spec
     describe "Action.PickUp" Action.PickUpSpec.spec
     describe "Action.Wait" Action.WaitSpec.spec
+    describe "Data.Array" Data.ArraySpec.spec
     describe "Dungeon.Generate" Dungeon.GenerateSpec.spec
     describe "Dungeon.Generate.Config" Dungeon.Generate.ConfigSpec.spec
     describe "Dungeon.Map.Cell" Dungeon.Map.CellSpec.spec
