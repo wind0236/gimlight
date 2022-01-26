@@ -2,7 +2,7 @@ module Main
     ( main
     ) where
 
-import           Game (start)
+import           Gimlight.Game (start)
 
 main :: IO ()
 main = start

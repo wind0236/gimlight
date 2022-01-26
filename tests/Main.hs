@@ -2,36 +2,43 @@ module Main
     ( main
     ) where
 
-import qualified Action.ConsumeSpec
-import qualified Action.DropSpec
-import qualified Action.MeleeSpec
-import qualified Action.MoveSpec
-import qualified Action.PickUpSpec
-import qualified Action.WaitSpec
-import qualified Data.ArraySpec
-import qualified Dungeon.Generate.ConfigSpec
-import qualified Dungeon.GenerateSpec
-import qualified Dungeon.Map.CellSpec
-import qualified Dungeon.Map.JSONReaderSpec
-import qualified Dungeon.Map.Tile.JSONReaderSpec
-import qualified FovSpec
-import           Test.Hspec                      (Spec, describe, hspec)
+import qualified Gimlight.Action.ConsumeSpec
+import qualified Gimlight.Action.DropSpec
+import qualified Gimlight.Action.MeleeSpec
+import qualified Gimlight.Action.MoveSpec
+import qualified Gimlight.Action.PickUpSpec
+import qualified Gimlight.Action.WaitSpec
+import qualified Gimlight.Data.ArraySpec
+import qualified Gimlight.Dungeon.Generate.ConfigSpec
+import qualified Gimlight.Dungeon.GenerateSpec
+import qualified Gimlight.Dungeon.Map.CellSpec
+import qualified Gimlight.Dungeon.Map.JSONReaderSpec
+import qualified Gimlight.Dungeon.Map.Tile.JSONReaderSpec
+import qualified Gimlight.FovSpec
+import           Test.Hspec                               (Spec, describe,
+                                                           hspec)
 
 main :: IO ()
 main = hspec spec
 
 spec :: Spec
 spec = do
-    describe "Action.Consume" Action.ConsumeSpec.spec
-    describe "Action.Drop" Action.DropSpec.spec
-    describe "Action.Melee" Action.MeleeSpec.spec
-    describe "Action.Move" Action.MoveSpec.spec
-    describe "Action.PickUp" Action.PickUpSpec.spec
-    describe "Action.Wait" Action.WaitSpec.spec
-    describe "Data.Array" Data.ArraySpec.spec
-    describe "Dungeon.Generate" Dungeon.GenerateSpec.spec
-    describe "Dungeon.Generate.Config" Dungeon.Generate.ConfigSpec.spec
-    describe "Dungeon.Map.Cell" Dungeon.Map.CellSpec.spec
-    describe "Dungeon.Map.JSONReader" Dungeon.Map.JSONReaderSpec.spec
-    describe "Dungeon.Map.Tile.JSONReader" Dungeon.Map.Tile.JSONReaderSpec.spec
-    describe "Fov" FovSpec.spec
+    describe "Gimlight.Action.Consume" Gimlight.Action.ConsumeSpec.spec
+    describe "Gimlight.Action.Drop" Gimlight.Action.DropSpec.spec
+    describe "Gimlight.Action.Melee" Gimlight.Action.MeleeSpec.spec
+    describe "Gimlight.Action.Move" Gimlight.Action.MoveSpec.spec
+    describe "Gimlight.Action.PickUp" Gimlight.Action.PickUpSpec.spec
+    describe "Gimlight.Action.Wait" Gimlight.Action.WaitSpec.spec
+    describe "Gimlight.Data.Array" Gimlight.Data.ArraySpec.spec
+    describe "Gimlight.Dungeon.Generate" Gimlight.Dungeon.GenerateSpec.spec
+    describe
+        "Gimlight.Dungeon.Generate.Config"
+        Gimlight.Dungeon.Generate.ConfigSpec.spec
+    describe "Gimlight.Dungeon.Map.Cell" Gimlight.Dungeon.Map.CellSpec.spec
+    describe
+        "Gimlight.Dungeon.Map.JSONReader"
+        Gimlight.Dungeon.Map.JSONReaderSpec.spec
+    describe
+        "Gimlight.Dungeon.Map.Tile.JSONReader"
+        Gimlight.Dungeon.Map.Tile.JSONReaderSpec.spec
+    describe "Gimlight.Fov" Gimlight.FovSpec.spec
