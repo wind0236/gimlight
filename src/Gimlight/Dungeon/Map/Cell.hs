@@ -237,13 +237,13 @@ locateItemAt tc i c =
 removeActorAt :: Coord -> StateT CellMap (Either Error) Actor
 removeActorAt c =
     StateT $ \cm ->
-        (maybeToRight OutOfRange (cm ^? rawCellMap . ix c) >>= removeActor) <&>
+        maybeToRight OutOfRange (cm ^? rawCellMap . ix c) >>= removeActor <&>
         second (\cell -> over rawCellMap (// [(c, cell)]) cm)
 
 removeItemAt :: Coord -> StateT CellMap (Either Error) Item
 removeItemAt c =
     StateT $ \cm ->
-        (maybeToRight OutOfRange (cm ^? rawCellMap . ix c) >>= removeItem) <&>
+        maybeToRight OutOfRange (cm ^? rawCellMap . ix c) >>= removeItem <&>
         second (\cell -> cm & rawCellMap %~ (// [(c, cell)]))
 
 removeActorIf :: (Actor -> Bool) -> StateT CellMap (Either Error) Actor
