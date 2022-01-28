@@ -43,7 +43,7 @@ import           Data.Bifunctor            (Bifunctor (first, second))
 import           Data.Binary               (Binary)
 import           Data.Either.Combinators   (maybeToRight)
 import           Data.Foldable             (Foldable (toList), find)
-import           Data.List                 (elemIndex)
+import           Data.List                 (elemIndex, nub)
 import qualified Data.Map                  as M
 import           Data.Maybe                (catMaybes, isJust, isNothing,
                                             mapMaybe)
@@ -165,7 +165,7 @@ instance Show CellMap where
             expectJust ("No such path: " ++ path) $ elemIndex path tileFiles
         renderedTileList = init $ unlines $ appendNumbers tileFiles
         appendNumbers = zipWith (\n -> (++) (show n ++ ": ")) [0 :: Int ..]
-        tileFiles = concatMap tileFilesOfLayer [upper, lower]
+        tileFiles = nub $ concatMap tileFilesOfLayer [upper, lower]
         tileFilesOfLayer = fmap fst . catMaybes . toList . tileIdentifiersOf
         tileIdentifiersOf layer = fmap (view (tileIdentifierLayer . layer)) cm
 

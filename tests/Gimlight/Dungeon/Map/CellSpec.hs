@@ -10,7 +10,8 @@ import           Gimlight.Dungeon.Map.Cell (allWallTiles, tileIdentifierLayerAt,
                                             upper)
 import           Gimlight.Dungeon.Map.Tile (wallTile)
 import           Gimlight.SetUp.CellMap    (initCellMap)
-import           Gimlight.SetUp.MapFile    (cellMapContainingMultipleFilesTile)
+import           Gimlight.SetUp.MapFile    (cellMapContainingMultipleFilesTile,
+                                            rectangleButNotSquareCellMap)
 import           Linear.V2                 (V2 (V2))
 import           Test.Hspec                (Spec, describe, it, shouldBe)
 import           Test.QuickCheck           (property)
@@ -40,16 +41,17 @@ testAllWallTiles =
 testShowCellMap :: Spec
 testShowCellMap =
     describe "CellMap" $
-    it "show prints the detailed cell map information." $ mapM_ testFunc pairs
+    it "show prints the detailed cell map information." $
+    mapM_ testFunc $ zip cellMaps expectations
   where
     testFunc (m, expected) = show m `shouldBe` expected
-    pairs =
-        [ (initCellMap, expectedForInitCellMap)
-        , ( cellMapContainingMultipleFilesTile
-          , expectedForCellMapContainingMultipleFilesTile)
+    cellMaps =
+        [ cellMapContainingMultipleFilesTile
+        , initCellMap
+        , rectangleButNotSquareCellMap
         ]
-    expectedForCellMapContainingMultipleFilesTile =
-        [s|
+    expectations =
+        [ [s|
 Upper layer:
 +-----+-----+
 |     |     |
@@ -63,8 +65,7 @@ Lower layer:
 Tile files:
 0: tests/tiles/single.json
 1: tests/tiles/united.json|]
-    expectedForInitCellMap =
-        [s|
+        , [s|
 Upper layer:
 +-----+-----+-----+
 |     |     |     |
@@ -89,3 +90,17 @@ Lower layer:
 
 Tile files:
 0: dummy.json|]
+        , [s|
+Upper layer:
++-----+-----+
+|     |     |
++-----+-----+
+
+Lower layer:
++-----+-----+
+|(0,0)|(0,0)|
++-----+-----+
+
+Tile files:
+0: tests/tiles/single.json|]
+        ]
