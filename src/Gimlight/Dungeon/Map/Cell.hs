@@ -39,15 +39,20 @@ import           Control.Monad.State       (MonadTrans (lift), StateT (StateT),
                                             gets)
 import           Data.Array                (Array, assocs, bounds, listArray,
                                             (!), (//))
-import           Data.Bifunctor            (Bifunctor (second))
+import           Data.Bifunctor            (Bifunctor (first, second))
 import           Data.Binary               (Binary)
 import           Data.Either.Combinators   (maybeToRight)
-import           Data.Foldable             (find)
+import           Data.Foldable             (Foldable (toList), find)
+import           Data.List                 (elemIndex)
 import qualified Data.Map                  as M
-import           Data.Maybe                (isJust, isNothing, mapMaybe)
+import           Data.Maybe                (catMaybes, isJust, isNothing,
+                                            mapMaybe)
 import           GHC.Generics              (Generic)
 import           Gimlight.Actor            (Actor, isPlayer)
 import           Gimlight.Coord            (Coord)
+import           Gimlight.Data.Array       (toRowsList)
+import           Gimlight.Data.List        (makeTable)
+import           Gimlight.Data.Maybe       (expectJust)
 import           Gimlight.Dungeon.Map.Tile (TileCollection, TileIdentifier,
                                             floorTile, wallTile)
 import qualified Gimlight.Dungeon.Map.Tile as Tile
@@ -135,11 +140,34 @@ newtype CellMap =
     CellMap
         { _rawCellMap :: Array (V2 Int) Cell
         }
-    deriving (Show, Ord, Eq, Generic)
+    deriving (Ord, Eq, Generic)
+
+makeLenses ''CellMap
 
 instance Binary CellMap
 
-makeLenses ''CellMap
+instance Show CellMap where
+    show (CellMap cm) =
+        "Upper layer:\n" ++ tileTableOf upper ++ "\n\nLower layer:\n" ++
+        tileTableOf lower ++
+        "\n\nTile files:\n" ++
+        renderedTileList
+      where
+        tileTableOf = listToTable . fileIdAndTileIdOf
+        listToTable = makeTable . toRowsList . fmap tileIdentifierToString
+        tileIdentifierToString = maybe blankCell show
+        blankCell = replicate cellWidth ' '
+        cellWidth = maximum $ fmap (length . show) fileIdAndTileIds
+        fileIdAndTileIds =
+            catMaybes $ concatMap (toList . fileIdAndTileIdOf) [upper, lower]
+        fileIdAndTileIdOf = fmap (fmap (first pathToId)) . tileIdentifiersOf
+        pathToId path =
+            expectJust ("No such path: " ++ path) $ elemIndex path tileFiles
+        renderedTileList = init $ unlines $ appendNumbers tileFiles
+        appendNumbers = zipWith (\n -> (++) (show n ++ ": ")) [0 :: Int ..]
+        tileFiles = concatMap tileFilesOfLayer [upper, lower]
+        tileFilesOfLayer = fmap fst . catMaybes . toList . tileIdentifiersOf
+        tileIdentifiersOf layer = fmap (view (tileIdentifierLayer . layer)) cm
 
 cellMap :: Array (V2 Int) TileIdentifierLayer -> CellMap
 cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False False)

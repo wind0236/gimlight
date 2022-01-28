@@ -1,17 +1,24 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Gimlight.Dungeon.Map.CellSpec
     ( spec
     ) where
 
 import           Control.Lens              ((^.))
+import           Data.String.QQ            (s)
 import           Gimlight.Dungeon.Map.Cell (allWallTiles, tileIdentifierLayerAt,
                                             upper)
 import           Gimlight.Dungeon.Map.Tile (wallTile)
+import           Gimlight.SetUp.CellMap    (initCellMap)
+import           Gimlight.SetUp.MapFile    (cellMapContainingMultipleFilesTile)
 import           Linear.V2                 (V2 (V2))
-import           Test.Hspec                (Spec, describe, it)
+import           Test.Hspec                (Spec, describe, it, shouldBe)
 import           Test.QuickCheck           (property)
 
 spec :: Spec
-spec = testAllWallTiles
+spec = do
+    testAllWallTiles
+    testShowCellMap
 
 testAllWallTiles :: Spec
 testAllWallTiles =
@@ -29,3 +36,56 @@ testAllWallTiles =
             False
             ((== Just wallTile) . (^. upper))
             (tileIdentifierLayerAt c cellMap)
+
+testShowCellMap :: Spec
+testShowCellMap =
+    describe "CellMap" $
+    it "show prints the detailed cell map information." $ mapM_ testFunc pairs
+  where
+    testFunc (m, expected) = show m `shouldBe` expected
+    pairs =
+        [ (initCellMap, expectedForInitCellMap)
+        , ( cellMapContainingMultipleFilesTile
+          , expectedForCellMapContainingMultipleFilesTile)
+        ]
+    expectedForCellMapContainingMultipleFilesTile =
+        [s|
+Upper layer:
++-----+-----+
+|     |     |
++-----+-----+
+
+Lower layer:
++-----+-----+
+|(0,0)|(1,1)|
++-----+-----+
+
+Tile files:
+0: tests/tiles/single.json
+1: tests/tiles/united.json|]
+    expectedForInitCellMap =
+        [s|
+Upper layer:
++-----+-----+-----+
+|     |     |     |
++-----+-----+-----+
+|(0,1)|     |     |
++-----+-----+-----+
+|     |     |     |
++-----+-----+-----+
+|     |     |     |
++-----+-----+-----+
+
+Lower layer:
++-----+-----+-----+
+|     |     |     |
++-----+-----+-----+
+|     |     |     |
++-----+-----+-----+
+|     |     |     |
++-----+-----+-----+
+|     |     |     |
++-----+-----+-----+
+
+Tile files:
+0: dummy.json|]
