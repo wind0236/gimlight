@@ -51,8 +51,8 @@ import           GHC.Generics              (Generic)
 import           Gimlight.Actor            (Actor, isPlayer)
 import           Gimlight.Coord            (Coord)
 import           Gimlight.Data.Array       (toRowsList)
-import           Gimlight.Data.List        (makeTable)
 import           Gimlight.Data.Maybe       (expectJust)
+import           Gimlight.Data.String      (makeTable)
 import           Gimlight.Dungeon.Map.Tile (TileCollection, TileIdentifier,
                                             floorTile, wallTile)
 import qualified Gimlight.Dungeon.Map.Tile as Tile

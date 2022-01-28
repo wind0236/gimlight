@@ -51,6 +51,7 @@ Test-Suite spec
                       , Gimlight.Data.ArraySpec
                       , Gimlight.Data.ListSpec
                       , Gimlight.Data.MaybeSpec
+                      , Gimlight.Data.StringSpec
                       , Gimlight.Dungeon.GenerateSpec
                       , Gimlight.Dungeon.Generate.ConfigSpec
                       , Gimlight.Dungeon.Map.CellSpec
@@ -88,6 +89,7 @@ library
                       , Gimlight.Data.Array
                       , Gimlight.Data.List
                       , Gimlight.Data.Maybe
+                      , Gimlight.Data.String
                       , Gimlight.Dungeon
                       , Gimlight.Dungeon.Generate
                       , Gimlight.Dungeon.Generate.Config

@@ -11,6 +11,7 @@ import qualified Gimlight.Action.WaitSpec
 import qualified Gimlight.Data.ArraySpec
 import qualified Gimlight.Data.ListSpec
 import qualified Gimlight.Data.MaybeSpec
+import qualified Gimlight.Data.StringSpec
 import qualified Gimlight.Dungeon.Generate.ConfigSpec
 import qualified Gimlight.Dungeon.GenerateSpec
 import qualified Gimlight.Dungeon.Map.CellSpec
@@ -34,6 +35,7 @@ spec = do
     describe "Gimlight.Data.Array" Gimlight.Data.ArraySpec.spec
     describe "Gimlight.Data.List" Gimlight.Data.ListSpec.spec
     describe "Gimlight.Data.Maybe" Gimlight.Data.MaybeSpec.spec
+    describe "Gimlight.Data.String" Gimlight.Data.StringSpec.spec
     describe "Gimlight.Dungeon.Generate" Gimlight.Dungeon.GenerateSpec.spec
     describe
         "Gimlight.Dungeon.Generate.Config"
