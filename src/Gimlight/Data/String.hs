@@ -1,16 +1,19 @@
 module Gimlight.Data.String
-    ( makeTable
+    ( adjustLength
+    , makeTable
     ) where
 
 import           Gimlight.Data.List (intercalateIncludingHeadTail)
+
+adjustLength :: Int -> String -> String
+adjustLength n s = s ++ replicate (n - length s) ' '
 
 makeTable :: [[String]] -> String
 makeTable [] = "+"
 makeTable rows = insertSeps canonicalized
   where
-    canonicalized = fmap (fmap addPad . addEmptyElements) rows
+    canonicalized = fmap (fmap (adjustLength cellWidth) . addEmptyElements) rows
     addEmptyElements xs = xs ++ replicate (numCols - length xs) []
-    addPad s = s ++ replicate (cellWidth - length s) ' '
     insertSeps = insertHseps . fmap insertVseps
     insertHseps = init . intercalateIncludingHeadTail (hsep ++ "\n")
     insertVseps = (++ "\n") . intercalateIncludingHeadTail "|"

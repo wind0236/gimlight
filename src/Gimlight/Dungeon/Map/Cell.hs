@@ -52,7 +52,7 @@ import           Gimlight.Actor            (Actor, isPlayer)
 import           Gimlight.Coord            (Coord)
 import           Gimlight.Data.Array       (toRowsList)
 import           Gimlight.Data.Maybe       (expectJust)
-import           Gimlight.Data.String      (makeTable)
+import           Gimlight.Data.String      (adjustLength, makeTable)
 import           Gimlight.Dungeon.Map.Tile (TileCollection, TileIdentifier,
                                             floorTile, wallTile)
 import qualified Gimlight.Dungeon.Map.Tile as Tile
@@ -155,8 +155,7 @@ instance Show CellMap where
       where
         tileTableOf = listToTable . fileIdAndTileIdOf
         listToTable = makeTable . toRowsList . fmap tileIdentifierToString
-        tileIdentifierToString = maybe blankCell show
-        blankCell = replicate cellWidth ' '
+        tileIdentifierToString = adjustLength cellWidth . maybe "" show
         cellWidth = maximum $ fmap (length . show) fileIdAndTileIds
         fileIdAndTileIds =
             catMaybes $ concatMap (toList . fileIdAndTileIdOf) [upper, lower]
