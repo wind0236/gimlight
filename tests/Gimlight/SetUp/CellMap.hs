@@ -16,7 +16,7 @@ import           Codec.Picture             (PixelRGBA8 (PixelRGBA8),
                                             generateImage)
 import           Control.Lens              ((%~))
 import           Control.Monad.State       (State, evalState, execStateT)
-import           Data.Array                (array, (//))
+import           Data.Array                (listArray, (//))
 import           Data.Either               (fromRight)
 import           Data.Map                  (fromList)
 import           Data.Maybe                (fromJust)
@@ -42,39 +42,33 @@ initCellMap :: CellMap
 initCellMap =
     fromRight (error "Failed to set up the test environment.") $
     flip execStateT emptyMap $ do
-        locateActorAt initTileCollection p playerPosition
-        locateItemAt initTileCollection herb playerPosition
-        locateItemAt initTileCollection herb orcWithFullItemsPosition
-        locateActorAt initTileCollection orcWithoutItems orcWithoutItemsPosition
-        locateActorAt
-            initTileCollection
-            orcWithFullItems
-            orcWithFullItemsPosition
-        locateActorAt initTileCollection s strongestOrcPosition
-        locateActorAt initTileCollection i intermediateOrcPosition
-        locateActorAt initTileCollection w weakestOrcPosition
-        locateActorAt initTileCollection orcWithHerb orcWithHerbPosition
+        mapM_
+            (locateItemAt initTileCollection herb)
+            [playerPosition, orcWithFullItemsPosition]
+        mapM_
+            (uncurry (locateActorAt initTileCollection))
+            [ (p, playerPosition)
+            , (orcWithoutItems, orcWithoutItemsPosition)
+            , (orcWithFullItems, orcWithFullItemsPosition)
+            , (s, strongestOrcPosition)
+            , (i, intermediateOrcPosition)
+            , (w, weakestOrcPosition)
+            , (orcWithHerb, orcWithHerbPosition)
+            ]
   where
     emptyMap =
         cellMap $
-        array
-            (V2 0 0, V2 (mapWidth - 1) (mapHeight - 1))
-            [ (V2 x y, emptyTile)
-            | x <- [0 .. mapWidth - 1]
-            , y <- [0 .. mapHeight - 1]
-            ] //
+        listArray (V2 0 0, V2 (mapWidth - 1) (mapHeight - 1)) (repeat emptyTile) //
         [(V2 0 1, unwalkable)]
     (p, w, i, s, orcWithoutItems, orcWithFullItems, orcWithHerb) =
-        flip evalState generator $ do
-            (,,,,,,) <$>
-                ((inventoryItems %~ fromJust . addItem sampleBook) <$> player) <*>
-                weakestOrc <*>
-                intermediateOrc <*>
-                strongestOrc <*>
-                orc <*>
-                ((!! 5) . iterate (inventoryItems %~ (fromJust . addItem herb)) <$>
-                 orc) <*>
-                ((inventoryItems %~ fromJust . addItem herb) <$> orc)
+        flip evalState generator $ (,,,,,,) <$>
+        ((inventoryItems %~ fromJust . addItem sampleBook) <$> player) <*>
+        weakestOrc <*>
+        intermediateOrc <*>
+        strongestOrc <*>
+        orc <*>
+        ((!! 5) . iterate (inventoryItems %~ fromJust . addItem herb) <$> orc) <*>
+        ((inventoryItems %~ fromJust . addItem herb) <$> orc)
     emptyTile = TileIdentifierLayer Nothing Nothing
     unwalkable = TileIdentifierLayer (Just (dummyTileFile, 1)) Nothing
     mapWidth = 3
