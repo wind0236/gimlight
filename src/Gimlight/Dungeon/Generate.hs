@@ -2,7 +2,8 @@ module Gimlight.Dungeon.Generate
     ( generateMultipleFloorsDungeon
     ) where
 
-import           Control.Lens                     (over, set, (&), (.~), (^.))
+import           Control.Lens                     (Ixed (ix), over, set, (&),
+                                                   (.~), (^.))
 import           Control.Monad.Morph              (MFunctor (hoist), generalize)
 import           Control.Monad.State              (MonadState (get, put),
                                                    MonadTrans (lift), State,
@@ -29,7 +30,8 @@ import           Gimlight.Dungeon.Generate.Room   (Room (..), center,
 import           Gimlight.Dungeon.Identifier      (Identifier)
 import           Gimlight.Dungeon.Map.Cell        (CellMap, allWallTiles,
                                                    changeTileAt, locateActorAt,
-                                                   locateItemAt, upper,
+                                                   locateItemAt, rawCellMap,
+                                                   tileIdentifierLayer, upper,
                                                    widthAndHeight)
 import           Gimlight.Dungeon.Map.Tile        (TileCollection, downStairs,
                                                    upStairs)
@@ -151,13 +153,11 @@ generateDungeonAccum acc tc tileMap playerPos cfg rooms = do
     V2 width height = widthAndHeight tileMap
 
 createRoom :: Room -> CellMap -> CellMap
-createRoom room r =
-    foldl
-        (\acc x ->
-             fromMaybe
-                 (error "Failed to change a tile.")
-                 (changeTileAt (\tile -> tile & upper .~ Nothing) x acc))
-        r
+createRoom room = flip (foldl removeTileAt) coords
+  where
+    removeTileAt cm x =
+        cm & rawCellMap . ix x . tileIdentifierLayer . upper .~ Nothing
+    coords =
         [V2 x y | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 
 tunnelBetween :: Coord -> Coord -> CellMap -> CellMap

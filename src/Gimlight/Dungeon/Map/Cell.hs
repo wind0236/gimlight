@@ -8,6 +8,7 @@ module Gimlight.Dungeon.Map.Cell
     , rawCellMap
     , TileIdentifierLayer(..)
     , Error(..)
+    , tileIdentifierLayer
     , upper
     , lower
     , cellMap
