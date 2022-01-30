@@ -4,8 +4,7 @@
 {-# LANGUAGE TupleSections   #-}
 
 module Gimlight.Dungeon.Map.Cell
-    ( CellMap(..)
-    , rawCellMap
+    ( CellMap
     , TileIdentifierLayer(..)
     , Error(..)
     , tileIdentifierLayer
@@ -33,9 +32,9 @@ module Gimlight.Dungeon.Map.Cell
     , tileIdentifierLayerAt
     ) where
 
-import           Control.Lens              (Ixed (ix), makeLenses, over,
-                                            preview, view, (%%~), (%~), (&),
-                                            (.~), (<&>), (?~), (^.), (^?))
+import           Control.Lens              (Ixed (ix), makeLenses, preview,
+                                            view, (%%~), (%~), (&), (.~), (<&>),
+                                            (?~), (^.), (^?))
 import           Control.Monad.State       (MonadTrans (lift), StateT (StateT),
                                             gets)
 import           Data.Array                (Array, assocs, bounds, listArray,
@@ -132,21 +131,13 @@ removeItem :: Cell -> Either Error (Item, Cell)
 removeItem c =
     fmap (, c & item .~ Nothing) . maybeToRight ItemNotFound $ c ^. item
 
-newtype CellMap =
-    CellMap
-        { _rawCellMap :: Array (V2 Int) Cell
-        }
-    deriving (Show, Ord, Eq, Generic)
-
-makeLenses ''CellMap
-
-instance Binary CellMap
+type CellMap = Array (V2 Int) Cell
 
 cellMap :: Array (V2 Int) TileIdentifierLayer -> CellMap
-cellMap = CellMap . fmap (\x -> Cell x Nothing Nothing False False)
+cellMap = fmap (\x -> Cell x Nothing Nothing False False)
 
 allWallTiles :: V2 Int -> CellMap
-allWallTiles wh = CellMap $ listArray (V2 0 0, wh - V2 1 1) $ repeat cell
+allWallTiles wh = listArray (V2 0 0, wh - V2 1 1) $ repeat cell
   where
     cell =
         Cell
@@ -157,7 +148,7 @@ allWallTiles wh = CellMap $ listArray (V2 0 0, wh - V2 1 1) $ repeat cell
             False
 
 widthAndHeight :: CellMap -> V2 Int
-widthAndHeight = (+ V2 1 1) . snd . bounds . view rawCellMap
+widthAndHeight = (+ V2 1 1) . snd . bounds
 
 isPositionInMap :: Coord -> CellMap -> Bool
 isPositionInMap (V2 x y) cm = x >= 0 && x < w && y >= 0 && y < h
@@ -170,82 +161,75 @@ changeTileAt ::
     -> CellMap
     -> Maybe CellMap
 changeTileAt f c m
-    | isJust $ tileIdentifierLayerAt c m =
-        Just $ m & rawCellMap %~ (// [(c, newTile)])
+    | isJust $ tileIdentifierLayerAt c m = Just $ m // [(c, newTile)]
     | otherwise = Nothing
   where
-    newTile = (m ^. rawCellMap) ! c & tileIdentifierLayer %~ f
+    newTile = m ! c & tileIdentifierLayer %~ f
 
 walkableFloors :: TileCollection -> CellMap -> Array (V2 Int) Bool
-walkableFloors tc = fmap (isWalkable tc) . view rawCellMap
+walkableFloors tc = fmap (isWalkable tc)
 
 exploredMap :: CellMap -> Array (V2 Int) Bool
-exploredMap = fmap (view explored) . view rawCellMap
+exploredMap = fmap (view explored)
 
 playerFov :: CellMap -> Array (V2 Int) Bool
-playerFov = fmap (view visibleFromPlayer) . view rawCellMap
+playerFov = fmap (view visibleFromPlayer)
 
 playerActor :: CellMap -> Maybe (Coord, Actor)
 playerActor = find (isPlayer . snd) . positionsAndActors
 
 transparentMap :: TileCollection -> CellMap -> Array (V2 Int) Bool
-transparentMap tc = fmap (isTransparent tc) . view rawCellMap
+transparentMap tc = fmap (isTransparent tc)
 
 updateExploredMap :: CellMap -> CellMap
 updateExploredMap cm =
-    cm & rawCellMap %~
-    (// [ (pos, (cm ^. rawCellMap) ! pos & explored .~ True)
-        | pos <- visibleList
-        ])
+    cm // [(pos, cm ! pos & explored .~ True) | pos <- visibleList]
   where
     visibleList = map fst $ filter snd $ assocs $ playerFov cm
 
 updatePlayerFov :: TileCollection -> CellMap -> Maybe CellMap
-updatePlayerFov tc cm =
-    fmap
-        (\xs ->
-             cm & rawCellMap %~
-             (// [ ( pos
-                   , (cm ^. rawCellMap) ! pos & visibleFromPlayer .~ isVisible)
-                 | (pos, isVisible) <- xs
-                 ]))
-        visibilityList
+updatePlayerFov tc cm = fmap markAsVisible visibilityList
   where
+    markAsVisible xs =
+        cm //
+        [ (pos, cm ! pos & visibleFromPlayer .~ isVisible)
+        | (pos, isVisible) <- xs
+        ]
     visibilityList = fmap assocs fov
     fov = (`calculateFov` transparentMap tc cm) <$> playerPosition
     playerPosition = fst <$> playerActor cm
 
 positionsAndActors :: CellMap -> [(Coord, Actor)]
-positionsAndActors = mapMaybe mapStep . assocs . view rawCellMap
+positionsAndActors = mapMaybe mapStep . assocs
   where
     mapStep (coord, cell) = (coord, ) <$> cell ^. actor
 
 positionsAndItems :: CellMap -> [(Coord, Item)]
-positionsAndItems = mapMaybe mapStep . assocs . view rawCellMap
+positionsAndItems = mapMaybe mapStep . assocs
   where
     mapStep (coord, cell) = (coord, ) <$> cell ^. item
 
 locateActorAt ::
        TileCollection -> Actor -> Coord -> StateT CellMap (Either Error) ()
 locateActorAt tc a c =
-    StateT $ \cm -> fmap ((), ) $ cm & rawCellMap . ix c %%~ locateActor tc a
+    StateT $ \cm -> fmap ((), ) $ cm & ix c %%~ locateActor tc a
 
 locateItemAt ::
        TileCollection -> Item -> Coord -> StateT CellMap (Either Error) ()
 locateItemAt tc i c =
-    StateT $ \cm -> fmap ((), ) $ cm & rawCellMap . ix c %%~ locateItem tc i
+    StateT $ \cm -> fmap ((), ) $ cm & ix c %%~ locateItem tc i
 
 removeActorAt :: Coord -> StateT CellMap (Either Error) Actor
 removeActorAt c =
     StateT $ \cm ->
-        maybeToRight OutOfRange (cm ^? rawCellMap . ix c) >>= removeActor <&>
-        second (\cell -> over rawCellMap (// [(c, cell)]) cm)
+        maybeToRight OutOfRange (cm ^? ix c) >>= removeActor <&>
+        second (\cell -> cm // [(c, cell)])
 
 removeItemAt :: Coord -> StateT CellMap (Either Error) Item
 removeItemAt c =
     StateT $ \cm ->
-        maybeToRight OutOfRange (cm ^? rawCellMap . ix c) >>= removeItem <&>
-        second (\cell -> cm & rawCellMap %~ (// [(c, cell)]))
+        maybeToRight OutOfRange (cm ^? ix c) >>= removeItem <&>
+        second (\cell -> cm // [(c, cell)])
 
 removeActorIf :: (Actor -> Bool) -> StateT CellMap (Either Error) Actor
 removeActorIf f =
@@ -254,4 +238,4 @@ removeActorIf f =
     removeActorAt
 
 tileIdentifierLayerAt :: Coord -> CellMap -> Maybe TileIdentifierLayer
-tileIdentifierLayerAt c = preview (rawCellMap . ix c . tileIdentifierLayer)
+tileIdentifierLayerAt c = preview (ix c . tileIdentifierLayer)

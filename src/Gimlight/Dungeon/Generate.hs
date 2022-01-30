@@ -1,3 +1,5 @@
+{-# LANGUAGE GADTs #-}
+
 module Gimlight.Dungeon.Generate
     ( generateMultipleFloorsDungeon
     ) where
@@ -30,7 +32,7 @@ import           Gimlight.Dungeon.Generate.Room   (Room (..), center,
 import           Gimlight.Dungeon.Identifier      (Identifier)
 import           Gimlight.Dungeon.Map.Cell        (CellMap, allWallTiles,
                                                    changeTileAt, locateActorAt,
-                                                   locateItemAt, rawCellMap,
+                                                   locateItemAt,
                                                    tileIdentifierLayer, upper,
                                                    widthAndHeight)
 import           Gimlight.Dungeon.Map.Tile        (TileCollection, downStairs,
@@ -155,8 +157,7 @@ generateDungeonAccum acc tc tileMap playerPos cfg rooms = do
 createRoom :: Room -> CellMap -> CellMap
 createRoom room = flip (foldl removeTileAt) coords
   where
-    removeTileAt cm x =
-        cm & rawCellMap . ix x . tileIdentifierLayer . upper .~ Nothing
+    removeTileAt cm x = cm & ix x . tileIdentifierLayer . upper .~ Nothing
     coords =
         [V2 x y | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 
