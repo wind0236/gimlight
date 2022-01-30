@@ -4,8 +4,8 @@ module Gimlight.Dungeon.Generate
     ( generateMultipleFloorsDungeon
     ) where
 
-import           Control.Lens                     (Ixed (ix), over, set, (&),
-                                                   (.~), (^.))
+import           Control.Lens                     (Ixed (ix), (&), (.~), (?~),
+                                                   (^.))
 import           Control.Monad.Morph              (MFunctor (hoist), generalize)
 import           Control.Monad.State              (MonadState (get, put),
                                                    MonadTrans (lift), State,
@@ -31,8 +31,7 @@ import           Gimlight.Dungeon.Generate.Room   (Room (..), center,
                                                    roomOverlaps)
 import           Gimlight.Dungeon.Identifier      (Identifier)
 import           Gimlight.Dungeon.Map.Cell        (CellMap, allWallTiles,
-                                                   changeTileAt, locateActorAt,
-                                                   locateItemAt,
+                                                   locateActorAt, locateItemAt,
                                                    tileIdentifierLayer, upper,
                                                    widthAndHeight)
 import           Gimlight.Dungeon.Map.Tile        (TileCollection, downStairs,
@@ -80,14 +79,10 @@ generateDungeonAndAppend zipper ts cfg ident = do
         newZipper =
             appendNode newLowerDungeon $
             modify
-                (const $
-                 over
-                     cellMap
-                     (fromMaybe (error "Failed to change the tile.") .
-                      changeTileAt
-                          (set upper (Just downStairs))
-                          upperStairsPosition)
-                     newUpperDungeon)
+                (const $ newUpperDungeon & cellMap . ix upperStairsPosition .
+                 tileIdentifierLayer .
+                 upper ?~
+                 downStairs)
                 zipper
         zipperFocusingNext =
             fromMaybe
@@ -118,8 +113,8 @@ generateDungeon tc cfg ident = do
             (getMaxRooms cfg)
     return
         ( dungeon
-              (fromMaybe (error "Failed to change the tile.") $
-               changeTileAt (set upper (Just upStairs)) enterPosition tiles)
+              (tiles & ix enterPosition . tileIdentifierLayer . upper ?~
+               upStairs)
               ident
         , enterPosition)
 

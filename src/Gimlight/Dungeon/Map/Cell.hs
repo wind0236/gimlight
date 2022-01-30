@@ -12,7 +12,6 @@ module Gimlight.Dungeon.Map.Cell
     , lower
     , cellMap
     , allWallTiles
-    , changeTileAt
     , updateExploredMap
     , updatePlayerFov
     , playerFov
@@ -33,8 +32,8 @@ module Gimlight.Dungeon.Map.Cell
     ) where
 
 import           Control.Lens              (Ixed (ix), makeLenses, preview,
-                                            view, (%%~), (%~), (&), (.~), (<&>),
-                                            (?~), (^.), (^?))
+                                            view, (%%~), (&), (.~), (<&>), (?~),
+                                            (^.), (^?))
 import           Control.Monad.State       (MonadTrans (lift), StateT (StateT),
                                             gets)
 import           Data.Array                (Array, assocs, bounds, listArray,
@@ -44,7 +43,7 @@ import           Data.Binary               (Binary)
 import           Data.Either.Combinators   (maybeToRight)
 import           Data.Foldable             (find)
 import qualified Data.Map                  as M
-import           Data.Maybe                (isJust, isNothing, mapMaybe)
+import           Data.Maybe                (isNothing, mapMaybe)
 import           GHC.Generics              (Generic)
 import           Gimlight.Actor            (Actor, isPlayer)
 import           Gimlight.Coord            (Coord)
@@ -154,17 +153,6 @@ isPositionInMap :: Coord -> CellMap -> Bool
 isPositionInMap (V2 x y) cm = x >= 0 && x < w && y >= 0 && y < h
   where
     V2 w h = widthAndHeight cm
-
-changeTileAt ::
-       (TileIdentifierLayer -> TileIdentifierLayer)
-    -> Coord
-    -> CellMap
-    -> Maybe CellMap
-changeTileAt f c m
-    | isJust $ tileIdentifierLayerAt c m = Just $ m // [(c, newTile)]
-    | otherwise = Nothing
-  where
-    newTile = m ! c & tileIdentifierLayer %~ f
 
 walkableFloors :: TileCollection -> CellMap -> Array (V2 Int) Bool
 walkableFloors tc = fmap (isWalkable tc)
