@@ -9,6 +9,7 @@ import qualified Gimlight.Action.MoveSpec
 import qualified Gimlight.Action.PickUpSpec
 import qualified Gimlight.Action.WaitSpec
 import qualified Gimlight.Data.ArraySpec
+import qualified Gimlight.Data.EitherSpec
 import qualified Gimlight.Data.ListSpec
 import qualified Gimlight.Data.MaybeSpec
 import qualified Gimlight.Data.StringSpec
@@ -33,6 +34,7 @@ spec = do
     describe "Gimlight.Action.PickUp" Gimlight.Action.PickUpSpec.spec
     describe "Gimlight.Action.Wait" Gimlight.Action.WaitSpec.spec
     describe "Gimlight.Data.Array" Gimlight.Data.ArraySpec.spec
+    describe "Gimlight.Data.Either" Gimlight.Data.EitherSpec.spec
     describe "Gimlight.Data.List" Gimlight.Data.ListSpec.spec
     describe "Gimlight.Data.Maybe" Gimlight.Data.MaybeSpec.spec
     describe "Gimlight.Data.String" Gimlight.Data.StringSpec.spec

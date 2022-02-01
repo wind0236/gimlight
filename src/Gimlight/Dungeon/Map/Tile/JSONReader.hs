@@ -1,33 +1,40 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Gimlight.Dungeon.Map.Tile.JSONReader
-    ( addTileFile
+    ( readTileFileRecursive
     ) where
 
-import           Codec.Picture             (Image (imageData, imageHeight, imageWidth),
-                                            PixelRGBA8, convertRGBA8, readImage)
-import           Codec.Picture.Extra       (crop, flipHorizontally,
-                                            flipVertically)
-import           Control.Applicative       (ZipList (ZipList, getZipList))
-import           Control.Lens              (filtered, has, only, (&), (^..),
-                                            (^?))
-import           Control.Monad             (guard, unless, (>=>))
-import           Data.Aeson.Lens           (_Bool, _Integer, _String, key,
-                                            values)
-import           Data.Bits                 (Bits (bit), (.|.))
-import           Data.Either               (fromRight)
-import           Data.List                 (transpose)
-import           Data.List.Split           (chunksOf)
-import           Data.Map                  (insert)
-import           Data.Maybe                (fromMaybe)
-import           Data.Text                 (Text, unpack)
-import qualified Data.Vector.Storable      as V
-import           Gimlight.Dungeon.Map.Tile (Tile, TileCollection, getImage,
-                                            isTransparent, isWalkable, tile)
-import           Gimlight.UI.Draw.Config   (tileHeight, tileWidth)
-import           System.Directory          (canonicalizePath,
-                                            makeRelativeToCurrentDirectory)
-import           System.FilePath           (dropFileName, (</>))
+import           Codec.Picture              (Image (imageData, imageHeight, imageWidth),
+                                             PixelRGBA8, convertRGBA8,
+                                             readImage)
+import           Codec.Picture.Extra        (crop, flipHorizontally,
+                                             flipVertically)
+import           Control.Applicative        (ZipList (ZipList, getZipList))
+import           Control.Lens               (filtered, has, only, (&), (^..),
+                                             (^?))
+import           Control.Monad              (guard, unless, (>=>))
+import           Data.Aeson.Lens            (_Bool, _Integer, _String, key,
+                                             values)
+import           Data.Bits                  (Bits (bit), (.|.))
+import           Data.Either                (fromRight)
+import           Data.Foldable              (foldlM)
+import           Data.List                  (transpose)
+import           Data.List.Split            (chunksOf)
+import           Data.Map                   (empty, insert)
+import           Data.Maybe                 (fromMaybe)
+import           Data.Text                  (Text, unpack)
+import qualified Data.Vector.Storable       as V
+import           Gimlight.Dungeon.Map.Tile  (Tile, TileCollection, getImage,
+                                             isTransparent, isWalkable, tile)
+import           Gimlight.UI.Draw.Config    (tileHeight, tileWidth)
+import           System.Directory           (canonicalizePath,
+                                             makeRelativeToCurrentDirectory)
+import           System.Directory.Recursive (getFilesRecursive)
+import           System.FilePath            (dropFileName, (</>))
+
+readTileFileRecursive :: FilePath -> IO TileCollection
+readTileFileRecursive dir =
+    getFilesRecursive dir >>= foldlM (flip addTileFile) empty
 
 addTileFile :: FilePath -> TileCollection -> IO TileCollection
 addTileFile path tc = do

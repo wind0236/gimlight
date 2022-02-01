@@ -16,6 +16,7 @@ common common
                       , containers >= 0.6.5.1 && < 0.7
                       , data-default >= 0.7.1 && < 0.8
                       , directory >= 1.3.7 && < 1.4
+                      , dir-traverse >= 0.2.3.0 && < 0.3
                       , either >= 5.0.1.1 && < 5.1
                       , filepath >= 1.4.1.2 && < 1.5
                       , lens >= 5.0.1 && < 5.1
@@ -49,6 +50,7 @@ Test-Suite spec
                       , Gimlight.Action.PickUpSpec
                       , Gimlight.Action.WaitSpec
                       , Gimlight.Data.ArraySpec
+                      , Gimlight.Data.EitherSpec
                       , Gimlight.Data.ListSpec
                       , Gimlight.Data.MaybeSpec
                       , Gimlight.Data.StringSpec
@@ -87,6 +89,7 @@ library
                       , Gimlight.Actor.Status.Hp
                       , Gimlight.Coord
                       , Gimlight.Data.Array
+                      , Gimlight.Data.Either
                       , Gimlight.Data.List
                       , Gimlight.Data.Maybe
                       , Gimlight.Data.String

@@ -18,16 +18,14 @@ import           Gimlight.Dungeon.Predefined.Beaeve (beaeve)
 import           Gimlight.IndexGenerator            (IndexGenerator)
 import           Linear.V2                          (V2 (V2))
 
-initDungeon ::
-       TileCollection -> StateT IndexGenerator IO (Dungeon, TileCollection)
+initDungeon :: TileCollection -> StateT IndexGenerator IO Dungeon
 initDungeon tc = do
-    (beaeve', tc') <- beaeve tc
+    beaeve' <- beaeve tc
     player' <- hoist generalize player
-    let d = beaeve' & cellMap %~ initBeaeve tc' player'
-    return (d, tc')
+    return $ beaeve' & cellMap %~ initBeaeve player'
   where
-    initBeaeve tc' p cm' =
+    initBeaeve p cm' =
         updateExploredMap .
         fromMaybe (error "Failed to update the player FoV.") .
-        updatePlayerFov tc' . fromRight (error "Failed to locate the player.") $
-        execStateT (locateActorAt tc' p (V2 10 10)) cm'
+        updatePlayerFov tc . fromRight (error "Failed to locate the player.") $
+        execStateT (locateActorAt tc p (V2 10 10)) cm'

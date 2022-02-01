@@ -35,11 +35,11 @@
  "tilesets":[
         {
          "firstgid":1,
-         "source":"..\/tiles\/united.json"
+         "source":"..\/tiles\/valid\/united.json"
         }, 
         {
          "firstgid":7,
-         "source":"..\/tiles\/single.json"
+         "source":"..\/tiles\/valid\/single.json"
         }],
  "tilewidth":48,
  "type":"map",

@@ -52,19 +52,19 @@ haskellTile =
         haskellTileImage
 
 unitedTileFile :: FilePath
-unitedTileFile = "tests/tiles/united.json"
+unitedTileFile = "tests/tiles/valid/united.json"
 
 singleTileFile :: FilePath
-singleTileFile = "tests/tiles/single.json"
+singleTileFile = "tests/tiles/valid/single.json"
 
 unwalkableTileFile :: FilePath
-unwalkableTileFile = "tests/tiles/unwalkable.json"
+unwalkableTileFile = "tests/tiles/valid/unwalkable.json"
 
 haskellTilePath :: FilePath
-haskellTilePath = "tests/tiles/haskell.json"
+haskellTilePath = "tests/tiles/valid/haskell.json"
 
 tileWithoutProperties :: FilePath
-tileWithoutProperties = "tests/tiles/no_properties.json"
+tileWithoutProperties = "tests/tiles/invalid/no_properties.json"
 
 -- Transformation order is important. Tiled's specification says
 --

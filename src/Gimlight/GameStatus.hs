@@ -11,14 +11,13 @@ import           Control.Lens                          ()
 import           Control.Monad.State                   (StateT (runStateT),
                                                         evalState, evalStateT)
 import           Data.Binary                           (Binary)
-import           Data.Map                              (empty)
 import           Data.Maybe                            (fromMaybe)
 import           Data.Tree                             (Tree (Node, rootLabel, subForest))
 import           GHC.Generics                          (Generic)
 import           Gimlight.Dungeon                      (addAscendingAndDescendingStiars,
                                                         addDescendingStairs)
 import           Gimlight.Dungeon.Init                 (initDungeon)
-import           Gimlight.Dungeon.Map.Tile.JSONReader  (addTileFile)
+import           Gimlight.Dungeon.Map.Tile.JSONReader  (readTileFileRecursive)
 import           Gimlight.Dungeon.Predefined.BatsCave  (batsDungeon)
 import           Gimlight.Dungeon.Predefined.GlobalMap (globalMap)
 import           Gimlight.Dungeon.Stairs               (StairsPair (StairsPair))
@@ -56,12 +55,11 @@ instance Binary GameStatus
 newGameStatus :: IO GameStatus
 newGameStatus = do
     g <- getStdGen
-    (gm, tc) <- globalMap empty
-    ((beaeve, tc'), ig) <- runStateT (initDungeon tc) generator
-    tc'' <- addTileFile "tiles/stairs.json" tc'
-    tc''' <- addTileFile "tiles/cave_floor.json" tc''
+    tc <- readTileFileRecursive "tiles/"
+    gm <- globalMap
+    (beaeve, ig) <- runStateT (initDungeon tc) generator
     let (bats, stairsPosition) =
-            flip evalState g $ evalStateT (batsDungeon tc''') ig
+            flip evalState g $ evalStateT (batsDungeon tc) ig
         (gmWithBatsStairs, batsRootMapWithParentMap) =
             addAscendingAndDescendingStiars
                 (StairsPair (V2 9 6) stairsPosition)
@@ -87,7 +85,7 @@ newGameStatus = do
                 initZipper
                 (foldr (L.addMessage . L.message) L.emptyLog [T.welcome])
                 questCollection
-                tc'''
+                tc
     return . Scene $
         sceneHandler
             "images/game_opening.png"

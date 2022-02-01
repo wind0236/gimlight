@@ -5,7 +5,7 @@ module Gimlight.Dungeon.GenerateSpec
 import           Control.Lens                         (_1, (^.))
 import           Control.Monad.State                  (State, StateT, evalState,
                                                        evalStateT)
-import           Data.Map                             (empty)
+import           Data.Map                             (union)
 import           Data.Tree                            (Tree)
 import           Gimlight.Coord                       (Coord)
 import           Gimlight.Dungeon                     (Dungeon)
@@ -16,7 +16,7 @@ import           Gimlight.Dungeon.Generate.Config     (Config, config,
 import           Gimlight.Dungeon.Identifier          (Identifier (Beaeve))
 import           Gimlight.Dungeon.Map.Cell            (CellMap, widthAndHeight)
 import           Gimlight.Dungeon.Map.Tile            (TileCollection)
-import           Gimlight.Dungeon.Map.Tile.JSONReader (addTileFile)
+import           Gimlight.Dungeon.Map.Tile.JSONReader (readTileFileRecursive)
 import           Gimlight.IndexGenerator              (IndexGenerator,
                                                        generator)
 import           Linear.V2                            (V2 (V2))
@@ -34,7 +34,8 @@ testSizeIsCorrect :: Spec
 testSizeIsCorrect = do
     tc <-
         runIO $
-        addTileFile "tiles/tiles.json" empty >>= addTileFile "tiles/stairs.json"
+        union <$> readTileFileRecursive "tests/tiles/valid/" <*>
+        readTileFileRecursive "tiles/"
     modifyMaxSuccess (const 1) $
         describe "generateMultipleFloorsDungeon" $
         it "generates a dungeon with the specified map size" $

@@ -1,9 +1,9 @@
 { "columns":1,
- "image":"..\/images\/tiles\/haskell.png",
+ "image":"..\/..\/images\/tiles\/single_0.png",
  "imageheight":48,
  "imagewidth":48,
  "margin":0,
- "name":"haskell",
+ "name":"single_0",
  "spacing":0,
  "tilecount":1,
  "tiledversion":"1.7.2",
@@ -20,17 +20,10 @@
                 {
                  "name":"walkable",
                  "type":"bool",
-                 "value":true
+                 "value":false
                 }]
         }],
  "tilewidth":48,
- "transformations":
-    {
-     "hflip":true,
-     "preferuntransformed":true,
-     "rotate":true,
-     "vflip":true
-    },
  "type":"tileset",
  "version":"1.6"
 }

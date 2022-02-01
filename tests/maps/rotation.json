@@ -13,7 +13,7 @@
          "width":8,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "data":[0, 0, 0, 0, 0, 0, 0, 0],
          "height":1,
@@ -35,7 +35,7 @@
  "tilesets":[
         {
          "firstgid":1,
-         "source":"..\/tiles\/haskell.json"
+         "source":"..\/tiles\/valid\/haskell.json"
         }],
  "tilewidth":48,
  "type":"map",

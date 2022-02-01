@@ -2,10 +2,8 @@ module Gimlight.Dungeon.Map.JSONReaderSpec
     ( spec
     ) where
 
-import           Data.Map                        (empty, union)
 import           Gimlight.Dungeon.Map.Cell       (CellMap)
-import           Gimlight.Dungeon.Map.JSONReader (readMapTileImage)
-import           Gimlight.Dungeon.Map.Tile       (TileCollection)
+import           Gimlight.Dungeon.Map.JSONReader (readMapFile)
 import           Gimlight.SetUp.MapFile          (cellMapContainingMultipleFilesTile,
                                                   cellMapOfSingleTileMap,
                                                   cellMapUsingMultipleTileFilesAndTransformation,
@@ -16,9 +14,6 @@ import           Gimlight.SetUp.MapFile          (cellMapContainingMultipleFiles
                                                   rectangleButNotSquareCellMap,
                                                   rectangleButNotSquareMap,
                                                   singleTileMap)
-import           Gimlight.SetUp.TileFile         (haskellTile,
-                                                  tilesInSingleTileFile,
-                                                  tilesInUnitedTileFile)
 import           Test.Hspec                      (Spec, context, describe, it,
                                                   runIO, shouldBe)
 
@@ -33,40 +28,32 @@ spec = do
 testSingleTileMap :: Spec
 testSingleTileMap =
     context "Single tile map" $
-    runIO tilesInSingleTileFile >>=
-    testReadMapTileImage singleTileMap cellMapOfSingleTileMap
+    testReadMapFile singleTileMap cellMapOfSingleTileMap
 
 testReadRectangleButNotSquareMap :: Spec
 testReadRectangleButNotSquareMap =
     context "Not square map" $
-    runIO tilesInSingleTileFile >>=
-    testReadMapTileImage rectangleButNotSquareMap rectangleButNotSquareCellMap
+    testReadMapFile rectangleButNotSquareMap rectangleButNotSquareCellMap
 
 testReadMapUsingMultipleTileFiles :: Spec
 testReadMapUsingMultipleTileFiles =
     context "Map using multiple tile files." $
-    runIO (union <$> tilesInSingleTileFile <*> tilesInUnitedTileFile) >>=
-    testReadMapTileImage
-        mapUsingMultipleTileFiles
-        cellMapContainingMultipleFilesTile
+    testReadMapFile mapUsingMultipleTileFiles cellMapContainingMultipleFilesTile
 
 testReadMapUsingRotatedTiles :: Spec
 testReadMapUsingRotatedTiles =
     context "Map using rotated tiles" $
-    runIO haskellTile >>=
-    testReadMapTileImage mapUsingRotatedTiles cellMapUsingRotatedTiles
+    testReadMapFile mapUsingRotatedTiles cellMapUsingRotatedTiles
 
 testReadMapUsingMultipleTileFilesAndTransformation :: Spec
 testReadMapUsingMultipleTileFilesAndTransformation =
     context "Map using multiple tile files and transformation" $
-    runIO (union <$> haskellTile <*> tilesInSingleTileFile) >>=
-    testReadMapTileImage
+    testReadMapFile
         mapUsingTilesFromMultipleTileFilesAndTransformation
         cellMapUsingMultipleTileFilesAndTransformation
 
-testReadMapTileImage :: FilePath -> CellMap -> TileCollection -> Spec
-testReadMapTileImage path cm tc = do
-    (resultCellMap, resultTile) <- runIO $ readMapTileImage empty path
-    describe "readMapTileImage" $ do
+testReadMapFile :: FilePath -> CellMap -> Spec
+testReadMapFile path cm = do
+    resultCellMap <- runIO $ readMapFile path
+    describe "readMapTileImage" $
         it "loads the map file" $ resultCellMap `shouldBe` cm
-        it "loads the tile file" $ resultTile `shouldBe` tc
