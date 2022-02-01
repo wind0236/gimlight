@@ -41,9 +41,9 @@ testAddUnwalkableTileFile = do
         result `shouldBe` expected
 
 testErrorOnReadingTileWithoutProperties :: Spec
-testErrorOnReadingTileWithoutProperties = do
+testErrorOnReadingTileWithoutProperties =
     describe "addTileFile" $
-        it "panics if it tries to read a tile that misses necessary proeprties." $
-        addTileFile tileWithoutProperties empty `shouldThrow`
-        errorCall
-            (tileWithoutProperties ++ ": Some tiles miss necessary properties.")
+    it "panics if it tries to read a tile that misses necessary proeprties." $
+    addTileFile tileWithoutProperties empty `shouldThrow`
+    errorCall
+        (tileWithoutProperties ++ ": Some tiles miss necessary properties.")
