@@ -1,0 +1,1 @@
+- error: {lhs: fromMaybe (error s) x, rhs: expectJust s x}

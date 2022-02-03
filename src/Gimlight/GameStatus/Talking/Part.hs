@@ -19,8 +19,8 @@ module Gimlight.GameStatus.Talking.Part
 import           Data.Binary           (Binary)
 import           Data.List.NonEmpty    (NonEmpty, toList)
 import qualified Data.List.NonEmpty    as NonEmpty
-import           Data.Maybe            (fromMaybe)
 import           GHC.Generics          (Generic)
+import           Gimlight.Data.Maybe   (expectJust)
 import           Gimlight.Localization (MultilingualText)
 import           Gimlight.Quest        (Inquiry, QuestCollection, Updater)
 import qualified Gimlight.Quest        as Quest
@@ -109,9 +109,7 @@ proceedNonVisiblePartsIfNecessary q (UpdateQuest (UpdateQuestHandler u af)) =
         Nothing -> (Nothing, updatedQuests)
   where
     updatedQuests =
-        fromMaybe
-            (error "Failed to update the quest collection.")
-            (Quest.update u q)
+        expectJust "Failed to update the quest collection." (Quest.update u q)
 proceedNonVisiblePartsIfNecessary q p = (Just p, q)
 
 selectPrevChoice :: TalkingPart -> TalkingPart

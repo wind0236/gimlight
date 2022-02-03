@@ -21,9 +21,9 @@ import           Data.Foldable              (foldlM)
 import           Data.List                  (transpose)
 import           Data.List.Split            (chunksOf)
 import           Data.Map                   (empty, insert)
-import           Data.Maybe                 (fromMaybe)
 import           Data.Text                  (Text, unpack)
 import qualified Data.Vector.Storable       as V
+import           Gimlight.Data.Maybe        (expectJust)
 import           Gimlight.Dungeon.Map.Tile  (Tile, TileCollection, getImage,
                                              isTransparent, isWalkable, tile)
 import           Gimlight.UI.Draw.Config    (tileHeight, tileWidth)
@@ -48,8 +48,8 @@ addTileFile path tc = do
 
 getImagePath :: String -> Text
 getImagePath json =
-    fromMaybe
-        (error "A tile file must associate with an image file.")
+    expectJust
+        "A tile file must associate with an image file."
         (json ^? key "image" . _String)
 
 generateTransformedTiles :: [(Int, Tile)] -> [(Int, Tile)]
@@ -105,8 +105,7 @@ allTilesHaveNecessaryProperties json =
 
 getTileCount :: String -> Int
 getTileCount json =
-    fromInteger $ fromMaybe (error "No tilecount entry.") $ json ^?
-    key "tilecount" .
+    fromInteger $ expectJust "No tilecount entry." $ json ^? key "tilecount" .
     _Integer
 
 getIds :: String -> [Int]

@@ -11,9 +11,9 @@ import           Control.Lens                          ()
 import           Control.Monad.State                   (StateT (runStateT),
                                                         evalState, evalStateT)
 import           Data.Binary                           (Binary)
-import           Data.Maybe                            (fromMaybe)
 import           Data.Tree                             (Tree (Node, rootLabel, subForest))
 import           GHC.Generics                          (Generic)
+import           Gimlight.Data.Maybe                   (expectJust)
 import           Gimlight.Dungeon                      (addAscendingAndDescendingStiars,
                                                         addDescendingStairs)
 import           Gimlight.Dungeon.Init                 (initDungeon)
@@ -77,9 +77,7 @@ newGameStatus = do
                 }
         zipper = appendTree batsTreeWithParentMap $ treeZipper dungeonTree
         initZipper =
-            fromMaybe
-                (error "Unreachable.")
-                (goDownBy (== beaeveWithParentMap) zipper)
+            expectJust "Unreachable." (goDownBy (== beaeveWithParentMap) zipper)
         initExploring =
             exploringHandler
                 initZipper

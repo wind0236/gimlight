@@ -12,11 +12,11 @@ import           Control.Monad.State              (MonadState (get, put),
                                                    StateT, execStateT)
 import           Data.Either                      (fromRight)
 import           Data.Foldable                    (foldlM)
-import           Data.Maybe                       (fromMaybe)
 import           Data.Tree                        (Tree (Node, rootLabel, subForest))
 import           Gimlight.Actor                   (Actor)
 import           Gimlight.Actor.Monsters          (orc, troll)
 import           Gimlight.Coord                   (Coord)
+import           Gimlight.Data.Maybe              (expectJust)
 import           Gimlight.Dungeon                 (Dungeon,
                                                    addAscendingAndDescendingStiars,
                                                    cellMap, dungeon,
@@ -85,9 +85,7 @@ generateDungeonAndAppend zipper ts cfg ident = do
                  downStairs)
                 zipper
         zipperFocusingNext =
-            fromMaybe
-                (error "unreachable.")
-                (goDownBy (== newLowerDungeon) newZipper)
+            expectJust "unreachable." (goDownBy (== newLowerDungeon) newZipper)
     return zipperFocusingNext
 
 newStairsPosition :: TileCollection -> Dungeon -> State StdGen Coord

@@ -12,11 +12,11 @@ import           Control.Monad.State        (execStateT, runStateT)
 import           Control.Monad.Trans.Writer (Writer)
 import           Data.Either.Combinators    (rightToMaybe)
 import           Data.Foldable              (find)
-import           Data.Maybe                 (fromMaybe)
 import           Gimlight.Action            (Action,
                                              ActionResult (killed, newCellMap, status),
                                              ActionStatus)
 import           Gimlight.Actor             (Actor, isPlayer)
+import           Gimlight.Data.Maybe        (expectJust)
 import           Gimlight.Dungeon           (Dungeon, ascendingStairs, cellMap,
                                              descendingStairs,
                                              positionOnParentMap)
@@ -49,8 +49,8 @@ ascendStairsAtPlayerPosition ts ds = newZipper
         Just $
         modify
             (\d ->
-                 fromMaybe
-                     (error "Failed to update the map.")
+                 expectJust
+                     "Failed to update the map."
                      (d & cellMap %%~
                       (\x ->
                            rightToMaybe (execStateT (locateActorAt ts p pos) x) >>=
@@ -81,8 +81,8 @@ descendStairsAtPlayerPosition ts ds = newZipper
         Just $
         modify
             (\d ->
-                 fromMaybe
-                     (error "Failed to update the map.")
+                 expectJust
+                     "Failed to update the map."
                      (d & cellMap %%~
                       (\x ->
                            rightToMaybe (execStateT (locateActorAt ts p pos) x) >>=
@@ -104,8 +104,8 @@ exitDungeon ts ds = newZipper
                 Just $
                 modify
                     (\d ->
-                         fromMaybe
-                             (error "Failed to update the map.")
+                         expectJust
+                             "Failed to update the map."
                              (d & cellMap %%~ rightToMaybe .
                               execStateT (locateActorAt ts p pos)))
                     g

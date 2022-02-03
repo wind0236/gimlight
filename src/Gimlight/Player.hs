@@ -8,7 +8,6 @@ module Gimlight.Player
 
 import           Control.Lens                      ((^.))
 import           Data.Foldable                     (find)
-import           Data.Maybe                        (fromMaybe)
 import           Gimlight.Action                   (ActionStatus (Failed, Ok, ReadingStarted))
 import           Gimlight.Action.Consume           (consumeAction)
 import           Gimlight.Action.Drop              (dropAction)
@@ -18,6 +17,7 @@ import           Gimlight.Action.PickUp            (pickUpAction)
 import           Gimlight.Actor                    (Actor, getTalkingPart,
                                                     isMonster)
 import qualified Gimlight.Actor                    as A
+import           Gimlight.Data.Maybe               (expectJust)
 import           Gimlight.Dungeon                  (cellMap, getIdentifier)
 import           Gimlight.Dungeon.Identifier       (isTown)
 import           Gimlight.Dungeon.Map.Cell         (isPositionInMap,
@@ -64,7 +64,7 @@ handlePlayerSelectingItem reason eh =
     SelectingItem $ selectingItemHandler xs reason eh
   where
     xs = A.getItems p
-    p = fromMaybe (error "Player is dead.") (getPlayerActor eh)
+    p = expectJust "Player is dead." (getPlayerActor eh)
 
 handlePlayerAfterSelecting :: SelectingItemHandler -> GameStatus
 handlePlayerAfterSelecting h = result

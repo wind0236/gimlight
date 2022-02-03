@@ -16,11 +16,11 @@ import           Data.Bifunctor            (Bifunctor (second))
 import           Data.Bits                 (Bits (clearBit))
 import           Data.Either.Combinators   (maybeToRight)
 import           Data.List                 (find, sortBy)
-import           Data.Maybe                (fromMaybe)
 import           Data.Text                 (unpack)
 import           Data.Vector               (Vector, toList)
 import qualified Data.Vector               as V
 import           Gimlight.Data.Either      (expectRight)
+import           Gimlight.Data.Maybe       (expectJust)
 import           Gimlight.Dungeon.Map.Cell (CellMap,
                                             TileIdentifierLayer (TileIdentifierLayer),
                                             cellMap)
@@ -82,8 +82,8 @@ getTileIdOfNthLayer n json pathToMap =
     rawIdToIdentifier ident =
         (fmap Just . (\(x, y) -> (, y) <$> canonicalizeIdentifier x)) .
         second (ident -) $
-        fromMaybe
-            (error ("Invalid tile GID: " ++ show ident))
+        expectJust
+            ("Invalid tile GID: " ++ show ident)
             (find ((clearAllFlags ident >=) . snd) $ getSourceAndFirstGid json)
     canonicalizeIdentifier path =
         canonicalizePath (dropFileName pathToMap </> path) >>=
