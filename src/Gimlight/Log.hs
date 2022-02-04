@@ -1,13 +1,14 @@
 module Gimlight.Log
-    ( MessageLog
-    , emptyLog
-    , Message
-    , message
-    , addMessage
-    , addMessages
-    ) where
+  ( MessageLog,
+    emptyLog,
+    Message,
+    message,
+    addMessage,
+    addMessages,
+  )
+where
 
-import           Gimlight.Localization (MultilingualText)
+import Gimlight.Localization (MultilingualText)
 
 type Message = MultilingualText
 

@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Gimlight.Localization.Texts.Title
-    ( newGame
-    , loadGame
-    , quitGame
-    ) where
+  ( newGame,
+    loadGame,
+    quitGame,
+  )
+where
 
-import           Gimlight.Localization (MultilingualText, multilingualText)
+import Gimlight.Localization (MultilingualText, multilingualText)
 
 newGame :: MultilingualText
 newGame = multilingualText "New game" "新しく始める"

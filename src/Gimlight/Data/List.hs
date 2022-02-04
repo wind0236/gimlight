@@ -1,9 +1,10 @@
 module Gimlight.Data.List
-    ( intercalateIncludingHeadTail
-    , filterAll
-    ) where
+  ( intercalateIncludingHeadTail,
+    filterAll,
+  )
+where
 
-import           Data.List (intercalate)
+import Data.List (intercalate)
 
 intercalateIncludingHeadTail :: [a] -> [[a]] -> [a]
 intercalateIncludingHeadTail x xs = x ++ intercalate x xs ++ x

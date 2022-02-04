@@ -1,7 +1,8 @@
 module Gimlight.Item.Book
-    ( Book
-    ) where
+  ( Book,
+  )
+where
 
-import           Gimlight.Localization (MultilingualText)
+import Gimlight.Localization (MultilingualText)
 
 type Book = MultilingualText

@@ -1,20 +1,21 @@
 module Gimlight.UI.Types
-    ( AppEvent(..)
-    , GameWidgetEnv
-    , GameWidgetNode
-    , GameEventResponse
-    ) where
+  ( AppEvent (..),
+    GameWidgetEnv,
+    GameWidgetNode,
+    GameEventResponse,
+  )
+where
 
-import           Data.Text          (Text)
-import           Gimlight.GameModel (GameModel)
-import           Monomer            (AppEventResponse, WidgetEnv, WidgetNode)
+import Data.Text (Text)
+import Gimlight.GameModel (GameModel)
+import Monomer (AppEventResponse, WidgetEnv, WidgetNode)
 
 data AppEvent
-    = AppInit
-    | AppSaveFinished
-    | AppLoadFinished GameModel
-    | AppKeyboardInput Text
-    deriving (Eq)
+  = AppInit
+  | AppSaveFinished
+  | AppLoadFinished GameModel
+  | AppKeyboardInput Text
+  deriving (Eq)
 
 type GameWidgetEnv = WidgetEnv GameModel AppEvent
 

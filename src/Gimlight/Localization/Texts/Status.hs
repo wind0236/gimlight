@@ -1,15 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Gimlight.Localization.Texts.Status
-    ( level
-    , experience
-    , attack
-    , defence
-    , levelUp
-    ) where
+  ( level,
+    experience,
+    attack,
+    defence,
+    levelUp,
+  )
+where
 
-import           Gimlight.Localization (MultilingualText, multilingualText)
-import           TextShow              (TextShow (showt))
+import Gimlight.Localization (MultilingualText, multilingualText)
+import TextShow (TextShow (showt))
 
 level :: MultilingualText
 level = multilingualText "Level" "レベル"
@@ -25,6 +26,7 @@ defence = multilingualText "Defence" "防御"
 
 levelUp :: MultilingualText -> Int -> MultilingualText
 levelUp who n =
-    who <>
-    multilingualText " reached to level " "はレベル" <>
-    multilingualText (showt n) (showt n) <> multilingualText "." "になった．"
+  who
+    <> multilingualText " reached to level " "はレベル"
+    <> multilingualText (showt n) (showt n)
+    <> multilingualText "." "になった．"

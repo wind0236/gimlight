@@ -1,16 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Gimlight.Actor.Monsters
-    ( orc
-    , troll
-    ) where
+  ( orc,
+    troll,
+  )
+where
 
-import           Control.Monad.State       (State)
-import           Gimlight.Actor            (Actor, monster)
-import           Gimlight.Actor.Identifier (Identifier (Orc, Troll))
-import           Gimlight.Actor.Status     (status)
-import           Gimlight.Actor.Status.Hp  (hp)
-import           Gimlight.IndexGenerator   (IndexGenerator)
+import Control.Monad.State (State)
+import Gimlight.Actor (Actor, monster)
+import Gimlight.Actor.Identifier (Identifier (Orc, Troll))
+import Gimlight.Actor.Status (status)
+import Gimlight.Actor.Status.Hp (hp)
+import Gimlight.IndexGenerator (IndexGenerator)
 
 orc :: State IndexGenerator Actor
 orc = monster Orc st "images/orc.png"

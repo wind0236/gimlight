@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Gimlight.Localization.Texts.Items
-    ( herb
-    , sampleBook
-    ) where
+  ( herb,
+    sampleBook,
+  )
+where
 
-import           Gimlight.Localization (MultilingualText, multilingualText)
+import Gimlight.Localization (MultilingualText, multilingualText)
 
 herb :: MultilingualText
 herb = multilingualText "Herb" "薬草"

@@ -2,15 +2,15 @@
 -- expose `GameModel`'s internal structure. Otherwise, we will drown in lots of
 -- functions.
 module Gimlight.GameModel
-    ( GameModel(..)
-    ) where
+  ( GameModel (..),
+  )
+where
 
-import           Gimlight.GameConfig (GameConfig)
-import           Gimlight.GameStatus (GameStatus)
+import Gimlight.GameConfig (GameConfig)
+import Gimlight.GameStatus (GameStatus)
 
-data GameModel =
-    GameModel
-        { status :: GameStatus
-        , config :: GameConfig
-        }
-    deriving (Eq)
+data GameModel = GameModel
+  { status :: GameStatus,
+    config :: GameConfig
+  }
+  deriving (Eq)
