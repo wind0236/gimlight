@@ -56,7 +56,6 @@ Test-Suite spec
                       , Gimlight.Data.StringSpec
                       , Gimlight.Dungeon.GenerateSpec
                       , Gimlight.Dungeon.Generate.ConfigSpec
-                      , Gimlight.Dungeon.Map.CellSpec
                       , Gimlight.Dungeon.Map.JSONReaderSpec
                       , Gimlight.Dungeon.Map.Tile.JSONReaderSpec
                       , Gimlight.FovSpec

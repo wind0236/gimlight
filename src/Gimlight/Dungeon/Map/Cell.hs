@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE GADTs           #-}
 {-# LANGUAGE LambdaCase      #-}
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections   #-}
 
@@ -11,7 +13,7 @@ module Gimlight.Dungeon.Map.Cell
     , upper
     , lower
     , cellMap
-    , allWallTiles
+    , upperAt
     , updateExploredMap
     , updatePlayerFov
     , playerFov
@@ -31,13 +33,12 @@ module Gimlight.Dungeon.Map.Cell
     , tileIdLayerAt
     ) where
 
-import           Control.Lens              (Ixed (ix), makeLenses, preview,
-                                            view, (%%~), (&), (.~), (<&>), (?~),
-                                            (^.), (^?))
+import           Control.Lens              (Ixed (ix), Traversal', makeLenses,
+                                            preview, view, (%%~), (&), (.~),
+                                            (<&>), (?~), (^.), (^?))
 import           Control.Monad.State       (MonadTrans (lift), StateT (StateT),
                                             gets)
-import           Data.Array                (Array, assocs, bounds, listArray,
-                                            (!), (//))
+import           Data.Array                (Array, assocs, bounds, (!), (//))
 import           Data.Bifunctor            (Bifunctor (second))
 import           Data.Binary               (Binary)
 import           Data.Either.Combinators   (maybeToRight)
@@ -47,8 +48,7 @@ import           Data.Maybe                (isNothing, mapMaybe)
 import           GHC.Generics              (Generic)
 import           Gimlight.Actor            (Actor, isPlayer)
 import           Gimlight.Coord            (Coord)
-import           Gimlight.Dungeon.Map.Tile (TileCollection, TileId,
-                                            floorTile, wallTile)
+import           Gimlight.Dungeon.Map.Tile (TileCollection, TileId)
 import qualified Gimlight.Dungeon.Map.Tile as Tile
 import           Gimlight.Fov              (calculateFov)
 import           Gimlight.Item             (Item)
@@ -76,11 +76,11 @@ instance Binary TileIdLayer
 
 data Cell =
     Cell
-        { _tileIdLayer :: TileIdLayer
-        , _actor               :: Maybe Actor
-        , _item                :: Maybe Item
-        , _explored            :: Bool
-        , _visibleFromPlayer   :: Bool
+        { _tileIdLayer       :: TileIdLayer
+        , _actor             :: Maybe Actor
+        , _item              :: Maybe Item
+        , _explored          :: Bool
+        , _visibleFromPlayer :: Bool
         }
     deriving (Show, Ord, Eq, Generic)
 
@@ -103,8 +103,7 @@ isTransparent tc =
 
 isTileWalkable :: TileCollection -> Cell -> Bool
 isTileWalkable tc c =
-    fmap (Tile.isWalkable . (tc M.!)) (c ^. tileIdLayer . upper) /=
-    Just False
+    fmap (Tile.isWalkable . (tc M.!)) (c ^. tileIdLayer . upper) /= Just False
 
 locateActor :: TileCollection -> Actor -> Cell -> Either Error Cell
 locateActor tc a c
@@ -135,16 +134,8 @@ type CellMap = Array (V2 Int) Cell
 cellMap :: Array (V2 Int) TileIdLayer -> CellMap
 cellMap = fmap (\x -> Cell x Nothing Nothing False False)
 
-allWallTiles :: V2 Int -> CellMap
-allWallTiles wh = listArray (V2 0 0, wh - V2 1 1) $ repeat cell
-  where
-    cell =
-        Cell
-            (TileIdLayer (Just wallTile) (Just floorTile))
-            Nothing
-            Nothing
-            False
-            False
+upperAt :: V2 Int -> Traversal' CellMap (Maybe TileId)
+upperAt x = ix x . tileIdLayer . upper
 
 widthAndHeight :: CellMap -> V2 Int
 widthAndHeight = (+ V2 1 1) . snd . bounds

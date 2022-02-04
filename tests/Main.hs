@@ -15,7 +15,6 @@ import qualified Gimlight.Data.MaybeSpec
 import qualified Gimlight.Data.StringSpec
 import qualified Gimlight.Dungeon.Generate.ConfigSpec
 import qualified Gimlight.Dungeon.GenerateSpec
-import qualified Gimlight.Dungeon.Map.CellSpec
 import qualified Gimlight.Dungeon.Map.JSONReaderSpec
 import qualified Gimlight.Dungeon.Map.Tile.JSONReaderSpec
 import qualified Gimlight.FovSpec
@@ -42,7 +41,6 @@ spec = do
     describe
         "Gimlight.Dungeon.Generate.Config"
         Gimlight.Dungeon.Generate.ConfigSpec.spec
-    describe "Gimlight.Dungeon.Map.Cell" Gimlight.Dungeon.Map.CellSpec.spec
     describe
         "Gimlight.Dungeon.Map.JSONReader"
         Gimlight.Dungeon.Map.JSONReaderSpec.spec

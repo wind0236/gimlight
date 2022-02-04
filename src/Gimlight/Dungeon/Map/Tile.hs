@@ -9,10 +9,6 @@ module Gimlight.Dungeon.Map.Tile
     , isWalkable
     , isTransparent
     , getImage
-    , wallTile
-    , floorTile
-    , upStairs
-    , downStairs
     ) where
 
 import           Codec.Picture        (Image (Image, imageData, imageHeight, imageWidth),
@@ -71,15 +67,3 @@ isWalkable = walkable
 
 isTransparent :: Tile -> Bool
 isTransparent = transparent
-
-floorTile :: TileId
-floorTile = ("tiles/cave_floor.json", 0)
-
-wallTile :: TileId
-wallTile = ("tiles/tiles.json", 1)
-
-downStairs :: TileId
-downStairs = ("tiles/stairs.json", 0)
-
-upStairs :: TileId
-upStairs = ("tiles/stairs.json", 1)

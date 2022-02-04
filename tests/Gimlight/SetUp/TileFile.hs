@@ -3,10 +3,12 @@ module Gimlight.SetUp.TileFile
     , tilesInSingleTileFile
     , tilesInUnwalkableTileFile
     , haskellTile
+    , generateTile
     , unitedTileFile
     , singleTileFile
     , unwalkableTileFile
     , haskellTilePath
+    , tileFileForGeneration
     , tileWithoutProperties
     ) where
 
@@ -18,9 +20,9 @@ import           Data.List                 (transpose)
 import           Data.List.Split           (chunksOf)
 import           Data.Map                  (fromList)
 import qualified Data.Vector.Storable      as V
-import           Gimlight.Dungeon.Map.Tile (Tile, TileCollection,
-                                            TileId, tile)
-import           Gimlight.SetUp.ImageFile  (haskellTileImage, singleTileImage)
+import           Gimlight.Dungeon.Map.Tile (Tile, TileCollection, TileId, tile)
+import           Gimlight.SetUp.ImageFile  (generateTileImage, haskellTileImage,
+                                            singleTileImage)
 import           Gimlight.UI.Draw.Config   (tileWidth)
 
 tilesInUnitedTileFile :: IO TileCollection
@@ -51,6 +53,19 @@ haskellTile =
         (fromList . tileList haskellTilePath 0 (tile True True))
         haskellTileImage
 
+generateTile :: IO TileCollection
+generateTile = fromList <$> foldlM foldStep [] [0 .. 29]
+  where
+    foldStep :: [(TileId, Tile)] -> Int -> IO [(TileId, Tile)]
+    foldStep acc x =
+        fmap
+            ((acc ++) . tileList tileFileForGeneration x (tileOfIndex x))
+            (generateTileImage x)
+    tileOfIndex n
+        | n `elem` unwalkableAndUntransparentTiles = tile False False
+        | otherwise = tile True True
+    unwalkableAndUntransparentTiles = [1 .. 21]
+
 unitedTileFile :: FilePath
 unitedTileFile = "tests/tiles/valid/united.json"
 
@@ -65,6 +80,9 @@ haskellTilePath = "tests/tiles/valid/haskell.json"
 
 tileWithoutProperties :: FilePath
 tileWithoutProperties = "tests/tiles/invalid/no_properties.json"
+
+tileFileForGeneration :: FilePath
+tileFileForGeneration = "tests/tiles/valid/generate.json"
 
 -- Transformation order is important. Tiled's specification says
 --

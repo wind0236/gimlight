@@ -4,18 +4,23 @@ module Gimlight.Dungeon.Generate
     ( generateMultipleFloorsDungeon
     ) where
 
-import           Control.Lens                     (Ixed (ix), (&), (.~), (?~),
-                                                   (^.))
+import           Control.Lens                     (Ixed (ix), _2, _Just, view,
+                                                   (&), (.~), (?~), (^.), (^?))
 import           Control.Monad.Morph              (MFunctor (hoist), generalize)
 import           Control.Monad.State              (MonadState (get, put),
                                                    MonadTrans (lift), State,
                                                    StateT, execStateT)
+import           Data.Array                       (listArray, (!))
+import           Data.Bits                        (Bits (bit, complement, (.&.), (.|.)))
 import           Data.Either                      (fromRight)
 import           Data.Foldable                    (foldlM)
+import           Data.List                        (elemIndex)
+import           Data.Maybe                       (isNothing)
 import           Data.Tree                        (Tree (Node, rootLabel, subForest))
 import           Gimlight.Actor                   (Actor)
 import           Gimlight.Actor.Monsters          (orc, troll)
 import           Gimlight.Coord                   (Coord)
+import           Gimlight.Data.List               (filterAll)
 import           Gimlight.Data.Maybe              (expectJust)
 import           Gimlight.Dungeon                 (Dungeon,
                                                    addAscendingAndDescendingStiars,
@@ -24,18 +29,21 @@ import           Gimlight.Dungeon                 (Dungeon,
 import           Gimlight.Dungeon.Generate.Config (Config, getMapSize,
                                                    getMaxRooms, getNumOfFloors,
                                                    getRoomMaxSize,
-                                                   getRoomMinSize)
+                                                   getRoomMinSize,
+                                                   getTileFilePath)
 import           Gimlight.Dungeon.Generate.Room   (Room (..), center,
                                                    roomFromTwoPositionInclusive,
                                                    roomFromWidthHeight,
                                                    roomOverlaps)
 import           Gimlight.Dungeon.Identifier      (Identifier)
-import           Gimlight.Dungeon.Map.Cell        (CellMap, allWallTiles,
+import           Gimlight.Dungeon.Map.Cell        (CellMap,
+                                                   TileIdLayer (TileIdLayer),
                                                    locateActorAt, locateItemAt,
-                                                   tileIdLayer, upper,
+                                                   tileIdLayer, upper, upperAt,
                                                    widthAndHeight)
-import           Gimlight.Dungeon.Map.Tile        (TileCollection, downStairs,
-                                                   upStairs)
+import qualified Gimlight.Dungeon.Map.Cell        as C
+import           Gimlight.Dungeon.Map.Tile        (TileCollection, TileId,
+                                                   TileIndex)
 import           Gimlight.Dungeon.Stairs          (StairsPair (StairsPair))
 import           Gimlight.IndexGenerator          (IndexGenerator)
 import           Gimlight.Item                    (herb, sampleBook)
@@ -76,14 +84,11 @@ generateDungeonAndAppend zipper ts cfg ident = do
             addAscendingAndDescendingStiars
                 (StairsPair upperStairsPosition lowerStairsPosition)
                 (getFocused zipper, generatedDungeon)
+        upperWithStairs =
+            newUpperDungeon & cellMap . upperAt upperStairsPosition ?~
+            downStairsId cfg
         newZipper =
-            appendNode newLowerDungeon $
-            modify
-                (const $ newUpperDungeon & cellMap . ix upperStairsPosition .
-                 tileIdLayer .
-                 upper ?~
-                 downStairs)
-                zipper
+            appendNode newLowerDungeon $ modify (const upperWithStairs) zipper
         zipperFocusingNext =
             expectJust "unreachable." (goDownBy (== newLowerDungeon) newZipper)
     return zipperFocusingNext
@@ -102,19 +107,16 @@ generateDungeon ::
     -> StateT IndexGenerator (State StdGen) (Dungeon, Coord)
 generateDungeon tc cfg ident = do
     (tiles, enterPosition) <-
-        generateDungeonAccum
-            []
-            tc
-            (allWallTiles $ getMapSize cfg)
-            (V2 0 0)
-            cfg
-            (getMaxRooms cfg)
-    return
-        ( dungeon
-              (tiles & ix enterPosition . tileIdLayer . upper ?~
-               upStairs)
-              ident
-        , enterPosition)
+        generateDungeonAccum [] tc initialMap (V2 0 0) cfg (getMaxRooms cfg)
+    let d =
+            dungeon
+                (addWallsAndEdges cfg tiles & upperAt enterPosition ?~
+                 (getTileFilePath cfg, upStairsIndex))
+                ident
+    return (d, enterPosition)
+  where
+    initialMap = C.cellMap $ listArray mapRange $ repeat $ initialTile cfg
+    mapRange = (V2 0 0, getMapSize cfg - V2 1 1)
 
 generateDungeonAccum ::
        [Room]
@@ -146,6 +148,77 @@ generateDungeonAccum acc tc tileMap playerPos cfg rooms = do
     generateDungeonAccum newAcc tc newMap newPlayerPos cfg (rooms - 1)
   where
     V2 width height = widthAndHeight tileMap
+
+addWallsAndEdges :: Config -> CellMap -> CellMap
+addWallsAndEdges cfg = addEdgeTiles cfg . addWallTiles cfg
+
+addEdgeTiles :: Config -> CellMap -> CellMap
+addEdgeTiles cfg cm = foldl updateTileId cm ceilTiles
+  where
+    updateTileId cm' pos =
+        cm' & ix pos . tileIdLayer . upper . _Just . _2 .~
+        blobToIdAndLeftRotation (calculateBlob pos)
+    blobToIdAndLeftRotation b =
+        case fmap (`elemIndex` blobBase) (candidates b) of
+            [Just x, _, _, _] -> x
+            [_, Just x, _, _] -> head flags .|. flags !! 1 .|. x
+            [_, _, Just x, _] -> flags !! 1 .|. flags !! 2 .|. x
+            [_, _, _, Just x] -> flags !! 2 .|. head flags .|. x
+            _                 -> error "Unmatched."
+    candidates b = take 4 $ iterate ((`mod` 255) . (* 4)) b
+    flags = cycle $ fmap bit [29, 30, 31]
+    calculateBlob c =
+        foldl
+            (\acc (b, offset) ->
+                 if isEmpty (c + offset) || isWall (c + offset) ||
+                    isStairs (c + offset)
+                     then acc .&. complement b :: Int
+                     else acc)
+            255
+            blobOrder
+    blobOrder =
+        [ (bit 7 .|. bit 0 .|. bit 1, V2 0 (-1))
+        , (bit 1, V2 1 (-1))
+        , (bit 1 .|. bit 2 .|. bit 3, V2 1 0)
+        , (bit 3, V2 1 1)
+        , (bit 3 .|. bit 4 .|. bit 5, V2 0 1)
+        , (bit 5, V2 (-1) 1)
+        , (bit 5 .|. bit 6 .|. bit 7, V2 (-1) 0)
+        , (bit 7, V2 (-1) (-1))
+        ]
+    -- Refer to http://www.cr31.co.uk/stagecast/wang/blob.html for the blob
+    -- tile.
+    blobBase = [0, 1, 5, 7, 17, 21, 23, 29, 31, 85, 87, 95, 119, 127, 255]
+    ceilTiles = filter isCeil allCoordsInMap
+    isCeil = (Just (Just (getTileFilePath cfg, ceilTileIndex)) ==) . upperTileAt
+    isEmpty = (== Just Nothing) . upperTileAt
+    isWall = tileIdSatisfies isWallId
+    isStairs = tileIdSatisfies isStairsId
+    tileIdSatisfies cond = maybe False (maybe False (cond . snd)) . upperTileAt
+    allCoordsInMap = [V2 x y | x <- [0 .. width - 1], y <- [0 .. height - 1]]
+    upperTileAt c = cm ^? ix c . tileIdLayer . upper
+    V2 width height = widthAndHeight cm
+
+addWallTiles :: Config -> CellMap -> CellMap
+addWallTiles cfg cm = foldl changeTile cm wallCoords
+  where
+    changeTile cm' pos = cm' & ix pos . tileIdLayer . upper .~ changeTo pos
+    changeTo c
+        | isLeftEmpty c && isRightEmpty c =
+            Just (getTileFilePath cfg, edgeWallIndex)
+        | isLeftEmpty c = Just (getTileFilePath cfg, leftWallIndex)
+        | isRightEmpty c = Just (getTileFilePath cfg, rightWallIndex)
+        | otherwise = Just (getTileFilePath cfg, centerWallIndex)
+    isRightEmpty c@(V2 x _) = x + 1 < width && isEmptyTile (c + V2 1 0)
+    isLeftEmpty c@(V2 x _) = x - 1 >= 0 && isEmptyTile (c + V2 (-1) 0)
+    wallCoords =
+        subtract (V2 0 1) <$> filterAll [isAboveTileCeil, isEmptyTile] coords
+    isAboveTileCeil =
+        (Just ceilTileIndex ==) . fmap snd . upperTileAt . subtract (V2 0 1)
+    isEmptyTile = isNothing . upperTileAt
+    upperTileAt = (fmap (view (tileIdLayer . upper)) cm !)
+    coords = [V2 x y | x <- [0 .. width - 1], y <- [1 .. height - 1]] -- Exclude the first line otherwise an index out of bounds error will happen.
+    V2 width height = widthAndHeight cm
 
 createRoom :: Room -> CellMap -> CellMap
 createRoom room = flip (foldl removeTileAt) coords
@@ -199,9 +272,9 @@ newMonster = do
             else troll
 
 randomRST :: (Random a, RandomGen g) => (a, a) -> State g a
-randomRST range = do
+randomRST r = do
     g <- get
-    let (v, g') = randomR range g
+    let (v, g') = randomR r g
     put g'
     return v
 
@@ -211,6 +284,46 @@ randomST = do
     let (v, g') = random g
     put g'
     return v
+
+initialTile :: Config -> TileIdLayer
+initialTile cfg = TileIdLayer u l
+  where
+    u = Just (getTileFilePath cfg, ceilTileIndex)
+    l = Just (getTileFilePath cfg, floorTileIndex)
+
+isStairsId :: TileIndex -> Bool
+isStairsId = (`elem` [downStairsIndex, upStairsIndex])
+
+isWallId :: TileIndex -> Bool
+isWallId =
+    (`elem` [leftWallIndex, centerWallIndex, rightWallIndex, edgeWallIndex])
+
+floorTileIndex :: TileIndex
+floorTileIndex = 0
+
+ceilTileIndex :: TileIndex
+ceilTileIndex = 14
+
+leftWallIndex :: TileIndex
+leftWallIndex = 15
+
+centerWallIndex :: TileIndex
+centerWallIndex = 16
+
+rightWallIndex :: TileIndex
+rightWallIndex = 17
+
+edgeWallIndex :: TileIndex
+edgeWallIndex = 18
+
+downStairsId :: Config -> TileId
+downStairsId cfg = (getTileFilePath cfg, downStairsIndex)
+
+downStairsIndex :: TileIndex
+downStairsIndex = 22
+
+upStairsIndex :: TileIndex
+upStairsIndex = 23
 
 maxMonstersPerRoom :: Int
 maxMonstersPerRoom = 1

@@ -4,7 +4,8 @@ module Gimlight.Dungeon.Map.Tile.JSONReaderSpec
 
 import           Data.Map                             (unions)
 import           Gimlight.Dungeon.Map.Tile.JSONReader (readTileFileRecursive)
-import           Gimlight.SetUp.TileFile              (haskellTile,
+import           Gimlight.SetUp.TileFile              (generateTile,
+                                                       haskellTile,
                                                        tileWithoutProperties,
                                                        tilesInSingleTileFile,
                                                        tilesInUnitedTileFile,
@@ -31,6 +32,7 @@ testReadTileFilesRecursive = do
         , tilesInSingleTileFile
         , tilesInUnwalkableTileFile
         , haskellTile
+        , generateTile
         ]
 
 testErrorOnReadingTileWithoutProperties :: Spec
