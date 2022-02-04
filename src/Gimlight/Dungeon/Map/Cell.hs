@@ -7,7 +7,7 @@ module Gimlight.Dungeon.Map.Cell
     ( CellMap
     , TileIdLayer(..)
     , Error(..)
-    , tileIdentifierLayer
+    , tileIdLayer
     , upper
     , lower
     , cellMap
@@ -28,7 +28,7 @@ module Gimlight.Dungeon.Map.Cell
     , removeActorIf
     , positionsAndActors
     , positionsAndItems
-    , tileIdentifierLayerAt
+    , tileIdLayerAt
     ) where
 
 import           Control.Lens              (Ixed (ix), makeLenses, preview,
@@ -76,7 +76,7 @@ instance Binary TileIdLayer
 
 data Cell =
     Cell
-        { _tileIdentifierLayer :: TileIdLayer
+        { _tileIdLayer :: TileIdLayer
         , _actor               :: Maybe Actor
         , _item                :: Maybe Item
         , _explored            :: Bool
@@ -92,18 +92,18 @@ isWalkable :: TileCollection -> Cell -> Bool
 isWalkable tc c =
     all ($ c)
         [ (/= Just False) . fmap (Tile.isWalkable . (tc M.!)) .
-          view (tileIdentifierLayer . upper)
+          view (tileIdLayer . upper)
         , isNothing . view actor
         ]
 
 isTransparent :: TileCollection -> Cell -> Bool
 isTransparent tc =
     (/= Just False) . fmap (Tile.isTransparent . (tc M.!)) .
-    view (tileIdentifierLayer . upper)
+    view (tileIdLayer . upper)
 
 isTileWalkable :: TileCollection -> Cell -> Bool
 isTileWalkable tc c =
-    fmap (Tile.isWalkable . (tc M.!)) (c ^. tileIdentifierLayer . upper) /=
+    fmap (Tile.isWalkable . (tc M.!)) (c ^. tileIdLayer . upper) /=
     Just False
 
 locateActor :: TileCollection -> Actor -> Cell -> Either Error Cell
@@ -225,5 +225,5 @@ removeActorIf f =
     maybeToRight ActorNotFound >>=
     removeActorAt
 
-tileIdentifierLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
-tileIdentifierLayerAt c = preview (ix c . tileIdentifierLayer)
+tileIdLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
+tileIdLayerAt c = preview (ix c . tileIdLayer)

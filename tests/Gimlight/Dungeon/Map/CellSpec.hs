@@ -3,7 +3,7 @@ module Gimlight.Dungeon.Map.CellSpec
     ) where
 
 import           Control.Lens              ((^.))
-import           Gimlight.Dungeon.Map.Cell (allWallTiles, tileIdentifierLayerAt,
+import           Gimlight.Dungeon.Map.Cell (allWallTiles, tileIdLayerAt,
                                             upper)
 import           Gimlight.Dungeon.Map.Tile (wallTile)
 import           Linear.V2                 (V2 (V2))
@@ -28,4 +28,4 @@ testAllWallTiles =
         maybe
             False
             ((== Just wallTile) . (^. upper))
-            (tileIdentifierLayerAt c cm)
+            (tileIdLayerAt c cm)

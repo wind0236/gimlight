@@ -24,7 +24,7 @@ import           Gimlight.Dungeon.Map.Cell       (exploredMap, lower,
                                                   playerActor, playerFov,
                                                   positionsAndActors,
                                                   positionsAndItems,
-                                                  tileIdentifierLayerAt, upper,
+                                                  tileIdLayerAt, upper,
                                                   widthAndHeight)
 import           Gimlight.Dungeon.Map.Tile       (getImage)
 import           Gimlight.GameConfig             (GameConfig)
@@ -117,13 +117,13 @@ mapWidget eh = vstack rows
     lowerLayerAt = layerOfAt lower
     upperLayerAt = layerOfAt upper
     layerOfAt which c = tileIdToImageMem <$> getTileIdOfLayerAt which c
-    tileIdToImageMem tileIdentifier =
+    tileIdToImageMem tileId =
         imageMem
-            (showt tileIdentifier)
+            (showt tileId)
             (vectorToByteString $ imageData img)
             (imgSize img)
       where
-        img = getImage $ getTileCollection eh Map.! tileIdentifier
+        img = getImage $ getTileCollection eh Map.! tileId
     imgSize img =
         Size (fromIntegral $ imageWidth img) (fromIntegral $ imageHeight img)
     shadowAt c = filler `styleBasic` [bgColor $ black & L.a .~ cellOpacity c]
@@ -133,8 +133,8 @@ mapWidget eh = vstack rows
         | otherwise = 1
     isVisible c = fromMaybe False $ playerFov (d ^. cellMap) ^? ix c
     isExplored c = fromMaybe False $ exploredMap (d ^. cellMap) ^? ix c
-    getTileIdOfLayerAt which c = tileIdentifierLayer c >>= (^. which)
-    tileIdentifierLayer c = tileIdentifierLayerAt c $ d ^. cellMap
+    getTileIdOfLayerAt which c = tileIdLayer c >>= (^. which)
+    tileIdLayer c = tileIdLayerAt c $ d ^. cellMap
     V2 topLeftCoordX topLeftCoordY = topLeftCoord d
     d = getCurrentDungeon eh
 

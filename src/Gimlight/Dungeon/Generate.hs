@@ -32,7 +32,7 @@ import           Gimlight.Dungeon.Generate.Room   (Room (..), center,
 import           Gimlight.Dungeon.Identifier      (Identifier)
 import           Gimlight.Dungeon.Map.Cell        (CellMap, allWallTiles,
                                                    locateActorAt, locateItemAt,
-                                                   tileIdentifierLayer, upper,
+                                                   tileIdLayer, upper,
                                                    widthAndHeight)
 import           Gimlight.Dungeon.Map.Tile        (TileCollection, downStairs,
                                                    upStairs)
@@ -80,7 +80,7 @@ generateDungeonAndAppend zipper ts cfg ident = do
             appendNode newLowerDungeon $
             modify
                 (const $ newUpperDungeon & cellMap . ix upperStairsPosition .
-                 tileIdentifierLayer .
+                 tileIdLayer .
                  upper ?~
                  downStairs)
                 zipper
@@ -111,7 +111,7 @@ generateDungeon tc cfg ident = do
             (getMaxRooms cfg)
     return
         ( dungeon
-              (tiles & ix enterPosition . tileIdentifierLayer . upper ?~
+              (tiles & ix enterPosition . tileIdLayer . upper ?~
                upStairs)
               ident
         , enterPosition)
@@ -150,7 +150,7 @@ generateDungeonAccum acc tc tileMap playerPos cfg rooms = do
 createRoom :: Room -> CellMap -> CellMap
 createRoom room = flip (foldl removeTileAt) coords
   where
-    removeTileAt cm x = cm & ix x . tileIdentifierLayer . upper .~ Nothing
+    removeTileAt cm x = cm & ix x . tileIdLayer . upper .~ Nothing
     coords =
         [V2 x y | x <- [x1 room .. x2 room - 1], y <- [y1 room .. y2 room - 1]]
 
