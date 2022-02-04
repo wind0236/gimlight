@@ -3,8 +3,8 @@
 module Gimlight.Dungeon.Map.Tile
     ( Tile
     , TileCollection
-    , TileIdentifier
     , TileId
+    , TileIndex
     , tile
     , isWalkable
     , isTransparent
@@ -54,11 +54,11 @@ instance Binary Tile where
     get =
         Tile <$> get <*> get <*> (Image <$> get <*> get <*> (fromList <$> get))
 
-type TileCollection = Map TileIdentifier Tile
+type TileCollection = Map TileId Tile
 
-type TileIdentifier = (FilePath, Int)
+type TileId = (FilePath, Int)
 
-type TileId = Int
+type TileIndex = Int
 
 tile :: Bool -> Bool -> Image PixelRGBA8 -> Tile
 tile = Tile
@@ -72,14 +72,14 @@ isWalkable = walkable
 isTransparent :: Tile -> Bool
 isTransparent = transparent
 
-floorTile :: TileIdentifier
+floorTile :: TileId
 floorTile = ("tiles/cave_floor.json", 0)
 
-wallTile :: TileIdentifier
+wallTile :: TileId
 wallTile = ("tiles/tiles.json", 1)
 
-downStairs :: TileIdentifier
+downStairs :: TileId
 downStairs = ("tiles/stairs.json", 0)
 
-upStairs :: TileIdentifier
+upStairs :: TileId
 upStairs = ("tiles/stairs.json", 1)

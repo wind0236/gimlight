@@ -5,7 +5,7 @@
 
 module Gimlight.Dungeon.Map.Cell
     ( CellMap
-    , TileIdentifierLayer(..)
+    , TileIdLayer(..)
     , Error(..)
     , tileIdentifierLayer
     , upper
@@ -47,7 +47,7 @@ import           Data.Maybe                (isNothing, mapMaybe)
 import           GHC.Generics              (Generic)
 import           Gimlight.Actor            (Actor, isPlayer)
 import           Gimlight.Coord            (Coord)
-import           Gimlight.Dungeon.Map.Tile (TileCollection, TileIdentifier,
+import           Gimlight.Dungeon.Map.Tile (TileCollection, TileId,
                                             floorTile, wallTile)
 import qualified Gimlight.Dungeon.Map.Tile as Tile
 import           Gimlight.Fov              (calculateFov)
@@ -63,20 +63,20 @@ data Error
     | TileIsNotWalkable
     deriving (Show)
 
-data TileIdentifierLayer =
-    TileIdentifierLayer
-        { _upper :: Maybe TileIdentifier
-        , _lower :: Maybe TileIdentifier
+data TileIdLayer =
+    TileIdLayer
+        { _upper :: Maybe TileId
+        , _lower :: Maybe TileId
         }
     deriving (Show, Ord, Eq, Generic)
 
-makeLenses ''TileIdentifierLayer
+makeLenses ''TileIdLayer
 
-instance Binary TileIdentifierLayer
+instance Binary TileIdLayer
 
 data Cell =
     Cell
-        { _tileIdentifierLayer :: TileIdentifierLayer
+        { _tileIdentifierLayer :: TileIdLayer
         , _actor               :: Maybe Actor
         , _item                :: Maybe Item
         , _explored            :: Bool
@@ -132,7 +132,7 @@ removeItem c =
 
 type CellMap = Array (V2 Int) Cell
 
-cellMap :: Array (V2 Int) TileIdentifierLayer -> CellMap
+cellMap :: Array (V2 Int) TileIdLayer -> CellMap
 cellMap = fmap (\x -> Cell x Nothing Nothing False False)
 
 allWallTiles :: V2 Int -> CellMap
@@ -140,7 +140,7 @@ allWallTiles wh = listArray (V2 0 0, wh - V2 1 1) $ repeat cell
   where
     cell =
         Cell
-            (TileIdentifierLayer (Just wallTile) (Just floorTile))
+            (TileIdLayer (Just wallTile) (Just floorTile))
             Nothing
             Nothing
             False
@@ -225,5 +225,5 @@ removeActorIf f =
     maybeToRight ActorNotFound >>=
     removeActorAt
 
-tileIdentifierLayerAt :: Coord -> CellMap -> Maybe TileIdentifierLayer
+tileIdentifierLayerAt :: Coord -> CellMap -> Maybe TileIdLayer
 tileIdentifierLayerAt c = preview (ix c . tileIdentifierLayer)

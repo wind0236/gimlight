@@ -14,7 +14,7 @@ module Gimlight.SetUp.MapFile
 import           Data.Array                (array)
 import           Data.Bits                 (Bits (bit, (.|.)))
 import           Gimlight.Dungeon.Map.Cell (CellMap,
-                                            TileIdentifierLayer (TileIdentifierLayer),
+                                            TileIdLayer (TileIdLayer),
                                             cellMap)
 import           Gimlight.SetUp.TileFile   (haskellTilePath, singleTileFile,
                                             unitedTileFile)
@@ -25,8 +25,8 @@ cellMapContainingMultipleFilesTile =
     cellMap $
     array
         (V2 0 0, V2 1 0)
-        [ (V2 0 0, TileIdentifierLayer Nothing (Just (singleTileFile, 0)))
-        , (V2 1 0, TileIdentifierLayer Nothing (Just (unitedTileFile, 1)))
+        [ (V2 0 0, TileIdLayer Nothing (Just (singleTileFile, 0)))
+        , (V2 1 0, TileIdLayer Nothing (Just (unitedTileFile, 1)))
         ]
 
 cellMapOfSingleTileMap :: CellMap
@@ -34,14 +34,14 @@ cellMapOfSingleTileMap =
     cellMap $
     array
         (V2 0 0, V2 0 0)
-        [(V2 0 0, TileIdentifierLayer Nothing (Just (singleTileFile, 0)))]
+        [(V2 0 0, TileIdLayer Nothing (Just (singleTileFile, 0)))]
 
 rectangleButNotSquareCellMap :: CellMap
 rectangleButNotSquareCellMap =
     cellMap $
     array
         (V2 0 0, V2 1 0)
-        [ (V2 x 0, TileIdentifierLayer Nothing (Just (singleTileFile, 0)))
+        [ (V2 x 0, TileIdLayer Nothing (Just (singleTileFile, 0)))
         | x <- [0, 1]
         ]
 
@@ -53,7 +53,7 @@ cellMapUsingRotatedTiles =
   where
     tiles = [layerFromDVH d v h | (d, v, h) <- diagonalVertialHorizontal]
     layerFromDVH d v =
-        TileIdentifierLayer Nothing . Just . identifierFromDVH d v
+        TileIdLayer Nothing . Just . identifierFromDVH d v
     identifierFromDVH d v h = (haskellTilePath, idMultiplier d v h 0)
     idMultiplier d v h = (bitIf d 29 .|. bitIf v 30 .|. bitIf h 31 .|.)
     bitIf cond b
@@ -68,8 +68,8 @@ cellMapUsingMultipleTileFilesAndTransformation =
     cellMap $
     array
         (V2 0 0, V2 1 0)
-        [ (V2 0 0, TileIdentifierLayer Nothing $ Just (haskellTilePath, bit 31))
-        , (V2 1 0, TileIdentifierLayer Nothing $ Just (singleTileFile, bit 31))
+        [ (V2 0 0, TileIdLayer Nothing $ Just (haskellTilePath, bit 31))
+        , (V2 1 0, TileIdLayer Nothing $ Just (singleTileFile, bit 31))
         ]
 
 mapUsingMultipleTileFiles :: FilePath

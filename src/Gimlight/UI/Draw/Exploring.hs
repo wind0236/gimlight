@@ -116,7 +116,7 @@ mapWidget eh = vstack rows
         [width $ fromIntegral tileWidth, height $ fromIntegral tileHeight]
     lowerLayerAt = layerOfAt lower
     upperLayerAt = layerOfAt upper
-    layerOfAt which c = tileIdToImageMem <$> getTileIdentifierOfLayerAt which c
+    layerOfAt which c = tileIdToImageMem <$> getTileIdOfLayerAt which c
     tileIdToImageMem tileIdentifier =
         imageMem
             (showt tileIdentifier)
@@ -133,7 +133,7 @@ mapWidget eh = vstack rows
         | otherwise = 1
     isVisible c = fromMaybe False $ playerFov (d ^. cellMap) ^? ix c
     isExplored c = fromMaybe False $ exploredMap (d ^. cellMap) ^? ix c
-    getTileIdentifierOfLayerAt which c = tileIdentifierLayer c >>= (^. which)
+    getTileIdOfLayerAt which c = tileIdentifierLayer c >>= (^. which)
     tileIdentifierLayer c = tileIdentifierLayerAt c $ d ^. cellMap
     V2 topLeftCoordX topLeftCoordY = topLeftCoord d
     d = getCurrentDungeon eh

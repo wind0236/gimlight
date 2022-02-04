@@ -28,7 +28,7 @@ import           Gimlight.Actor.Status     (status)
 import           Gimlight.Actor.Status.Hp  (hp)
 import           Gimlight.Coord            (Coord)
 import           Gimlight.Dungeon.Map.Cell (CellMap,
-                                            TileIdentifierLayer (TileIdentifierLayer),
+                                            TileIdLayer (TileIdLayer),
                                             cellMap, locateActorAt,
                                             locateItemAt)
 import           Gimlight.Dungeon.Map.Tile (TileCollection, tile)
@@ -69,8 +69,8 @@ initCellMap =
         orc <*>
         ((!! 5) . iterate (inventoryItems %~ fromJust . addItem herb) <$> orc) <*>
         ((inventoryItems %~ fromJust . addItem herb) <$> orc)
-    emptyTile = TileIdentifierLayer Nothing Nothing
-    unwalkable = TileIdentifierLayer (Just (dummyTileFile, 1)) Nothing
+    emptyTile = TileIdLayer Nothing Nothing
+    unwalkable = TileIdLayer (Just (dummyTileFile, 1)) Nothing
     mapWidth = 3
     mapHeight = 4
 

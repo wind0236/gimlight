@@ -22,9 +22,9 @@ import qualified Data.Vector               as V
 import           Gimlight.Data.Either      (expectRight)
 import           Gimlight.Data.Maybe       (expectJust)
 import           Gimlight.Dungeon.Map.Cell (CellMap,
-                                            TileIdentifierLayer (TileIdentifierLayer),
+                                            TileIdLayer (TileIdLayer),
                                             cellMap)
-import           Gimlight.Dungeon.Map.Tile (TileIdentifier)
+import           Gimlight.Dungeon.Map.Tile (TileId)
 import           Linear.V2                 (V2 (V2))
 import           System.Directory          (canonicalizePath,
                                             makeRelativeToCurrentDirectory)
@@ -62,8 +62,8 @@ getMapSize json =
   where
     fetch k = json ^? key k . _Integer
 
-getTiles :: String -> FilePath -> ExceptT String IO (Vector TileIdentifierLayer)
-getTiles json pathToMap = V.zipWith TileIdentifierLayer <$> uppers <*> lowers
+getTiles :: String -> FilePath -> ExceptT String IO (Vector TileIdLayer)
+getTiles json pathToMap = V.zipWith TileIdLayer <$> uppers <*> lowers
   where
     lowers = getTileIdOfNthLayerOrErr 0
     uppers = getTileIdOfNthLayerOrErr 1
@@ -74,7 +74,7 @@ getTiles json pathToMap = V.zipWith TileIdentifierLayer <$> uppers <*> lowers
         "The map file does not contain the level " ++ which ++ " layer."
 
 getTileIdOfNthLayer ::
-       Int -> String -> FilePath -> MaybeT IO (Vector (Maybe TileIdentifier))
+       Int -> String -> FilePath -> MaybeT IO (Vector (Maybe TileId))
 getTileIdOfNthLayer n json pathToMap =
     MaybeT . traverse (mapM rawIdToIdentifier) $ getDataOfNthLayer n json
   where

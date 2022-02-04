@@ -19,14 +19,14 @@ import           Data.List.Split           (chunksOf)
 import           Data.Map                  (fromList)
 import qualified Data.Vector.Storable      as V
 import           Gimlight.Dungeon.Map.Tile (Tile, TileCollection,
-                                            TileIdentifier, tile)
+                                            TileId, tile)
 import           Gimlight.SetUp.ImageFile  (haskellTileImage, singleTileImage)
 import           Gimlight.UI.Draw.Config   (tileWidth)
 
 tilesInUnitedTileFile :: IO TileCollection
 tilesInUnitedTileFile = fromList <$> foldlM foldStep [] [0 .. 5]
   where
-    foldStep :: [(TileIdentifier, Tile)] -> Int -> IO [(TileIdentifier, Tile)]
+    foldStep :: [(TileId, Tile)] -> Int -> IO [(TileId, Tile)]
     foldStep acc x =
         fmap
             ((acc ++) . tileList unitedTileFile x (tileOfIndex x))
@@ -80,7 +80,7 @@ tileList ::
     -> Int
     -> (Image PixelRGBA8 -> Tile)
     -> Image PixelRGBA8
-    -> [(TileIdentifier, Tile)]
+    -> [(TileId, Tile)]
 tileList path idx tileGen img =
     fmap
         (identifierAndTileForDVH path idx tileGen img)
@@ -92,7 +92,7 @@ identifierAndTileForDVH ::
     -> (Image PixelRGBA8 -> Tile)
     -> Image PixelRGBA8
     -> (Bool, Bool, Bool)
-    -> (TileIdentifier, Tile)
+    -> (TileId, Tile)
 identifierAndTileForDVH path idx tileGen img (d, v, h) =
     ((path, tileFlagsSetter d v h idx), tileGen (transformImage d v h img))
 
