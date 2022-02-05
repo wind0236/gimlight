@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Gimlight.GameStatus.Scene
   ( SceneHandler,
@@ -11,6 +12,7 @@ module Gimlight.GameStatus.Scene
   )
 where
 
+import Control.Lens (makeLenses, view, (%~), (&), (^.))
 import Data.Binary (Binary)
 import Data.Text (Text)
 import GHC.Generics (Generic)
@@ -24,11 +26,13 @@ newtype SceneElement
 instance Binary SceneElement
 
 data SceneHandler = SceneHandler
-  { backgroundImage :: Text,
-    elements :: [SceneElement],
-    afterScene :: ExploringHandler
+  { _backgroundImage :: Text,
+    _elements :: [SceneElement],
+    _afterScene :: ExploringHandler
   }
   deriving (Show, Ord, Eq, Generic)
+
+makeLenses ''SceneHandler
 
 instance Binary SceneHandler
 
@@ -39,27 +43,15 @@ text :: SceneElement -> MultilingualText
 text (WithoutSpeaker t) = t
 
 getBackgroundImagePath :: SceneHandler -> Text
-getBackgroundImagePath = backgroundImage
+getBackgroundImagePath = view backgroundImage
 
 getCurrentScene :: SceneHandler -> SceneElement
-getCurrentScene = head . elements
+getCurrentScene = head . view elements
 
 sceneHandler :: Text -> [SceneElement] -> ExploringHandler -> SceneHandler
 sceneHandler = SceneHandler
 
 nextSceneOrFinish :: SceneHandler -> Either ExploringHandler SceneHandler
-nextSceneOrFinish
-  SceneHandler
-    { backgroundImage = b,
-      elements = es,
-      afterScene = af
-    } =
-    if length es == 1
-      then Left af
-      else
-        Right $
-          SceneHandler
-            { backgroundImage = b,
-              elements = tail es,
-              afterScene = af
-            }
+nextSceneOrFinish sh
+  | length (sh ^. elements) == 1 = Left $ sh ^. afterScene
+  | otherwise = Right $ sh & elements %~ tail
