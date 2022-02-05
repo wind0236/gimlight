@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Gimlight.GameStatus.Scene
@@ -21,7 +22,7 @@ import Gimlight.Localization (MultilingualText)
 
 newtype SceneElement
   = WithoutSpeaker MultilingualText
-  deriving (Show, Ord, Eq, Generic)
+  deriving stock (Show, Ord, Eq, Generic)
 
 instance Binary SceneElement
 
