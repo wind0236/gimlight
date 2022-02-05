@@ -10,10 +10,12 @@ import Gimlight.GameModel (GameModel (GameModel, config, status))
 import Gimlight.GameStatus (GameStatus (SelectingLocale, Title))
 import Gimlight.UI.Draw (drawUI)
 import Gimlight.UI.Draw.Config (windowHeight, windowWidth)
+import Gimlight.UI.Draw.Fonts (bold, regular)
 import qualified Gimlight.UI.Event as E
 import Gimlight.UI.Types (AppEvent (..))
 import Monomer
-  ( MainWindowState (MainWindowNormal),
+  ( Font (unFont),
+    MainWindowState (MainWindowNormal),
     appFontDef,
     appInitEvent,
     appTheme,
@@ -41,7 +43,8 @@ start = do
     initUIConfig =
       [ appWindowTitle "Roguelike",
         appTheme darkTheme,
-        appFontDef "Regular" "third_party/noto-cjk/NotoSansCJK-VF.otf.ttc",
+        appFontDef (unFont regular) "third_party/Noto_Sans_JP/NotoSansJP-Light.otf",
+        appFontDef (unFont bold) "third_party/Noto_Sans_JP/NotoSansJP-Bold.otf",
         appInitEvent AppInit,
         appWindowState $ MainWindowNormal (windowWidth, windowHeight),
         appWindowResizable False

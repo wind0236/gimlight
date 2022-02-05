@@ -148,6 +148,7 @@ library
                       , Gimlight.TreeZipper
                       , Gimlight.UI.Draw
                       , Gimlight.UI.Draw.Exploring
+                      , Gimlight.UI.Draw.Fonts
                       , Gimlight.UI.Draw.GameOver
                       , Gimlight.UI.Draw.KeyEvent
                       , Gimlight.UI.Draw.ReadingBook
