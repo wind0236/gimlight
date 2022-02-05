@@ -12,9 +12,9 @@ import Monomer (AppEventResponse, WidgetEnv, WidgetNode)
 
 data AppEvent
   = AppInit
-  | AppSaveFinished
-  | AppLoadFinished GameModel
   | AppKeyboardInput Text
+  | NewGameLoaded GameModel
+  | LanguageSelected GameModel
   deriving (Eq)
 
 type GameWidgetEnv = WidgetEnv GameModel AppEvent

@@ -41,9 +41,8 @@ import Gimlight.Player
     handlePlayerPickingUp,
     handlePlayerSelectingItem,
   )
-import Gimlight.Save (load, save)
 import Gimlight.UI.Types
-  ( AppEvent (AppInit, AppKeyboardInput, AppLoadFinished, AppSaveFinished),
+  ( AppEvent (AppInit, AppKeyboardInput, LanguageSelected, NewGameLoaded),
     GameEventResponse,
     GameWidgetEnv,
     GameWidgetNode,
@@ -63,9 +62,9 @@ handleEvent ::
 handleEvent _ _ gameStatus evt =
   case evt of
     AppInit -> []
-    AppSaveFinished -> []
-    AppLoadFinished ngs -> [Model ngs]
     AppKeyboardInput k -> handleKeyInput gameStatus k
+    NewGameLoaded gm -> [Model gm]
+    LanguageSelected gm -> [Model gm]
 
 handleKeyInput :: GameModel -> Text -> [GameEventResponse]
 handleKeyInput e@GameModel {status = s} k =
@@ -80,7 +79,7 @@ handleKeyInput e@GameModel {status = s} k =
     GameOver -> []
 
 handleKeyInputDuringExploring :: GameModel -> Text -> [GameEventResponse]
-handleKeyInputDuringExploring e@GameModel {status = st@(Exploring eh)} k
+handleKeyInputDuringExploring e@GameModel {status = Exploring eh} k
   | k == "Right" = [Model $ e {status = handlePlayerMoving (V2 1 0) eh}]
   | k == "Left" = [Model $ e {status = handlePlayerMoving (V2 (-1) 0) eh}]
   | k == "Up" = [Model $ e {status = handlePlayerMoving (V2 0 (-1)) eh}]
@@ -88,12 +87,6 @@ handleKeyInputDuringExploring e@GameModel {status = st@(Exploring eh)} k
   | k == "g" = [Model e {status = handlePlayerPickingUp eh}]
   | k == "u" = [Model e {status = handlePlayerSelectingItem Use eh}]
   | k == "d" = [Model e {status = handlePlayerSelectingItem Drop eh}]
-  | k == "Ctrl-s" = [Task (save st >> return AppSaveFinished)]
-  | k == "Ctrl-l" =
-      [ Task $ do
-          s <- load
-          return $ AppLoadFinished e {status = s}
-      ]
   | k == "Shift-." =
       [ Model
           e
@@ -155,12 +148,7 @@ handleKeyInputDuringReadingBook _ _ = error "We are not reading a book."
 
 handleKeyInputDuringTitle :: GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringTitle g k
-  | k == "n" = [Task $ AppLoadFinished <$> startNewGame g]
-  | k == "l" =
-      [ Task $ do
-          s <- load
-          return $ AppLoadFinished g {status = s}
-      ]
+  | k == "n" = [Task $ NewGameLoaded <$> startNewGame g]
   | k == "q" = [exitApplication]
   | otherwise = []
   where
@@ -171,8 +159,8 @@ handleKeyInputDuringTitle g k
 handleKeyInputDuringSelectingLanguage ::
   GameModel -> Text -> [GameEventResponse]
 handleKeyInputDuringSelectingLanguage g@GameModel {config = c} k
-  | k == "e" = [Task $ AppLoadFinished <$> updateConfig English]
-  | k == "j" = [Task $ AppLoadFinished <$> updateConfig Japanese]
+  | k == "e" = [Task $ LanguageSelected <$> updateConfig English]
+  | k == "j" = [Task $ LanguageSelected <$> updateConfig Japanese]
   | otherwise = []
   where
     updateConfig l = do

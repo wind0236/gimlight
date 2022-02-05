@@ -23,6 +23,5 @@ drawTitle c =
     vstack
       [ label "Gimlight" `styleBasic` [textSize 36],
         label $ "[n] " <> getLocalizedText c T.newGame,
-        label $ "[l] " <> getLocalizedText c T.loadGame,
         label $ "[q] " <> getLocalizedText c T.quitGame
       ]

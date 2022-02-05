@@ -144,7 +144,6 @@ library
                       , Gimlight.Player
                       , Gimlight.Quest
                       , Gimlight.Quest.KillBats
-                      , Gimlight.Save
                       , Gimlight.TreeZipper
                       , Gimlight.UI.Draw
                       , Gimlight.UI.Draw.Exploring
