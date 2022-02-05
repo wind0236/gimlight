@@ -59,3 +59,11 @@ jobs:
       run: |
         cabal install hlint --ignore-project -j
         ~/.cabal/bin/hlint .
+
+    - name: Check format
+      uses: mrkkrp/ormolu-action@v5
+      with:
+        pattern: |
+          src/**/*.hs
+          app/**/*.hs
+          tests/**/*.hs
