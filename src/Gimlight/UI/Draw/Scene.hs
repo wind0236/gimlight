@@ -16,7 +16,7 @@ import Gimlight.GameStatus.Scene
 import Gimlight.Localization (getLocalizedText)
 import Gimlight.UI.Draw.Fonts (bold)
 import Gimlight.UI.Draw.KeyEvent (withKeyEvents)
-import Gimlight.UI.Types (GameWidgetNode)
+import Gimlight.UI.Types (AppEvent (ShowNextScene), GameWidgetNode)
 import Monomer
   ( CmbAlignBottom (alignBottom),
     CmbAlignLeft (alignLeft),
@@ -24,16 +24,21 @@ import Monomer
     CmbBgColor (bgColor),
     CmbHeight (height),
     CmbMultiline (multiline),
+    CmbOnFinished (onFinished),
     CmbPadding (padding),
     CmbStyleBasic (styleBasic),
     CmbTextColor (textColor),
     CmbTextFont (textFont),
     CmbTextSize (textSize),
+    WidgetNode,
+    animFadeIn,
+    animFadeOut_,
     black,
     box_,
     filler,
     image,
     label_,
+    nodeKey,
     vstack,
     white,
     zstack,
@@ -50,14 +55,20 @@ drawScene sh c =
       ]
 
 drawText :: SceneHandler -> GameConfig -> GameWidgetNode
-drawText sh c =
-  vstack
-    [ filler,
-      zstack
-        [ filler `styleBasic` [bgColor $ black & L.a .~ 0.5],
-          box_ [alignTop, alignLeft] $
-            label_ (getLocalizedText c $ text $ getCurrentScene sh) [multiline]
-              `styleBasic` [textColor white, textSize 20, padding 20, textFont bold]
-        ]
-        `styleBasic` [height 200]
-    ]
+drawText sh c = container inner `styleBasic` [height 200]
+  where
+    container = fixToBottom . shadeBox . fadeInOut . box_ [alignTop, alignLeft]
+    inner = label_ (getLocalizedText c $ text $ getCurrentScene sh) [multiline] `styleBasic` textStyle
+    textStyle = [textColor white, textSize 20, padding 20, textFont bold]
+
+shadeBox :: WidgetNode s e -> WidgetNode s e
+shadeBox content = zstack [filler `styleBasic` [bgColor $ black & L.a .~ 0.5], content]
+
+fixToBottom :: WidgetNode s e -> WidgetNode s e
+fixToBottom content = vstack [filler, content]
+
+fadeInOut :: WidgetNode s AppEvent -> WidgetNode s AppEvent
+fadeInOut content = outer
+  where
+    inner = animFadeIn content `nodeKey` "sceneFadeIn"
+    outer = animFadeOut_ [onFinished ShowNextScene] inner `nodeKey` "sceneFadeOut"

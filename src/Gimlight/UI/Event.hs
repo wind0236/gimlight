@@ -42,14 +42,16 @@ import Gimlight.Player
     handlePlayerSelectingItem,
   )
 import Gimlight.UI.Types
-  ( AppEvent (AppInit, AppKeyboardInput, LanguageSelected, NewGameLoaded),
+  ( AppEvent (AppInit, AppKeyboardInput, LanguageSelected, NewGameLoaded, ShowNextScene),
     GameEventResponse,
     GameWidgetEnv,
     GameWidgetNode,
   )
 import Linear.V2 (V2 (V2))
 import Monomer
-  ( EventResponse (Model, Task),
+  ( AnimationMsg (AnimationStart, AnimationStop),
+    EventResponse (Message, Model, Task),
+    WidgetKey (WidgetKey),
     exitApplication,
   )
 
@@ -65,6 +67,13 @@ handleEvent _ _ gameStatus evt =
     AppKeyboardInput k -> handleKeyInput gameStatus k
     NewGameLoaded gm -> [Model gm]
     LanguageSelected gm -> [Model gm]
+    ShowNextScene -> nextStatus gameStatus
+  where
+    nextStatus g@GameModel {status = Scene sh} =
+      case nextSceneOrFinish sh of
+        Right r -> [Model g {status = Scene r}, Message (WidgetKey "sceneFadeIn") AnimationStart]
+        Left l -> [Model g {status = Exploring l}]
+    nextStatus _ = error "No handling scene."
 
 handleKeyInput :: GameModel -> Text -> [GameEventResponse]
 handleKeyInput e@GameModel {status = s} k =
@@ -120,14 +129,12 @@ handleKeyInputDuringTalking e@GameModel {status = Talking h} k
 handleKeyInputDuringTalking _ _ = error "We are not talking."
 
 handleKeyInputDuringScene :: GameModel -> Text -> [GameEventResponse]
-handleKeyInputDuringScene e@GameModel {status = Scene sh} k
-  | k == "Enter" = [Model $ e {status = nextStatus}]
+handleKeyInputDuringScene GameModel {status = Scene _} k
+  | k == "Enter" =
+      [ Message (WidgetKey "sceneFadeIn") AnimationStop,
+        Message (WidgetKey "sceneFadeOut") AnimationStart
+      ]
   | otherwise = []
-  where
-    nextStatus =
-      case nextSceneOrFinish sh of
-        Right r -> Scene r
-        Left l -> Exploring l
 handleKeyInputDuringScene _ _ = error "We are not handling a scene."
 
 handleKeyInputDuringSelectingItem :: GameModel -> Text -> [GameEventResponse]
