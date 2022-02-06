@@ -35,9 +35,8 @@ jobs:
       run: |
         sudo apt update
         sudo apt install libsdl2-dev libglew-dev moreutils
-
-    - name: Update cabal
-      run: cabal update -j
+        cabal update -j
+        cabal install weeder hlint hindent stylish-haskell -j -z
 
     - name: Generate `cabal.project.local`
       run: "echo \"package * \n  ghc-options: -fwrite-ide-info\" > cabal.project.local"
@@ -48,19 +47,14 @@ jobs:
         cabal build --enable-tests --enable-benchmarks all -j
 
     - name: Detect unused lines
-      run: |
-        cabal install weeder --ignore-project -j
-        ~/.cabal/bin/weeder
+      run: ~/.cabal/bin/weeder
 
     - name: Run tests
       run: cabal test all -j
 
     - name: Run hlint
-      run: |
-        cabal install hlint --ignore-project -j
-        ~/.cabal/bin/hlint .
+      run: ~/.cabal/bin/hlint .
 
     - name: Check format
       run: |
-        cabal install hindent stylish-haskell -j -z
         find src tests app -name '*.hs'|xargs -I {} sh -c "cat {}|~/.cabal/bin/hindent|~/.cabal/bin/stylish-haskell|diff --color -u {} -"
