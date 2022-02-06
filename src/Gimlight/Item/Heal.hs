@@ -1,19 +1,19 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module Gimlight.Item.Heal
-  ( HealHandler,
-    healHandler,
-    getHealAmount,
-  )
-where
+    ( HealHandler
+    , healHandler
+    , getHealAmount
+    ) where
 
-import Data.Binary (Binary)
-import GHC.Generics (Generic)
+import           Data.Binary  (Binary)
+import           GHC.Generics (Generic)
 
-newtype HealHandler = HealHandler
-  { amount :: Int
-  }
-  deriving (Show, Ord, Eq, Generic)
+newtype HealHandler =
+    HealHandler
+        { amount :: Int
+        }
+    deriving (Show, Ord, Eq, Generic)
 
 instance Binary HealHandler
 

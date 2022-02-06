@@ -1,12 +1,11 @@
 module Gimlight.IndexGenerator
-  ( IndexGenerator,
-    Index,
-    generator,
-    generate,
-  )
-where
+    ( IndexGenerator
+    , Index
+    , generator
+    , generate
+    ) where
 
-import Control.Monad.State (MonadState (state), State)
+import           Control.Monad.State (MonadState (state), State)
 
 type IndexGenerator = Int
 

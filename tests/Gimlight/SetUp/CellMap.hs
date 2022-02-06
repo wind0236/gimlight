@@ -1,85 +1,73 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Gimlight.SetUp.CellMap
-  ( initCellMap,
-    initTileCollection,
-    playerPosition,
-    orcWithoutItemsPosition,
-    orcWithFullItemsPosition,
-    strongestOrcPosition,
-    intermediateOrcPosition,
-    weakestOrcPosition,
-    orcWithHerbPosition,
-  )
-where
+    ( initCellMap
+    , initTileCollection
+    , playerPosition
+    , orcWithoutItemsPosition
+    , orcWithFullItemsPosition
+    , strongestOrcPosition
+    , intermediateOrcPosition
+    , weakestOrcPosition
+    , orcWithHerbPosition
+    ) where
 
-import Codec.Picture
-  ( PixelRGBA8 (PixelRGBA8),
-    generateImage,
-  )
-import Control.Lens ((%~))
-import Control.Monad.State (State, evalState, execStateT)
-import Data.Array (listArray, (//))
-import Data.Either (fromRight)
-import Data.Map (fromList)
-import Data.Maybe (fromJust)
-import Gimlight.Actor
-  ( Actor,
-    inventoryItems,
-    monster,
-    player,
-  )
-import Gimlight.Actor.Identifier (Identifier (Orc))
-import Gimlight.Actor.Monsters (orc)
-import Gimlight.Actor.Status (status)
-import Gimlight.Actor.Status.Hp (hp)
-import Gimlight.Coord (Coord)
-import Gimlight.Dungeon.Map.Cell
-  ( CellMap,
-    TileIdLayer (TileIdLayer),
-    cellMap,
-    locateActorAt,
-    locateItemAt,
-  )
-import Gimlight.Dungeon.Map.Tile (TileCollection, tile)
-import Gimlight.IndexGenerator (IndexGenerator, generator)
-import Gimlight.Inventory (addItem)
-import Gimlight.Item (herb, sampleBook)
-import Gimlight.UI.Draw.Config (tileHeight, tileWidth)
-import Linear.V2 (V2 (V2))
+import           Codec.Picture             (PixelRGBA8 (PixelRGBA8),
+                                            generateImage)
+import           Control.Lens              ((%~))
+import           Control.Monad.State       (State, evalState, execStateT)
+import           Data.Array                (listArray, (//))
+import           Data.Either               (fromRight)
+import           Data.Map                  (fromList)
+import           Data.Maybe                (fromJust)
+import           Gimlight.Actor            (Actor, inventoryItems, monster,
+                                            player)
+import           Gimlight.Actor.Identifier (Identifier (Orc))
+import           Gimlight.Actor.Monsters   (orc)
+import           Gimlight.Actor.Status     (status)
+import           Gimlight.Actor.Status.Hp  (hp)
+import           Gimlight.Coord            (Coord)
+import           Gimlight.Dungeon.Map.Cell (CellMap, TileIdLayer (TileIdLayer),
+                                            cellMap, locateActorAt,
+                                            locateItemAt)
+import           Gimlight.Dungeon.Map.Tile (TileCollection, tile)
+import           Gimlight.IndexGenerator   (IndexGenerator, generator)
+import           Gimlight.Inventory        (addItem)
+import           Gimlight.Item             (herb, sampleBook)
+import           Gimlight.UI.Draw.Config   (tileHeight, tileWidth)
+import           Linear.V2                 (V2 (V2))
 
 initCellMap :: CellMap
 initCellMap =
-  fromRight (error "Failed to set up the test environment.") $
+    fromRight (error "Failed to set up the test environment.") $
     flip execStateT emptyMap $ do
-      mapM_
-        (locateItemAt initTileCollection herb)
-        [playerPosition, orcWithFullItemsPosition]
-      mapM_
-        (uncurry (locateActorAt initTileCollection))
-        [ (p, playerPosition),
-          (orcWithoutItems, orcWithoutItemsPosition),
-          (orcWithFullItems, orcWithFullItemsPosition),
-          (s, strongestOrcPosition),
-          (i, intermediateOrcPosition),
-          (w, weakestOrcPosition),
-          (orcWithHerb, orcWithHerbPosition)
-        ]
+        mapM_
+            (locateItemAt initTileCollection herb)
+            [playerPosition, orcWithFullItemsPosition]
+        mapM_
+            (uncurry (locateActorAt initTileCollection))
+            [ (p, playerPosition)
+            , (orcWithoutItems, orcWithoutItemsPosition)
+            , (orcWithFullItems, orcWithFullItemsPosition)
+            , (s, strongestOrcPosition)
+            , (i, intermediateOrcPosition)
+            , (w, weakestOrcPosition)
+            , (orcWithHerb, orcWithHerbPosition)
+            ]
   where
     emptyMap =
-      cellMap $
-        listArray (V2 0 0, V2 (mapWidth - 1) (mapHeight - 1)) (repeat emptyTile)
-          // [(V2 0 1, unwalkable)]
+        cellMap $
+        listArray (V2 0 0, V2 (mapWidth - 1) (mapHeight - 1)) (repeat emptyTile) //
+        [(V2 0 1, unwalkable)]
     (p, w, i, s, orcWithoutItems, orcWithFullItems, orcWithHerb) =
-      flip evalState generator $
-        (,,,,,,)
-          <$> ((inventoryItems %~ fromJust . addItem sampleBook) <$> player)
-          <*> weakestOrc
-          <*> intermediateOrc
-          <*> strongestOrc
-          <*> orc
-          <*> ((!! 5) . iterate (inventoryItems %~ fromJust . addItem herb) <$> orc)
-          <*> ((inventoryItems %~ fromJust . addItem herb) <$> orc)
+        flip evalState generator $ (,,,,,,) <$>
+        ((inventoryItems %~ fromJust . addItem sampleBook) <$> player) <*>
+        weakestOrc <*>
+        intermediateOrc <*>
+        strongestOrc <*>
+        orc <*>
+        ((!! 5) . iterate (inventoryItems %~ fromJust . addItem herb) <$> orc) <*>
+        ((inventoryItems %~ fromJust . addItem herb) <$> orc)
     emptyTile = TileIdLayer Nothing Nothing
     unwalkable = TileIdLayer (Just (dummyTileFile, 1)) Nothing
     mapWidth = 3
@@ -87,10 +75,10 @@ initCellMap =
 
 initTileCollection :: TileCollection
 initTileCollection =
-  fromList
-    [ ((dummyTileFile, 0), tile True True emptyImage),
-      ((dummyTileFile, 1), tile False True emptyImage)
-    ]
+    fromList
+        [ ((dummyTileFile, 0), tile True True emptyImage)
+        , ((dummyTileFile, 1), tile False True emptyImage)
+        ]
   where
     emptyImage = generateImage (\_ _ -> PixelRGBA8 0 0 0 0) tileWidth tileHeight
 

@@ -1,10 +1,9 @@
 module Gimlight.Data.String
-  ( adjustLength,
-    makeTable,
-  )
-where
+    ( adjustLength
+    , makeTable
+    ) where
 
-import Gimlight.Data.List (intercalateIncludingHeadTail)
+import           Gimlight.Data.List (intercalateIncludingHeadTail)
 
 adjustLength :: Int -> String -> String
 adjustLength n s = s ++ replicate (n - length s) ' '

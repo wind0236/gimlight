@@ -2,27 +2,26 @@
 {-# LANGUAGE TupleSections #-}
 
 module Gimlight.TreeZipper
-  ( TreeZipper,
-    treeZipper,
-    goToRootAndGetTree,
-    getFocused,
-    modify,
-    goToRoot,
-    goUp,
-    goDownBy,
-    appendNode,
-    appendTree,
-  )
-where
+    ( TreeZipper
+    , treeZipper
+    , goToRootAndGetTree
+    , getFocused
+    , modify
+    , goToRoot
+    , goUp
+    , goDownBy
+    , appendNode
+    , appendTree
+    ) where
 
-import Data.Binary (Binary)
-import Data.Foldable (find)
-import Data.Tree (Tree (Node, rootLabel, subForest))
-import GHC.Generics (Generic)
+import           Data.Binary   (Binary)
+import           Data.Foldable (find)
+import           Data.Tree     (Tree (Node, rootLabel, subForest))
+import           GHC.Generics  (Generic)
 
-data TreeCrumb a
-  = TreeCrumb a [Tree a]
-  deriving (Show, Ord, Eq, Generic)
+data TreeCrumb a =
+    TreeCrumb a [Tree a]
+    deriving (Show, Ord, Eq, Generic)
 
 instance (Binary a) => Binary (TreeCrumb a)
 
@@ -44,16 +43,15 @@ goToRoot :: TreeZipper a -> TreeZipper a
 goToRoot z = maybe z goToRoot (goUp z)
 
 goUp :: TreeZipper a -> Maybe (TreeZipper a)
-goUp (Node {rootLabel = r, subForest = fs}, TreeCrumb newRootLabel newSubForest : bs) =
-  Just
-    ( Node {rootLabel = newRootLabel, subForest = Node r fs : newSubForest},
-      bs
-    )
+goUp (Node {rootLabel = r, subForest = fs}, TreeCrumb newRootLabel newSubForest:bs) =
+    Just
+        ( Node {rootLabel = newRootLabel, subForest = Node r fs : newSubForest}
+        , bs)
 goUp (_, []) = Nothing
 
 goDownBy :: (a -> Bool) -> TreeZipper a -> Maybe (TreeZipper a)
 goDownBy f (Node {rootLabel = r, subForest = ts}, bs) =
-  (,TreeCrumb r ts : bs) <$> find (f . rootLabel) ts
+    (, TreeCrumb r ts : bs) <$> find (f . rootLabel) ts
 
 appendNode :: a -> TreeZipper a -> TreeZipper a
 appendNode n (z@Node {subForest = ts}, bs) = (z {subForest = newNode : ts}, bs)

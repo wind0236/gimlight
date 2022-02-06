@@ -1,10 +1,9 @@
 module Gimlight.Generator
-  ( generateNonPositive,
-    generatePositiveBigSmallNumbers,
-  )
-where
+    ( generateNonPositive
+    , generatePositiveBigSmallNumbers
+    ) where
 
-import Test.QuickCheck (Arbitrary (arbitrary), Gen, suchThat)
+import           Test.QuickCheck (Arbitrary (arbitrary), Gen, suchThat)
 
 generateNonPositive :: Gen Int
 generateNonPositive = negate . abs <$> arbitrary

@@ -34,7 +34,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install libsdl2-dev libglew-dev
+        sudo apt install libsdl2-dev libglew-dev moreutils
 
     - name: Update cabal
       run: cabal update -j
@@ -61,9 +61,6 @@ jobs:
         ~/.cabal/bin/hlint .
 
     - name: Check format
-      uses: mrkkrp/ormolu-action@v5
-      with:
-        pattern: |
-          src/**/*.hs
-          app/**/*.hs
-          tests/**/*.hs
+      run: |
+        cabal install hindent stylish-haskell -j -z
+        find src tests app -name '*.hs'|xargs -I {} sh -c "cat {}|~/.cabal/bin/hindent|~/.cabal/bin/stylish-haskell|diff --color -u {} -"

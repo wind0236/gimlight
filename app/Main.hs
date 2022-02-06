@@ -1,9 +1,8 @@
 module Main
-  ( main,
-  )
-where
+    ( main
+    ) where
 
-import Gimlight.Game (start)
+import           Gimlight.Game (start)
 
 main :: IO ()
 main = start
