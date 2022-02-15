@@ -24,17 +24,16 @@ import           Monomer                          (CmbAlignCenter (alignCenter),
                                                    CmbStyleBasic (styleBasic),
                                                    CmbTextColor (textColor),
                                                    CmbTextSize (textSize),
-                                                   black, box_, filler, gray,
-                                                   hstack, image, label, red,
-                                                   vstack, zstack)
+                                                   black, box_, filler, hstack,
+                                                   image, label, red, vstack,
+                                                   zstack)
 import qualified Monomer.Lens                     as L
 
 drawTalking :: TalkingHandler -> GameConfig -> GameWidgetNode
 drawTalking th c =
     withKeyEvents $
     zstack
-        [ drawExploring afterGameStatus c `styleBasic`
-          [bgColor $ gray & L.a .~ 0.5]
+        [ drawExploring afterGameStatus c
         , filler `styleBasic` [bgColor $ black & L.a .~ 0.5]
         , talkingWindow c partner (getTalkingPart th)
         ]
