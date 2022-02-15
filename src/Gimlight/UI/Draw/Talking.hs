@@ -43,7 +43,7 @@ drawTalking th c =
 
 talkingWindow :: GameConfig -> Actor -> TalkingPart -> GameWidgetNode
 talkingWindow c a (Selection h) =
-    box_ [alignCenter] $ hstack [image (a ^. standingImagePath), window]
+    hstack [image (a ^. standingImagePath), window]
   where
     window = zstack [image "images/talking_window.png", talkingContent c h]
 talkingWindow _ _ _ = error "Unable to draw."
