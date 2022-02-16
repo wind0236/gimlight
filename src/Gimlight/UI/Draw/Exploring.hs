@@ -10,8 +10,7 @@ import           Control.Lens                    (Ixed (ix), (&), (.~), (^.),
 import           Control.Monad                   (guard)
 import           Data.Array                      ((!))
 import qualified Data.Map                        as Map
-import           Data.Maybe                      (catMaybes, fromMaybe,
-                                                  mapMaybe)
+import           Data.Maybe                      (catMaybes, mapMaybe)
 import           Data.Vector.Storable.ByteString (vectorToByteString)
 import           Gimlight.Actor                  (getCurrentExperiencePoint,
                                                   getDefence,
@@ -131,8 +130,8 @@ mapWidget eh = vstack rows
         | isVisible c = 0
         | isExplored c = 0.5
         | otherwise = 1
-    isVisible c = fromMaybe False $ playerFov (d ^. cellMap) ^? ix c
-    isExplored c = fromMaybe False $ exploredMap (d ^. cellMap) ^? ix c
+    isVisible c = playerFov (d ^. cellMap) ^? ix c == Just True
+    isExplored c = exploredMap (d ^. cellMap) ^? ix c == Just True
     getTileIdOfLayerAt which c = tileIdLayer c >>= (^. which)
     tileIdLayer c = tileIdLayerAt c $ d ^. cellMap
     V2 topLeftCoordX topLeftCoordY = topLeftCoord d
