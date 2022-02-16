@@ -11,6 +11,7 @@ import           Control.Lens                          ()
 import           Control.Monad.State                   (StateT (runStateT),
                                                         evalState, evalStateT)
 import           Data.Binary                           (Binary)
+import           Data.List.NonEmpty                    (fromList)
 import           Data.Tree                             (Tree (Node, rootLabel, subForest))
 import           GHC.Generics                          (Generic)
 import           Gimlight.Data.Maybe                   (expectJust)
@@ -87,5 +88,5 @@ newGameStatus = do
     return . Scene $
         sceneHandler
             "images/game_opening.png"
-            [withoutSpeaker T.title1, withoutSpeaker T.title2]
+            (fromList [withoutSpeaker T.title1, withoutSpeaker T.title2])
             initExploring

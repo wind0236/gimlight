@@ -12,9 +12,11 @@ module Gimlight.GameStatus.Scene
     , nextSceneOrFinish
     ) where
 
-import           Control.Lens                  (makeLenses, view, (%~), (&),
+import           Control.Lens                  (makeLenses, view, (&), (.~),
                                                 (^.))
 import           Data.Binary                   (Binary)
+import           Data.List.NonEmpty            (NonEmpty)
+import qualified Data.List.NonEmpty            as N
 import           Data.Text                     (Text)
 import           GHC.Generics                  (Generic)
 import           Gimlight.GameStatus.Exploring (ExploringHandler)
@@ -29,7 +31,7 @@ instance Binary SceneElement
 data SceneHandler =
     SceneHandler
         { _backgroundImage :: Text
-        , _elements        :: [SceneElement]
+        , _elements        :: NonEmpty SceneElement
         , _afterScene      :: ExploringHandler
         }
     deriving (Show, Ord, Eq, Generic)
@@ -48,12 +50,14 @@ getBackgroundImagePath :: SceneHandler -> Text
 getBackgroundImagePath = view backgroundImage
 
 getCurrentScene :: SceneHandler -> SceneElement
-getCurrentScene = head . view elements
+getCurrentScene = N.head . view elements
 
-sceneHandler :: Text -> [SceneElement] -> ExploringHandler -> SceneHandler
+sceneHandler ::
+       Text -> NonEmpty SceneElement -> ExploringHandler -> SceneHandler
 sceneHandler = SceneHandler
 
 nextSceneOrFinish :: SceneHandler -> Either ExploringHandler SceneHandler
-nextSceneOrFinish sh
-    | length (sh ^. elements) == 1 = Left $ sh ^. afterScene
-    | otherwise = Right $ sh & elements %~ tail
+nextSceneOrFinish sh =
+    case N.tail (sh ^. elements) of
+        [] -> Left $ sh ^. afterScene
+        xs -> Right $ sh & elements .~ N.fromList xs
